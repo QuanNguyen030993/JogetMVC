@@ -672,7 +672,7 @@ Note:
                                             $customButton.dxButton({
                                                 disabled: !isCurrentRoute,
                                                 text: route.displayStatus || route.actionName || route.actionCode || "Custom action",
-                                                icon: getTransitionButtonIcon(route, route.isReturn ? "undo" : "chevronright"),
+                                                icon: getTransitionButtonIcon(route, route.isReturn ? "undo" : ""),
                                                 type: route.isReturn ? "danger" : "info",
                                                 onClick: function () {
                                                     const routeFormId = window.PolicyIssuanceIdManager.form(routeDept, recordId);

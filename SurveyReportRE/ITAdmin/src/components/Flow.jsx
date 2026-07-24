@@ -65,6 +65,7 @@ const transitionIconOptions = [
     { icon: 'folder', value: 'folder', label: 'folder' },
     { icon: 'home', value: 'home', label: 'home' },
     { icon: 'preferences', value: 'preferences', label: 'preferences' },
+    { icon: 'person-running', value: 'person-running', label: 'person-running' },
     { icon: 'user', value: 'user', label: 'user' },
     { icon: 'lock', value: 'lock', label: 'lock' },
     { icon: 'menu', value: 'menu', label: 'menu' },
@@ -1305,44 +1306,119 @@ function Flow({ id: propId }) {
         [selectedNode, setNodes],
     );
 
-    const updateSelectedEdge = useCallback(
-        (field, value) => {
-            if (!selectedEdge) {
-                return;
-            }
+    // const updateSelectedEdge = useCallback(
+    //     (field, value) => {
+    //         if (!selectedEdge) {
+    //             return;
+    //         }
 
-            const matched = edges.find((e) => e.id === selectedEdge.id);
-            const dataToUse = matched ? matched.data : selectedEdge.data;
-            const nextData = {
-                ...dataToUse,
-                [field]: value,
-            };
-            const isReturn = nextData.isReturn === true || String(nextData.isReturn) === 'true';
-            const hasCommand = nextData.command && nextData.command !== 'None' && nextData.command !== '0';
+    //         const matched = edges.find((e) => e.id === selectedEdge.id);
+    //         const dataToUse = matched ? matched.data : selectedEdge.data;
+    //         const nextData = {
+    //             ...dataToUse,
+    //             [field]: value,
+    //         };
+    //         const isReturn = nextData.isReturn === true || String(nextData.isReturn) === 'true';
+    //         const hasCommand = nextData.command && nextData.command !== 'None' && nextData.command !== '0';
 
-            const nextEdge = {
-                ...(matched || selectedEdge),
-                label: formatTransitionLabel(nextData.actionName, nextData.statusName || nextData.statusId, nextData.command),
-                data: nextData,
-                animated: !hasCommand,
-                style: isReturn
-                    ? { stroke: '#dc2626', strokeWidth: 3 }
-                    : { stroke: '#2563eb', strokeWidth: 2 },
-                markerEnd: {
-                    type: MarkerType.ArrowClosed,
-                    width: 16,
-                    height: 16,
-                    color: isReturn ? '#dc2626' : '#2563eb',
-                },
-            };
+    //         const nextEdge = {
+    //             ...(matched || selectedEdge),
+    //             label: formatTransitionLabel(nextData.actionName, nextData.statusName || nextData.statusId, nextData.command),
+    //             data: nextData,
+    //             animated: !hasCommand,
+    //             style: isReturn
+    //                 ? { stroke: '#dc2626', strokeWidth: 3 }
+    //                 : { stroke: '#2563eb', strokeWidth: 2 },
+    //             markerEnd: {
+    //                 type: MarkerType.ArrowClosed,
+    //                 width: 16,
+    //                 height: 16,
+    //                 color: isReturn ? '#dc2626' : '#2563eb',
+    //             },
+    //         };
 
-            setEdges((currentEdges) =>
-                currentEdges.map((edge) => (edge.id === selectedEdge.id ? nextEdge : edge))
-            );
-            setSelectedEdge(nextEdge);
-        },
-        [selectedEdge, edges, setEdges],
-    );
+    //         setEdges((currentEdges) =>
+    //             currentEdges.map((edge) => (edge.id === selectedEdge.id ? nextEdge : edge))
+    //         );
+    //         setSelectedEdge(nextEdge);
+    //     },
+    //     [selectedEdge, edges, setEdges],
+    // );
+const updateSelectedEdge = useCallback(
+   (fieldOrValues, value) => {
+       if (!selectedEdge) return;
+       const values =
+           typeof fieldOrValues === 'object'
+               ? fieldOrValues
+               : { [fieldOrValues]: value };
+       let updatedEdge = null;
+       setEdges((currentEdges) =>
+           currentEdges.map((edge) => {
+               if (edge.id !== selectedEdge.id) {
+                   return edge;
+               }
+               const nextData = {
+                   ...edge.data,
+                   ...values,
+               };
+               const isReturn =
+                   nextData.isReturn === true ||
+                   String(nextData.isReturn) === 'true';
+               const hasCommand =
+                   nextData.command &&
+                   nextData.command !== 'None' &&
+                   nextData.command !== '0';
+               updatedEdge = {
+                   ...edge,
+                   label: formatTransitionLabel(
+                       nextData.actionName,
+                       nextData.statusName || nextData.statusId,
+                       nextData.command
+                   ),
+                   data: nextData,
+                   animated: !hasCommand,
+                   style: isReturn
+                       ? {
+                             stroke: '#dc2626',
+                             strokeWidth: 3,
+                         }
+                       : {
+                             stroke: '#2563eb',
+                             strokeWidth: 2,
+                         },
+                   markerEnd: {
+                       type: MarkerType.ArrowClosed,
+                       width: 16,
+                       height: 16,
+                       color: isReturn ? '#dc2626' : '#2563eb',
+                   },
+               };
+               return updatedEdge;
+           })
+       );
+       if (updatedEdge) {
+           setSelectedEdge(updatedEdge);
+       } else {
+           setSelectedEdge((currentSelectedEdge) => {
+               if (!currentSelectedEdge) return currentSelectedEdge;
+               const nextData = {
+                   ...currentSelectedEdge.data,
+                   ...values,
+               };
+               return {
+                   ...currentSelectedEdge,
+                   data: nextData,
+                   label: formatTransitionLabel(
+                       nextData.actionName,
+                       nextData.statusName || nextData.statusId,
+                       nextData.command
+                   ),
+               };
+           });
+       }
+   },
+   [selectedEdge, setEdges]
+);
 
     const [condSource, setCondSource] = useState('payload');
     const [condField, setCondField] = useState('totalPremiumTotal');
@@ -1916,7 +1992,7 @@ function Flow({ id: propId }) {
                         />
                     </label>
                 )}
-                <label>
+                {/* <label>
                     <span>Status (Trạng thái)</span>
                     <select
                         value={selectedEdge.data?.statusName || ''}
@@ -1936,6 +2012,29 @@ function Flow({ id: propId }) {
                             </option>
                         ))}
                     </select>
+                </label> */}
+                <label>
+                <span>Status (Trạng thái)</span>
+                <select
+                    value={selectedEdge.data?.statusId || ''}
+                    onChange={(event) => {
+                        const selectedId = event.target.value;
+                        const matchingStatus = statusList.find(
+                            (status) => String(status.id) === String(selectedId)
+                        );
+                        updateSelectedEdge({
+                            statusId: selectedId,
+                            statusName: matchingStatus?.value || '',
+                        });
+                    }}
+                >
+                <option value="">-- Chọn Trạng thái --</option>
+                    {statusList.map((status) => (
+                <option key={status.id} value={status.id}>
+                            {status.value} (ID: {status.id})
+                </option>
+                    ))}
+                </select>
                 </label>
                 <label className="flow-checkbox">
                     <input

@@ -5,8 +5,8 @@ import '../styles/tatChart.css';
 const TATChart = forwardRef((props, ref) => {
     const [sessions, setSessions] = useState([]);
     const [deptProcessings, setDeptProcessings] = useState([]);
-    const [quotations, setQuotations] = useState([]);
-    const [policyIssuances, setPolicyIssuances] = useState([]);
+    // const [quotations, setQuotations] = useState([]);
+    // const [policyIssuances, setPolicyIssuances] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedRecordGuid, setSelectedRecordGuid] = useState('ALL');
     const [selectedDeptFilter, setSelectedDeptFilter] = useState('ALL');
@@ -55,56 +55,115 @@ const TATChart = forwardRef((props, ref) => {
         }
     }, [selectedRecordGuid]);
 
-    const fetchSessions = async () => {
-        try {
-            const [resSessions, resQuotes, resPolicies] = await Promise.all([
-                fetch(`${API_BASE_URL}/api/TurnAroundTimeSession/GetAll`).then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch(`${API_BASE_URL}/api/Quotation/GetAll`).then(r => r.ok ? r.json() : []).catch(() => []),
-                fetch(`${API_BASE_URL}/api/PolicyIssuance/GetAll`).then(r => r.ok ? r.json() : []).catch(() => [])
-            ]);
+    const postInstanceByRecord = async (recordGuid = null) => {
+        const response = await fetch(`${API_BASE_URL}/api/Report/InstanceByRecord`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
 
-            const loadedSessions = Array.isArray(resSessions) ? resSessions : [];
-            const loadedQuotes = Array.isArray(resQuotes) ? resQuotes : [];
-            const loadedPolicies = Array.isArray(resPolicies) ? resPolicies : [];
-
-            if (loadedSessions.length > 0) {
-                setSessions(loadedSessions);
-                setQuotations(loadedQuotes);
-                setPolicyIssuances(loadedPolicies);
-            } else {
-                const demoData = generateDemoTatData();
-                setSessions(demoData.sessions);
-                setQuotations(demoData.quotations);
-                setPolicyIssuances(demoData.policyIssuances);
-            }
-        } catch (err) {
-            console.error("Error fetching TAT sessions:", err);
-            const demoData = generateDemoTatData();
-            setSessions(demoData.sessions);
-            setQuotations(demoData.quotations);
-            setPolicyIssuances(demoData.policyIssuances);
+        if (!response.ok) {
+            throw new Error(`InstanceByRecord failed: ${response.status} ${response.statusText}`);
         }
+
+        return response.json();
     };
 
-    const fetchDeptProcessings = async () => {
+    const normalizeInstanceResponse = (payload) => {
+        if (payload && !Array.isArray(payload)) {
+            return {
+                sessions: Array.isArray(payload.sessions) ? payload.sessions : [],
+                deptProcessings: Array.isArray(payload.deptProcessings) ? payload.deptProcessings : []
+            };
+        }
+
+        const rows = Array.isArray(payload) ? payload : [];
+        const sessionMap = new Map();
+        const processingMap = new Map();
+
+        rows.forEach((row) => {
+            const sessionId = row.sessionId ?? row.SessionId ?? row.id ?? row.Id;
+            if (sessionId != null && !sessionMap.has(String(sessionId))) {
+                sessionMap.set(String(sessionId), {
+                    id: sessionId,
+                    sessionNo: row.sessionNo ?? row.SessionNo,
+                    sessionTypeId: row.sessionTypeId ?? row.SessionTypeId,
+                    sessionStartDate: row.sessionStartDate ?? row.SessionStartDate,
+                    sessionEndDate: row.sessionEndDate ?? row.SessionEndDate,
+                    totalDays: row.totalDays ?? row.TotalDays,
+                    recordGuid: row.recordGuid ?? row.RecordGuid,
+                    recordTitle: row.recordTitle ?? row.RecordTitle,
+                    instanceCode: row.instanceCode ?? row.InstanceCode
+                });
+            }
+
+            const processingId = row.processingId ?? row.ProcessingId ?? row.deptProcessingId ?? row.DeptProcessingId;
+            if (processingId != null && !processingMap.has(String(processingId))) {
+                processingMap.set(String(processingId), {
+                    id: processingId,
+                    turnAroundTimeSessionId: row.turnAroundTimeSessionId ?? row.TurnAroundTimeSessionId ?? sessionId,
+                    department: row.department ?? row.Department,
+                    acceptDate: row.acceptDate ?? row.AcceptDate,
+                    completeDate: row.completeDate ?? row.CompleteDate,
+                    processingDays: row.processingDays ?? row.ProcessingDays,
+                    durationText: row.durationText ?? row.DurationText,
+                    note: row.note ?? row.Note
+                });
+            }
+        });
+
+        return {
+            sessions: Array.from(sessionMap.values()),
+            deptProcessings: Array.from(processingMap.values())
+        };
+    };
+
+    const fetchSessions = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/TurnAroundTimeDeptProcessing/GetAll`).then(r => r.ok ? r.json() : []).catch(() => []);
-            const loadedDepts = Array.isArray(res) ? res : [];
-            if (loadedDepts.length > 0) {
-                setDeptProcessings(loadedDepts);
-            } else {
+            const payload = await postInstanceByRecord(null);
+            const normalized = normalizeInstanceResponse(payload);
+
+            if (normalized.sessions.length > 0) {
+                setSessions(normalized.sessions);
+            } else if (props.useDemoData) {
                 const demoData = generateDemoTatData();
-                setDeptProcessings(demoData.deptProcessings);
+                setSessions(demoData.sessions);
+            } else {
+                setSessions([]);
             }
         } catch (err) {
-            console.error("Error fetching TAT dept processings:", err);
-            const demoData = generateDemoTatData();
-            setDeptProcessings(demoData.deptProcessings);
+            console.error('Error fetching TAT sessions:', err);
+            if (props.useDemoData) {
+                const demoData = generateDemoTatData();
+                setSessions(demoData.sessions);
+            } else {
+                setSessions([]);
+            }
         } finally {
             setLoading(false);
         }
     };
+
+    const fetchDeptProcessings = async () => {
+    setLoading(true);
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/TurnAroundTimeDeptProcessing/GetAll`).then(r => r.ok ? r.json() : []).catch(() => []);
+        const loadedDepts = Array.isArray(res) ? res : [];
+        if (loadedDepts.length > 0) {
+            setDeptProcessings(loadedDepts);
+        } else {
+            const demoData = generateDemoTatData();
+            setDeptProcessings(demoData.deptProcessings);
+        }
+    } catch (err) {
+        console.error("Error fetching TAT dept processings:", err);
+        const demoData = generateDemoTatData();
+        setDeptProcessings(demoData.deptProcessings);
+    } finally {
+        setLoading(false);
+    }
+};
+
 
     // Realistic Demo Data Generator matching user's diagram
     const generateDemoTatData = () => {
@@ -212,33 +271,16 @@ const TATChart = forwardRef((props, ref) => {
 
     const recordTitleMap = useMemo(() => {
         const map = {};
-        
-        quotations.forEach(q => {
-            const guid = q.guid || q.Guid;
-            if (guid) {
-                const code = q.quotationCode || q.QuotationCode || q.requestNo || q.RequestNo;
-                const subject = q.subject || q.Subject || '';
-                const display = code ? `${code} - ${subject}` : subject;
-                if (display) {
-                    map[guid.toLowerCase()] = `Quotation: ${display}`;
-                }
-            }
+        sessions.forEach((session) => {
+            const guid = session.recordGuid ?? session.RecordGuid;   
+            if (!guid) return;
+            const instanceCode = session.instanceCode ?? session.InstanceCode;
+            const recordTitle = session.recordTitle ?? session.RecordTitle;
+            const display = instanceCode ; //[instanceCode, recordTitle].filter(Boolean).join(' - ');
+            map[String(guid).toLowerCase()] = display;
         });
-        
-        policyIssuances.forEach(p => {
-            const guid = p.guid || p.Guid;
-            if (guid) {
-                const code = p.policyIssuanceCode || p.PolicyIssuanceCode || p.policyNo || p.PolicyNo;
-                const subject = p.subject || p.Subject || '';
-                const display = code ? `${code} - ${subject}` : subject;
-                if (display) {
-                    map[guid.toLowerCase()] = `Policy Issuance: ${display}`;
-                }
-            }
-        });
-        
         return map;
-    }, [quotations, policyIssuances]);
+    }, [sessions]);
 
     // List of unique RecordGuids
     const recordGuidOptions = useMemo(() => {
@@ -246,13 +288,14 @@ const TATChart = forwardRef((props, ref) => {
         const seen = new Set();
         sessions.forEach(s => {
             const g = s.recordGuid || s.RecordGuid;
-            if (g && !seen.has(g)) {
-                seen.add(g);
-                const lowercaseGuid = g.toLowerCase();
+            const normalizedGuid = g ? String(g).toLowerCase() : '';
+            if (g && !seen.has(normalizedGuid)) {
+                seen.add(normalizedGuid);
+                const lowercaseGuid = normalizedGuid;
                 const matchedTitle = recordTitleMap[lowercaseGuid];
                 guids.push({
                     guid: g,
-                    title: matchedTitle || s.recordTitle || `Instance ${g.slice(0, 8)}...`
+                    title: recordTitleMap[lowercaseGuid] || "" // matchedTitle || s.recordTitle || `Instance ${s.instanceCode}`
                 });
             }
         });
@@ -314,8 +357,8 @@ const TATChart = forwardRef((props, ref) => {
 
         // Sort chronologically by AcceptDate
         return list.sort((a, b) => {
-            const da = new Date(a.acceptDate || a.AcceptDate || 0);
-            const db = new Date(b.acceptDate || b.AcceptDate || 0);
+            const da = Number(a.id || a.Id || 0);
+            const db = Number(b.id || b.Id || 0);
             return da - db;
         });
     }, [deptProcessings, filteredSessionIds, selectedDeptFilter]);
@@ -792,11 +835,6 @@ const TATChart = forwardRef((props, ref) => {
                             {/* MODE 2 & 3: TIME AXIS GANTT BLOCK DIAGRAM */}
                             {layoutMode !== 'cycle-flow' && (
                                 <div className="axis-diagram-card">
-                                    <div className="card-header">
-                                        <h3>Sơ Đồ Chu Kỳ Trục Thời Gian (Time Axis Block Diagram)</h3>
-                                        <p>Trục thời gian chạy ngang từ <strong>Accept Date đầu tiên</strong> đến <strong>Complete Date cuối cùng</strong>.</p>
-                                    </div>
-
                                     {filteredCheckpoints.length === 0 ? (
                                         <div className="no-data">Không có dữ liệu checkpoint phù hợp với bộ lọc.</div>
                                     ) : (
@@ -1005,3 +1043,4 @@ const TATChart = forwardRef((props, ref) => {
 
 TATChart.displayName = "TATChart";
 export default TATChart;
+ 

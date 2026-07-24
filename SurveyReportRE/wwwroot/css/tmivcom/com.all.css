@@ -1238,6 +1238,8 @@ textarea {
     border-radius: 8px
 }
 
+
+
 .tmiv-mini-toolbar {
     display: flex;
     align-items: center;
@@ -2098,196 +2100,94 @@ textarea {
         border-color: #e2e8f0;
     }
 
-:root {
-    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    color: #111827;
-    background: #f3f4f6;
+/* Tooltip Popups for Edge Icons in Diagram */
+.diagram-icon-hover-trigger {
+    position: relative;
 }
 
-body {
-    margin: 0;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #eff6ff, #f9fafb);
-}
-
-* {
-    box-sizing: border-box;
-}
-
-.app-shell {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 32px 20px 48px;
-}
-
-.card, .preview-card {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-    padding: 24px;
-    margin-bottom: 20px;
-}
-
-.upload-form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-}
-
-.download-btn {
-    border: 0;
-    border-radius: 999px;
-    padding: 10px 18px;
-    background: #2563eb;
-    color: white;
-    cursor: pointer;
-    font-weight: 500;
-    text-decoration: none;
-    font-size: 14px;
-    transition: background-color 0.2s, transform 0.1s;
-}
-
-    button:hover, .download-btn:hover {
-        background: #1d4ed8;
-    }
-
-    button:active, .download-btn:active {
-        transform: scale(0.98);
-    }
-
-    button:disabled {
-        opacity: 0.7;
-        cursor: wait;
-    }
-
-.status {
-    margin-top: 12px;
-    color: #4b5563;
-}
-
-.preview-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #e5e7eb;
-    padding-bottom: 16px;
-    margin-bottom: 20px;
-}
-
-    .preview-header h2 {
-        margin: 0;
-        font-size: 1.25rem;
-        color: #1e293b;
-        word-break: break-all;
-    }
-
-.preview-body-viewer {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    overflow: hidden;
-    min-height: 400px;
-}
-
-/* Custom DOCX Renderer Styles */
-.docx-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    max-height: 650px;
-    overflow-y: auto;
-    background: #f8fafc;
-}
-
-.docx-render-area {
-    width: 100%;
-    max-width: 800px;
-}
-
-.docx-viewer {
-    background: transparent !important;
-    padding: 0 !important;
-}
-
-    .docx-viewer section.docx {
-        background: white !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-        margin: 10px auto 20px auto !important;
-        border-radius: 4px !important;
-        padding: 20mm 15mm 20mm 15mm !important;
-        border: 1px solid #e2e8f0 !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-    }
-
-/* Custom Excel Renderer Styles */
-.excel-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-height: 650px;
-}
-
-.sheet-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-    overflow-x: auto;
-    padding: 4px 0 8px 0;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.sheet-tab {
-    background: #e2e8f0;
-    color: #475569;
-    border: none;
-    border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 13px;
-    cursor: pointer;
-}
-
-    .sheet-tab:hover {
-        background: #cbd5e1;
-    }
-
-    .sheet-tab.active {
-        background: #2563eb;
-        color: white;
-    }
-
-.excel-render-wrapper {
-    width: 100%;
-    overflow: auto;
+.diagram-tooltip-popup {
+    display: none;
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 280px;
+    max-height: 250px;
+    background: #ffffff;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
-    background: white;
-}
-
-.excel-render-area table {
-    border-collapse: collapse;
-    width: max-content;
-    min-width: 100%;
-    font-size: 13px;
-    color: #334155;
-}
-
-.excel-render-area th, .excel-render-area td {
-    border: 1px solid #e2e8f0;
-    padding: 8px 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 10px;
+    z-index: 10000;
+    white-space: normal;
     text-align: left;
-    white-space: nowrap;
+    pointer-events: none;
 }
 
-.excel-render-area tr:nth-child(even) {
-    background-color: #f8fafc;
+    .diagram-tooltip-popup::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 6px;
+        border-style: solid;
+        border-color: #ffffff transparent transparent transparent;
+    }
+
+    .diagram-tooltip-popup::before {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 7px;
+        border-style: solid;
+        border-color: #cbd5e1 transparent transparent transparent;
+        z-index: -1;
+    }
+
+.diagram-icon-hover-trigger:hover .diagram-tooltip-popup {
+    display: block;
 }
 
-.excel-render-area tr:hover {
-    background-color: #f1f5f9;
+.diagram-tooltip-popup .tooltip-header {
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 5px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #1e293b;
 }
 
+.diagram-tooltip-popup .tooltip-body {
+    font-size: 11px;
+    color: #475569;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
 
+.diagram-tooltip-popup .tooltip-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
 
+    .diagram-tooltip-popup .tooltip-field .label {
+        font-weight: 600;
+        color: #64748b;
+        font-size: 10px;
+        text-transform: uppercase;
+    }
+
+.diagram-tooltip-popup .content-preview {
+    max-height: 120px;
+    overflow-y: auto;
+    background: #f8fafc;
+    padding: 6px;
+    border-radius: 4px;
+    border: 1px solid #f1f5f9;
+    font-size: 10.5px;
+    line-height: 1.4;
+    word-break: break-all;
+}

@@ -28,27 +28,24 @@ public class ReportController : BaseControllerApi<EmptyClass>
     private readonly IBaseRepository<EmptyClass> _BaseRepository;
     private readonly IConfiguration configuration;
     private readonly IConfigurationSection path;
-    public static string MANAGER_APP = "";
-    public static string APPROVER_APP = "";
-    public static string CHECKER_APP = "";
-    public static string USER_APP = "";
-    public static string SUPER_USER = "";
-    public static string DOMAIN_NAME = "";
     private static string BLOB_PATH = "";
     public static string CURRENT_USER = "";
     public ReportController(IBaseRepository<EmptyClass> BaseRepository, IConfiguration config, IHttpContextAccessor httpContextAccessor, ILogger<EmptyClass> logger) : base(BaseRepository, httpContextAccessor)
     {
         configuration = config;
         _BaseRepository = BaseRepository;
-        MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
-        APPROVER_APP = configuration.GetSection("BusinessConfig:ApproverAppKey").Value;
-        CHECKER_APP = configuration.GetSection("BusinessConfig:CheckerAppKey").Value;
-        USER_APP = configuration.GetSection("BusinessConfig:UserAppKey").Value;
-        SUPER_USER = configuration.GetSection("SuperUser:SuperUser").Value;
-        DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
         path = _BaseRepository._baseConfiguration.GetSection("BlobStorage:Path");
         BLOB_PATH = path.Value;
         CURRENT_USER = _httpContextAccessor.HttpContext.User.Identity.Name.Replace(DOMAIN_NAME, "");
+    }
+    public async Task<object> InstanceByRecord()
+    {
+        string baseQuery = $"EXEC usp_Instance_By_Record";
+
+        List<Dictionary<string, object>> result =
+            await _BaseRepository.ExecuteCustomQuery(baseQuery);
+
+        return result;
     }
 
 }

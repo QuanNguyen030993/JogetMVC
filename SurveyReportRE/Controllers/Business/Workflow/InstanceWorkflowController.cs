@@ -126,15 +126,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             quotation.ActionStatus = submitRequest.ActionStatus;
         TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
         TurnAroundItem tatObject = Util.TurnAroundTimePicker(result, submitRequest.StepsWorkflow.FromNodeId);
-        //    switch
-        //{
-        //    "FO" => result.FO,
-        //    "TS" => result.TS,
-        //    "UW" => result.UW,
-        //    "LMKT" => result.LMKT,
-        //    "PM" => result.PM,
-        //    _ => null
-        //};
+        
         tatObject.CompleteDate = DateTime.Now;
         switch (submitRequest.StepsWorkflow.FromNodeId)
         {
@@ -148,6 +140,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 result.UW = tatObject;
                 break;
             case "LMKT":
+                tatObject.AcceptDate = DateTime.Now;
+                tatObject.CompleteDate = null;
                 result.LMKT = tatObject;
                 break;
             case "PM":

@@ -29,6 +29,8 @@ using static ERPCore.Models.Models.Parsing.JsonHandle;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
+using DocumentFormat.OpenXml.Bibliography;
+using ERPCore.Pages;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -58,6 +60,8 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<Line> _lineRepository;
     private readonly IBaseRepository<SLA> _slaRepository;
     private readonly IBaseRepository<UsersSession> _usersSessionRepository;
+    private readonly IBaseRepository<TurnAroundTimeSession> _turnAroundTimeSessionRepository;
+    private readonly IBaseRepository<TurnAroundTimeDeptProcessing> _turnAroundTimeDeptProcessingRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly ILogger<Quotation> _logger;
     private readonly IConfigurationSection path;
@@ -112,6 +116,8 @@ public class QuotationController : BaseControllerApi<Quotation>
         _lineRepository = new BaseRepository<Line>(configuration, _httpContextAccessor);
         _slaRepository = new BaseRepository<SLA>(configuration, _httpContextAccessor);
         _usersSessionRepository = new BaseRepository<UsersSession>(configuration, _httpContextAccessor);
+        _turnAroundTimeSessionRepository = new BaseRepository<TurnAroundTimeSession>(configuration, _httpContextAccessor);
+        _turnAroundTimeDeptProcessingRepository = new BaseRepository<TurnAroundTimeDeptProcessing>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _messageSettings = configuration.GetSection("Message").Get<Message>();
 
@@ -1005,7 +1011,11 @@ public class QuotationController : BaseControllerApi<Quotation>
 
             quotation.WorkflowStatus = enumData?.Value ?? "";
             quotation = await _BaseRepository.InsertData(JsonConvert.DeserializeObject<Quotation>(JsonConvert.SerializeObject(quotation)));
-            
+
+
+            TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
+            TurnAroundItem tatObject = Util.TurnAroundTimePicker(result, stepsWorkflow.FromNodeId);
+
             if (file != null)
             {
                 Request.Headers["Folder"] = $@"{nameof(Quotation)}\{quotation.QuotationCode}";
@@ -1033,6 +1043,65 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
             await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+            TurnAroundTimeSession activeSession = new TurnAroundTimeSession();
+            activeSession = await _turnAroundTimeSessionRepository
+            .GetSingleObject(s => s.RecordGuid == instanceWorkflow.RecordGuid);
+
+
+            if (activeSession == null)
+            {
+                // Đếm số phiên đã có để tính SessionNo tiếp theo
+                var allSessions = await _turnAroundTimeSessionRepository
+                    .GetListObject(s => s.RecordGuid == instanceWorkflow.RecordGuid);
+
+                int nextSessionNo = (allSessions?.Count ?? 0) + 1;
+
+                activeSession = new TurnAroundTimeSession
+                {
+                    SessionNo = nextSessionNo,
+                    SessionTypeId = quotation.RequestTypeId,   // truyền từ client: New=1 / Renew=2 / Amend=3
+                    SessionStartDate = tatObject.AcceptDate,
+                    SessionEndDate = tatObject.CompleteDate,
+                    TotalDays = 0,
+                    RecordGuid = quotation.Guid
+                };
+                await _turnAroundTimeSessionRepository.InsertData(activeSession);
+                // Sau insert, activeSession.Id đã được gán bởi EF/repository
+            }
+            else
+            {
+                // Đếm số phiên đã có để tính SessionNo tiếp theo
+                var allSessions = await _turnAroundTimeSessionRepository
+                    .GetListObject(s => s.RecordGuid == instanceWorkflow.RecordGuid);
+
+
+                activeSession.SessionNo = activeSession.SessionNo;
+                activeSession.SessionTypeId = quotation.RequestTypeId;   // truyền từ client: New=1 / Renew=2 / Amend=3
+                activeSession.SessionStartDate = activeSession.SessionStartDate;
+                activeSession.SessionEndDate = tatObject.CompleteDate;
+                activeSession.TotalDays = 0;
+                activeSession.RecordGuid = quotation.Guid;
+                await _turnAroundTimeSessionRepository.UpdateData(activeSession, JsonConvert.SerializeObject(activeSession), activeSession.Id, "Id");
+                // Sau insert, activeSession.Id đã được gán bởi EF/repository
+            }
+
+            // Bước 2 — Tìm hoặc tạo DeptProcessing cho phòng ban đang submit
+            TurnAroundTimeDeptProcessing deptProcessing = new TurnAroundTimeDeptProcessing();
+
+            DateTime acceptDate = tatObject.AcceptDate ?? DateTime.Now;
+            DateTime completeDate = tatObject.CompleteDate ?? DateTime.Now;
+            int processingDays = (completeDate.Date - acceptDate.Date).Days;  // đơn vị ngày
+
+            // Chưa có → tạo mới
+            deptProcessing = new TurnAroundTimeDeptProcessing
+            {
+                TurnAroundTimeSessionId = activeSession.Id,
+                Department = stepsWorkflow?.FromNodeId,
+                AcceptDate = acceptDate,
+                CompleteDate = completeDate,
+                ProcessingDays = processingDays
+            };
+            await _turnAroundTimeDeptProcessingRepository.InsertData(deptProcessing);
 
             //loop multiple account tai day
             var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
@@ -1044,27 +1113,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 stepsWorkflow,
                 JsonConvert.DeserializeObject<Quotation>(JsonConvert.SerializeObject(quotation)));
             string picsStr = picS.PICMain.GetType().GetProperty(stepsWorkflow?.ToNodeId ?? "")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
-            //foreach (var memberName in picsStr.Split(","))
-            //{
-            //    NotificationRequest notification = new NotificationRequest();
-            //    Notification Notification = new Notification();
-            //    Notification.Title = notificationTitle.Title;
-            //    Notification.Message = notificationTitle.Content;
-            //    Notification.IsRead = false;
-            //    Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
-            //    Notification.System = "WM";
-            //    Notification.RecordGuid = quotation.Guid;
-            //    Notification.Type = notificationTitle.TypeId;
-
-            //    Notification.ReceivedBy = memberName;
-            //    notification.Notification = Notification;
-            //    notification.connectionId = memberName;
-            //    notification.tabPublicUrl = Util.URLObjectMaking(quotation);
-            //    PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
-            //    string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
-            //    Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
-            //    await NotificationController.Notify(notification);
-            //}
+           
 
             foreach (string memberName in picsStr.Split(","))
             {

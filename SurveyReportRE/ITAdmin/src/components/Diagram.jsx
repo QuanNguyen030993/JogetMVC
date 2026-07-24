@@ -30,7 +30,6 @@ const CustomEdge = ({
     data = {},
 }) => {
     const { setEdges, getZoom } = useReactFlow();
-    console.log(data);
     const controlX = Number.isFinite(data?.controlX) ? data.controlX : (sourceX + targetX) / 2;
     const controlY = Number.isFinite(data?.controlY) ? data.controlY : (sourceY + targetY) / 2;
 

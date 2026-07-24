@@ -12,6 +12,7 @@ using TMIVHashing;
 using ERPCore.ControllerUtil;
 using Serilog.Events;
 using Microsoft.AspNetCore.SignalR;
+using ERPCore.Storage;
 
 //Generate once
 //string projectId = "9A19103F16F74668BE549A1E7A4F75";

@@ -447,6 +447,9 @@ namespace ERPCore.ControllerUtil
             , IOptionsMonitor<BlobStorageSettings> optionsMonitor
             ) 
         {
+
+
+
             var userInfo = await ControllerHelper.FetchUserRoles(httpContextAccessor, configuration, DOMAIN_NAME);
               string logQuery = $@"INSERT INTO CommentLog (RecordGuid
             ,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem,CreatedAtUtc)

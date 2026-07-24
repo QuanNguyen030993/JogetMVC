@@ -27,6 +27,7 @@
 
         var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
         var acceptStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+        var clientStatusId = `Client_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
         var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
         var declinedStatusId = `DC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
         
@@ -74,7 +75,11 @@
     // var itemsDelay = [null, null, declinedButtonId, declinedStatusId];
     var itemsDelay = [acceptDecisionV2];
 
-
+      var items = [
+            { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)", text: "Client Accept", value: true },
+            // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
+            { id: "DC_@QTViewIdHelper.Decision(dept, quotationId)", text: "Client Deny", value: false }
+        ];
     function getClientDecisionStatus(actionStatus) {
         if (!actionStatus) return "";
         try {
@@ -208,20 +213,36 @@
                  { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3},
                 
                             ]},
-                            {
-                                itemType: "group",
-                                name: "decision@(dept)Group",
-                                cssClass: "workflow-decision-group qt-decision-group-@(dept)",
-                                elementAttr: {
-                                    id: "qt-decision-group-@(dept)-@(quotationId)",
-                                    "data-form-group-name": "decision@(dept)Group",
-                                    "data-route-dept": "@dept"
-                                },
-                                caption: "Client Confirm",
-                                colCount: 2,
-                                items: [
-                        workflowDecisionField(thisObject, ...itemsDelay)
-                    ]}
+                        {
+                        itemType: "group",
+                        name: "decision@(dept)Group",
+                        cssClass: "workflow-decision-group qt-decision-group-@(dept)",
+                        elementAttr: {
+                            id: "qt-decision-group-@(dept)-@(quotationId)",
+                            "data-form-group-name": "decision@(dept)Group",
+                            "data-route-dept": "@dept"
+                        },
+                        caption: "Client Confirm",
+                        colCount: 2,
+                        items: [
+                {
+                     dataField: "decision",
+
+                     label: {
+                         text: "Decision"
+                     },
+                     itemType: "simple",
+                     template: function (data, itemElement) {
+                         // $(`<div id="${submitBranchId}" class="lmkt-submitbranch-decision-host"></div>`)
+                         //     .appendTo(itemElement);
+
+                         $(`#${clientStatusId}`).appendTo(itemElement);
+                         $.each(items, function (itemIndex, item) {
+                             $(`<div id="${item.id}">`).dxButton({ text: item.text, visible: false}).appendTo(itemElement);
+                         });
+                     }
+                }
+    ]}
                ]
     
     });
