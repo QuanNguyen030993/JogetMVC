@@ -3235,6 +3235,7 @@
                         $(container).append(html);
                         };
                     }
+                
             });
         }
         onCustomizeColumns(columns) {
@@ -3247,6 +3248,9 @@
             {
                 configureStatusGridColumn(col);
             }
+             if (col.dataField == "requestDate") {
+                    col.sortOrder = "desc";
+                }
             if (col.dataField === "policyIssuanceStatus")
             {
                 col.cellTemplate = function (container, options) {
