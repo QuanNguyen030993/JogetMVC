@@ -378,6 +378,15 @@ const createNodeStyle = (node = {}) => {
             fontWeight: '600',
         };
     }
+    if (type === 'jump') {
+        return {
+            background: '#fffbeb',
+            border: '2px dashed #d97706',
+            borderRadius: '14px',
+            color: '#b45309',
+            fontWeight: '600',
+        };
+    }
     if (styleColor === 'orange' || type === 'decision') {
         return {
             background: '#fff7ed',

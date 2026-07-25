@@ -23,7 +23,21 @@
 }
 
 .ui-tabs-nav .ui-state-active a {
-    color: #94a3b8;
+    color: #fff;
+}
+
+.ui-tabs-nav .ui-state-active {
+    background-color: var(--focus, #2563eb);
+    box-shadow: 0 3px 10px rgba(37, 99, 235, .24);
+}
+
+.ui-tabs-nav .ui-state-active .close-tab-btn {
+    background-color: rgba(255, 255, 255, .18);
+    color: #fff;
+}
+
+.ui-tabs-nav .ui-state-active .close-tab-btn:hover {
+    background-color: rgba(255, 255, 255, .3);
 }
 
 .close-tab-btn {

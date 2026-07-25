@@ -1,4 +1,4 @@
-﻿using DocumentFormat.OpenXml.Office2013.Excel;
+using DocumentFormat.OpenXml.Office2013.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using ERPCore.Controllers.Base;
@@ -798,6 +798,25 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         if (stepsWorkflow != null)
 
         {
+            var (resolvedNodeId, resolvedDeptCode) = Util.ResolveWorkflowJumps(
+                workflowDefinition.WorkflowNodes,
+                stepsWorkflow.TNodeId ?? "",
+                Newtonsoft.Json.Linq.JObject.FromObject((object)quotation)
+            );
+            if (!string.IsNullOrWhiteSpace(resolvedNodeId))
+            {
+                stepsWorkflow.TNodeId = resolvedNodeId;
+                stepsWorkflow.ToNodeId = resolvedDeptCode;
+            }
+
+            string destinationDepartment = stepsWorkflow.ToNodeId?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(destinationDepartment))
+            {
+                throw new InvalidOperationException(
+                    $"Policy issuance workflow '{workflowDefinition.WorkflowCode}' has no destination department on its start step.");
+            }
+            quotation.StageDept = destinationDepartment;
+
             (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig, siteEnums);
             quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
             quotation.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
@@ -820,7 +839,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             //    Request.Headers["SectionName"] = $@"{quotationData.QuotationData.Attributes.SectionName}_{quotation.Id.ToString()}";
             //    await AsyncUploadSingleFile(file);
             //}
-            instanceWorkflow.RecordGuid = quotation.Guid;
+                        instanceWorkflow.RecordGuid = quotation.Guid;
 
             instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
             instanceWorkflow.CurrentStepId = new Guid();

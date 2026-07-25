@@ -1023,7 +1023,18 @@ public class QuotationController : BaseControllerApi<Quotation>
                 Request.Headers["SectionName"] = $@"{quotationData.QuotationData.Attributes.SectionName}_{quotation.Id.ToString()}";
                 await AsyncUploadSingleFile(file);
             }
-            instanceWorkflow.RecordGuid = quotation.Guid;
+                        instanceWorkflow.RecordGuid = quotation.Guid;
+
+            var (resolvedNodeId, resolvedDeptCode) = Util.ResolveWorkflowJumps(
+                workflowDefinition.WorkflowNodes,
+                stepsWorkflow.TNodeId ?? "",
+                Newtonsoft.Json.Linq.JObject.FromObject((object)quotation)
+            );
+            if (!string.IsNullOrEmpty(resolvedNodeId))
+            {
+                stepsWorkflow.TNodeId = resolvedNodeId;
+                stepsWorkflow.ToNodeId = resolvedDeptCode;
+            }
 
             instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
             instanceWorkflow.CurrentStepId = new Guid();

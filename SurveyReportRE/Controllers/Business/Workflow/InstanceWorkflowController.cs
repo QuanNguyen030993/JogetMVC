@@ -114,11 +114,34 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     public async Task<IActionResult> QuotationSubmitNextStep([FromBody] WorkflowTransitionSubmitRequest submitRequest)
     {
 
-        if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
-        submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
-        await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
+                if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
+        
         Quotation quotation = new Quotation();
         quotation = await _quotationRepository.GetSingleObject(s => s.Id == submitRequest.QuotationId);
+        
+        Guid workflowDefinitionId = submitRequest.InstanceWorkflow?.WorkflowDefinitionId ?? Guid.Empty;
+        if (workflowDefinitionId != Guid.Empty && submitRequest.StepsWorkflow != null && quotation != null)
+        {
+            WorkflowDefinition? definition = await _workflowDefinitionRepository.GetSingleObject(
+                item => item.Guid == workflowDefinitionId);
+            if (definition != null && !string.IsNullOrEmpty(definition.WorkflowNodes))
+            {
+                JObject recordData = JObject.FromObject(quotation);
+                var (resolvedNodeId, resolvedDeptCode) = Util.ResolveWorkflowJumps(
+                    definition.WorkflowNodes,
+                    submitRequest.StepsWorkflow.TNodeId ?? "",
+                    recordData
+                );
+                if (!string.IsNullOrEmpty(resolvedNodeId) && resolvedNodeId != submitRequest.StepsWorkflow.TNodeId)
+                {
+                    submitRequest.StepsWorkflow.TNodeId = resolvedNodeId;
+                    submitRequest.StepsWorkflow.ToNodeId = resolvedDeptCode;
+                }
+            }
+        }
+
+        submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
+        await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
         quotation.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
         quotation.StatusId = submitRequest.StepsWorkflow.StatusId;
@@ -295,11 +318,34 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     public async Task<IActionResult> PolicyIssuanceSubmitNextStep([FromBody] WorkflowTransitionSubmitRequest submitRequest)
     {
 
-        if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
-        submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
-        await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
+                if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
+        
         PolicyIssuance quotation = new PolicyIssuance();
         quotation = await _policyIssuanceRepository.GetSingleObject(s => s.Id == submitRequest.PolicyIssuanceId);
+        
+        Guid workflowDefinitionId = submitRequest.InstanceWorkflow?.WorkflowDefinitionId ?? Guid.Empty;
+        if (workflowDefinitionId != Guid.Empty && submitRequest.StepsWorkflow != null && quotation != null)
+        {
+            WorkflowDefinition? definition = await _workflowDefinitionRepository.GetSingleObject(
+                item => item.Guid == workflowDefinitionId);
+            if (definition != null && !string.IsNullOrEmpty(definition.WorkflowNodes))
+            {
+                JObject recordData = JObject.FromObject(quotation);
+                var (resolvedNodeId, resolvedDeptCode) = Util.ResolveWorkflowJumps(
+                    definition.WorkflowNodes,
+                    submitRequest.StepsWorkflow.TNodeId ?? "",
+                    recordData
+                );
+                if (!string.IsNullOrEmpty(resolvedNodeId) && resolvedNodeId != submitRequest.StepsWorkflow.TNodeId)
+                {
+                    submitRequest.StepsWorkflow.TNodeId = resolvedNodeId;
+                    submitRequest.StepsWorkflow.ToNodeId = resolvedDeptCode;
+                }
+            }
+        }
+
+        submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
+        await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
         quotation.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
         quotation.StatusId = submitRequest.StepsWorkflow.StatusId;

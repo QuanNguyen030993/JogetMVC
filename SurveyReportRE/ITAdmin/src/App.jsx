@@ -51,6 +51,85 @@ if (typeof window !== 'undefined') {
   };
 }
 
+// Global API Monitor Interceptor to capture client-to-server traffic
+const apiHistory = [];
+const apiListeners = new Set();
+
+const addApiRecord = (record) => {
+  apiHistory.push(record);
+  if (apiHistory.length > 300) apiHistory.shift();
+  apiListeners.forEach(listener => {
+    try {
+      listener(record);
+    } catch (e) {
+      console.error(e);
+    }
+  });
+};
+
+if (typeof window !== 'undefined' && !window.__apiInterceptorInstalled) {
+  window.__apiInterceptorInstalled = true;
+
+  // Intercept window.fetch
+  const originalFetch = window.fetch;
+  window.fetch = async function (...args) {
+    const start = performance.now();
+    const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+    let status = 200;
+    let ok = true;
+    try {
+      const response = await originalFetch.apply(this, args);
+      status = response.status;
+      ok = response.ok;
+      return response;
+    } catch (error) {
+      status = 500;
+      ok = false;
+      throw error;
+    } finally {
+      const duration = performance.now() - start;
+      addApiRecord({
+        url,
+        timestamp: new Date(),
+        duration: Math.round(duration),
+        status,
+        ok,
+        method: args[1]?.method || 'GET'
+      });
+    }
+  };
+
+  // Intercept XMLHttpRequest
+  const originalOpen = XMLHttpRequest.prototype.open;
+  const originalSend = XMLHttpRequest.prototype.send;
+
+  XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+    this._url = url;
+    this._method = method;
+    this._startTime = performance.now();
+    return originalOpen.apply(this, [method, url, ...rest]);
+  };
+
+  XMLHttpRequest.prototype.send = function (...args) {
+    this.addEventListener('loadend', () => {
+      const duration = performance.now() - (this._startTime || performance.now());
+      addApiRecord({
+        url: this._url || '',
+        timestamp: new Date(),
+        duration: Math.round(duration),
+        status: this.status || 200,
+        ok: this.status >= 200 && this.status < 300,
+        method: this._method || 'GET'
+      });
+    });
+    return originalSend.apply(this, args);
+  };
+
+  window.__apiHistory = apiHistory;
+  window.__apiListeners = apiListeners;
+}
+
+
 function App() {
   const [loginStats,setLoginStats]=useState([]);
   const [disk,setDisk]=useState(0);

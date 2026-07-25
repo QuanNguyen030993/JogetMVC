@@ -1,6 +1,7 @@
 using Newtonsoft.Json;
 using ERPCore.Models.Migration.Business.Data;
 using System.Reflection;
+using System.Linq;
 using HtmlAgilityPack;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
@@ -3645,6 +3646,149 @@ NormalizeRefParams(
             }
 
             return result;
+        }
+
+        public static (string ResolvedNodeId, string ResolvedDeptCode) ResolveWorkflowJumps(
+            string workflowNodesJson,
+            string startNodeId,
+            JObject recordData)
+        {
+            string nextCurrentStep = startNodeId;
+            string nextDeptCode = "";
+
+            if (string.IsNullOrEmpty(workflowNodesJson)) return (nextCurrentStep, nextDeptCode);
+
+            try
+            {
+                JObject payload = JObject.Parse(workflowNodesJson);
+                JArray? nodes = payload.GetValue("workflowNodes", StringComparison.OrdinalIgnoreCase) as JArray;
+                if (nodes == null) return (nextCurrentStep, nextDeptCode);
+
+                HashSet<string> visitedNodeIds = new HashSet<string>();
+                bool nodeChanged = true;
+
+                while (nodeChanged)
+                {
+                    nodeChanged = false;
+                    if (visitedNodeIds.Contains(nextCurrentStep))
+                    {
+                        break; // Circular reference protection
+                    }
+                    visitedNodeIds.Add(nextCurrentStep);
+
+                    JObject? targetNode = nodes
+                        .OfType<JObject>()
+                        .FirstOrDefault(item =>
+                            string.Equals(item.GetValue("id", StringComparison.OrdinalIgnoreCase)?.ToString(), nextCurrentStep, StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(item.GetValue("nodeCode", StringComparison.OrdinalIgnoreCase)?.ToString(), nextCurrentStep, StringComparison.OrdinalIgnoreCase));
+
+                    if (targetNode != null)
+                    {
+                        string nodeType = targetNode.GetValue("nodeType", StringComparison.OrdinalIgnoreCase)?.ToString() ?? "";
+                        string dept = targetNode.GetValue("departmentName", StringComparison.OrdinalIgnoreCase)?.ToString()
+                            ?? targetNode.GetValue("nodeName", StringComparison.OrdinalIgnoreCase)?.ToString()
+                            ?? "";
+
+                        if (string.Equals(nodeType, "jump", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string jumpCondition = targetNode.GetValue("jumpCondition", StringComparison.OrdinalIgnoreCase)?.ToString() ?? "";
+                            string jumpTarget = targetNode.GetValue("jumpTargetNodeId", StringComparison.OrdinalIgnoreCase)?.ToString() ?? "";
+
+                            if (EvaluateWorkflowCondition(jumpCondition, recordData))
+                            {
+                                if (!string.IsNullOrEmpty(jumpTarget))
+                                {
+                                    nextCurrentStep = jumpTarget;
+                                    nodeChanged = true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            nextDeptCode = dept;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Silent fallback
+            }
+
+            return (nextCurrentStep, nextDeptCode);
+        }
+
+        public static bool EvaluateWorkflowCondition(string conditionExpr, JObject data)
+        {
+            if (string.IsNullOrWhiteSpace(conditionExpr)) return true; // Empty condition is considered always true
+
+            try
+            {
+                // Normalize expression (remove payload. prefix, map === to ==)
+                string normalizedExpr = conditionExpr
+                    .Replace("payload.", "")
+                    .Replace("===", "==")
+                    .Replace("!==", "!=");
+
+                var match = Regex.Match(normalizedExpr, @"^\s*([a-zA-Z0-9_\.]+)\s*(=|==|!=|contains|in)\s*(.+)$");
+                if (match.Success)
+                {
+                    string key = match.Groups[1].Value.Trim();
+                    string op = match.Groups[2].Value.Trim();
+                    string rawVal = match.Groups[3].Value.Trim().Trim('\'', '"');
+
+                    JToken? propToken = data.SelectToken(key);
+                    if (propToken == null)
+                    {
+                        var prop = data.Properties().FirstOrDefault(p => string.Equals(p.Name, key, StringComparison.OrdinalIgnoreCase));
+                        propToken = prop?.Value;
+                    }
+
+                    string propValStr = propToken?.ToString() ?? "";
+
+                    if (op == "==" || op == "=")
+                    {
+                        return string.Equals(propValStr, rawVal, StringComparison.OrdinalIgnoreCase);
+                    }
+                    else if (op == "!=")
+                    {
+                        return !string.Equals(propValStr, rawVal, StringComparison.OrdinalIgnoreCase);
+                    }
+                    else if (op.Equals("contains", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return propValStr.Contains(rawVal, StringComparison.OrdinalIgnoreCase);
+                    }
+                    else if (op.Equals("in", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var vals = rawVal.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(v => v.Trim());
+                        return vals.Contains(propValStr, StringComparer.OrdinalIgnoreCase);
+                    }
+                }
+
+                // Try looking up directly as a flag property name (boolean)
+                string cleanExpr = normalizedExpr.Trim();
+                JToken? flagToken = data.SelectToken(cleanExpr);
+                if (flagToken == null)
+                {
+                    var prop = data.Properties().FirstOrDefault(p => string.Equals(p.Name, cleanExpr, StringComparison.OrdinalIgnoreCase));
+                    flagToken = prop?.Value;
+                }
+                if (flagToken != null)
+                {
+                    if (flagToken.Type == JTokenType.Boolean)
+                    {
+                        return flagToken.Value<bool>();
+                    }
+                    string val = flagToken.ToString();
+                    return !string.IsNullOrEmpty(val) && !string.Equals(val, "false", StringComparison.OrdinalIgnoreCase) && !string.Equals(val, "0");
+                }
+            }
+            catch
+            {
+                // Silent fallback
+            }
+
+            return false;
         }
     }
     public enum CommandQueryType

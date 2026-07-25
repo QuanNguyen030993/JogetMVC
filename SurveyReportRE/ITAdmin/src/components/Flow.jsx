@@ -40,6 +40,13 @@ const nodeTemplates = [
         description: 'Standard workflow action',
     },
     {
+        type: 'jump',
+        label: 'Jump Node (Có ĐK)',
+        subtitle: 'Bước nhảy có điều kiện',
+        nodeType: 'jump',
+        description: 'Conditional Skip / Jump step',
+    },
+    {
         type: 'department',
         label: 'Department Node',
         subtitle: 'Assigned team',
@@ -1211,6 +1218,9 @@ function Flow({ id: propId }) {
                 } else if (template.type === 'custom') {
                     shape = 'diamond';
                     styleColor = 'orange';
+                } else if (template.type === 'jump') {
+                    shape = 'rectangle';
+                    styleColor = 'lightOrange';
                 }
 
                 newNode = {
@@ -1633,8 +1643,32 @@ const updateSelectedEdge = useCallback(
                         <option value="complete">Complete (Circle)</option>
                         <option value="end">End (Circle)</option>
                         <option value="custom">Custom</option>
+                        <option value="jump">Jump (Bước nhảy có ĐK)</option>
                     </select>
                 </label>
+                {selectedNode.data.nodeType === 'jump' && (
+                    <div style={{ marginTop: '14px', padding: '12px', background: '#fffbeb', borderRadius: '8px', border: '1px dashed #f59e0b' }}>
+                        <h4 style={{ fontSize: '0.85rem', color: '#b45309', fontWeight: 600, marginBottom: '8px' }}>Jump Node Configuration</h4>
+                        
+                        <label>
+                            <span>Target Node ID / Dept (Điểm nhảy đến)</span>
+                            <input
+                                value={selectedNode.data.jumpTargetNodeId || ''}
+                                placeholder="Ví dụ: NODE_123 hoặc TS"
+                                onChange={(event) => updateSelectedNode('jumpTargetNodeId', event.target.value)}
+                            />
+                        </label>
+                        
+                        <label style={{ marginTop: '10px' }}>
+                            <span>Skip Condition (Điều kiện nhảy)</span>
+                            <input
+                                value={selectedNode.data.jumpCondition || ''}
+                                placeholder="Ví dụ: payload.skipTS === true"
+                                onChange={(event) => updateSelectedNode('jumpCondition', event.target.value)}
+                            />
+                        </label>
+                    </div>
+                )}
                 {selectedNode.data.nodeType === 'custom' && (
                     <label>
                         <span>Vị trí Binding (Custom Key)</span>
@@ -2117,7 +2151,7 @@ const updateSelectedEdge = useCallback(
                     </select>
                 </label>
 
-                {selectedEdge.data?.transitionType === 'Condition' && (
+                {(selectedEdge.data?.transitionType === 'Condition' || selectedEdge.data?.transitionType === 'Custom') && (
                     <div style={{ marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
                         <h4 style={{ fontSize: '0.9rem', marginBottom: '10px', color: '#1e293b', fontWeight: 600 }}>Mini Condition Builder</h4>
                         
