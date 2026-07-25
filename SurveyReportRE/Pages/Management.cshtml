@@ -640,7 +640,16 @@
         $("#tablist").on("click", "span.fa.fa-times", function () {
             var $tabDivId = $(this).closest("[id$='_li_tab']");
             nativeRemoveTab($tabDivId);
-    });
+        });
+
+        // Chrome controls the wording of this dialog. It is intentionally
+        // registered for the whole main screen so closing/reloading the actual
+        // browser tab always requests confirmation after user interaction.
+        window.addEventListener("beforeunload", function (event) {
+            event.preventDefault();
+            event.returnValue = true;
+            return true;
+        });
 
 
 
@@ -2276,7 +2285,7 @@
     }
 
     #tablist > ul > li.ui-tabs-active .close-tab-btn {
-        color: var(--c-2563eb) !important;
+        color: var(--c-ffffff) !important;
     }
 
     #tablist > ul > li.ui-tabs-active .close-tab-btn:hover {

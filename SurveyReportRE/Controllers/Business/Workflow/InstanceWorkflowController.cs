@@ -1055,7 +1055,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             if (!string.IsNullOrWhiteSpace(mailTemplate.MailQuery))
             {
                 DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, parameters.ToArray()); // ("QuotationId", quotation.Id));
-                if (query.Rows.Count > 0) templateData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+                if (query != null)
+                    if (query.Rows.Count > 0) templateData = Util.MakeQueryIntoDirectory(query.Rows[0]);
             }
             templateData["RecordId"] = quotation.Id;
             templateData["RecordCode"] = quotation.QuotationCode ?? "";
@@ -1138,6 +1139,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             if (!string.IsNullOrWhiteSpace(mailTemplate.MailQuery))
             {
                 DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+                if (query != null)
                 if (query.Rows.Count > 0) templateData = Util.MakeQueryIntoDirectory(query.Rows[0]);
             }
             templateData["RecordId"] = quotation.Id;

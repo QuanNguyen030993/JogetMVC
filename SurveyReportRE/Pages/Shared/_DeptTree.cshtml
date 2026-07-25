@@ -24,6 +24,13 @@
 }
 
 <div id="@deptTreeId" class="dept-tree">
+    <div id="@(deptTreeId)_idleClock"
+         class="dept-idle-clock"
+         aria-hidden="true"
+        title="Time without activity">
+        <span class="dept-idle-clock-label">Idle</span>
+        <span class="dept-idle-clock-value">02:00</span>
+    </div>
     <div class="treeStack" id="@treeStackId">
         <div class="vline" id="@(moduleCode == "qt" ? QTViewIdHelper.TreeVLine(quotationId) :  PIViewIdHelper.TreeVLine(quotationId))"></div>
         <div class="dept-scroll-beacon" aria-hidden="true"></div>
@@ -76,6 +83,85 @@
         var attempts = 0;
         var treeStackId = "@treeStackId";
         var overviewScrollId = "@overviewScrollId";
+        var idleClockId = "@(deptTreeId)_idleClock";
+
+        if (!window.DeptTreeIdleClock) {
+            window.DeptTreeIdleClock = (function () {
+                const idleThresholdMs = 5000;
+                const countdownDurationMs = 120000;
+                const clocks = new Set();
+                let lastActivityAt = Date.now();
+                let isIdle = false;
+
+                function formatDuration(durationMs) {
+                    const totalSeconds = Math.max(0, Math.ceil(durationMs / 1000));
+                    const hours = Math.floor(totalSeconds / 3600);
+                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                    const seconds = totalSeconds % 60;
+                    const twoDigits = value => String(value).padStart(2, "0");
+
+                    return hours > 0
+                        ? `${twoDigits(hours)}:${twoDigits(minutes)}`
+                        : `${twoDigits(minutes)}:${twoDigits(seconds)}`;
+                }
+
+                function renderClocks(idleDurationMs, shouldShow) {
+                    clocks.forEach(function (clock) {
+                        if (!clock.isConnected) {
+                            clocks.delete(clock);
+                            return;
+                        }
+
+                        const value = clock.querySelector(".dept-idle-clock-value");
+                        if (value) value.textContent = formatDuration(idleDurationMs);
+                        clock.classList.toggle("is-visible", shouldShow);
+                        clock.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+                    });
+                }
+
+                function update() {
+                    const idleDurationMs = Date.now() - lastActivityAt;
+                    isIdle = idleDurationMs >= idleThresholdMs;
+                    const countdownElapsedMs = Math.max(0, idleDurationMs - idleThresholdMs);
+                    const remainingMs = Math.max(0, countdownDurationMs - countdownElapsedMs);
+                    renderClocks(remainingMs, isIdle);
+                }
+
+                function markActivity() {
+                    lastActivityAt = Date.now();
+                    if (!isIdle) return;
+
+                    isIdle = false;
+                    renderClocks(countdownDurationMs, false);
+                }
+
+                [
+                    "pointerdown",
+                    "pointermove",
+                    "keydown",
+                    "wheel",
+                    "touchstart"
+                ].forEach(function (eventName) {
+                    document.addEventListener(eventName, markActivity, {
+                        passive: true,
+                        capture: true
+                    });
+                });
+
+                window.setInterval(update, 1000);
+
+                return {
+                    register: function (clock) {
+                        if (!clock) return;
+                        clocks.add(clock);
+                        update();
+                    },
+                    reset: markActivity
+                };
+            })();
+        }
+
+        window.DeptTreeIdleClock.register(document.getElementById(idleClockId));
 
         function bindWhenReady() {
             var treeStack = document.getElementById(treeStackId);

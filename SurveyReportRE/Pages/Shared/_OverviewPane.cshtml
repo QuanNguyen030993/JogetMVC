@@ -133,26 +133,18 @@
 
 
                 <div class="admin-row">
-                    <label>Created By</label>
-                    <span class="createdBy">-</span>
+                    <label>Person in Charge (PIC)</label>
+                    <div class="maintenance-value-list" data-maintenance-pic>
+                        <span class="maintenance-empty">-</span>
+                    </div>
                 </div>
 
 
                 <div class="admin-row">
-                    <label>Updated By</label>
-                    <span class="updatedBy">-</span>
-                </div>
-
-
-                <div class="admin-row">
-                    <label>Created Date</label>
-                    <span class="createdDate">-</span>
-                </div>
-
-
-                <div class="admin-row">
-                    <label>Updated Date</label>
-                    <span class="updatedDate">-</span>
+                    <label>Turnaround Time</label>
+                    <div class="maintenance-value-list" data-maintenance-tat>
+                        <span class="maintenance-empty">-</span>
+                    </div>
                 </div>
 
             </div>
@@ -160,6 +152,70 @@
 
 
         $("body").append(panel);
+
+        function parseMaintenanceMap(value) {
+            if (!value) return {};
+            if (typeof value === "object") return value;
+            try {
+                const parsed = JSON.parse(value);
+                return parsed && typeof parsed === "object" ? parsed : {};
+            } catch (error) {
+                console.warn("Maintenance info JSON could not be parsed.", error);
+                return {};
+            }
+        }
+
+        function maintenanceLabel(value) {
+            return String(value || "")
+                .replace(/([a-z])([A-Z])/g, "$1 $2")
+                .replace(/[_-]+/g, " ")
+                .replace(/\b\w/g, character => character.toUpperCase());
+        }
+
+        function maintenanceText(value) {
+            if (value == null || value === "") return "-";
+            if (Array.isArray(value)) return value.filter(Boolean).join(", ") || "-";
+            if (typeof value !== "object") return String(value);
+
+            const details = Object.entries(value)
+                .filter(([, detail]) => detail != null && detail !== "")
+                .map(([name, detail]) => `${maintenanceLabel(name)}: ${maintenanceText(detail)}`);
+            return details.join(" · ") || "-";
+        }
+
+        function renderMaintenanceMap($container, rawValue) {
+            const valueMap = parseMaintenanceMap(rawValue);
+            const entries = Object.entries(valueMap)
+                .filter(([, value]) => value != null && value !== "");
+
+            $container.empty();
+            if (!entries.length) {
+                $("<span>", { class: "maintenance-empty", text: "-" }).appendTo($container);
+                return;
+            }
+
+            entries.forEach(([name, value]) => {
+                const $entry = $("<div>", { class: "maintenance-value-item" }).appendTo($container);
+                $("<strong>").text(maintenanceLabel(name)).appendTo($entry);
+                $("<span>").text(maintenanceText(value)).appendTo($entry);
+            });
+        }
+
+        window.updateOverviewMaintenanceInfo = function (targetModuleCode, recordId, formData) {
+            const targetPanelId = `${String(targetModuleCode || "").trim().toLowerCase()}-adminInfoPanel_${recordId}`;
+            const $targetPanel = $(document.getElementById(targetPanelId));
+            if (!$targetPanel.length) return;
+
+            formData = formData || {};
+            renderMaintenanceMap(
+                $targetPanel.find("[data-maintenance-pic]"),
+                formData.pIC ?? formData.pic ?? formData.PIC
+            );
+            renderMaintenanceMap(
+                $targetPanel.find("[data-maintenance-tat]"),
+                formData.turnAroundTimeAttributes ?? formData.TurnAroundTimeAttributes
+            );
+        };
 
 
 

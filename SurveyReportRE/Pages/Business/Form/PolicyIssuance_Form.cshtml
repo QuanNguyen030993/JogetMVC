@@ -453,7 +453,8 @@ Note:
             state.selectedGuid = q.guid ?? null;
             selectedAttachmentId = q.documentId ?? null;
             state.selectedCodeNo = q.quotationCode ?? null;
-            stageDept = q.stageDept ?? null;
+            stageDept = String(q.stageDept || "").trim().toUpperCase() || null;
+            state.stageDept = stageDept;
             state.comments = [];
             state.pinNotes = [];
 
@@ -519,17 +520,21 @@ Note:
               return ajaxGet(`/api/PolicyIssuance/GetPolicyIssuanceWorkflow/@ViewData["Guid"]`, null)
                   .then(instance => {
                       return ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance?.workflowDefinitionId ?? "00000000-0000-0000-0000-000000000000"}/${instance?.currentStep ?? 0}`, null)
-                          .then(data => {
-                              data = Array.isArray(data) ? data : [];
-                              state.nextStep.instanceWorkflow = instance;
-                              state.nextStep.flowSteps = data;
-                              state.nextStep.currentStep = instance?.currentStep ?? 0;
-
-                              return policyIssuanceFormStages.enter("routeState").then(async function () {
-                                        const customRoutes = data.filter(function (route) {
-                                            return String(route?.flowType || "").trim().toLowerCase() === "custom";
-                                        });
+                              .then(data => {
+                                  debugger
+                            data = Array.isArray(data) ? data : [];
+                            state.nextStep.instanceWorkflow = instance;
+                            state.nextStep.flowSteps = data;
+                            state.nextStep.currentStep = instance?.currentStep ?? 0;
+                            // setNextStep(state.nextStep);
+                            // Route state chi duoc bind sau khi loading tong da dong va
+                            // tat ca dxForm/dxTagBox da co data.
+                            return policyIssuanceFormStages.enter("routeState").then(async function () {
+                                       
                                         // var findRoute = data.find(f => !f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                         const customRoutes = data.filter(function (route) {
+                                             return String(route?.flowType || "").trim().toLowerCase() === "custom";
+                                         });
                                          var findRoutes = data.filter(f => !f.isReturn
                                              && String(f?.flowType || "").trim().toLowerCase() !== "custom"
                                              && f.fromNodeId == stageDept
@@ -541,12 +546,19 @@ Note:
                                             && f.fNodeId == state.nextStep.currentStep);
                                         var returnButtonId = window.PolicyIssuanceIdManager.btnReturnBranch(stageDept,@ViewData["Id"]);
                                         var submitButtonId = window.PolicyIssuanceIdManager.btnSubmitBranch(stageDept,@ViewData["Id"]);
-                                        // var remarkBoxId = window.QuotationIdManager.remarkBox(stageDept,@ViewData["Id"]);
+                                        // var remarkBoxId = window.PolicyIssuanceIdManager.remarkBox(stageDept,@ViewData["Id"]);
+                                        if (piDeptModuleCode.find(f => f == stageDept))
+                                        {
                                         var formId = window.PolicyIssuanceIdManager.form(stageDept,@ViewData["Id"]);
                                         var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                                          var tatObject = new Object();
 
-                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem");
+                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem") || {};
+                                         var actionStatusObject = tryParseJSON(formItems.actionStatus, "Submit Button ActionStatus Problem") || {};
+                                         var hasAcceptedRouteStatus = stageDept === "LMKT" && (actionStatusObject[`${stageDept}Button`] || actionStatusObject[stageDept]);
+                                         if (hasAcceptedRouteStatus) {
+                                             findRoutes = [];
+                                         }
                                         const recordId = @ViewData["Id"];
                                         const normalizeRouteDept = function (value) {
                                             return String(value || "").trim().toUpperCase();
@@ -583,7 +595,7 @@ Note:
                                             const routeKeys = getRouteGroupKeys(routeData);
                                             if (!routeKeys.length) return $();
 
-                                            let $host = $(`[data-pi-route-custom-host][data-record-id="${recordId}"]`)
+                                            let $host = $(`[data-route-custom-host][data-record-id="${recordId}"]`)
                                                 .filter(function () {
                                                     return isSimilarRouteGroup(
                                                         routeKeys,
@@ -622,7 +634,7 @@ Note:
                                                 }
                                             }
                                             if (!$decisionGroup.length) {
-                                                console.warn("No policy issuance decision group matched the custom route.", routeData);
+                                                console.warn("No decision group id matched the custom route.", routeData);
                                                 return $();
                                             }
 
@@ -633,34 +645,48 @@ Note:
                                             const $decisionArea = $decisionGroup
                                                 .find(".dx-form-group-content")
                                                 .first();
-                                            if (!$decisionArea.length) return $();
+                                            if (!$decisionArea.length) {
+                                                console.warn(`Decision content for group '${groupId}' was not found.`);
+                                                return $();
+                                            }
 
+                                            $host = $(`<div class="workflow-custom-route-host" data-route-custom-host="true" data-record-id="${recordId}" data-route-dept="${groupDept}"></div>`);
                                             const $actionArea = $decisionArea
                                                 .find(".decision-action-row")
                                                 .first();
-
-                                            return $("<div>")
-                                                .addClass("workflow-custom-route-host")
-                                                .attr({
-                                                    "data-pi-route-custom-host": "true",
-                                                    "data-record-id": recordId,
-                                                    "data-route-dept": groupDept,
-                                                    "data-route-group-id": groupId
-                                                })
+                                            $host
+                                                .attr("data-route-group-id", groupId)
                                                 .appendTo($actionArea.length ? $actionArea : $decisionArea);
+                                            return $host;
                                         };
 
-                                        $(`[data-pi-route-custom-host][data-record-id="${recordId}"] [data-custom-route-button]`).each(function () {
+                                        $(`[data-route-custom-host][data-record-id="${recordId}"] [data-custom-route-button]`).each(function () {
                                             $(this).dxButton("instance")?.dispose();
                                             $(this).remove();
                                         });
 
+                                        const $uwRouteSlot = ensureCustomRouteHost({ fromNodeId: "UW" });
+                                        const hasUwCustomRoute = customRoutes.some(function (route) {
+                                            return isSimilarRouteGroup(getRouteGroupKeys(route), "UW");
+                                        });
+                                        if ($uwRouteSlot.length) {
+                                            $uwRouteSlot
+                                                .removeClass("is-route-pending")
+                                                .toggleClass("has-flow-route", hasUwCustomRoute)
+                                                .toggleClass("is-fallback-ready", !hasUwCustomRoute)
+                                                .attr("data-has-flow-route", hasUwCustomRoute ? "true" : "false");
+                                            const fallbackInstance = $uwRouteSlot.find("[data-uw-route-fallback]").dxButton("instance");
+                                            if (fallbackInstance && !hasUwCustomRoute) {
+                                                fallbackInstance.option("disabled", stageDept !== "UW" || !!tatObject?.UW?.AcceptDate);
+                                            }
+                                        }
                                         for (const [routeIndex, route] of customRoutes.entries()) {
                                             await policyIssuanceFormStages.pace(routeIndex);
                                             const $routeHost = ensureCustomRouteHost(route);
                                             if (!$routeHost.length) continue;
-
                                             const routeDept = normalizeRouteDept($routeHost.attr("data-route-dept"));
+                                            if (!routeDept) continue;
+
                                             const rawRouteKey = route?.routeId || route?.id || route?.actionCode || routeIndex;
                                             const safeRouteKey = String(rawRouteKey).replace(/[^a-zA-Z0-9_-]/g, "_");
                                             const customButtonId = `pi-custom-route-${recordId}-${routeDept}-${safeRouteKey}-${routeIndex}`;
@@ -682,7 +708,6 @@ Note:
                                                         appNotifyWarning("Please put your reason to remarks!", false);
                                                         return;
                                                     }
-
                                                     routeFormItems.comment = content;
                                                     if (route.isReturn) {
                                                         returnToStep(formModuleKeyPi, state.nextStep, route, routeFormItems);
@@ -702,18 +727,22 @@ Note:
                                                     const buttonId =
                                                         `${returnButtonId}_${route.routeId || route.actionCode}`;
 
+                                                    const routeButtonHost = `#${returnButtonId}`;
+
                                                     if (!$(`#${buttonId}`).length) {
                                                         $(`<div id="${buttonId}"></div>`)
-                                                            .appendTo(`#${returnButtonId}`);
+                                                            .appendTo(routeButtonHost);
+                                                    } else if (!$(`#${buttonId}`).parent().is(routeButtonHost)) {
+                                                        $(`#${buttonId}`).appendTo(routeButtonHost);
                                                     }
 
                                                     $(`#${buttonId}`).dxButton({
                                                         disabled: false,
                                                         text: route.displayStatus || "",
-                                                        icon: "undo",
+                                                        icon: getTransitionButtonIcon(route, "undo"),
                                                         type: "danger",
                                                         onClick: function () {
-                                                           var content = remarkBoxs[stageDept].controlRemark.value();
+                                                            var content = remarkBoxs[stageDept].controlRemark.value();
                                                             if (content)
                                                                 {
                                                                 formItems =
@@ -735,16 +764,17 @@ Note:
                                                             }
                                                         }
                                                     });
+                                                    applyTransitionButtonClass(`#${buttonId}`, route);
                                                 }
                                             }
                                         }
                                         catch (exception) {
                                             console.log("Return problem", exception);
                                         }
-                                                                                try {
+                                        try {
 
                                             if (findRoutes?.length) {
-                                                console.log(findRoutes);
+
                                                 for (const [routeIndex, route] of findRoutes.entries()) {
                                                     await policyIssuanceFormStages.pace(
                                                         customRoutes.length + findRouteReturns.length + routeIndex
@@ -753,75 +783,79 @@ Note:
                                                     const buttonId =
                                                         `${submitButtonId}_${route.routeId || route.actionCode}`;
 
+                                                    const routeButtonHost = `#${submitButtonId}`;
+
                                                     if (!$(`#${buttonId}`).length) {
                                                         $(`<div id="${buttonId}"></div>`)
-                                                            .appendTo(`#${submitButtonId}`);
+                                                            .appendTo(routeButtonHost);
+                                                    } else if (!$(`#${buttonId}`).parent().is(routeButtonHost)) {
+                                                        $(`#${buttonId}`).appendTo(routeButtonHost);
                                                     }
 
-                                                       $(`#${buttonId}`).dxButton({
-        disabled: stageDept === "LMKT"
-            ? false
-            : (tatObject?.[stageDept]?.AcceptDate ? false : true),
-        text: route.displayStatus || "",
-        icon: getTransitionButtonIcon(route, "fa-solid fa-person-running"),
-        type: "info",
-        onClick: function () {
+                                                    $(`#${buttonId}`).dxButton({
+                                                        disabled: stageDept === "LMKT"
+                                                            ? false
+                                                            : (tatObject?.[stageDept]?.AcceptDate ? false : true),
+                                                        text: route.displayStatus || "",
+                                                        icon: getTransitionButtonIcon(route, "fa-solid fa-person-running"),
+                                                        type: "info",
+                                                        onClick: function () {
 
-            var content =
-                remarkBoxs[stageDept].controlRemark.value();
+                                                            var content =
+                                                                remarkBoxs[stageDept].controlRemark.value();
 
-            formItems =
-                $(`#${formId}`)
-                    .dxForm("instance")
-                    ?.option("formData") || {};
+                                                            formItems =
+                                                                $(`#${formId}`)
+                                                                    .dxForm("instance")
+                                                                    ?.option("formData") || {};
 
-            formItems.comment = content || "";
+                                                            formItems.comment = content || "";
 
-            if (stageDept === "LMKT") {
-                var currentTatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "LMKT SubmitBranch TAT Problem") || {};
-                if (!currentTatObject[stageDept]) {
-                    currentTatObject[stageDept] = {
-                        AcceptDate: "",
-                        CompleteDate: ""
-                    };
-                }
-                if (!currentTatObject[stageDept].AcceptDate) {
-                    currentTatObject[stageDept].AcceptDate = formatDateToString(new Date()).gmt7;
-                }
+                                                            if (stageDept === "LMKT") {
+                                                                var currentTatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "LMKT SubmitBranch TAT Problem") || {};
+                                                                if (!currentTatObject[stageDept]) {
+                                                                    currentTatObject[stageDept] = {
+                                                                        AcceptDate: "",
+                                                                        CompleteDate: ""
+                                                                    };
+                                                                }
+                                                                if (!currentTatObject[stageDept].AcceptDate) {
+                                                                    currentTatObject[stageDept].AcceptDate = formatDateToString(new Date()).gmt7;
+                                                                }
 
-                var currentActionStatus = tryParseJSON(formItems.actionStatus, "LMKT SubmitBranch ActionStatus Problem") || {};
-                currentActionStatus[stageDept] = route.displayStatus || route.actionName || route.actionCode || "Submitted";
-                currentActionStatus[`${stageDept}Button`] = {
-                    text: route.displayStatus || route.actionName || route.actionCode || "Submitted",
-                    actionCode: route.actionCode || "",
-                    icon: getTransitionButtonIcon(route, "check"),
-                    buttonClass: getTransitionButtonClass(route, "dx-button-info")
-                };
+                                                                var currentActionStatus = tryParseJSON(formItems.actionStatus, "LMKT SubmitBranch ActionStatus Problem") || {};
+                                                                currentActionStatus[stageDept] = route.displayStatus || route.actionName || route.actionCode || "Submitted";
+                                                                currentActionStatus[`${stageDept}Button`] = {
+                                                                    text: route.displayStatus || route.actionName || route.actionCode || "Submitted",
+                                                                    actionCode: route.actionCode || "",
+                                                                    icon: getTransitionButtonIcon(route, "check"),
+                                                                    buttonClass: getTransitionButtonClass(route, "dx-button-info")
+                                                                };
 
-                formItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
-                formItems.actionStatus = JSON.stringify(currentActionStatus);
-                ajaxPut('/api/Quotation/UpdateData',
-                    {
-                        key: formItems.id,
-                        values: JSON.stringify(formItems)
-                    },
-                    {
-                        onSuccess: function () { },
-                        onError: function (err) { console.log("LMKT SubmitBranch status update problem", err); }
-                    }
-                );
-                $(`#${submitButtonId}`).find(".dx-button").css("background-color", window.DecisionColors.accepted);
-            }
+                                                                formItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
+                                                                formItems.actionStatus = JSON.stringify(currentActionStatus);
+                                                                ajaxPut('/api/PolicyIssuance/UpdateData',
+                                                                    {
+                                                                        key: formItems.id,
+                                                                        values: JSON.stringify(formItems)
+                                                                    },
+                                                                    {
+                                                                        onSuccess: function () { },
+                                                                        onError: function (err) { console.log("LMKT SubmitBranch status update problem", err); }
+                                                                    }
+                                                                );
+                                                                $(`#${submitButtonId}`).find(".dx-button").css("background-color", window.DecisionColors.accepted);
+                                                            }
 
-            submitNextStep(
-                `${formModuleKeyPi}`,
-                state.nextStep,
-                route,
-                formItems
-            );
-        }
-    });
-    applyTransitionButtonClass(`#${buttonId}`, route);
+                                                            submitNextStep(
+                                                                `${formModuleKeyPi}`,
+                                                                state.nextStep,
+                                                                route,
+                                                                formItems
+                                                            );
+                                                        }
+                                                    });
+                                                    applyTransitionButtonClass(`#${buttonId}`, route);
 
                                                 }
                                             }
@@ -829,8 +863,11 @@ Note:
                                         catch (exception) {
                                             console.log("Submit problem", exception);
                                         }
+                                        }
                                    });
-                          });
+                            // });
+                        });
+
                   });
           }
 
@@ -1530,6 +1567,7 @@ Note:
         async function renderDetail() {
             var q = getSelectedModel();
             if (!q) return;
+            window.updateOverviewMaintenanceInfo?.(formModuleKeyPi, @ViewData["Id"], q);
             await policyIssuanceFormStages.enter("shell");
             // resetOverviewAnimation();
 
@@ -1539,13 +1577,39 @@ Note:
 
 
 
-            var control = new Object();
+            const ensureActiveRemarkEditor = function () {
+                if (!stageDept || !window.PolicyIssuanceIdManager.validateDepartment(stageDept)) return null;
+
+                const actionBarId = window.PolicyIssuanceIdManager.actionBarDept(stageDept, @ViewData["Id"]);
+                const actionBar = document.getElementById(actionBarId);
+                if (!actionBar) {
+                    console.warn("Active policy issuance action bar was not found.", {
+                        stageDept: stageDept,
+                        actionBarId: actionBarId
+                    });
+                    return null;
+                }
+
+                $(actionBar).closest(".dept-footer").show();
+                $(actionBar).css("display", "flex");
+                const editorControl = TinyMCEElementMaker(
+                    ".htmleditor",
+                    stageDept,
+                    @ViewData["Id"],
+                    remarkBoxs?.[stageDept]?.controlRemark,
+                    "pi");
+                remarkBoxs[stageDept] = {
+                    id: q.id,
+                    sectionName: stageDept,
+                    controlRemark: editorControl
+                };
+                return editorControl;
+            };
+
             $.each(piDeptModuleCode, function (itemIndex, item) {
                 deptData[item] = { ...q, id: q.id, sectionName: item, code: q.policyIssuanceCode };
-                if (q.stageDept == item) {
-                    $(`#${PolicyIssuanceIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "block" });
-                    var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control, "pi");
-                    remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
+                if (stageDept === item) {
+                    ensureActiveRemarkEditor();
                 }
                 else {
                     $(`#${PolicyIssuanceIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "none" });
@@ -1567,6 +1631,7 @@ Note:
                 policyAssignmentLifecycle,
                 firstRender ? FormStageDelay.assignment : FormStageDelay.reloadAssignment
             );
+            ensureActiveRemarkEditor();
             scrollToDept(formModuleKeyPi, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
             // TinyMCEElementMaker(`.htmleditor`);
 

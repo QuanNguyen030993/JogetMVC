@@ -1888,13 +1888,35 @@
                     item.editorType = "dxHtmlEditor";
                     item.instanceProps = new Object();
                     item.instanceProps.refKey = id;
-                    const remarkBoxId = moduleKey === "pi"
-                        ? window.PolicyIssuanceIdManager.remarkBox(dept, id)
-                        : window.QuotationIdManager.remarkBox(dept, id);
-                    var itemElement = $(`#${remarkBoxId}`);
-                    var $element = itemElement;
+                    const idManager = moduleKey === "pi"
+                        ? window.PolicyIssuanceIdManager
+                        : window.QuotationIdManager;
+                    const remarkBoxId = idManager.remarkBox(dept, id);
+                    const actionBarId = idManager.actionBarDept(dept, id);
+                    const actionBar = document.getElementById(actionBarId);
+                    const remarkElement = document.getElementById(remarkBoxId)
+                        || actionBar?.querySelector(".htmleditor");
+                    var $element = remarkElement ? $(remarkElement) : $();
+                    if (!$element.length) {
+                        console.warn("Remark editor container was not found.", {
+                            moduleKey: moduleKey,
+                            dept: dept,
+                            id: id,
+                            remarkBoxId: remarkBoxId
+                        });
+                        return null;
+                    }
+                    if (typeof $element.htmleditor !== "function") {
+                        console.error("The htmleditor plugin is not available.");
+                        return null;
+                    }
+
+                    const existingControl = $element.data("workflowRemarkControl");
+                    if (existingControl && $element.children().length) {
+                        return existingControl;
+                    }
+
                     if ($element.length > 0) {
-                        $element.empty();
                         item.control = $element.htmleditor(
                                     {
 
@@ -1910,12 +1932,13 @@
 
                                     }
                                 );
+                        $element.data("workflowRemarkControl", item.control);
                         // createEditor(item, itemElement, $("<div>"), item);
 
                     }
                      return item.control;
-                }catch {
-                    console.log("Remark box problem");
+                }catch (error) {
+                    console.error("Remark box problem", error);
                     return  null;
                 }
 
@@ -3133,7 +3156,11 @@
                 : FormStageDelay.departmentOrder.policyIssuance;
             const idManager = isQuotation ? window.QuotationIdManager : window.PolicyIssuanceIdManager;
             const schemeName = isQuotation ? "Quotation" : "PolicyIssuance";
+            const workflowPage = isQuotation ? window.QuotationPage : window.PolicyIssuancePage;
             const sourceData = data || {};
+            const getActiveStage = function () {
+                return String(workflowPage?.state?.stageDept || "").trim().toUpperCase();
+            };
 
             renderState.isAssigneeBoxRender = false;
             await new Promise(resolve => setTimeout(resolve, Math.max(0, Number(delay) || 0)));
@@ -3145,8 +3172,11 @@
                 const currentPic = getDefaultPicByDept(dept, dataForm);
                 const $section = $(`#${moduleKey}-sec_${dept}_${dataForm.id}`);
                 $section
-                    .find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer")
+                    .find(".dept-upperbody, .dept-body, .dept-lowerbody")
                     .toggle(!!currentPic);
+                $section
+                    .find(".dept-footer")
+                    .toggle(!!currentPic || getActiveStage() === dept);
 
                 await renderDepartmentAssigneeBox(`#${idManager.assigneeBox(dept, dataForm.id)}`, {
                     groupName: dept,
@@ -3169,8 +3199,11 @@
                             .map(item => item?.accountName || item?.emailName)
                             .filter(Boolean);
                         $section
-                            .find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer")
+                            .find(".dept-upperbody, .dept-body, .dept-lowerbody")
                             .toggle(accounts.length > 0);
+                        $section
+                            .find(".dept-footer")
+                            .toggle(accounts.length > 0 || getActiveStage() === dept);
 
                         // Giu nguyen full selection. Loai currentPic tai day se lam PIC cu
                         // bi mat chi vi user mo roi dong dropdown ma khong sua gi.
@@ -3355,30 +3388,71 @@
                         options: {
                             type: "default",
                             text: "Assign to me",
+                            elementAttr: {
+                                class: "workflow-primary-button assign-to-me-button"
+                            },
                             onClick: function () {
                                 $.ajax({
                                     url: "api/Employee/GetMyAssigneeProfile",
                                     type: "GET",
                                     dataType: "json"
-                                }).done(function (res) {
-                                    if (!res || !res.success || !res.data) return;
+                                }).done(async function (res) {
+                                    if (!res || !res.success || !res.data?.accountName) {
+                                        DevExpress.ui.notify("Your assignee profile is not available.", "warning", 2500);
+                                        return;
+                                    }
+
                                     const me = res.data;
                                     const editor = $el.dxTagBox("instance");
-                                    let current = editor.option("value") || [];
-                                    if (!current.includes(me.accountName)) {
-                                        current.push(me.accountName);
+                                    if (!editor) return;
+
+                                    // Get the store currently bound to the editor. This is important
+                                    // when the assignee box has been refreshed with a new data source.
+                                    const currentStore = editor.getDataSource()?.store?.() || resolvedStore;
+                                    try {
+                                        const existingMe = await Promise.resolve(currentStore.byKey(me.accountName))
+                                            .catch(() => null);
+                                        if (!existingMe) {
+                                            await Promise.resolve(currentStore.insert(me));
+                                        }
+                                    } catch (error) {
+                                        console.warn("Current user could not be added to the assignee list.", error);
                                     }
+
+                                    const current = Array.isArray(editor.option("value"))
+                                        ? editor.option("value").slice()
+                                        : [];
+                                    if (!current.includes(me.accountName)) current.push(me.accountName);
+
+                                    const selectedItems = Array.isArray(editor.option("selectedItems"))
+                                        ? editor.option("selectedItems").slice()
+                                        : [];
+                                    const selectedByAccount = new Map(
+                                        selectedItems
+                                            .filter(item => item?.accountName)
+                                            .map(item => [item.accountName, item])
+                                    );
+                                    selectedByAccount.set(me.accountName, me);
+                                    const mergedSelectedItems = current
+                                        .map(accountName => selectedByAccount.get(accountName)
+                                            || employees.find(item => item?.accountName === accountName)
+                                            || { accountName: accountName, fullName: accountName });
+
                                     editor.option("value", current);
+                                    editor.getDataSource()?.reload?.();
 
                                     if (typeof settings.onChanged === "function") {
-                                        settings.onChanged([me], editor, true);
+                                        settings.onChanged(mergedSelectedItems, editor, true);
                                     }
                                     if (typeof settings.onClosed === "function") {
-                                        settings.onClosed([me], editor, true);
+                                        settings.onClosed(mergedSelectedItems, editor, true);
                                     }
                                     if (typeof settings.onValueChanged === "function") {
-                                        settings.onValueChanged([me], editor, true);
+                                        settings.onValueChanged(mergedSelectedItems, editor, true);
                                     }
+                                }).fail(function (xhr) {
+                                    console.error("GetMyAssigneeProfile failed.", xhr);
+                                    DevExpress.ui.notify("Unable to assign the task to you.", "error", 2500);
                                 });
                             }
                         }
@@ -3564,8 +3638,7 @@
                     sendData.ActionStatus = formItems.actionStatus;
                 }
                 //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
-                    var condition = safeJsonParse(findRoute.data);
-                    if (condition){
+                    var condition = safeJsonParse(findRoute.data) || {};
                 if (condition.source == "form") {
                         // const uploader1 = $(`[id^='attList_qt-body_FO_RES_default_${formItems.id}_'] .att-item.animate-step.visible`);
                         // const fileCount1 = uploader1.length || 0; // number of quote docs
@@ -3584,7 +3657,7 @@
                         formItems.id,
                         `Submitting to ${findRoute.toNodeId}…`
                     );
-
+                    debugger
                             return ajaxPost(`/api/InstanceWorkflow/${flowName}SubmitNextStep`, sendData, {processData: true,
                         onSuccess: function (response) {
                             appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
@@ -3605,7 +3678,6 @@
                 else {
                     DevExpress.ui.notify(condition.message, condition.validateType);
                 }
-                }
 
             }
                 function returnToStep(moduleName, _nextStep, findRoute, formItems) {
@@ -3625,8 +3697,7 @@
                 }
 
                 //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
-                var condition = safeJsonParse(findRoute.data);
-                if (condition){
+                var condition = safeJsonParse(findRoute.data) || {};
                 // if (condition.source == "form") {
                 //     formItems = window.QuotationPage.state.formFO.dxForm("instance").option("formData");
                 //     formItems.hasResAttachment = window.QuotationPage.state.hasResAttachment;
@@ -3659,7 +3730,6 @@
                 }
                 else {
                     DevExpress.ui.notify(condition.message, condition.validateType);
-                }
                 }
 
 
