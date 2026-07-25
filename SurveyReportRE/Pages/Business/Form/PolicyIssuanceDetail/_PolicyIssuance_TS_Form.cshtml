@@ -21,6 +21,8 @@
     thisObject.formId = `@PIViewIdHelper.Form(dept, policyIssuanceId)`;
     thisObject.dept = `@dept`;
     thisObject.prefix = `@prefix`;
+    thisObject.schemeName = "PolicyIssuance";
+    thisObject.decisionColSpan = 2;
     var thisObjectDetails = new Object();
     thisObjectDetails.ModelName =  "PolicyIssuanceDetails";
     thisObjectDetails.refField =  "PolicyIssuanceId";
@@ -196,12 +198,26 @@
      ]}]
      ;
    
-     var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
-         var acceptStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
-     var declinedButtonId = `DC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
-         var declinedStatusId = `DC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
-                     var items = [ `#${acceptButtonId}`, `#${declinedButtonId}`];
-                                 var itemsDelay = [ acceptButtonId , acceptStatusId, declinedButtonId, declinedStatusId,'', ''];
+    var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+    var acceptStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+    // Keep the Policy Issuance TS decision on the same V2 lifecycle as
+    // Quotation TS so the deferred renderer wires AcceptTask correctly.
+    var acceptDecisionV2 = {
+        buttonId: acceptButtonId,
+        statusId: acceptStatusId,
+        text: "Accept",
+        icon: "check",
+        type: "success",
+        buttonClass: "dx-button-success",
+        disabled: true,
+        useDefaultDecisionClick: true,
+        acceptStatusField: "actionStatus",
+        useTatAcceptStatus: true,
+        tatStatusText: "Accepted",
+        skipAcceptedMainFields: false,
+        statusButtonDisabled: true
+    };
+    var itemsDelay = [acceptDecisionV2];
 
     $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm({
         dataSource: makeBasicDataSource(thisObject, true),
@@ -219,7 +235,7 @@
                   caption: "@dept Decision",
                   colCount: 2,
                   items: [
-            decisionField(`@PIViewIdHelper.Form(dept, policyIssuanceId)`, "@dept",`AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,`Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,null,null  )
+            workflowDecisionField(thisObject, ...itemsDelay)
         ]}
 
        

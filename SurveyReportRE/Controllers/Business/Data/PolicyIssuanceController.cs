@@ -53,6 +53,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IBaseRepository<Document> _documentRepository;
     private readonly IBaseRepository<PolicyIssuanceDetails> _policyIssuanceDetailsRepository;
     private readonly IBaseRepository<PolicyIssuanceChecklist> _policyIssuanceChecklistRepository;
+    private readonly IBaseRepository<SignedBackPolicyIssuance> _signedBackPolicyIssuanceRepository;
     private readonly IBaseRepository<ChecklistDefinition> _checklistDefinitionRepository;
     private readonly IBaseRepository<Quotation> _quotationRepository;
     private readonly IBaseRepository<MailTemplate> _mailTemplateRepository;
@@ -105,6 +106,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _policyIssuanceDetailsRepository = new BaseRepository<PolicyIssuanceDetails>(configuration, _httpContextAccessor);
         _policyIssuanceChecklistRepository = new BaseRepository<PolicyIssuanceChecklist>(configuration, _httpContextAccessor);
+        _signedBackPolicyIssuanceRepository = new BaseRepository<SignedBackPolicyIssuance>(configuration, _httpContextAccessor);
         _checklistDefinitionRepository = new BaseRepository<ChecklistDefinition>(configuration, _httpContextAccessor);
         _quotationRepository = new BaseRepository<Quotation>(configuration, _httpContextAccessor);
         _mailTemplateRepository = new BaseRepository<MailTemplate>(configuration, _httpContextAccessor);
@@ -164,6 +166,29 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         return Ok(policyIssuances
             .Where(item => item.ModifiedDate.HasValue && item.ModifiedDate.Value.Date <= reminderDate)
             .OrderBy(item => item.ModifiedDate)
+            .ToList());
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<PolicyIssuance>>> SignedBackList()
+    {
+        var signedBackRows = await _signedBackPolicyIssuanceRepository.GetListObject(
+            item => !item.Deleted);
+        var policyIssuanceIds = signedBackRows
+            .Select(item => item.PolicyIssuanceId)
+            .ToHashSet();
+        var policyIssuances = await _BaseRepository.GetAll();
+
+        var earliestReminderByPolicy = signedBackRows
+            .GroupBy(item => item.PolicyIssuanceId)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Min(item => item.ReminderDate));
+
+        return Ok(policyIssuances
+            .Where(item => !item.Deleted && policyIssuanceIds.Contains(item.Id))
+            .OrderBy(item => earliestReminderByPolicy[item.Id])
+            .ThenBy(item => item.Id)
             .ToList());
     }
 

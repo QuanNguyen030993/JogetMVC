@@ -1547,6 +1547,7 @@ Note:
         async function renderDetail() {
             var q = getSelectedModel();
             if (!q) return;
+            window.updateOverviewMaintenanceInfo?.(formModuleKeyQt, @ViewData["Id"], q);
 
             await quotationFormStages.enter("shell");
 

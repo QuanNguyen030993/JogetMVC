@@ -5,21 +5,29 @@
 }
 
 <style>
-    #piReminderButton_@policyIssuanceId {
+    #piReminderButton_@(policyIssuanceId) {
         display: inline-flex;
         align-items: center;
         flex: 0 0 auto;
     }
 
-    #piReminderButton_@policyIssuanceId .dx-button {
+    #piReminderButton_@(policyIssuanceId).dx-button {
         min-width: 34px;
         width: 34px;
         height: 34px;
         border-radius: 6px;
     }
 
-    #piReminderButton_@policyIssuanceId .dx-button-content {
+    #piReminderButton_@(policyIssuanceId).dx-button .dx-button-content {
         padding: 7px;
+    }
+
+    #piTsHeaderActions_@(policyIssuanceId) {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex: 0 0 auto;
+        min-height: 34px;
     }
 </style>
 
@@ -28,9 +36,11 @@
     <div class="dept-form-header__assign">
         <div id="@PIViewIdHelper.AssigneeBox(dept, policyIssuanceId)"></div>
     </div>
-    <div id="piReminderButton_@policyIssuanceId"></div>
-    @* <div id="@PIViewIdHelper.BtnToggleResForm(dept, policyIssuanceId)"></div> *@
 </div>
+    <div id="piTsHeaderActions_@(policyIssuanceId)" class="dept-form-header__actions">
+        <div id="piReminderButton_@(policyIssuanceId)" class="ts-reminder-button-host"></div>
+        @* Additional TS header buttons can be mounted here. *@
+    </div>
 <div id="pi-stickPanel_@dept">
 </div>
 <div class="dept-hint-wrap">

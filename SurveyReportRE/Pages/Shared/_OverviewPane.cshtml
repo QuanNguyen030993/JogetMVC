@@ -109,6 +109,9 @@
         const panelId =
             "@Id("adminInfoPanel")";
 
+        // The panel lives under body, outside the overview root. Remove a panel
+        // left by an earlier render of the same record before creating a new one.
+        $(document.getElementById(panelId)).remove();
 
         // tạo panel bằng JS
         const panel = $(`
@@ -201,6 +204,45 @@
             });
         }
 
+        function renderMaintenanceInfo(formData) {
+            formData = formData || {};
+            renderMaintenanceMap(
+                panel.find("[data-maintenance-pic]"),
+                formData.pIC ?? formData.pic ?? formData.PIC
+            );
+            renderMaintenanceMap(
+                panel.find("[data-maintenance-tat]"),
+                formData.turnAroundTimeAttributes
+                    ?? formData.turnaroundTimeAttributes
+                    ?? formData.TurnAroundTimeAttributes
+            );
+        }
+
+        function reloadMaintenanceInfo() {
+            const controller = "@moduleCode" === "pi" ? "PolicyIssuance" : "Quotation";
+            panel.find(".maintenance-value-list")
+                .empty()
+                .append($("<span>", { class: "maintenance-empty", text: "Loading..." }));
+
+            return $.ajax({
+                url: `/api/${controller}/GetAll`,
+                method: "GET",
+                data: {
+                    key: "@Model.Id",
+                    _: Date.now()
+                },
+                cache: false
+            }).then(function (response) {
+                const formData = Array.isArray(response) ? response[0] : response;
+                renderMaintenanceInfo(formData || {});
+                return formData;
+            }).catch(function (error) {
+                renderMaintenanceInfo({});
+                console.warn("Maintenance info could not be reloaded.", error);
+                return null;
+            });
+        }
+
         window.updateOverviewMaintenanceInfo = function (targetModuleCode, recordId, formData) {
             const targetPanelId = `${String(targetModuleCode || "").trim().toLowerCase()}-adminInfoPanel_${recordId}`;
             const $targetPanel = $(document.getElementById(targetPanelId));
@@ -213,7 +255,9 @@
             );
             renderMaintenanceMap(
                 $targetPanel.find("[data-maintenance-tat]"),
-                formData.turnAroundTimeAttributes ?? formData.TurnAroundTimeAttributes
+                formData.turnAroundTimeAttributes
+                    ?? formData.turnaroundTimeAttributes
+                    ?? formData.TurnAroundTimeAttributes
             );
         };
 
@@ -223,7 +267,11 @@
 
             e.stopPropagation();
 
-            panel.toggleClass("show");
+            const willShow = !panel.hasClass("show");
+            panel.toggleClass("show", willShow);
+            if (willShow) {
+                reloadMaintenanceInfo();
+            }
 
         });
 

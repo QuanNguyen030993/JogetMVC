@@ -18,57 +18,18 @@
 
 <script>
      var dept = "@dept";
-
-     function getTsReminderData_@(policyIssuanceId)() {
-         var formData = $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm("instance")?.option("formData") || {};
-         var attributes = {};
-
-         try {
-             attributes = JSON.parse(formData.attributes || formData.Attributes || "{}");
-         } catch (e) {
-             attributes = {};
-         }
-
-         return (attributes.tsReminderSchedules || []).map(function (item, index) {
-             var reminderDate = item.reminderDate ? new Date(item.reminderDate) : null;
-             return {
-                 id: item.id || (Date.now() + index),
-                 reminderCount: item.reminderCount,
-                 reminderDate: reminderDate && !isNaN(reminderDate.getTime()) ? reminderDate : null,
-                 content: item.content || ""
-             };
-         });
-     }
-
-     function applyTsReminderData_@(policyIssuanceId)(items) {
-         var form = $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm("instance");
-         var formData = form?.option("formData") || {};
-         var attributes = {};
-
-         try {
-             attributes = JSON.parse(formData.attributes || formData.Attributes || "{}");
-         } catch (e) {
-             attributes = {};
-         }
-
-         attributes.tsReminderSchedules = items.map(function (item) {
-             return {
-                 id: item.id,
-                 reminderCount: item.reminderCount,
-                 reminderDate: item.reminderDate,
-                 content: item.content
-             };
-         });
-
-         var serializedAttributes = JSON.stringify(attributes);
-         formData.attributes = serializedAttributes;
-         formData.Attributes = serializedAttributes;
-         form?.option("formData", formData);
-     }
+     var signedBackPolicyIssuanceSource_@(policyIssuanceId) = {
+         ModelName: "SignedBackPolicyIssuance",
+         refField: "PolicyIssuanceId",
+         refKey: @policyIssuanceId
+     };
 
      function renderTsReminderGrid_@(policyIssuanceId)() {
          return $("<div id='piReminderGrid_@policyIssuanceId'>").dxDataGrid({
-             dataSource: getTsReminderData_@(policyIssuanceId)(),
+             dataSource: makeBasicDataSource(
+                 signedBackPolicyIssuanceSource_@(policyIssuanceId),
+                 false
+             ),
              keyExpr: "id",
              height: "100%",
              showBorders: true,
@@ -78,22 +39,26 @@
              noDataText: "No reminders have been added",
              paging: { enabled: false },
              editing: {
-                 mode: "row",
+                 mode: "batch",
                  allowAdding: true,
                  allowUpdating: true,
                  allowDeleting: true,
                  useIcons: true,
+                 selectTextOnEditStart: true,
+                 startEditAction: "click",
                  newRowPosition: "last"
              },
              onInitNewRow: function (e) {
-                 var rows = e.component.getDataSource().items();
+                 var rows = e.component.getVisibleRows()
+                     .filter(function (row) { return row.rowType === "data"; })
+                     .map(function (row) { return row.data; });
                  var maxCount = rows.reduce(function (max, row) {
                      return Math.max(max, Number(row.reminderCount) || 0);
                  }, 0);
-                 e.data.id = Date.now();
+                 e.data.policyIssuanceId = @policyIssuanceId;
                  e.data.reminderCount = maxCount + 1;
                  e.data.reminderDate = new Date();
-                 e.data.content = "";
+                 e.data.note = "";
              },
              toolbar: {
                  items: [{
@@ -104,11 +69,21 @@
              },
              columns: [{
                  dataField: "reminderCount",
-                 caption: "Reminder no.",
+                 caption: "No.",
                  dataType: "number",
-                 width: 130,
-                 editorOptions: { min: 1, showSpinButtons: true },
-                 validationRules: [{ type: "required" }, { type: "range", min: 1 }]
+                 width: 100,
+                 editorOptions: { min: 1, step: 1, showSpinButtons: true },
+                 validationRules: [
+                     { type: "required" },
+                     { type: "range", min: 1 },
+                     {
+                         type: "custom",
+                         message: "No. must be an integer",
+                         validationCallback: function (args) {
+                             return Number.isInteger(Number(args.value));
+                         }
+                     }
+                 ]
              }, {
                  dataField: "reminderDate",
                  caption: "Reminder date",
@@ -118,53 +93,54 @@
                  editorOptions: { displayFormat: "dd/MM/yyyy", useMaskBehavior: true },
                  validationRules: [{ type: "required" }]
              }, {
-                 dataField: "content",
-                 caption: "Reminder content",
+                 dataField: "note",
+                 caption: "Note",
                  minWidth: 320,
-                 editorType: "dxTextArea",
-                 editorOptions: { minHeight: 70, autoResizeEnabled: true },
-                 validationRules: [{ type: "required", trim: true }]
+                 editorType: "dxTextBox",
+                 editorOptions: { maxLength: 4000 },
+                 validationRules: [
+                     { type: "required", trim: true },
+                     { type: "stringLength", max: 4000 }
+                 ]
              }, {
                  type: "buttons",
-                 width: 90,
-                 buttons: ["edit", "delete"]
+                 width: 60,
+                 buttons: ["delete"]
              }]
          });
      }
 
-     $("#piReminderButton_@policyIssuanceId").dxButton({
-         icon: "clock",
-         hint: "Reminder schedule",
-         stylingMode: "outlined",
-         type: "normal",
-         elementAttr: {
-             "aria-label": "Open reminder schedule"
-         },
-         onClick: function () {
-             var popupInstance = makePopupWithScroll(
-                 renderTsReminderGrid_@(policyIssuanceId)(),
-                 "medium",
-                 "Reminder schedule"
-             );
+    $("#piReminderButton_@policyIssuanceId").dxButton({
+        icon: "clock",
+        hint: "Reminder schedule",
+        stylingMode: "outlined",
+        type: "normal",
+        elementAttr: {
+            "aria-label": "Open reminder schedule"
+        },
+        onClick: function () {
+            var popupInstance = makePopupWithScroll(
+                renderTsReminderGrid_@(policyIssuanceId)(),
+                "medium",
+                "Reminder schedule"
+            );
 
-             popupInstance.option("toolbarItems[0].options", {
-                 stylingMode: "contained",
-                 type: "default",
-                 text: "Apply",
-                 onClick: function () {
-                     var grid = $("#piReminderGrid_@policyIssuanceId").dxDataGrid("instance");
-                     grid.saveEditData().then(function () {
-                         if (grid.hasEditData()) return;
-                         applyTsReminderData_@(policyIssuanceId)(grid.getDataSource().items());
-                         popupInstance.hide();
-                         DevExpress.ui.notify("Reminder schedule updated. Click Save to persist changes.", "success", 2200);
-                     });
-                 }
-             });
-             popupInstance.show();
-         }
-     });
-
+            popupInstance.option("toolbarItems[0].options", {
+                stylingMode: "contained",
+                type: "default",
+                text: "Apply",
+                onClick: function () {
+                    var grid = $("#piReminderGrid_@policyIssuanceId").dxDataGrid("instance");
+                    grid.saveEditData().then(function () {
+                        if (grid.hasEditData()) return;
+                        popupInstance.hide();
+                        DevExpress.ui.notify("Reminder schedule saved.", "success", 1800);
+                    });
+                }
+            });
+            popupInstance.show();
+        }
+    });
        //       var pageLayout = window.PolicyIssuancePage;
        // var stateLayout = pageLayout.state;
     $("#@PIViewIdHelper.BtnSave(dept, policyIssuanceId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:

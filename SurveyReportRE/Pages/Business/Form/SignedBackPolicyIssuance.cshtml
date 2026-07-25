@@ -1,0 +1,41 @@
+@page
+@model SignedBackPolicyIssuanceModel
+@{
+}
+<script>
+    $(function () {
+        const gridParams = {
+            isAllowRowMenu: false,
+            gridEditorOptions: {
+                editing: { allowUpdating: false, allowAdding: false, allowDeleting: false },
+                filterRow: {
+                    visible: true,
+                    applyFilter: "auto"
+                },
+                headerFilter: {
+                    visible: true,
+                    allowSearch: true
+                },
+                searchPanel: {
+                    visible: true,
+                    width: 280,
+                    placeholder: "Search signed-back PolicyIssuance..."
+                },
+                noDataText: "No PolicyIssuance has signed-back reminder data"
+            }
+        };
+        const gridOption = new PolicyIssuanceGridOption(
+            "@SignedBackPolicyIssuanceModel.ModelName",
+            "User",
+            gridParams
+        );
+        gridOption.overrideGetUrl = "/api/PolicyIssuance/SignedBackList";
+        new MGrid(
+            null,
+            $("#dataGrid_@SignedBackPolicyIssuanceModel.PageName"),
+            gridOption,
+            null
+        );
+    });
+</script>
+<div id="dataGrid_@SignedBackPolicyIssuanceModel.PageName"></div>

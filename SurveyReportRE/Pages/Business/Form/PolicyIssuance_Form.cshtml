@@ -665,21 +665,21 @@ Note:
                                             $(this).remove();
                                         });
 
-                                        const $uwRouteSlot = ensureCustomRouteHost({ fromNodeId: "UW" });
-                                        const hasUwCustomRoute = customRoutes.some(function (route) {
-                                            return isSimilarRouteGroup(getRouteGroupKeys(route), "UW");
-                                        });
-                                        if ($uwRouteSlot.length) {
-                                            $uwRouteSlot
-                                                .removeClass("is-route-pending")
-                                                .toggleClass("has-flow-route", hasUwCustomRoute)
-                                                .toggleClass("is-fallback-ready", !hasUwCustomRoute)
-                                                .attr("data-has-flow-route", hasUwCustomRoute ? "true" : "false");
-                                            const fallbackInstance = $uwRouteSlot.find("[data-uw-route-fallback]").dxButton("instance");
-                                            if (fallbackInstance && !hasUwCustomRoute) {
-                                                fallbackInstance.option("disabled", stageDept !== "UW" || !!tatObject?.UW?.AcceptDate);
-                                            }
-                                        }
+                                        // const $uwRouteSlot = ensureCustomRouteHost({ fromNodeId: "UW" });
+                                        // const hasUwCustomRoute = customRoutes.some(function (route) {
+                                        //     return isSimilarRouteGroup(getRouteGroupKeys(route), "UW");
+                                        // });
+                                        // if ($uwRouteSlot.length) {
+                                        //     $uwRouteSlot
+                                        //         .removeClass("is-route-pending")
+                                        //         .toggleClass("has-flow-route", hasUwCustomRoute)
+                                        //         .toggleClass("is-fallback-ready", !hasUwCustomRoute)
+                                        //         .attr("data-has-flow-route", hasUwCustomRoute ? "true" : "false");
+                                        //     const fallbackInstance = $uwRouteSlot.find("[data-uw-route-fallback]").dxButton("instance");
+                                        //     if (fallbackInstance && !hasUwCustomRoute) {
+                                        //         fallbackInstance.option("disabled", stageDept !== "UW" || !!tatObject?.UW?.AcceptDate);
+                                        //     }
+                                        // }
                                         for (const [routeIndex, route] of customRoutes.entries()) {
                                             await policyIssuanceFormStages.pace(routeIndex);
                                             const $routeHost = ensureCustomRouteHost(route);
