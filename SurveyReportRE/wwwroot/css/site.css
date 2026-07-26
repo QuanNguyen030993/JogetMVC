@@ -1,5 +1,7 @@
 .dExForm {
-    padding: 10px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 8px;
     margin-right: var(--collapsed-form-mr);
 }
 
@@ -16,8 +18,9 @@
 
 .dExFormToolBar {
     width: 100%;
-    padding: 8px 12px;
-    margin-bottom: 12px;
+    box-sizing: border-box;
+    padding: 6px 10px;
+    margin-bottom: 8px;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,.08);
@@ -27,7 +30,7 @@
 
 .dExToolbar
 .dx-toolbar-items-container {
-    min-height: 42px;
+    min-height: 38px;
 }
 
 
@@ -1103,6 +1106,7 @@ aside {
 .btn:nth-child(2) { animation-delay: 0.3s; }
 .btn:nth-child(3) { animation-delay: 0.4s; }
 .btn:nth-child(4) { animation-delay: 0.5s; }
+.toolbar {
     display: flex;
     gap: 10px;
     align-items: center;
@@ -1390,7 +1394,7 @@ aside {
     position: relative;
     height: calc(100vh - 140px);
     overflow: auto;
-    padding: 14px 78px 18px 14px;
+    padding: 0 66px 12px 10px;
     scroll-behavior: smooth;
 }
 
@@ -1398,8 +1402,8 @@ aside {
     background: #fff;
     border: 1px solid rgba(226, 232, 240, 0.8);
     border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 24px;
+    padding: 16px;
+    margin-bottom: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     border-left: 6px solid #cbd5e1;
@@ -1424,7 +1428,7 @@ aside {
 }
 .dept-body {
     min-height: 200px;
-    padding: 10px;
+    padding: 6px;
 }
 
 .dept-section-content {
@@ -3283,8 +3287,8 @@ text-overflow: ellipsis;
 
 .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
     width: auto;
-    padding-left: 18px;
-    padding-right: 18px;
+    padding-left: 12px;
+    padding-right: 12px;
 }
 
 .actionBar {
@@ -4685,7 +4689,7 @@ body .dx-datagrid {
 }
 
 body .dx-datagrid .dx-datagrid-header-panel {
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-bottom: 1px solid var(--dx-grid-border);
     background: var(--dx-grid-surface);
 }
@@ -4730,8 +4734,8 @@ body .dx-datagrid .dx-datagrid-headers {
 }
 
 body .dx-datagrid .dx-header-row > td {
-    padding-top: 11px;
-    padding-bottom: 11px;
+    padding-top: 8px;
+    padding-bottom: 8px;
     border-color: var(--dx-grid-border);
     background: transparent !important;
     color: var(--dx-grid-header-text) !important;
@@ -4793,8 +4797,8 @@ body .dx-datagrid .dx-datagrid-rowsview {
 }
 
 body .dx-datagrid .dx-data-row > td {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 7px;
+    padding-bottom: 7px;
     border-color: var(--dx-grid-border-soft);
     color: var(--dx-grid-text);
     vertical-align: middle;
@@ -4831,7 +4835,7 @@ body .dx-datagrid .dx-group-row > td {
 }
 
 body .dx-datagrid .dx-master-detail-row > td {
-    padding: 14px;
+    padding: 10px;
     background: #f8fafc;
 }
 
@@ -4881,7 +4885,7 @@ body .dx-datagrid .dx-datagrid-summary-item {
 }
 
 body .dx-datagrid .dx-datagrid-pager {
-    padding: 10px 12px;
+    padding: 7px 10px;
     border-top: 1px solid var(--dx-grid-border);
     background: #fff;
     color: var(--dx-grid-muted);
@@ -5761,13 +5765,13 @@ textarea {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 12px 20px !important;
+    gap: 12px;
+    padding: 9px 14px !important;
     background: #f8fafc !important;
     border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
     border-top-left-radius: 16px !important;
     border-top-right-radius: 16px !important;
-    margin: -24px -24px 20px -24px !important;
+    margin: -16px -16px 12px -16px !important;
 }
 
 /* Override title in header */
@@ -5849,8 +5853,8 @@ textarea {
     background: #f8fafc !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 12px !important;
-    padding: 18px !important;
-    margin-bottom: 20px !important;
+    padding: 12px !important;
+    margin-bottom: 12px !important;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
 }
 
@@ -5858,8 +5862,8 @@ textarea {
     font-size: 13px !important;
     font-weight: 700 !important;
     color: #2563eb !important;
-    padding-bottom: 8px !important;
-    margin-bottom: 14px !important;
+    padding-bottom: 6px !important;
+    margin-bottom: 10px !important;
     border-bottom: 1px solid #e2e8f0 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
@@ -5934,15 +5938,15 @@ textarea {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 18px;
-    margin-bottom: 20px;
+    padding: 12px;
+    margin-bottom: 12px;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, .05), 0 1px 2px -1px rgba(0, 0, 0, .05);
 }
 
 .comment-groups-toggle-enabled .comment-group-toggle > .dept-title {
     position: relative;
-    padding: 0 34px 8px 0;
-    margin-bottom: 14px;
+    padding: 0 30px 6px 0;
+    margin-bottom: 10px;
     border-bottom: 1px solid #e2e8f0;
     color: #2563eb;
     font-size: 13px;
@@ -6296,8 +6300,8 @@ textarea {
 .overview-scroll .dept-section > .dept-header.dept-header-floated {
     border: 0 !important;
     border-radius: 10px 10px 0 0 !important;
-    margin-left: -25px !important;
-    margin-right: -25px !important;
+    margin-left: -17px !important;
+    margin-right: -17px !important;
     background: #fff !important;
     box-shadow:
         inset 0 3px 0 #60a5fa,
@@ -6368,5 +6372,95 @@ textarea {
     .main-sidebar > .sidebar {
         height: calc(100vh - 100px) !important;
         max-height: calc(100vh - 100px);
+    }
+}
+
+/* ========================================================================== */
+/* Shared form density
+   Keep complete forms visible at 100% browser zoom without shrinking text or
+   controls. These rules only remove decorative whitespace from app forms.
+   ========================================================================== */
+.dExForm .dx-layout-manager .dx-field-item:not(.dx-first-row),
+.dept-body .dx-layout-manager .dx-field-item:not(.dx-first-row),
+.dept-upperbody .dx-layout-manager .dx-field-item:not(.dx-first-row) {
+    padding-top: 7px;
+}
+
+.dExForm .dx-layout-manager .dx-field-item:not(.dx-first-col),
+.dept-body .dx-layout-manager .dx-field-item:not(.dx-first-col),
+.dept-upperbody .dx-layout-manager .dx-field-item:not(.dx-first-col) {
+    padding-left: 8px;
+}
+
+.dExForm .dx-layout-manager .dx-field-item:not(.dx-last-col),
+.dept-body .dx-layout-manager .dx-field-item:not(.dx-last-col),
+.dept-upperbody .dx-layout-manager .dx-field-item:not(.dx-last-col) {
+    padding-right: 8px;
+}
+
+.dExForm .dx-form-group-with-caption > .dx-form-group-content,
+.dept-body .dx-form-group-with-caption > .dx-form-group-content,
+.dept-upperbody .dx-form-group-with-caption > .dx-form-group-content {
+    margin-top: 4px;
+    padding-top: 9px;
+    padding-bottom: 10px;
+}
+
+.dExForm .dx-form-group-with-caption .dx-form-group.dx-form-group-with-caption,
+.dept-body .dx-form-group-with-caption .dx-form-group.dx-form-group-with-caption,
+.dept-upperbody .dx-form-group-with-caption .dx-form-group.dx-form-group-with-caption {
+    padding-left: 12px;
+}
+
+.dExForm .dx-layout-manager .dx-tabpanel .dx-multiview-item-content {
+    padding: 10px;
+}
+
+.dExForm .dx-field-item-label-content {
+    padding-bottom: 3px;
+}
+
+@media (max-width: 1366px) {
+    .dExForm {
+        padding: 6px;
+    }
+
+    .contentGrid {
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .overview-scroll {
+        padding-right: 58px;
+        padding-bottom: 8px;
+        padding-left: 8px;
+    }
+
+    .dept-section {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    .dept-section .dept-header {
+        margin: -12px -12px 10px -12px !important;
+    }
+
+    .overview-scroll .dept-section > .dept-header.dept-header-floated {
+        margin-left: -13px !important;
+        margin-right: -13px !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .dExForm .dx-layout-manager .dx-field-item:not(.dx-first-col),
+    .dept-body .dx-layout-manager .dx-field-item:not(.dx-first-col),
+    .dept-upperbody .dx-layout-manager .dx-field-item:not(.dx-first-col) {
+        padding-left: 5px;
+    }
+
+    .dExForm .dx-layout-manager .dx-field-item:not(.dx-last-col),
+    .dept-body .dx-layout-manager .dx-field-item:not(.dx-last-col),
+    .dept-upperbody .dx-layout-manager .dx-field-item:not(.dx-last-col) {
+        padding-right: 5px;
     }
 }

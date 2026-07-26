@@ -34,7 +34,7 @@
     .workload-dashboard-page {
         box-sizing: border-box;
         min-height: 100%;
-        padding: 28px;
+        padding: 16px;
         background:
             radial-gradient(circle at 8% 0%, var(--c-rgba-74-112-255-13), transparent 25rem),
             radial-gradient(circle at 92% 8%, var(--c-rgba-36-193-153-09), transparent 24rem),
@@ -51,9 +51,9 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 24px;
-        margin-bottom: 22px;
-        padding: 28px 30px;
+        gap: 16px;
+        margin-bottom: 14px;
+        padding: 20px 22px;
         overflow: hidden;
         color: var(--c-ffffff);
         border-radius: 20px;
@@ -134,7 +134,7 @@
     }
 
     .workload-dashboard-card {
-        padding: 24px;
+        padding: 16px;
         border: 1px solid var(--c-rgba-221-226-235-82);
         border-radius: 20px;
         background: var(--c-rgba-255-255-255-92);
@@ -160,18 +160,18 @@
 
     @@media (max-width: 767px) {
         .workload-dashboard-page {
-            padding: 14px;
+            padding: 8px;
         }
 
         .workload-dashboard-hero {
             align-items: flex-start;
             flex-direction: column;
-            padding: 22px;
+            padding: 16px;
             border-radius: 16px;
         }
 
         .workload-dashboard-card {
-            padding: 14px;
+            padding: 10px;
             overflow-x: auto;
             border-radius: 16px;
         }
@@ -185,8 +185,8 @@
 <main class="workload-dashboard-page">
     <div class="workload-dashboard-shell">
         <section class="workload-dashboard-card" aria-label="Biểu đồ workload">
-            <div class="workload-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-                <h1 style="margin: 0; font-size: 24px; font-weight: 750; letter-spacing: -.02em;">Workload Dashboard</h1>
+            <div class="workload-card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                <h1 style="margin: 0; font-size: 22px; font-weight: 750; letter-spacing: -.02em;">Workload Dashboard</h1>
                 <div id="workloadDataSourceBadge" class="workload-dashboard-badge is-mock">
                     <span class="workload-dashboard-badge-dot"></span>
                     <span id="workloadDataSourceLabel" class="workload-dashboard-source-label">Mock data</span>
