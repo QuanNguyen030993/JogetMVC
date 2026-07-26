@@ -1792,7 +1792,7 @@
                 const s = String(raw ?? "").trim();
                 const k = s.toLowerCase().replace(/\s+/g, " ");
 
-                if (k === "" || k === "new") return { css: "new", text: raw };
+                if (k === "") return { text: "(All)" };
                 if (k === "pending") return { css: "pending", text: raw };
                 if (k.includes("pending")) return { css: "pending", text: raw };
                 if (k === "in progress") return { css: "in-progress", text: raw };
