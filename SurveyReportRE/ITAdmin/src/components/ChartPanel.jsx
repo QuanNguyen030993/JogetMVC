@@ -135,7 +135,7 @@ const RealtimeApiMonitor = () => {
   }, [chartData]);
 
   return (
-    <div className="chart-card wide realtime-api-monitor">
+    <div className="chart-card">
       <div className="chart-card-header">
         <div className="header-title-area">
           <h3>⚡ Real-time API Traffic & Latency Monitor</h3>

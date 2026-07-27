@@ -1608,6 +1608,7 @@ aside {
 
 .actionRight {
     display: flex;
+    margin-top: 10px;
     align-items: center;
     gap: 10px;
 }
@@ -6297,7 +6298,7 @@ textarea {
     scroll-padding-top: 0;
 }
 
-.overview-scroll .dept-section > .dept-header.dept-header-floated {
+/*.overview-scroll .dept-section > .dept-header.dept-header-floated {
     border: 0 !important;
     border-radius: 10px 10px 0 0 !important;
     margin-left: -17px !important;
@@ -6309,8 +6310,15 @@ textarea {
         inset 3px 0 0 #60a5fa,
         inset -3px 0 0 #60a5fa,
         0 12px 28px rgba(15, 23, 42, .24) !important;
-}
-
+}*/
+    .overview-scroll .dept-section > .dept-header.dept-header-floated {
+        margin-left: -30px !important;
+        width: 103%;
+        margin-top: -18px !important;
+        border-top-left-radius: 0px !important;
+        border-top-right-radius: 0px !important;
+        background: #fff !important;
+    }
 .overview-scroll .dept-section > .dept-header.dept-header-floated .dept-title {
     color: #1d4ed8 !important;
 }
