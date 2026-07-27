@@ -10,9 +10,6 @@
         mGridOption.selection = { mode: "multiple", showCheckBoxesMode: "always" };
         
         var mGrid = new MGrid(null, $(`#dataGrid_@PrepareListModel.ModelName`), new PrepareListGridOption('@PrepareListModel.ModelName', "User", mGridOption), null);
-        // var DS = mGrid.component.getDataSource();
-        // DS.filter(["isArchived", "=", null], "or", ["isArchived", "=", false]);
-        // mGrid.component.option("dataSource", DS);
     });
 </script>
 <div id="dataGrid_@PrepareListModel.ModelName"></div>

@@ -2781,7 +2781,7 @@
                     var isFloated = entry === activeEntry
                         && headerRect.top <= markerY + 1
                         && sectionRect.bottom > containerRect.top + headerRect.height;
-                    $(entry.header).toggleClass("dept-header-floated", isFloated);
+                    // $(entry.header).toggleClass("dept-header-floated", isFloated);
                 });
                 $nodes.removeClass("focus");
                 $(activeEntry.node).addClass("focus");
@@ -2803,7 +2803,7 @@
 
             function requestUpdate() {
                 if (animationFrame) return;
-                animationFrame = window.requestAnimationFrame(updateActiveNode);
+                 animationFrame = window.requestAnimationFrame(updateActiveNode);
             }
 
             function observeRenderedLayout() {
@@ -3657,7 +3657,6 @@
                         formItems.id,
                         `Submitting to ${findRoute.toNodeId}…`
                     );
-                    debugger
                             return ajaxPost(`/api/InstanceWorkflow/${flowName}SubmitNextStep`, sendData, {processData: true,
                         onSuccess: function (response) {
                             appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
@@ -8433,7 +8432,6 @@
                         // }
                       } // if TAT Accept and Button Accept
                       else {
-                          debugger
                           if (params.length > 0)
                           {
 

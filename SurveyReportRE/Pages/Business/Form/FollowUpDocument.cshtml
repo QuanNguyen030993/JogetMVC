@@ -7,11 +7,23 @@
         const gridParams = {
             isAllowRowMenu: false,
             gridEditorOptions: {
-                editing: { allowUpdating: false, allowAdding: false, allowDeleting: false }
+                editing: { allowUpdating: false, allowAdding: false, allowDeleting: false },
+                filterRow: {
+                    visible: true,
+                    applyFilter: "auto"
+                },
+                headerFilter: {
+                    visible: true,
+                    allowSearch: true
+                }
             }
         };
+        const params = new URLSearchParams();
+        params.set("refField", "workflowStatus");
+        params.set("refKey", "Follow up");
         const gridOption = new PolicyIssuanceGridOption("@FollowUpDocumentModel.ModelName", "User", gridParams);
-        gridOption.overrideGetUrl = "/api/PolicyIssuance/FollowUpDocumentList";
+        gridOption.refKey = "Follow up";
+        gridOption.refField = "workflowStatus";
         new MGrid(null, $("#dataGrid_@FollowUpDocumentModel.PageName"), gridOption, null);
     });
 </script>

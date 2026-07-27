@@ -521,7 +521,6 @@ Note:
                   .then(instance => {
                       return ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance?.workflowDefinitionId ?? "00000000-0000-0000-0000-000000000000"}/${instance?.currentStep ?? 0}`, null)
                               .then(data => {
-                                  debugger
                             data = Array.isArray(data) ? data : [];
                             state.nextStep.instanceWorkflow = instance;
                             state.nextStep.flowSteps = data;
@@ -539,6 +538,8 @@ Note:
                                              && String(f?.flowType || "").trim().toLowerCase() !== "custom"
                                              && f.fromNodeId == stageDept
                                              && f.fNodeId == state.nextStep.currentStep);
+
+                                             console.log(findRoutes);
                                         // var findRouteReturn = data.find(f => f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
                                         var findRouteReturns = data.filter(f => f.isReturn
                                             && String(f?.flowType || "").trim().toLowerCase() !== "custom"
@@ -1591,7 +1592,7 @@ Note:
                 }
 
                 $(actionBar).closest(".dept-footer").show();
-                $(actionBar).css("display", "flex");
+                $(actionBar).css("display", "block");
                 const editorControl = TinyMCEElementMaker(
                     ".htmleditor",
                     stageDept,
