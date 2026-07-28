@@ -236,6 +236,19 @@ Note:
      const QtRoles = piDeptModuleCode;
         $(`#${formModuleKeyPi}-loginRoleLabel`).text(state.currentUserRole);
 
+        $(document)
+            .off(`overviewMaintenanceRoleChanged.pi-${policyIssuanceViewInstanceId}`)
+            .on(`overviewMaintenanceRoleChanged.pi-${policyIssuanceViewInstanceId}`, function (_, detail) {
+                if (detail?.moduleCode !== formModuleKeyPi
+                    || String(detail.recordId) !== String(policyIssuanceViewInstanceId)) return;
+
+                state.currentUserRole = detail.role;
+                _role = detail.role;
+                $(`#${formModuleKeyPi}-loginRoleLabel`).text(detail.role);
+                applyEditLock();
+                updateHints();
+            });
+
         var filter = "all";
         var searchText = "";
         var selectedGuid = null;
@@ -1046,9 +1059,11 @@ Note:
            
 
             const $roleSelect = $(`#${window.PolicyIssuanceIdManager.roleSelect(policyIssuanceViewInstanceId)}`);
-            if (String(window._isDebugMode).toLowerCase() === "true" && $roleSelect.length && !$roleSelect.hasClass("dx-selectbox")) {
+            const canSwitchMaintenanceRole = String(window._isDebugMode).toLowerCase() === "true"
+                || String(window._isSuperUser).toLowerCase() === "true";
+            if (canSwitchMaintenanceRole && $roleSelect.length && !$roleSelect.hasClass("dx-selectbox")) {
                 $roleSelect.dxSelectBox({
-                    items: QtRoles,
+                    dataSource: QtRoles,
                     value: state.currentUserRole,
                     stylingMode: "outlined",
                     width: "100%",

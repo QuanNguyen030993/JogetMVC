@@ -522,6 +522,18 @@ Note:
             const QtRoles = qtDeptModuleCode;
             $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
 
+            $(document)
+                .off("overviewMaintenanceRoleChanged.qt-individual")
+                .on("overviewMaintenanceRoleChanged.qt-individual", function (_, detail) {
+                    if (detail?.moduleCode !== formModuleKeyQt || detail?.recordId !== "individual") return;
+
+                    state.currentUserRole = detail.role;
+                    _role = detail.role;
+                    $(`#${formModuleKeyQt}-loginRoleLabel`).text(detail.role);
+                    applyEditLock();
+                    updateHints();
+                });
+
             var filter = "all";
             var searchText = "";
             let selectedId = null;
@@ -885,14 +897,17 @@ Note:
                  }, 1);
 
                 const $roleSelect = $(`#${window.QuotationIdManager.roleSelect("individual")}`);
-                if (String(window._isDebugMode).toLowerCase() === "true" && $roleSelect.length && !$roleSelect.hasClass("dx-selectbox")) {
+                const canSwitchMaintenanceRole = String(window._isDebugMode).toLowerCase() === "true"
+                    || String(window._isSuperUser).toLowerCase() === "true";
+                if (canSwitchMaintenanceRole && $roleSelect.length && !$roleSelect.hasClass("dx-selectbox")) {
                 $roleSelect.dxSelectBox({
-                    items: QtRoles,
+                    dataSource: QtRoles,
                     value: state.currentUserRole,
                     stylingMode: "outlined",
                     width: "100%",
                     onValueChanged: (e) => {
                         state.currentUserRole = e.value;
+                        _role = e.value;
                         $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
                         applyEditLock();
                         updateHints();

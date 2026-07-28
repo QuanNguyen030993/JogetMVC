@@ -1414,7 +1414,7 @@ aside {
    ================================ */
 
 .statusTag {
-    font-size: 11px;
+    font-size: var(--management-font-body, 10px);
     padding: 3px 9px;
     border-radius: 999px;
     font-weight: 500;
@@ -1767,7 +1767,7 @@ aside {
 .workflow-decision-group .decision-status-row .decision-common-status {
     min-height: 22px !important;
     padding: 2px 9px !important;
-    font-size: 11px !important;
+    font-size: var(--management-font-body, 10px) !important;
     box-shadow: none;
     cursor: default;
     user-select: none;
@@ -4845,6 +4845,43 @@ body .dx-datagrid .dx-datagrid-header-panel {
     width: 100%;
 }
 
+.maintenance-role-float {
+    display: none;
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    z-index: 1300;
+    width: min(210px, calc(100vw - 24px));
+    box-sizing: border-box;
+    padding: 7px 8px 8px;
+    border: 1px solid rgba(37, 99, 235, .3);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, .2);
+    backdrop-filter: blur(8px);
+}
+
+.maintenance-role-float.is-visible {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.maintenance-role-float-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    color: #475569;
+    font-size: var(--management-font-small, 10px);
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.maintenance-role-float-label i {
+    color: #2563eb;
+}
+
 .maintenance-role-select .dx-texteditor-container {
     min-height: 28px;
 }
@@ -4852,6 +4889,12 @@ body .dx-datagrid .dx-datagrid-header-panel {
 .maintenance-role-select .dx-texteditor-input {
     min-height: 28px;
     padding: 4px 8px;
+}
+
+/* DevExtreme appends selectbox popups under body. Keep the maintenance role
+   dropdown above its fixed admin panel and the Management top bar. */
+body .dx-overlay-wrapper.maintenance-role-dropdown {
+    z-index: 32010 !important;
 }
 
 body .dx-datagrid .dx-toolbar {
@@ -7367,8 +7410,13 @@ body.skin-re :is(.dExForm, [id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
 
 body.skin-re :is(.dExForm, [id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
     :is(.dx-field-item-label-text, .dx-field-item-optional-mark, .dx-placeholder,
-        .dept-hint, .dept-updated, .statusTag, .overview-status-pill) {
+        .dept-hint, .dept-updated) {
     font-size: var(--management-font-small) !important;
+}
+
+/* Status badges follow the same body type scale as grid and form text. */
+body.skin-re :is(.statusTag, .overview-status-pill, .decision-common-status) {
+    font-size: var(--management-font-body) !important;
 }
 
 body.skin-re :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
@@ -7396,4 +7444,96 @@ body.skin-re .dx-overlay-wrapper :is(.dx-list-item, .dx-menu-item, .dx-popup-con
 
 body.skin-re .dx-overlay-wrapper .dx-popup-title {
     font-size: var(--management-font-title) !important;
+}
+
+/* Compact, consistent typography and spacing for every right-dock payload. */
+body.skin-re #rightCommentList {
+    box-sizing: border-box;
+    padding: 2px !important;
+    color: var(--theme-text);
+    font-size: var(--management-font-body) !important;
+    line-height: 1.35;
+}
+
+body.skin-re #rightCommentList
+    :is(.dx-widget, .dx-texteditor-input, .dx-button-text, .dx-datagrid,
+        .ct-user, .ct-text, .ct-view-more, div, span, a, p, li, td, th,
+        label, input, textarea, select, button) {
+    font-size: var(--management-font-body) !important;
+    line-height: 1.35;
+}
+
+body.skin-re #rightCommentList
+    :is(.ct-time, .dx-field-item-label-text, .dx-field-item-optional-mark,
+        .dx-placeholder, small) {
+    font-size: var(--management-font-small) !important;
+}
+
+body.skin-re #rightCommentList
+    :is(.dx-form-group-caption, .dx-toolbar-label, .dx-toolbar-label > div) {
+    font-size: var(--management-font-title) !important;
+}
+
+body.skin-re #rightCommentList > :not(iframe),
+body.skin-re #rightCommentList > [id^="form_"] {
+    box-sizing: border-box;
+    padding: 4px !important;
+}
+
+body.skin-re #rightCommentList .ct-item {
+    padding: 6px 8px !important;
+    margin: 0 0 6px !important;
+    border-left-width: 2px;
+}
+
+body.skin-re #rightCommentList .ct-text {
+    margin-top: 2px;
+}
+
+body.skin-re #rightCommentList .ct-view-more {
+    margin-top: 4px;
+}
+
+body.skin-re #rightCommentList :is(p, ul, ol) {
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+
+body.skin-re #rightCommentList :is(ul, ol) {
+    padding-left: 16px;
+}
+
+body.skin-re #rightCommentList :is(td, th) {
+    padding: 3px 5px !important;
+}
+
+body.skin-re #rightCommentList .dx-layout-manager .dx-field-item {
+    padding-top: 3px !important;
+    padding-right: 3px !important;
+    padding-bottom: 3px !important;
+    padding-left: 3px !important;
+}
+
+body.skin-re #rightCommentList .dx-form-group-with-caption > .dx-form-group-content {
+    margin-top: 2px;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+}
+
+body.skin-re #rightCommentList .dx-field-item-label-content {
+    padding-bottom: 1px;
+}
+
+body.skin-re #rightCommentList .dx-texteditor-input {
+    min-height: 26px;
+    padding: 3px 6px !important;
+}
+
+body.skin-re #rightCommentList .dx-button-content {
+    min-height: 24px;
+    padding: 3px 7px !important;
+}
+
+body.skin-re #rightCommentList .dx-datagrid :is(.dx-header-row, .dx-data-row) > td {
+    padding: 4px 6px !important;
 }

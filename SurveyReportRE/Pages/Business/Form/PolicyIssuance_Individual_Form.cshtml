@@ -563,6 +563,18 @@ Note:
         // var currentUserRole = _role;
         $("#loginRoleLabel").text(state.currentUserRole);
 
+        $(document)
+            .off("overviewMaintenanceRoleChanged.pi-individual")
+            .on("overviewMaintenanceRoleChanged.pi-individual", function (_, detail) {
+                if (detail?.moduleCode !== formModuleKeyPi || detail?.recordId !== "individual") return;
+
+                state.currentUserRole = detail.role;
+                _role = detail.role;
+                $("#loginRoleLabel").text(detail.role);
+                applyEditLock();
+                updateHints();
+            });
+
         var filter = "all";
         var searchText = "";
         let selectedId = state.quotes[0]?.id;
@@ -664,12 +676,15 @@ Note:
             $(`#${formModuleKeyPi}-formPM`).dxForm("instance")?.option("readOnly", roPM);
 
             const $roleSelect = $(`#${window.PolicyIssuanceIdManager.roleSelect("individual")}`);
-            if (String(window._isDebugMode).toLowerCase() === "true" && $roleSelect.length && !$roleSelect.hasClass("dx-selectbox")) {
+            const canSwitchMaintenanceRole = String(window._isDebugMode).toLowerCase() === "true"
+                || String(window._isSuperUser).toLowerCase() === "true";
+            if (canSwitchMaintenanceRole && $roleSelect.length && !$roleSelect.hasClass("dx-selectbox")) {
             $roleSelect.dxSelectBox({
-          items: Roles, value: state.currentUserRole, stylingMode:"outlined",
+          dataSource: Roles, value: state.currentUserRole, stylingMode:"outlined",
           width: "100%",
           onValueChanged: (e) => {
             state.currentUserRole = e.value;
+            _role = e.value;
             $("#loginRoleLabel").text(state.currentUserRole);
             applyEditLock();
             updateHints();

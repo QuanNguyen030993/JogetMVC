@@ -487,6 +487,126 @@
             return;
         }
     };
+
+    var tabOverflowUpdateFrame = 0;
+
+    function renderTabOverflowMenu() {
+        var $tabs = $("#tablist");
+        var $menu = $("#tabOverflowMenu");
+        if (!$tabs.length || !$menu.length) return;
+
+        $menu.empty();
+        $tabs.children("ul").children("li").each(function (index) {
+            var $tab = $(this);
+            var title = $tab.find("a").first().text().trim() || `Tab ${index + 1}`;
+            var $item = $("<button>", {
+                type: "button",
+                class: "tab-overflow-item",
+                title: title,
+                role: "menuitem",
+                "data-tab-index": index
+            });
+
+            $("<i>", {
+                class: "fa fa-file-o tab-overflow-item-icon",
+                "aria-hidden": "true"
+            }).appendTo($item);
+            $("<span>", {
+                class: "tab-overflow-item-title",
+                text: title
+            }).appendTo($item);
+            $("<i>", {
+                class: "fa fa-check tab-overflow-item-check",
+                "aria-hidden": "true"
+            }).appendTo($item);
+
+            if ($tab.hasClass("ui-tabs-active")) {
+                $item.addClass("is-active").attr("aria-current", "page");
+            }
+            $item.appendTo($menu);
+        });
+    }
+
+    function updateTabOverflow() {
+        tabOverflowUpdateFrame = 0;
+        var $tabList = $("#tablist");
+        var $nav = $tabList.children("ul");
+        var $overflow = $("#tabOverflow");
+        if (!$tabList.length || !$nav.length || !$overflow.length) return;
+
+        var isVisible = !$overflow.prop("hidden");
+        var recoveredWidth = isVisible ? ($overflow.outerWidth(true) || 0) + 4 : 0;
+        var availableWithoutButton = $nav[0].clientWidth + recoveredWidth;
+        var needsOverflow = $nav[0].scrollWidth > availableWithoutButton + 1;
+
+        $overflow.prop("hidden", !needsOverflow);
+        if (!needsOverflow) {
+            $("#tabOverflowMenu").prop("hidden", true);
+            $("#tabOverflowButton").attr("aria-expanded", "false");
+        } else if (!$("#tabOverflowMenu").prop("hidden")) {
+            renderTabOverflowMenu();
+        }
+    }
+
+    function scheduleTabOverflowUpdate() {
+        if (tabOverflowUpdateFrame) cancelAnimationFrame(tabOverflowUpdateFrame);
+        tabOverflowUpdateFrame = requestAnimationFrame(updateTabOverflow);
+    }
+
+    function initTabOverflow() {
+        var $nav = $("#tablist").children("ul");
+        var $button = $("#tabOverflowButton");
+        var $menu = $("#tabOverflowMenu");
+        if (!$nav.length || !$button.length || !$menu.length) return;
+
+        $button.off("click.tabOverflow").on("click.tabOverflow", function (event) {
+            event.stopPropagation();
+            var willOpen = $menu.prop("hidden");
+            if (willOpen) renderTabOverflowMenu();
+            $menu.prop("hidden", !willOpen);
+            $button.attr("aria-expanded", willOpen ? "true" : "false");
+        });
+
+        $menu.off("click.tabOverflow").on("click.tabOverflow", ".tab-overflow-item", function () {
+            var tabIndex = Number($(this).attr("data-tab-index"));
+            if (!Number.isInteger(tabIndex)) return;
+
+            $("#tablist").tabs("option", "active", tabIndex);
+            var tabElement = $nav.children("li").get(tabIndex);
+            tabElement?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+            $menu.prop("hidden", true);
+            $button.attr("aria-expanded", "false");
+        });
+
+        $(document)
+            .off("click.tabOverflow keydown.tabOverflow")
+            .on("click.tabOverflow", function () {
+                $menu.prop("hidden", true);
+                $button.attr("aria-expanded", "false");
+            })
+            .on("keydown.tabOverflow", function (event) {
+                if (event.key !== "Escape") return;
+                $menu.prop("hidden", true);
+                $button.attr("aria-expanded", "false");
+                $button.trigger("focus");
+            });
+
+        new MutationObserver(scheduleTabOverflowUpdate).observe($nav[0], {
+            childList: true,
+            subtree: true,
+            characterData: true,
+            attributes: true,
+            attributeFilter: ["class"]
+        });
+
+        if (window.ResizeObserver) {
+            new ResizeObserver(scheduleTabOverflowUpdate).observe($(".management-topbar")[0]);
+        } else {
+            $(window).off("resize.tabOverflow").on("resize.tabOverflow", scheduleTabOverflowUpdate);
+        }
+
+        scheduleTabOverflowUpdate();
+    }
 </script>
 <link href="~/favicon_new.ico" rel="icon" type="image/x-icon" />
 <script src="~/lib/AdminLTE/adminlte.min.js"></script>
@@ -505,6 +625,19 @@
             <!--Tab list-->
             <div id="tablist" class="ui-tabs-nav">
                 <ul></ul>
+            </div>
+
+            <div id="tabOverflow" class="tab-overflow" hidden>
+                <button id="tabOverflowButton"
+                        class="tab-overflow-button"
+                        type="button"
+                        title="Show open tabs"
+                        aria-label="Show open tabs"
+                        aria-haspopup="menu"
+                        aria-expanded="false">
+                    <i class="fa fa-angle-down" aria-hidden="true"></i>
+                </button>
+                <div id="tabOverflowMenu" class="tab-overflow-menu" role="menu" hidden></div>
             </div>
 
             <!-- Global maintenance status. Per-form debug controls live in each
@@ -670,6 +803,7 @@
 
         // removed this as not need any more => var appLoadingPanel = $("<div>").appendTo($(constNotifyContainer)).dxLoadPanel({ visible: false }).dxLoadPanel("instance");
         initTabs();
+        initTabOverflow();
 
         //Close tab button function
         $("#tablist").on("click", "span.fa.fa-times", function () {
@@ -2951,6 +3085,119 @@
 
     .management-topbar #tablist > ul::-webkit-scrollbar {
         display: none;
+    }
+
+    .management-topbar .tab-overflow {
+        position: relative;
+        height: var(--management-header-height);
+        display: flex;
+        align-items: center;
+        flex: 0 0 auto;
+        z-index: 31000;
+    }
+
+    .management-topbar .tab-overflow[hidden],
+    .management-topbar .tab-overflow-menu[hidden] {
+        display: none !important;
+    }
+
+    .management-topbar .tab-overflow-button {
+        width: var(--management-header-control-height);
+        height: var(--management-header-control-height);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 1px solid var(--theme-border);
+        border-radius: 8px;
+        background: var(--theme-surface);
+        color: var(--theme-text);
+        box-shadow: var(--theme-shadow-sm);
+        cursor: pointer;
+        transition: background .16s ease, border-color .16s ease, color .16s ease;
+    }
+
+    .management-topbar .tab-overflow-button:hover,
+    .management-topbar .tab-overflow-button[aria-expanded="true"] {
+        border-color: var(--theme-border-strong);
+        background: var(--theme-surface-hover);
+        color: var(--theme-primary);
+    }
+
+    .management-topbar .tab-overflow-button .fa {
+        font-size: var(--management-font-title);
+        transition: transform .16s ease;
+    }
+
+    .management-topbar .tab-overflow-button[aria-expanded="true"] .fa {
+        transform: rotate(180deg);
+    }
+
+    .management-topbar .tab-overflow-menu {
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        width: min(290px, calc(100vw - 16px));
+        max-height: min(440px, calc(100vh - var(--management-header-height) - 16px));
+        padding: 4px;
+        overflow-x: hidden;
+        overflow-y: auto;
+        border: 1px solid var(--theme-border);
+        border-radius: 8px;
+        background: var(--theme-surface);
+        box-shadow: 0 14px 36px rgba(15, 23, 42, .22);
+    }
+
+    .management-topbar .tab-overflow-item {
+        width: 100%;
+        min-height: 27px;
+        display: grid;
+        grid-template-columns: 16px minmax(0, 1fr) 14px;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 7px;
+        border: 0;
+        border-radius: 5px;
+        background: transparent;
+        color: var(--theme-text);
+        font-family: 'Outfit', 'Inter', sans-serif;
+        font-size: var(--management-font-body);
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .management-topbar .tab-overflow-item:hover,
+    .management-topbar .tab-overflow-item:focus-visible {
+        outline: none;
+        background: var(--theme-surface-hover);
+        color: var(--theme-text-strong);
+    }
+
+    .management-topbar .tab-overflow-item.is-active {
+        background: color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface));
+        color: var(--theme-primary);
+        font-weight: 700;
+    }
+
+    .management-topbar .tab-overflow-item-icon {
+        color: var(--theme-muted);
+        font-size: var(--management-font-body);
+    }
+
+    .management-topbar .tab-overflow-item-title {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .management-topbar .tab-overflow-item-check {
+        visibility: hidden;
+        color: var(--theme-primary);
+        font-size: var(--management-font-small);
+    }
+
+    .management-topbar .tab-overflow-item.is-active .tab-overflow-item-check {
+        visibility: visible;
     }
 
     /* jQuery UI appends loaded form panes inside #tablist. Keep their origin

@@ -799,8 +799,8 @@
     string[] qtDeptModuleCode = new string[] { "FO", "TS", "UW", "LMKT", "PM" }; 
     string[] piDeptModuleCode = new string[] { "FO", "TS", "PM" }; 
     }
-    var qtDeptModuleCode = @Html.Raw(JsonSerializer.Serialize(qtDeptModuleCode));
-    var piDeptModuleCode = @Html.Raw(JsonSerializer.Serialize(piDeptModuleCode));
+    var qtDeptModuleCode = window.qtDeptModuleCode = @Html.Raw(JsonSerializer.Serialize(qtDeptModuleCode));
+    var piDeptModuleCode = window.piDeptModuleCode = @Html.Raw(JsonSerializer.Serialize(piDeptModuleCode));
 </script>
 
 @await Html.PartialAsync("_SignalR")

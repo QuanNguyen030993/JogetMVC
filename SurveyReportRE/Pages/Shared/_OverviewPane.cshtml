@@ -91,6 +91,17 @@
             }' />
         </div>
     </section>
+
+    <aside id="@Id("roleSwitcherFloat")"
+           class="maintenance-role-float"
+           aria-label="Switch maintenance role">
+        <div class="maintenance-role-float-label">
+            <i class="fa fa-user-shield" aria-hidden="true"></i>
+            <span>Switch role</span>
+        </div>
+        <div id="@(Model.Prefix)-roleSelect_@maintenanceInstanceId"
+             class="maintenance-role-select"></div>
+    </aside>
 </div>
 <script>
     $(function () {
@@ -135,12 +146,6 @@
                     <span>${'@Model.Guid'}</span>
                 </div>
 
-                <div class="admin-row maintenance-role-row">
-                    <label>Debug role</label>
-                    <div id="@(Model.Prefix)-roleSelect_@maintenanceInstanceId" class="maintenance-role-select"></div>
-                </div>
-
-
                 <div class="admin-row">
                     <label>Person in Charge (PIC)</label>
                     <div class="maintenance-value-list" data-maintenance-pic>
@@ -161,8 +166,85 @@
 
 
         $("body").append(panel);
-        panel.find(".maintenance-role-row")
-            .toggle(String(window._isDebugMode).toLowerCase() === "true");
+        const canSwitchMaintenanceRole =
+            String(window._isDebugMode).toLowerCase() === "true"
+            || String(window._isSuperUser).toLowerCase() === "true";
+        const $maintenanceRoleFloat = $("#@Id("roleSwitcherFloat")");
+        $maintenanceRoleFloat.toggleClass("is-visible", canSwitchMaintenanceRole);
+
+        const $maintenanceRoleSelect = $maintenanceRoleFloat.find(".maintenance-role-select");
+        let syncingMaintenanceRole = false;
+
+        function getMaintenanceRoleState() {
+            const page = "@moduleCode" === "pi"
+                ? window.PolicyIssuancePage
+                : window.QuotationPage;
+            return page?.state;
+        }
+
+        function getMaintenanceRoles() {
+            const roles = "@moduleCode" === "pi"
+                ? window.piDeptModuleCode
+                : window.qtDeptModuleCode;
+            return Array.isArray(roles)
+                ? roles.map(role => String(role).trim()).filter(Boolean)
+                : [];
+        }
+
+        function getMaintenanceCurrentRole() {
+            const labelRole = $(`#@Model.Prefix-loginRoleLabel`).text().trim();
+            return labelRole
+                || getMaintenanceRoleState()?.currentUserRole
+                || String(window._role || "").trim();
+        }
+
+        function ensureMaintenanceRoleSelect() {
+            if (!canSwitchMaintenanceRole || !$maintenanceRoleSelect.length) return;
+
+            const roles = getMaintenanceRoles();
+            const currentRole = getMaintenanceCurrentRole();
+            const selectedRole = roles.find(role =>
+                role.localeCompare(currentRole, undefined, { sensitivity: "base" }) === 0
+            ) || null;
+            const options = {
+                dataSource: roles.slice(),
+                value: selectedRole,
+                placeholder: "Select role...",
+                stylingMode: "outlined",
+                width: "100%",
+                searchEnabled: true,
+                dropDownOptions: {
+                    zIndex: 32010,
+                    wrapperAttr: {
+                        class: "maintenance-role-dropdown"
+                    }
+                },
+                onValueChanged: function (e) {
+                    if (syncingMaintenanceRole || !e.value) return;
+
+                    $(document).trigger("overviewMaintenanceRoleChanged", [{
+                        moduleCode: "@moduleCode",
+                        recordId: "@maintenanceInstanceId",
+                        role: e.value
+                    }]);
+                    DevExpress.ui.notify("Role switched: " + e.value, "info", 1200);
+                }
+            };
+
+            const instance = $maintenanceRoleSelect.hasClass("dx-selectbox")
+                ? $maintenanceRoleSelect.dxSelectBox("instance")
+                : null;
+            if (!instance) {
+                $maintenanceRoleSelect.dxSelectBox(options);
+                return;
+            }
+
+            syncingMaintenanceRole = true;
+            instance.option(options);
+            syncingMaintenanceRole = false;
+        }
+
+        ensureMaintenanceRoleSelect();
 
         function parseMaintenanceMap(value) {
             if (!value) return {};
@@ -278,6 +360,7 @@
             const willShow = !panel.hasClass("show");
             panel.toggleClass("show", willShow);
             if (willShow) {
+                ensureMaintenanceRoleSelect();
                 reloadMaintenanceInfo();
             }
 
