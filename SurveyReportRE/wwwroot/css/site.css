@@ -4698,7 +4698,7 @@ body .dx-datagrid {
 }
 
 body .dx-datagrid .dx-datagrid-header-panel {
-    padding: 8px 10px;
+    padding: 5px 7px;
     border-bottom: 1px solid var(--dx-grid-border);
     background: var(--dx-grid-surface);
 }
@@ -4707,6 +4707,38 @@ body .dx-datagrid .dx-toolbar {
     margin: 0;
     padding: 0;
     background: transparent;
+}
+
+body .dx-datagrid .dx-datagrid-header-panel .dx-toolbar-items-container {
+    min-height: var(--grid-toolbar-button-height);
+}
+
+body .dx-datagrid .dx-datagrid-header-panel .dx-button {
+    min-width: var(--grid-toolbar-button-height);
+    height: var(--grid-toolbar-button-height);
+    min-height: var(--grid-toolbar-button-height);
+    border-radius: 6px;
+    box-shadow: none;
+}
+
+body .dx-datagrid .dx-datagrid-header-panel .dx-button-content {
+    padding: 3px 6px;
+}
+
+body .dx-datagrid .dx-datagrid-header-panel .dx-button-has-icon:not(.dx-button-has-text) .dx-button-content {
+    padding: 4px;
+}
+
+body .dx-datagrid .dx-datagrid-header-panel .dx-button .dx-icon {
+    width: 14px;
+    height: 14px;
+    font-size: var(--grid-action-icon-size);
+    line-height: 14px;
+}
+
+body .dx-datagrid .dx-datagrid-header-panel .dx-button-text {
+    font-size: 11px;
+    line-height: 14px;
 }
 
 body .dx-datagrid .dx-toolbar .dx-toolbar-label,
@@ -4848,22 +4880,26 @@ body .dx-datagrid .dx-master-detail-row > td {
     background: #f8fafc;
 }
 
-body .dx-datagrid .dx-command-edit .dx-link,
-body .dx-datagrid .dx-command-select .dx-link {
+body .dx-datagrid td[class*="dx-command"] .dx-link {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 28px;
-    min-height: 28px;
-    margin: 0 2px;
-    border-radius: 6px;
+    width: var(--grid-command-button-size);
+    min-width: var(--grid-command-button-size);
+    height: var(--grid-command-button-size);
+    min-height: var(--grid-command-button-size);
+    margin: 0 1px;
+    padding: 3px;
+    border-radius: 5px;
+    box-sizing: border-box;
     color: #475569;
+    font-size: var(--grid-action-icon-size);
+    line-height: 1;
     text-decoration: none;
     transition: background-color .15s ease, color .15s ease, transform .15s ease;
 }
 
-body .dx-datagrid .dx-command-edit .dx-link:hover,
-body .dx-datagrid .dx-command-select .dx-link:hover {
+body .dx-datagrid td[class*="dx-command"] .dx-link:hover {
     background: #e2e8f0;
     color: var(--dx-grid-primary);
     transform: translateY(-1px);
@@ -4954,7 +4990,7 @@ body .dx-datagrid .dx-invalid > .dx-texteditor-container {
 
 @media (max-width: 768px) {
     body .dx-datagrid .dx-datagrid-header-panel {
-        padding: 8px;
+        padding: 5px 7px;
     }
 
     body .dx-datagrid .dx-datagrid-search-panel {
@@ -6364,6 +6400,45 @@ textarea {
     scrollbar-width: thin;
 }
 
+/* Compact sidebar density. Keep the icon centered in the 45px collapsed rail
+   while using the same vertical rhythm for expanded and nested menu items. */
+.skin-re .sidebar-menu > li > a {
+    min-height: 30px;
+    padding: var(--management-menu-item-padding-y) var(--management-menu-item-padding-x) !important;
+    line-height: 16px;
+}
+
+.skin-re .sidebar-menu > li > a > :is(.fa, .glyphicon, .ion) {
+    width: 20px;
+    margin-right: 3px;
+    font-size: 12px;
+    line-height: 16px;
+    text-align: center;
+}
+
+.skin-re .sidebar-menu li.header {
+    padding: 6px var(--management-menu-item-padding-x) !important;
+    line-height: 14px;
+}
+
+.skin-re .sidebar-menu .treeview-menu {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.skin-re .sidebar-menu .treeview-menu > li > a {
+    min-height: 26px;
+    padding: var(--management-submenu-item-padding-y) 8px var(--management-submenu-item-padding-y) 20px !important;
+    line-height: 16px;
+}
+
+@media (min-width: 768px) {
+    .skin-re.sidebar-mini.sidebar-collapse .sidebar-menu > li > a {
+        padding-right: var(--management-menu-item-padding-x) !important;
+        padding-left: var(--management-menu-item-padding-x) !important;
+    }
+}
+
 /* Neutralize the old inline height assigned to .tf-tree. */
 .main-sidebar > .sidebar > .sidebar-menu.tree {
     height: auto !important;
@@ -6436,6 +6511,20 @@ textarea {
     padding-bottom: 3px;
 }
 
+/* Match pane spacing to the compact overview/header density. Inline form
+   styles define these values repeatedly, so the shared tokens stay authoritative. */
+.contentGrid {
+    padding: var(--form-pane-padding) !important;
+}
+
+.contentGrid > .pane-left {
+    padding-right: var(--form-pane-side-padding) !important;
+}
+
+.contentGrid > .pane-right {
+    padding-left: var(--form-pane-side-padding) !important;
+}
+
 @media (max-width: 1366px) {
     .dExForm {
         padding: 6px;
@@ -6443,7 +6532,7 @@ textarea {
 
     .contentGrid {
         gap: 8px;
-        padding: 8px;
+        padding: var(--form-pane-padding) !important;
     }
 
     .overview-scroll {

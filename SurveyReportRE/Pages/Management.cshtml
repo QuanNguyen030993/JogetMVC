@@ -2906,13 +2906,19 @@
     /* jQuery UI appends loaded form panes inside #tablist. Keep their origin
        aligned with the menu and place them immediately below the header. */
     .management-topbar #tablist > .content-wrapper {
-        position: absolute;
+        position: fixed;
         top: var(--management-header-height);
-        left: 0;
-        width: calc(100vw - var(--management-sidebar-width) - var(--management-header-padding-x));
+        right: 0;
+        left: var(--management-sidebar-width);
+        width: auto;
         min-height: calc(100vh - var(--management-header-height));
         margin-top: 0;
+        padding: var(--form-loaded-inset);
         box-sizing: border-box;
+    }
+
+    .sidebar-mini.sidebar-collapse .management-topbar #tablist > .content-wrapper {
+        left: var(--management-sidebar-collapsed-width);
     }
 
     .management-topbar #tablist > .content-wrapper > div,
@@ -3059,5 +3065,12 @@
         .management-header-actions .user-account-chevron { display: none; }
         .management-header-actions #btnNew .dx-button-text { display: none; }
         .management-header-actions #btnNew .dx-button-content { padding: 3px 6px !important; }
+    }
+
+    @@media (max-width: 767px) {
+        .management-topbar #tablist > .content-wrapper,
+        .sidebar-mini.sidebar-collapse .management-topbar #tablist > .content-wrapper {
+            left: 0;
+        }
     }
 </style>

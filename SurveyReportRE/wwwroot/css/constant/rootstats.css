@@ -54,6 +54,18 @@
     --management-header-gap: 6px;
     --management-header-padding-x: 8px;
     --management-sidebar-width: 13vw;
+    --management-sidebar-collapsed-width: 45px;
+    --management-menu-item-padding-y: 6px;
+    --management-menu-item-padding-x: 10px;
+    --management-submenu-item-padding-y: 4px;
+
+    /* Compact loaded forms, split panes and DevExtreme grid actions. */
+    --form-loaded-inset: 6px;
+    --form-pane-padding: 4px;
+    --form-pane-side-padding: 2px;
+    --grid-toolbar-button-height: 26px;
+    --grid-command-button-size: 24px;
+    --grid-action-icon-size: 13px;
 
     /* Colors gathered from CSS files */
     --c-0077cc: #0077cc;
