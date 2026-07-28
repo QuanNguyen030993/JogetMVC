@@ -492,12 +492,12 @@
 <script src="~/lib/AdminLTE/adminlte.min.js"></script>
 <body class="sidebar-mini skin-re" style="height: auto; min-height: 100%; width: 100%;">
     <header>
-        <div class="main-header wrapper" style="display:flex; align-items: center;">
+        <div class="main-header wrapper management-topbar">
             <!-- LOGO -->
             <div class="management-logo-slot">
-                <div class="pull-left" style="margin-left: 12%;width: fit-content;white-space: nowrap;flex-shrink: 0;padding-right: 15px;">
-                    <a href="#" class="logo" data-toggle="push-menu" role="button" style="width: fit-content;">
-                        <div class="logo-lg" style="width: fit-content;"><b>Workflow Management</b></div>
+                <div class="pull-left management-logo-inner">
+                    <a href="#" class="logo management-logo-link" data-toggle="push-menu" role="button">
+                        <div class="logo-lg"><b>Workflow Management</b></div>
                         <div class="logo-mini" style=""><b></b></div>
                     </a>
                 </div>
@@ -511,13 +511,13 @@
                 <div id="environmentJogetLabel" style="color: red;"></div>
             </div>
             <!--Tab list-->
-            <div id="tablist" class="ui-tabs-nav" style="position: relative;width: 75%;">                
+            <div id="tablist" class="ui-tabs-nav">
                 <ul></ul>
             </div>
              
             <!--Login Info-->
-            <div style="display:flex;padding:5px;width: 16%;margin-top: 6px;justify-content: flex-end;">
-                <div id="btnNew" style=" margin-right: 15px;z-index: 1000;"></div>
+            <div class="management-header-actions">
+                <div id="btnNew"></div>
                 <div id="notificationBtn" class="notif-wrapper square-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="30" height="30" viewBox="0 0 256 256" xml:space="preserve">
                     <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
@@ -2828,5 +2828,236 @@
 
     .policy .card-body {
         background: linear-gradient( 180deg, var(--c-ffffff), var(--c-edfff8) );
+    }
+
+    /* Compact one-row management header: roughly half the previous footprint. */
+    .management-topbar {
+        height: var(--management-header-height) !important;
+        min-height: var(--management-header-height) !important;
+        max-height: var(--management-header-height) !important;
+        padding: 0 var(--management-header-padding-x) !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        gap: var(--management-header-gap) !important;
+        box-sizing: border-box;
+    }
+
+    .management-logo-slot {
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+    .management-logo-inner {
+        width: fit-content;
+        max-width: 100%;
+        margin-left: 4px !important;
+        padding-right: 4px !important;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .management-logo-link {
+        width: fit-content !important;
+        height: var(--management-header-height) !important;
+        padding: 0 4px !important;
+        line-height: var(--management-header-height) !important;
+    }
+
+    .management-topbar .logo-lg {
+        width: fit-content;
+        font-size: 12px !important;
+        line-height: var(--management-header-height) !important;
+    }
+
+    .management-topbar .admin-float-swicher {
+        max-height: var(--management-header-control-height);
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        overflow: hidden;
+    }
+
+    .management-topbar #tablist {
+        position: relative;
+        width: auto !important;
+        min-width: 0;
+        height: var(--management-header-height);
+        flex: 1 1 auto;
+        overflow: visible;
+    }
+
+    .management-topbar #tablist > ul {
+        height: var(--management-header-height);
+        padding: 4px 2px !important;
+        gap: 4px !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        box-sizing: border-box;
+    }
+
+    .management-topbar #tablist > ul::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* jQuery UI appends loaded form panes inside #tablist. Keep their origin
+       aligned with the menu and place them immediately below the header. */
+    .management-topbar #tablist > .content-wrapper {
+        position: absolute;
+        top: var(--management-header-height);
+        left: 0;
+        width: calc(100vw - var(--management-sidebar-width) - var(--management-header-padding-x));
+        min-height: calc(100vh - var(--management-header-height));
+        margin-top: 0;
+        box-sizing: border-box;
+    }
+
+    .management-topbar #tablist > .content-wrapper > div,
+    .management-topbar #tablist > .content-wrapper .dExForm {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .management-topbar #tablist > ul > li {
+        min-height: var(--management-header-tab-height);
+        height: var(--management-header-tab-height);
+        padding: 0 6px !important;
+        flex: 0 0 auto;
+        border-radius: 12px !important;
+        box-shadow: none !important;
+        box-sizing: border-box;
+    }
+
+    .management-topbar #tablist > ul > li a {
+        padding: 2px 3px !important;
+        font-size: 11px !important;
+        line-height: 16px !important;
+    }
+
+    .management-topbar #tablist > ul > li .close-tab-btn {
+        width: 14px !important;
+        height: 14px !important;
+        margin: 0 0 0 3px !important;
+        padding: 2px !important;
+        font-size: 8px !important;
+    }
+
+    .management-header-actions {
+        height: var(--management-header-height);
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: var(--management-header-gap);
+        flex: 0 0 auto;
+    }
+
+    .management-header-actions #btnNew {
+        z-index: 1000;
+        margin: 0;
+    }
+
+    .management-header-actions #btnNew .dx-button {
+        height: var(--management-header-control-height) !important;
+        min-height: var(--management-header-control-height) !important;
+        border-radius: 8px !important;
+    }
+
+    .management-header-actions #btnNew .dx-button-content {
+        padding: 3px 8px !important;
+    }
+
+    .management-header-actions #btnNew :is(.dx-button-text, .dx-icon) {
+        font-size: 11px !important;
+        line-height: 16px !important;
+    }
+
+    .management-header-actions .square-btn,
+    .management-header-actions #notificationBtn {
+        width: var(--management-header-control-height) !important;
+        height: var(--management-header-control-height) !important;
+        min-width: var(--management-header-control-height);
+        padding: 4px !important;
+        margin: 0 !important;
+        border-width: 1px !important;
+        border-radius: 8px !important;
+        box-shadow: none;
+        box-sizing: border-box;
+    }
+
+    .management-header-actions #notificationBtn svg {
+        width: 15px !important;
+        height: 15px !important;
+    }
+
+    .management-header-actions .notif-count {
+        top: 1px;
+        right: 1px;
+        min-width: 11px;
+        height: 11px;
+        padding: 0 2px;
+        font-size: 7px;
+        line-height: 11px;
+        box-shadow: 0 0 0 1px var(--theme-header);
+    }
+
+    .management-header-actions .user.user-menu {
+        margin-left: 0;
+    }
+
+    .management-header-actions .user-account-trigger {
+        min-width: 132px;
+        height: var(--management-header-control-height);
+        padding: 2px 6px 2px 3px;
+        gap: 5px;
+        border-radius: 8px;
+    }
+
+    .management-header-actions .user-account-avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 7px;
+        font-size: 10px;
+        box-shadow: none;
+    }
+
+    .management-header-actions .user-account-name {
+        max-width: 90px;
+        font-size: 10px;
+        line-height: 11px;
+    }
+
+    .management-header-actions .user-account-role {
+        margin-top: 0;
+        font-size: 8px;
+        line-height: 9px;
+    }
+
+    .management-header-actions .user-account-chevron {
+        font-size: 10px;
+    }
+
+    .management-header-actions .user-account-menu {
+        top: calc(var(--management-header-height) + 6px);
+    }
+
+    /* AdminLTE still reserves its original 50px header above the menu. */
+    .skin-re .main-sidebar {
+        top: var(--management-header-height) !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        min-height: calc(100vh - var(--management-header-height));
+    }
+
+    @@media (max-width: 900px) {
+        .management-logo-slot { flex-basis: 16%; max-width: 16%; }
+        .management-header-actions .user-account-trigger { min-width: 28px; width: 28px; padding: 2px; }
+        .management-header-actions .user-account-copy,
+        .management-header-actions .user-account-chevron { display: none; }
+        .management-header-actions #btnNew .dx-button-text { display: none; }
+        .management-header-actions #btnNew .dx-button-content { padding: 3px 6px !important; }
     }
 </style>

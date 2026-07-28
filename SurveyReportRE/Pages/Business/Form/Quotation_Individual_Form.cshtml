@@ -161,7 +161,7 @@ Note:
     }
 
     .contentGrid {
-        height: calc(100vh - 56px);
+        height: calc(100vh - var(--management-header-height, 32px));
         margin-right: var(--collapsed-form-mr);
         display: grid;
         grid-template-columns: 360px 1fr;
@@ -355,7 +355,7 @@ Note:
     }
 
     .contentGrid {
-        height: calc(100vh - 56px);
+        height: calc(100vh - var(--management-header-height, 32px));
         margin-right: var(--collapsed-form-mr);
         display: grid;
         grid-template-columns: minmax(240px, 340px) 8px minmax(0, 1fr);
@@ -460,7 +460,7 @@ Note:
         .contentGrid,
         .contentGrid.left-collapsed {
             height: auto;
-            min-height: calc(100vh - 56px);
+            min-height: calc(100vh - var(--management-header-height, 32px));
             grid-template-columns: minmax(0, 1fr);
             overflow: auto;
         }

@@ -560,7 +560,7 @@ aside {
     box-shadow: 0 0 0 2px white;
 }
 .content-wrapper {
-    margin-top: 30px;
+    margin-top: 0;
     /*margin-right: var(--collapsed-mr);*/
     /*position: absolute;*/
     /*background-color: white;*/
@@ -569,7 +569,7 @@ aside {
     /*height: 100%;*/
     /*z-index: 1000;*/
     position: absolute;
-    min-height: 100vh;
+    min-height: calc(100vh - var(--management-header-height, 32px));
     color: var(--theme-text);
 }
 .dxc-tooltip {
@@ -1994,7 +1994,7 @@ top:  1%;
 
 .rightDock {
     position: fixed;
-    top: 72px;
+    top: calc(var(--management-header-height, 32px) + 8px);
     right: 12px;
     bottom: 70px;
     /*width: 420px;*/
@@ -3004,7 +3004,7 @@ text-overflow: ellipsis;
 /* wrapper */
 .mini-browser-loading {
     position: fixed;
-    top: 55px;
+    top: calc(var(--management-header-height, 32px) + 8px);
     left: 43%;
     transform: translateX(-50%);
     z-index: 99999;
@@ -3317,7 +3317,7 @@ text-overflow: ellipsis;
 }
 
 .contentGrid {
-    height: calc(100vh - 56px);
+    height: calc(100vh - var(--management-header-height, 32px));
     margin-right: var(--collapsed-form-mr);
     display: grid;
     grid-template-columns: 360px 1fr;
@@ -3570,7 +3570,7 @@ text-overflow: ellipsis;
 }
 
 .contentGrid {
-    height: calc(100vh - 56px);
+    height: calc(100vh - var(--management-header-height, 32px));
     margin-right: var(--collapsed-form-mr);
     display: grid;
     grid-template-columns: minmax(260px, 420px) 10px minmax(620px, 1fr);
@@ -3694,7 +3694,7 @@ text-overflow: ellipsis;
 }
 
 .contentGrid {
-    height: calc(100vh - 56px);
+    height: calc(100vh - var(--management-header-height, 32px));
     margin-right: var(--collapsed-form-mr);
     display: grid;
     grid-template-columns: 360px 1fr;
@@ -3888,7 +3888,7 @@ text-overflow: ellipsis;
 }
 
 .contentGrid {
-    height: calc(100vh - 56px);
+    height: calc(100vh - var(--management-header-height, 32px));
     margin-right: var(--collapsed-form-mr);
     display: grid;
     grid-template-columns: minmax(260px, 420px) 10px minmax(620px, 1fr);
@@ -6356,8 +6356,8 @@ textarea {
 /* Keep long application menus inside the viewport. */
 .main-sidebar > .sidebar {
     box-sizing: border-box;
-    height: calc(100vh - 50px) !important;
-    max-height: calc(100vh - 50px);
+    height: calc(100vh - var(--management-header-height, 32px)) !important;
+    max-height: calc(100vh - var(--management-header-height, 32px));
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -6386,8 +6386,8 @@ textarea {
 
 @media (max-width: 767px) {
     .main-sidebar > .sidebar {
-        height: calc(100vh - 100px) !important;
-        max-height: calc(100vh - 100px);
+        height: calc(100vh - var(--management-header-height, 32px)) !important;
+        max-height: calc(100vh - var(--management-header-height, 32px));
     }
 }
 

@@ -47,6 +47,14 @@
     --dx-grid-selected: #e8f1ff;
     --dx-grid-radius: 0px;
 
+    /* Compact management header geometry. */
+    --management-header-height: 32px;
+    --management-header-control-height: 28px;
+    --management-header-tab-height: 24px;
+    --management-header-gap: 6px;
+    --management-header-padding-x: 8px;
+    --management-sidebar-width: 13vw;
+
     /* Colors gathered from CSS files */
     --c-0077cc: #0077cc;
     --c-1861ac: #1861ac;
