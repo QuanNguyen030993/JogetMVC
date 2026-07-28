@@ -595,10 +595,11 @@ const TATChart = forwardRef((props, ref) => {
                                     setIsDropdownOpen(false);
                                 }}
                                 style={{
-                                    padding: "8px 12px",
+                                    padding: "4px 8px",
                                     cursor: "pointer",
                                     borderBottom: "1px solid #f1f5f9",
                                     fontWeight: "600",
+                                    fontSize: "11px",
                                     background: selectedRecordGuid === 'ALL' ? '#f1f5f9' : 'transparent'
                                 }}
                             >
@@ -606,7 +607,7 @@ const TATChart = forwardRef((props, ref) => {
                             </div>
                             
                             {filteredOptions.length === 0 ? (
-                                <div style={{ padding: "8px 12px", color: "#64748b", fontStyle: "italic" }}>
+                                <div style={{ padding: "4px 8px", color: "#64748b", fontStyle: "italic", fontSize: "11px" }}>
                                     Không tìm thấy kết quả phù hợp
                                 </div>
                             ) : (
@@ -620,9 +621,10 @@ const TATChart = forwardRef((props, ref) => {
                                             setIsDropdownOpen(false);
                                         }}
                                         style={{
-                                            padding: "8px 12px",
+                                            padding: "4px 8px",
                                             cursor: "pointer",
                                             borderBottom: "1px solid #f1f5f9",
+                                            fontSize: "11px",
                                             background: selectedRecordGuid === opt.guid ? '#e0f2fe' : 'transparent'
                                         }}
                                     >
@@ -668,7 +670,7 @@ const TATChart = forwardRef((props, ref) => {
 
                 {selectedRecordGuid !== 'ALL' && (
                     <div className="filter-group" style={{ flex: "0 0 auto", justifyContent: "flex-end" }}>
-                        <button className="btn-refresh" onClick={fetchDeptProcessings} title="Tải lại dữ liệu" style={{ height: "40px", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <button className="btn-refresh" onClick={fetchDeptProcessings} title="Tải lại dữ liệu" style={{ height: "24px", display: "flex", alignItems: "center", gap: "4px", padding: "0 6px", fontSize: "11px" }}>
                             🔄 Tải lại
                         </button>
                     </div>

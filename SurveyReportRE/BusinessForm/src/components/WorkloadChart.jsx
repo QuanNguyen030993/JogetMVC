@@ -21,7 +21,7 @@ import {
 } from "recharts";
 
 function Card({ title, value }) {
-
+  const isNumber = typeof value === 'number' || (typeof value === 'string' && !isNaN(value));
   return (
 <div
 
@@ -29,34 +29,52 @@ function Card({ title, value }) {
 
         background: "#fff",
 
-        padding: 16,
+        padding: "4px 8px",
 
-        borderRadius: 12,
+        borderRadius: 8,
 
-        boxShadow: "0 1px 3px rgba(0,0,0,.1)"
+        boxShadow: "0 1px 3px rgba(0,0,0,.1)",
+
+        display: "flex",
+
+        flexDirection: "column",
+
+        justifyContent: "center",
+
+        minHeight: "36px"
 
       }}
 >
+{title && (
 <div
 
         style={{
 
           color: "#666",
 
-          marginBottom: 8
+          marginBottom: 1,
+
+          fontSize: "11px",
+
+          lineHeight: "1.1"
 
         }}
 >
 
         {title}
 </div>
+)}
 <div
 
         style={{
 
-          fontSize: 28,
+          fontSize: isNumber ? "13px" : "11px",
 
-          fontWeight: 700
+          fontWeight: 700,
+
+          color: isNumber ? "#0f172a" : "#2563eb",
+
+          lineHeight: "1.2"
 
         }}
 >
@@ -82,7 +100,7 @@ function LegendItem({ color, label }) {
 
         gap: 6,
 
-        fontSize: 13
+        fontSize: 11
 
       }}
 >
@@ -133,7 +151,7 @@ function StatusChart({
 
         borderRadius: 12,
 
-        padding: "16px 12px 12px"
+        padding: "10px 8px 8px"
 
       }}
 >
@@ -141,11 +159,11 @@ function StatusChart({
 
         style={{
 
-          marginBottom: 12,
+          marginBottom: 8,
 
           textAlign: "center",
 
-          fontSize: 16,
+          fontSize: 12,
 
           fontWeight: 700
 
@@ -158,7 +176,7 @@ function StatusChart({
 
         style={{
 
-          height: 480
+          height: 320
 
         }}
 >
@@ -182,7 +200,7 @@ function StatusChart({
 
                 left: 0,
 
-                bottom: 55
+                bottom: 35
 
               }}
 
@@ -205,7 +223,8 @@ function StatusChart({
 
                 textAnchor="end"
 
-                height={70}
+                height={50}
+                style={{ fontSize: 10 }}
 
               />
 <YAxis
@@ -213,6 +232,7 @@ function StatusChart({
                 domain={[0, yAxisMax]}
 
                 allowDecimals={false}
+                style={{ fontSize: 11 }}
 
               />
 <Tooltip
@@ -468,13 +488,13 @@ export default function WorkloadChart({
   };
 
   const selectStyle = {
-    minWidth: 150,
-    height: 38,
-    padding: "0 10px",
+    minWidth: 100,
+    height: 24,
+    padding: "0 4px",
     border: "1px solid #d1d5db",
-    borderRadius: 8,
+    borderRadius: 6,
     background: "#fff",
-    fontSize: "14px",
+    fontSize: "11px",
     cursor: "pointer"
   };
 
@@ -488,9 +508,9 @@ export default function WorkloadChart({
       <div
         style={{
           display: "flex",
-          gap: 12,
+          gap: 8,
           flexWrap: "wrap",
-          marginBottom: 20
+          marginBottom: 12
         }}
       >
         <select
@@ -575,11 +595,11 @@ export default function WorkloadChart({
 
           gridTemplateColumns:
 
-            "repeat(auto-fit, minmax(180px, 1fr))",
+            "repeat(auto-fit, minmax(140px, 1fr))",
 
-          gap: 16,
+          gap: 12,
 
-          marginBottom: 24
+          marginBottom: 12
 
         }}
 >
@@ -629,7 +649,7 @@ value="Overview Workload"
 
           borderRadius: 12,
 
-          padding: 20,
+          padding: 12,
 
           boxShadow:
 
@@ -649,9 +669,9 @@ value="Overview Workload"
 
             alignItems: "center",
 
-            gap: 16,
+            gap: 12,
 
-            marginBottom: 16,
+            marginBottom: 12,
 
             flexWrap: "wrap"
 
@@ -662,7 +682,7 @@ value="Overview Workload"
 
               style={{
 
-                fontSize: 18,
+                fontSize: 12,
 
                 fontWeight: 700
 
@@ -675,11 +695,11 @@ value="Overview Workload"
 
               style={{
 
-                marginTop: 4,
+                marginTop: 2,
 
                 color: "#666",
 
-                fontSize: 13
+                fontSize: 11
 
               }}
 >
