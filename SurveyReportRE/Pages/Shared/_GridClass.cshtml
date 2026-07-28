@@ -2217,6 +2217,15 @@
             this.hyperLinkCode(columns, "Business/Form", "PolicyIssuance", "id", "policyIssuanceCode");
             this.hyperLinkCode(columns, "Business/Form", "Quotation", "quotationId", "quotationCode");
             $.each(columns, function (colIndex, col) {
+                $.each(piDeptModuleCode, function (itemInd, item) {
+                    if (col.dataField === `pic${item}`) {
+                        col.cellTemplate = function (container, options) {
+                            const pic = tryParseJSON(options.data.pic, "PIC Load Problem From Grid") || {};
+                            col.value = pic[item];
+                            return $("<div>").text(pic[item] || "").appendTo(container);
+                        };
+                    }
+                });
             if (col.dataField === "workflowStatus")
             {
                 configureStatusGridColumn(col);

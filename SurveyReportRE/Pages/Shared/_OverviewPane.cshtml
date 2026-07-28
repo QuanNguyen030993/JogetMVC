@@ -153,6 +153,20 @@
                     </div>
                 </div>
 
+                <div class="admin-row">
+                    <label>Leader PIC</label>
+                    <div class="maintenance-value-list" data-maintenance-leader-pic>
+                        <span class="maintenance-empty">-</span>
+                    </div>
+                </div>
+
+                <div class="admin-row">
+                    <label>HOD PIC</label>
+                    <div class="maintenance-value-list" data-maintenance-hod-pic>
+                        <span class="maintenance-empty">-</span>
+                    </div>
+                </div>
+
 
                 <div class="admin-row">
                     <label>Turnaround Time</label>
@@ -182,8 +196,8 @@
             return page?.state;
         }
 
-        function getMaintenanceRoles() {
-            const roles = "@moduleCode" === "pi"
+        function getMaintenanceRoles(targetModuleCode = "@moduleCode") {
+            const roles = String(targetModuleCode || "").trim().toLowerCase() === "pi"
                 ? window.piDeptModuleCode
                 : window.qtDeptModuleCode;
             return Array.isArray(roles)
@@ -294,18 +308,48 @@
             });
         }
 
-        function renderMaintenanceInfo(formData) {
+        function renderMaintenancePic($container, rawValue, departments) {
+            const valueMap = parseMaintenanceMap(rawValue);
+            const hasValue = Object.values(valueMap)
+                .some(value => value != null && value !== "");
+
+            $container.empty();
+            if (!hasValue) {
+                $("<span>", { class: "maintenance-empty", text: "-" }).appendTo($container);
+                return;
+            }
+
+            $container.append(renderPicInline(valueMap, departments));
+        }
+
+        function renderMaintenanceFields($targetPanel, formData, targetModuleCode = "@moduleCode") {
             formData = formData || {};
-            renderMaintenanceMap(
-                panel.find("[data-maintenance-pic]"),
-                formData.pIC ?? formData.pic ?? formData.PIC
+            const departments = getMaintenanceRoles(targetModuleCode);
+            renderMaintenancePic(
+                $targetPanel.find("[data-maintenance-pic]"),
+                formData.pIC ?? formData.pic ?? formData.PIC,
+                departments
+            );
+            renderMaintenancePic(
+                $targetPanel.find("[data-maintenance-leader-pic]"),
+                formData.leaderPIC ?? formData.leaderPic ?? formData.LeaderPIC,
+                departments
+            );
+            renderMaintenancePic(
+                $targetPanel.find("[data-maintenance-hod-pic]"),
+                formData.hodpic ?? formData.hodPIC ?? formData.hODPIC ?? formData.HODPIC,
+                departments
             );
             renderMaintenanceMap(
-                panel.find("[data-maintenance-tat]"),
+                $targetPanel.find("[data-maintenance-tat]"),
                 formData.turnAroundTimeAttributes
                     ?? formData.turnaroundTimeAttributes
                     ?? formData.TurnAroundTimeAttributes
             );
+        }
+
+        function renderMaintenanceInfo(formData) {
+            renderMaintenanceFields(panel, formData);
         }
 
         function reloadMaintenanceInfo() {
@@ -338,17 +382,7 @@
             const $targetPanel = $(document.getElementById(targetPanelId));
             if (!$targetPanel.length) return;
 
-            formData = formData || {};
-            renderMaintenanceMap(
-                $targetPanel.find("[data-maintenance-pic]"),
-                formData.pIC ?? formData.pic ?? formData.PIC
-            );
-            renderMaintenanceMap(
-                $targetPanel.find("[data-maintenance-tat]"),
-                formData.turnAroundTimeAttributes
-                    ?? formData.turnaroundTimeAttributes
-                    ?? formData.TurnAroundTimeAttributes
-            );
+            renderMaintenanceFields($targetPanel, formData, targetModuleCode);
         };
 
 

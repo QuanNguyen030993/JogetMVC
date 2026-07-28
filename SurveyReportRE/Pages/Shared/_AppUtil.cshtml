@@ -1856,9 +1856,13 @@
             return String(val);
         }
 
-        function renderPicInline(picJson) {
+        function renderPicInline(picJson, departments = null) {
             const obj = parsePicObject(picJson);
-            const deptOrder = ["FO", "TS", "UW", "LMKT", "PM"];
+            const deptOrder = Array.isArray(departments) && departments.length
+                ? departments
+                    .map(dept => String(dept || "").trim().toUpperCase())
+                    .filter(Boolean)
+                : ["FO", "TS", "UW", "LMKT", "PM"];
 
             return `
                 <div class="pic-inline-wrap">
@@ -3181,6 +3185,9 @@
                 await renderDepartmentAssigneeBox(`#${idManager.assigneeBox(dept, dataForm.id)}`, {
                     groupName: dept,
                     dataForm: dataForm,
+                    currentSection: function () {
+                        return workflowPage?.state?.currentUserRole || _role;
+                    },
                     onClosed: function (selectedItems) {
                         if (!renderState.isAssigneeBoxRender || !Array.isArray(selectedItems)) return;
 
@@ -3245,16 +3252,85 @@
             return entry.promise;
         }
 
+        function normalizeAssignmentAccount(value) {
+            return String(value || "")
+                .trim()
+                .replace(/^.*\\/, "")
+                .toLowerCase();
+        }
+
+        function collectAssignmentAccounts(value, result = []) {
+            if (value == null || value === "") return result;
+
+            if (Array.isArray(value)) {
+                value.forEach(item => collectAssignmentAccounts(item, result));
+                return result;
+            }
+
+            if (typeof value === "object") {
+                Object.values(value).forEach(item => collectAssignmentAccounts(item, result));
+                return result;
+            }
+
+            String(value)
+                .split(/[;,|]/)
+                .map(normalizeAssignmentAccount)
+                .filter(Boolean)
+                .forEach(account => result.push(account));
+            return result;
+        }
+
+        function getDepartmentLeaderAccounts(dataForm, department) {
+            const rawLeaderPic = dataForm?.leaderPIC
+                ?? dataForm?.leaderPic
+                ?? dataForm?.LeaderPIC
+                ?? dataForm?.LEADERPIC;
+            const leaderMap = parsePicObject(rawLeaderPic);
+            const departmentKey = Object.keys(leaderMap).find(key =>
+                String(key).trim().toUpperCase() === String(department || "").trim().toUpperCase()
+            );
+
+            return departmentKey
+                ? collectAssignmentAccounts(leaderMap[departmentKey])
+                : [];
+        }
+
+        function canEditDepartmentAssignee(settings) {
+            const department = String(settings?.groupName || "").trim().toUpperCase();
+            const currentSection = String(
+                typeof settings?.currentSection === "function"
+                    ? settings.currentSection()
+                    : (settings?.currentSection || _role)
+            ).trim().toUpperCase();
+            const applicationRole = String(_roleAppName || "").trim().toUpperCase();
+            const authenticatedSection = String(_role || "").trim().toUpperCase();
+            const isItTester = authenticatedSection === "IT"
+                || applicationRole === "IT"
+                || applicationRole === "ADMIN"
+                || applicationRole === "SUPERUSER"
+                || String(_isSuperUser).toLowerCase() === "true";
+
+            if (isItTester) return true;
+            if (applicationRole !== "LEADER" || currentSection !== department) return false;
+
+            const currentAccount = normalizeAssignmentAccount(_loginUser);
+            return !!currentAccount
+                && getDepartmentLeaderAccounts(settings?.dataForm, department)
+                    .includes(currentAccount);
+        }
+
         async function renderDepartmentAssigneeBox(selector, options, hideIfMuliple = true) {
             const settings = $.extend(true, {
                 groupName: "",
                 dataForm: {},
                 currentUserId: null,
+                currentSection: null,
                 value: null, // string: acc1,acc2
                 onChanged: null,
                 onClosed: null,
                 onValueChanged: null
             }, options || {});
+            const canEdit = canEditDepartmentAssignee(settings);
 
             const store = new DevExpress.data.CustomStore({
                 key: "accountName", // align with valueExpr: "accountName"
@@ -3340,7 +3416,11 @@
             if (existingInstance) {
                 existingInstance.option({
                     dataSource: resolvedStore,
-                    value: selectedValues
+                    value: selectedValues,
+                    readOnly: !canEdit,
+                    hint: canEdit
+                        ? ""
+                        : "Only the Leader PIC in the same section can assign."
                 });
                 existingInstance.repaint();
                 await new Promise(resolve => requestAnimationFrame(resolve));
@@ -3357,6 +3437,10 @@
                 height: 38,
                 width: 400,
                 value: selectedValues,
+                readOnly: !canEdit,
+                hint: canEdit
+                    ? ""
+                    : "Only the Leader PIC in the same section can assign.",
                 searchEnabled: true,
                 maxDisplayedTags: hideIfMuliple ? 1 : 100,
                 showMultiTagOnly: hideIfMuliple,
@@ -3388,10 +3472,13 @@
                         options: {
                             type: "default",
                             text: "Assign to me",
+                            visible: canEdit,
+                            disabled: !canEdit,
                             elementAttr: {
                                 class: "workflow-primary-button assign-to-me-button"
                             },
                             onClick: function () {
+                                if (!canEditDepartmentAssignee(settings)) return;
                                 $.ajax({
                                     url: "api/Employee/GetMyAssigneeProfile",
                                     type: "GET",
@@ -3459,6 +3546,7 @@
                     }
                 ],
                 onClosed: function (e) {
+                    if (!canEditDepartmentAssignee(settings)) return;
                     const items = e.component.option("selectedItems") || [];
                     if (typeof settings.onClosed === "function") {
                         settings.onClosed(items, e.component, false);
