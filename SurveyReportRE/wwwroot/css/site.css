@@ -630,21 +630,27 @@ aside {
 
 .attachment-drop-zone {
     width: 100%;
-    height: 100%;
-    min-height: 50px;
-    background-color: #f5faff;
-    border: 2px dashed #007bff;
-    border-radius: 8px;
-    padding: 5px 10px;
+    min-height: 92px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, var(--form-attachment-surface, #f5faff), var(--form-attachment-icon-bg, #ffffff));
+    border: 1.5px dashed var(--form-attachment-border, #c7daf5);
+    border-radius: 12px;
+    padding: 16px 20px;
     text-align: center;
-    box-shadow: 0 3px 11px rgba(0, 0, 0, 0.05);
-    transition: border-color 0.3s ease-in-out;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 3px 11px rgba(31, 42, 55, .04);
+    transition: background .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
 
-.attachment-drop-zone:hover .attachment-drop-zone__content,
-.attachment-drop-zone:focus-visible .attachment-drop-zone__content {
-    background: #1765cc;
-    box-shadow: 0 2px 6px rgba(26, 115, 232, .28);
+.attachment-drop-zone:hover,
+.attachment-drop-zone:focus-visible {
+    background: var(--form-attachment-hover-surface, #edf5ff);
+    border-color: var(--form-attachment-accent, #5d95f5);
+    box-shadow: 0 0 0 3px var(--form-node-focus-ring, rgba(93, 149, 245, .14)), 0 7px 18px rgba(31, 42, 55, .06);
 }
 
 .attachment-drop-zone:focus-visible {
@@ -652,24 +658,17 @@ aside {
 }
 
 .attachment-drop-zone.is-dragging {
-    min-height: 200px;
-    padding: 22px 28px;
-    justify-content: center;
-    gap: 16px;
-    border-style: dashed;
-    border-color: #1a73e8;
-    background: #e8f0fe;
-    color: #3c4043;
-    box-shadow: 0 0 0 3px rgba(26, 115, 232, .14);
+    min-height: 128px;
+    border-color: var(--form-attachment-accent, #5d95f5);
+    background: var(--form-attachment-hover-surface, #edf5ff);
+    box-shadow: 0 0 0 4px var(--form-node-focus-ring, rgba(93, 149, 245, .14));
+    transform: translateY(-1px);
 }
 
 .attachment-drop-zone.is-uploading {
     cursor: progress;
-}
-
-.attachment-drop-zone.is-uploading .attachment-drop-zone__content {
-    background: linear-gradient(90deg, #1a73e8, #4c8fe8, #1a73e8);
-    background-size: 200% 100%;
+    background: linear-gradient(90deg, var(--form-attachment-surface), var(--form-attachment-hover-surface), var(--form-attachment-surface));
+    background-size: 220% 100%;
     animation: attachment-drop-zone-loading 1.4s linear infinite;
 }
 
@@ -678,47 +677,55 @@ aside {
 }
 
 .attachment-drop-zone__icon {
-    display: none;
+    display: inline-grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    border: 1px solid var(--form-attachment-border, #c7daf5);
+    border-radius: 10px;
+    background: var(--form-attachment-icon-bg, #ffffff);
+    color: var(--form-attachment-accent, #5d95f5);
+    font-size: 19px;
+    box-shadow: 0 3px 8px rgba(31, 42, 55, .06);
 }
 
 .attachment-drop-zone__content {
-    display: inline-flex;
-    align-items: center;
-    min-height: 38px;
-    padding: 0 16px;
-    border-radius: 4px;
-    color: gray;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    padding: 0;
+    color: var(--form-attachment-text, #3f4d66);
     line-height: 1.35;
-    transition: background-color .18s ease, box-shadow .18s ease;
+    text-align: left;
 }
 
 .attachment-drop-zone__content strong {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
 }
 
-.attachment-drop-zone__drop-label,
 .attachment-drop-zone__hint {
+    display: block;
+    color: var(--form-attachment-muted, #7c879d);
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.attachment-drop-zone__drop-label {
     display: none;
 }
 
 .attachment-drop-zone.is-dragging .attachment-drop-zone__icon {
-    display: inline-block;
-    flex: 0 0 auto;
-    font-size: 34px;
-    color: #1a73e8;
+    color: var(--form-attachment-accent, #5d95f5);
+    transform: translateY(-2px);
 }
 
 .attachment-drop-zone.is-dragging .attachment-drop-zone__content {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 5px;
-    min-height: 0;
-    padding: 0;
-    background: transparent;
-    color: #3c4043;
-    box-shadow: none;
 }
 
 .attachment-drop-zone.is-dragging .attachment-drop-zone__compact-label {
@@ -727,16 +734,15 @@ aside {
 
 .attachment-drop-zone.is-dragging .attachment-drop-zone__drop-label,
 .attachment-drop-zone.is-dragging .attachment-drop-zone__hint {
-    display: inline;
+    display: block;
 }
 
 .attachment-drop-zone.is-dragging .attachment-drop-zone__drop-label {
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .attachment-drop-zone.is-dragging .attachment-drop-zone__hint {
-    font-size: 13px;
-    color: #5f6368;
+    font-size: 11px;
 }
 
 @keyframes attachment-drop-zone-loading {
@@ -746,12 +752,12 @@ aside {
 
 @media (max-width: 640px) {
     .attachment-drop-zone {
-        min-height: 44px;
+        min-height: 82px;
+        padding: 14px;
     }
 
     .attachment-drop-zone.is-dragging {
         min-height: 112px;
-        padding: 18px;
         flex-direction: column;
         text-align: center;
     }
@@ -6595,8 +6601,113 @@ textarea {
 }
 
 /* Remarks editor follows the same neutral card treatment as the form. */
-:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-footer > .dept-title {
-    color: var(--form-remarks-title) !important;
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .actionBarDept {
+    background: var(--form-remarks-surface) !important;
+    border: 1px solid var(--form-remarks-border) !important;
+    box-shadow: 0 3px 11px rgba(31, 42, 55, .05) !important;
+}
+
+/* Department and Remarks captions share the DevExtreme group-caption type. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dept-header .dept-title, .actionBarDept .dept-title,
+        .dept-body .dx-form-group-caption, .dept-upperbody .dx-form-group-caption) {
+    color: var(--form-group-title-color) !important;
+    font-size: var(--form-group-title-size) !important;
+    font-weight: var(--form-group-title-weight) !important;
+    letter-spacing: var(--form-group-title-letter-spacing) !important;
+    line-height: 1.35 !important;
+    text-transform: uppercase !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .actionBarDept .dept-title {
+    display: inline-block;
+    margin-bottom: 8px !important;
+}
+
+/* Compact icon-only permission badges. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-hint .lock {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    border: 1px solid var(--form-remarks-border);
+    border-radius: 8px;
+    box-sizing: border-box;
+    background: var(--form-action-neutral-bg);
+    box-shadow: none;
+    font-size: 0;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-hint .lock svg {
+    width: 15px;
+    height: 15px;
+    flex: 0 0 15px;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-hint .lock.editable {
+    color: var(--form-attachment-accent);
+    background: var(--form-remarks-toolbar);
+    border-color: var(--form-attachment-border);
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-hint .lock.readonly {
+    color: var(--form-action-neutral-text);
+}
+
+/* FileUploader controls stay readable without DevExtreme's saturated fills. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dx-fileuploader .dx-button {
+    color: var(--form-upload-button-text) !important;
+    background: var(--form-upload-button-bg) !important;
+    border: 1px solid var(--form-upload-button-border) !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dx-fileuploader .dx-button :is(.dx-button-text, .dx-icon) {
+    color: inherit !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dx-fileuploader .dx-button:is(.dx-state-hover, .dx-state-focused, .dx-state-active) {
+    color: var(--form-upload-button-text) !important;
+    background: var(--form-upload-button-hover-bg) !important;
+    border-color: var(--form-attachment-accent) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dx-fileuploader .dx-button.dx-state-focused {
+    box-shadow: 0 0 0 3px var(--form-node-focus-ring) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dx-fileuploader .dx-fileuploader-cancel-button {
+    color: var(--form-action-neutral-text) !important;
+    background: var(--form-action-neutral-bg) !important;
+    border-color: var(--form-action-neutral-border) !important;
+}
+
+/* Focus marks navigation only; keep it as a light theme outline. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-node.focus .dept-circle:not(.status-success):not(.status-fail),
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-node.focus.scroll-active .dept-circle:not(.status-success):not(.status-fail) {
+    color: var(--form-node-focus-text) !important;
+    background: var(--theme-surface) !important;
+    border-color: var(--form-node-focus-border) !important;
+    box-shadow: 0 0 0 3px var(--form-node-focus-ring), 0 8px 18px rgba(31, 42, 55, .1) !important;
+}
+
+/* stageDept is the status node: use a soft red fill, even when focused. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dept-node.status .dept-circle:not(.status-success):not(.status-fail) {
+    color: var(--form-node-stage-text) !important;
+    background: var(--form-node-stage-bg) !important;
+    border-color: var(--form-node-stage-border) !important;
+    box-shadow: 0 8px 18px rgba(31, 42, 55, .1) !important;
+    transform: scale(1.08);
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dept-node.status.focus .dept-circle:not(.status-success):not(.status-fail)::after {
+    display: none;
 }
 
 :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-footer .tmiv-html-editor {
