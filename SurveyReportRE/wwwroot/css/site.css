@@ -570,6 +570,7 @@ aside {
     /*z-index: 1000;*/
     position: absolute;
     min-height: 100vh;
+    color: var(--theme-text);
 }
 .dxc-tooltip {
     z-index: 2000;
@@ -907,7 +908,7 @@ aside {
 .sidebarHeader {
     padding: 14px 14px 10px;
     border-bottom: 1px solid rgba(255,255,255,.08);
-    background: linear-gradient(0deg, rgba(232,74,95,.08), rgba(232,74,95,.08));
+    background: var(--theme-primary-soft);
 }
 
     .sidebarHeader .appName {
@@ -951,8 +952,8 @@ aside {
     }
 
     .navItem.active {
-        background: rgba(232,74,95,.18);
-        border: 1px solid rgba(232,74,95,.35);
+        background: var(--theme-primary-soft);
+        border: 1px solid var(--theme-primary);
     }
 
 .navDot {
@@ -1148,8 +1149,8 @@ aside {
     }
 
     .navItem.active {
-        background: rgba(232,74,95,.18);
-        border: 1px solid rgba(232,74,95,.35);
+        background: var(--theme-primary-soft);
+        border: 1px solid var(--theme-primary);
     }
 
 .navDot {
@@ -1180,7 +1181,7 @@ aside {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 14px;
-    box-shadow: 0 2px 10px rgba(0,0,0,.04);
+    box-shadow: var(--theme-shadow-sm);
     overflow: hidden;
 }
 
@@ -1195,7 +1196,7 @@ aside {
     position: sticky;
     top: 0;
     z-index: 2;
-    background: linear-gradient(135deg, #2A7B9B 0%, #57C785 50%, #EDDD53 100%);
+    background: var(--theme-primary);
     /* Add for smoother rendering */
     will-change: transform;
     backface-visibility: hidden;
@@ -1220,7 +1221,7 @@ aside {
     position: sticky;
     top: 0;
     z-index: 2;
-    background: linear-gradient(135deg, #F5CCA4 0%, #EBBDAE 50%,#FFFFFF 100%);
+    background: var(--theme-secondary);
     /* Add for smoother rendering */
     will-change: transform;
     backface-visibility: hidden;
@@ -1230,6 +1231,7 @@ aside {
     .pi-cardHeader .h {
         font-weight: 800;
         font-size: 13px;
+        color: #fff;
     }
 
 
@@ -1245,7 +1247,7 @@ aside {
     margin-bottom: 10px;
     cursor: pointer;
     transition: .12s ease;
-    background: #fff;
+    background: var(--theme-surface);
 }
 
     .qt-quoteCard:hover {
@@ -1254,8 +1256,8 @@ aside {
     }
 
     .qt-quoteCard.selected {
-        border-color: rgba(232,74,95,.55);
-        box-shadow: 0 0 0 3px rgba(232,74,95,.12);
+        border-color: var(--theme-primary);
+        box-shadow: 0 0 0 3px var(--theme-primary-ring);
     }
 
 .pi-quoteCard {
@@ -1265,7 +1267,7 @@ aside {
     margin-bottom: 10px;
     cursor: pointer;
     transition: .12s ease;
-    background: #fff;
+    background: var(--theme-surface);
 }
 
     .pi-quoteCard:hover {
@@ -1274,8 +1276,8 @@ aside {
     }
 
     .pi-quoteCard.selected {
-        border-color: rgba(232,74,95,.55);
-        box-shadow: 0 0 0 3px rgba(232,74,95,.12);
+        border-color: var(--theme-primary);
+        box-shadow: 0 0 0 3px var(--theme-primary-ring);
     }
 
 
@@ -1307,7 +1309,7 @@ aside {
 
 .quoteAmount {
     font-weight: 800;
-    color: #111827;
+    color: var(--theme-text-strong);
 }
 
 /* ================================
@@ -1329,14 +1331,14 @@ aside {
     /* Pending / New */
     .statusTag.pending,
     .statusTag.new {
-        background: rgba(107,114,128);
+        background: var(--pending);
         color: #FFFFFF;
     }
 
     /* In Progress */
 
     .statusTag.in-progress {
-        background: #f97316; /* màu cam */
+        background: var(--theme-warning); /* màu cam */
         color: #ffffff; /* chữ trắng */
     }
 
@@ -1345,7 +1347,7 @@ aside {
     .statusTag.approved,
     .statusTag.approve,
     .statusTag.client-accept {
-        background: rgba(16,185,129);
+        background: var(--theme-success);
         color: #ffffff;
     }
 
@@ -1353,7 +1355,7 @@ aside {
     .statusTag.rejected,
     .statusTag.declined,
     .statusTag.client-refuse {
-        background: rgba(239,68,68);
+        background: var(--theme-danger);
         color: #ffffff;
     }
 
@@ -1362,8 +1364,8 @@ aside {
     .statusTag.complete,
     .statusTag.dispose,
     .statusTag.archive {
-        background: rgba(139,92,246);
-        color: #4c1d95;
+        background: var(--both);
+        color: #ffffff;
     }
 
     /* Unknown / ? */
@@ -1399,21 +1401,21 @@ aside {
 }
 
 .dept-section {
-    background: #fff;
-    border: 1px solid rgba(226, 232, 240, 0.8);
+    background: var(--theme-surface);
+    border: 1px solid var(--theme-border);
     border-radius: 16px;
     padding: 16px;
     margin-bottom: 16px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    border-left: 6px solid #cbd5e1;
+    border-left: 6px solid var(--theme-border-strong);
 }
 
-.dept-section[id*="sec_FO"] { border-left-color: #3b82f6; }
-.dept-section[id*="sec_TS"] { border-left-color: #10b981; }
-.dept-section[id*="sec_UW"] { border-left-color: #8b5cf6; }
-.dept-section[id*="sec_LMKT"] { border-left-color: #f97316; }
-.dept-section[id*="sec_PM"] { border-left-color: #06b6d4; }
+.dept-section[id*="sec_FO"],
+.dept-section[id*="sec_UW"],
+.dept-section[id*="sec_LMKT"] { border-left-color: var(--theme-primary); }
+.dept-section[id*="sec_TS"],
+.dept-section[id*="sec_PM"] { border-left-color: var(--theme-secondary); }
 
     .dept-section.focused {
         border-color: rgba(37,99,235,.45);
@@ -1462,7 +1464,7 @@ aside {
 .dept-title {
     font-weight: 800;
     font-size: 18px;
-    color: #1e293b;
+    color: var(--theme-text-strong);
     margin-bottom: 8px;
 }
 
@@ -1727,7 +1729,7 @@ aside {
         width: 56px;
         height: 56px;
         border-color: var(--brand);
-        box-shadow: 0 0 0 4px rgba(232,74,95,.18);
+        box-shadow: 0 0 0 4px var(--theme-primary-ring);
     }
 
     .bnode.choice.active {
@@ -1894,8 +1896,8 @@ top:  1%;
 }
 
     .fh-node.cur {
-        border-color: rgba(232,74,95,.95);
-        box-shadow: 0 0 0 4px rgba(232,74,95,.16);
+        border-color: var(--theme-primary);
+        box-shadow: 0 0 0 4px var(--theme-primary-ring);
         background: #fff;
     }
 
@@ -3368,8 +3370,8 @@ text-overflow: ellipsis;
 }
 
 .dept-node.status .dept-circle {
-    border-color: rgba(232,74,95,.95);
-    box-shadow: 0 0 0 4px rgba(232,74,95,.16), 0 10px 22px rgba(0,0,0,.10);
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 4px var(--theme-primary-ring), 0 10px 22px rgba(0,0,0,.10);
 }
 
 .dept-node.focus .dept-circle {
@@ -3386,7 +3388,7 @@ text-overflow: ellipsis;
         position: absolute;
         inset: 4px;
         border-radius: 999px;
-        border: 2px solid rgba(232,74,95,.9);
+        border: 2px solid var(--theme-primary);
         pointer-events: none;
     }
 
@@ -3732,8 +3734,8 @@ text-overflow: ellipsis;
 }
 
 .dept-node.status .dept-circle {
-    border-color: rgba(232,74,95,.95);
-    box-shadow: 0 0 0 4px rgba(232,74,95,.16), 0 10px 22px rgba(0,0,0,.10);
+    border-color: var(--theme-primary);
+    box-shadow: 0 0 0 4px var(--theme-primary-ring), 0 10px 22px rgba(0,0,0,.10);
 }
 
 .dept-node.focus .dept-circle {
@@ -3750,7 +3752,7 @@ text-overflow: ellipsis;
         position: absolute;
         inset: 4px;
         border-radius: 999px;
-        border: 2px solid rgba(232,74,95,.9);
+        border: 2px solid var(--theme-primary);
         pointer-events: none;
     }
 
@@ -6286,7 +6288,7 @@ textarea {
     isolation: isolate;
     overflow: visible;
     opacity: 1 !important;
-    background: #f8fafc !important;
+    background: var(--theme-surface-muted) !important;
     background-image: none !important;
     backdrop-filter: none !important;
 }
@@ -6317,10 +6319,10 @@ textarea {
         margin-top: -18px !important;
         border-top-left-radius: 0px !important;
         border-top-right-radius: 0px !important;
-        background: #fff !important;
+        background: var(--theme-surface) !important;
     }
 .overview-scroll .dept-section > .dept-header.dept-header-floated .dept-title {
-    color: #1d4ed8 !important;
+    color: var(--theme-primary) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -6337,12 +6339,12 @@ textarea {
 /* Make DevExtreme text area & text box borders soft and modern */
 .dept-upperbody .dx-texteditor {
     border-radius: 6px !important;
-    border-color: #cbd5e1 !important;
+    border-color: var(--theme-border-strong) !important;
 }
 
     .dept-upperbody .dx-texteditor.dx-state-focused {
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+        border-color: var(--theme-primary) !important;
+        box-shadow: 0 0 0 2px var(--theme-primary-ring) !important;
     }
 
 /* Keep long application menus inside the viewport. */
@@ -6471,4 +6473,174 @@ textarea {
     .dept-upperbody .dx-layout-manager .dx-field-item:not(.dx-last-col) {
         padding-right: 5px;
     }
+}
+
+/* ========================================================================== */
+/* Quotation / Policy Issuance theme actions
+   Values live in constant/rootstats.css; selectors here only map controls to
+   semantic roles so dynamic DevExtreme buttons cannot reintroduce vivid colors. */
+/* ========================================================================== */
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .workflow-decision-group .dx-button-mode-contained.dx-button-success {
+    color: var(--form-action-accept-text) !important;
+    background: var(--form-action-accept-bg) !important;
+    border-color: var(--form-action-accept-border) !important;
+    box-shadow: none !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .workflow-decision-group .dx-button-mode-contained.dx-button-success .dx-icon {
+    color: var(--form-action-accept-text) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .workflow-decision-group .dx-button-mode-contained.dx-button-success:is(.dx-state-hover, .dx-state-focused, .dx-state-active) {
+    color: var(--form-action-accept-text) !important;
+    background: var(--form-action-accept-hover-bg) !important;
+    border-color: var(--form-action-accept-border) !important;
+}
+
+/* Submit/forward routes are the single primary action in each department. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is([id*="btnSubmitBranch"].dx-button, [id*="btnSubmitBranch"] .dx-button,
+        [data-custom-route-button].dx-button:not(.dx-button-danger),
+        [data-custom-route-button] .dx-button:not(.dx-button-danger)) {
+    color: var(--form-action-submit-text) !important;
+    background: var(--form-action-submit-bg) !important;
+    border-color: var(--form-action-submit-border) !important;
+    box-shadow: none !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is([id*="btnSubmitBranch"].dx-button, [id*="btnSubmitBranch"] .dx-button,
+        [data-custom-route-button].dx-button:not(.dx-button-danger),
+        [data-custom-route-button] .dx-button:not(.dx-button-danger)) .dx-icon {
+    color: var(--form-action-submit-text) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is([id*="btnSubmitBranch"].dx-button, [id*="btnSubmitBranch"] .dx-button,
+        [data-custom-route-button].dx-button:not(.dx-button-danger),
+        [data-custom-route-button] .dx-button:not(.dx-button-danger)):is(.dx-state-hover, .dx-state-focused, .dx-state-active) {
+    background: var(--form-action-submit-hover-bg) !important;
+    border-color: var(--form-action-submit-hover-bg) !important;
+}
+
+/* Return/reject stays recognizable without a saturated red fill. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is([id*="btnReturnBranch"].dx-button, [id*="btnReturnBranch"] .dx-button,
+        [data-custom-route-button].dx-button-danger,
+        [data-custom-route-button] .dx-button-danger) {
+    color: var(--form-action-return-text) !important;
+    background: var(--form-action-return-bg) !important;
+    border-color: var(--form-action-return-border) !important;
+    box-shadow: none !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is([id*="btnReturnBranch"].dx-button, [id*="btnReturnBranch"] .dx-button,
+        [data-custom-route-button].dx-button-danger,
+        [data-custom-route-button] .dx-button-danger) .dx-icon {
+    color: var(--form-action-return-text) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is([id*="btnReturnBranch"].dx-button, [id*="btnReturnBranch"] .dx-button,
+        [data-custom-route-button].dx-button-danger,
+        [data-custom-route-button] .dx-button-danger):is(.dx-state-hover, .dx-state-focused, .dx-state-active) {
+    color: var(--form-action-return-text) !important;
+    background: var(--form-action-return-hover-bg) !important;
+    border-color: var(--form-action-return-border) !important;
+}
+
+/* Workflow status chips use tinted surfaces instead of solid traffic colors. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .statusTag {
+    border: 1px solid var(--form-status-border) !important;
+    box-shadow: none !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .statusTag:is(.pending, .new) {
+    color: var(--form-status-pending-text) !important;
+    background: var(--form-status-pending-bg) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .statusTag.in-progress {
+    color: var(--form-status-progress-text) !important;
+    background: var(--form-status-progress-bg) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .statusTag:is(.accepted, .approved, .approve, .client-accept, .status-success) {
+    color: var(--form-status-accept-text) !important;
+    background: var(--form-status-accept-bg) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .statusTag:is(.rejected, .declined, .client-refuse) {
+    color: var(--form-status-reject-text) !important;
+    background: var(--form-status-reject-bg) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .statusTag:is(.done, .complete, .dispose, .archive) {
+    color: var(--form-status-complete-text) !important;
+    background: var(--form-status-complete-bg) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .statusTag.unknown,
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .decision-common-status.is-loading {
+    color: var(--form-status-warning-text) !important;
+    background: var(--form-status-warning-bg) !important;
+}
+
+/* Remarks editor follows the same neutral card treatment as the form. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-footer > .dept-title {
+    color: var(--form-remarks-title) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-footer .tmiv-html-editor {
+    overflow: hidden;
+    background: var(--form-remarks-surface) !important;
+    border: 1px solid var(--form-remarks-border) !important;
+    border-radius: 10px;
+    box-shadow: none !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-footer .tmiv-html-editor:focus-within {
+    border-color: var(--form-remarks-focus) !important;
+    box-shadow: 0 0 0 3px var(--form-remarks-focus-ring) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-footer .tmiv-html-toolbar {
+    background: var(--form-remarks-toolbar) !important;
+    border-bottom-color: var(--form-remarks-border) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-footer .tmiv-toolbar-separator {
+    background: var(--form-remarks-border) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-footer .tmiv-html-content {
+    color: var(--theme-text) !important;
+    background: var(--form-remarks-surface) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-footer :is(.tmiv-tool-item, .tmiv-select) {
+    color: var(--form-remarks-tool-text) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-footer .tmiv-select {
+    background: var(--form-remarks-surface) !important;
+    border-color: var(--form-remarks-border) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-footer .tmiv-tool-item:hover {
+    color: var(--form-remarks-focus) !important;
+    background: var(--form-remarks-tool-hover) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-footer .tmiv-tool-item.active {
+    color: var(--form-remarks-focus) !important;
+    background: var(--form-remarks-tool-active) !important;
 }

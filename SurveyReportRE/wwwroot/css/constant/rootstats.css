@@ -55,3 +55,62 @@
     --c-ffffff: #ffffff;
     --c-rgba-0-0-0-05: rgba(0,0,0,.05);
 }
+
+/* Quotation / Policy Issuance action palette.
+   Keep workflow actions calm and reserve saturated colors for critical alerts. */
+:root,
+:root[data-app-theme="reactify"] {
+    --form-action-submit-bg: #5d95f5;
+    --form-action-submit-hover-bg: #4b84e8;
+    --form-action-submit-border: #5d95f5;
+    --form-action-submit-text: #ffffff;
+
+    --form-action-accept-bg: #e7f6f0;
+    --form-action-accept-hover-bg: #d8eee5;
+    --form-action-accept-border: #abdcca;
+    --form-action-accept-text: #176f59;
+
+    --form-action-return-bg: #fff1f1;
+    --form-action-return-hover-bg: #ffe4e4;
+    --form-action-return-border: #ffc7c7;
+    --form-action-return-text: #bd3f46;
+
+    --form-action-neutral-bg: #f5f7fa;
+    --form-action-neutral-hover-bg: #edf1f6;
+    --form-action-neutral-border: #d9e0e9;
+    --form-action-neutral-text: #536079;
+
+    --form-status-pending-bg: #f0f3f7;
+    --form-status-pending-text: #69758a;
+    --form-status-progress-bg: #fff6df;
+    --form-status-progress-text: #9a6a09;
+    --form-status-accept-bg: #e7f6f0;
+    --form-status-accept-text: #176f59;
+    --form-status-reject-bg: #fff0f0;
+    --form-status-reject-text: #bd3f46;
+    --form-status-complete-bg: #f0eefb;
+    --form-status-complete-text: #6557a7;
+    --form-status-warning-bg: #fff6df;
+    --form-status-warning-text: #8b650f;
+    --form-status-border: rgba(83, 96, 121, .1);
+
+    --form-remarks-title: #536079;
+    --form-remarks-surface: #ffffff;
+    --form-remarks-toolbar: #f7f9fc;
+    --form-remarks-border: #dce3ec;
+    --form-remarks-focus: #5d95f5;
+    --form-remarks-focus-ring: rgba(93, 149, 245, .14);
+    --form-remarks-tool-hover: #edf4ff;
+    --form-remarks-tool-active: #e5efff;
+    --form-remarks-tool-text: #536079;
+}
+
+:root[data-app-theme="classic"] {
+    --form-action-submit-bg: #d84a5e;
+    --form-action-submit-hover-bg: #c33b50;
+    --form-action-submit-border: #d84a5e;
+    --form-remarks-focus: #d84a5e;
+    --form-remarks-focus-ring: rgba(216, 74, 94, .14);
+    --form-remarks-tool-hover: #fff0f2;
+    --form-remarks-tool-active: #ffe6e9;
+}

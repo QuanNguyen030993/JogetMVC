@@ -8,7 +8,20 @@
     }
 }
 <!--CSS variables-->
-<link href="~/css/constant/rootstats.css" rel="stylesheet" type="text/css" />
+<link href="~/css/constant/rootstats.css" rel="stylesheet" type="text/css" asp-append-version="true" />
+<link href="~/css/constant/root.css" rel="stylesheet" type="text/css" asp-append-version="true" />
+<script>
+    (function () {
+        const allowedThemes = ["reactify", "classic"];
+        let theme = "reactify";
+        try {
+            const storedTheme = localStorage.getItem("tmiv.theme");
+            if (allowedThemes.includes(storedTheme)) theme = storedTheme;
+        } catch { }
+        document.documentElement.dataset.appTheme = theme;
+        window.tmivTheme = theme;
+    })();
+</script>
 <!-- Colors gathered from Pages CSHTML/JS -->
 <style>
 :root {
@@ -221,7 +234,7 @@
 <link href="~/css/app/dx.css" rel="stylesheet" type="text/css" />
 <!--Only use 1 CSS-->
 <link href="~/css/app/dx-controls.css" rel="stylesheet" type="text/css" />
-<link href="~/css/app/theme.css" rel="stylesheet" type="text/css" />
+<link href="~/css/app/theme.css" rel="stylesheet" type="text/css" asp-append-version="true" />
 <!--Only use 1 CSS-->
 @* <link href="~/css/devextreme-20.1.4/dx.material.blue.light.css" rel="stylesheet" type="text/css" /> *@
 <link href="~/css/jquery/top-panel.min.css" rel="stylesheet" type="text/css" />
@@ -230,7 +243,7 @@
 
 <!--App CSS: customized-->
 @* <link href="~/css/devextreme/dx-diagram.min.css" rel="stylesheet"> *@
-<link href="~/css/app/tabs.css" rel="stylesheet" type="text/css" />
+<link href="~/css/app/tabs.css" rel="stylesheet" type="text/css" asp-append-version="true" />
 <link href="~/css/devextreme-20.1.4/dx-gantt.css" rel="stylesheet" type="text/css" />
 <link href="~/lib/AdminLTE/sidebar-menu.min.css" rel="stylesheet" />
 @* <link href="~/lib/AdminLTE/_all-skins.min.css" rel="stylesheet" /> *@
@@ -417,12 +430,12 @@
     
     // Shared decision palette for dynamically loaded form partials.
     window.DecisionColors = Object.freeze({
-        accepted: "#17a2b8",
-        accept: "#28a745",
-        reject: "#dc3545",
-        warning: "#ffc107",
-        normal: "#6c757d",
-        textOnColor: "#ffffff"
+        accepted: "var(--form-action-accept-bg)",
+        accept: "var(--form-action-accept-bg)",
+        reject: "var(--form-action-return-bg)",
+        warning: "var(--form-status-warning-bg)",
+        normal: "var(--form-action-neutral-bg)",
+        textOnColor: "var(--form-action-submit-text)"
     });
         const _errorFailLogCountMax = 100;
     window.ErrorFailLogCount = 0;

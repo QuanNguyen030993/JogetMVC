@@ -557,7 +557,7 @@
                     </div>
                     <button id="openUserSettings" class="user-settings-entry" type="button">
                         <span class="user-settings-icon"><i class="fa fa-cog"></i></span>
-                        <span><strong>Settings</strong><small>Role and notifications</small></span>
+                        <span><strong>Settings</strong><small>Role, theme and notifications</small></span>
                         <i class="fa fa-angle-right"></i>
                     </button>
                 </div>
@@ -584,11 +584,38 @@
                         <div>
                             <span class="user-settings-kicker">ACCOUNT SETTINGS</span>
                             <h2 id="userSettingsTitle">Account settings</h2>
-                            <p>Choose your workflow role and notification experience.</p>
+                            <p>Choose your workflow role, interface theme and notification experience.</p>
                         </div>
                         <button id="closeUserSettings" class="user-settings-close" type="button" aria-label="Close settings">&times;</button>
                     </header>
                     <div id="userRoleOptions" class="user-role-options"></div>
+                    <section class="account-theme-settings" aria-labelledby="accountThemeSettingTitle">
+                        <div class="account-setting-heading">
+                            <div class="account-theme-icon"><i class="fa fa-paint-brush"></i></div>
+                            <div>
+                                <strong id="accountThemeSettingTitle">Interface theme</strong>
+                                <span>Preview a theme now; it will be remembered for this account after saving.</span>
+                            </div>
+                        </div>
+                        <div id="accountThemeOptions" class="account-theme-options">
+                            <label class="account-theme-card" data-theme-option="reactify">
+                                <input type="radio" name="accountTheme" value="reactify" />
+                                <span class="account-theme-preview account-theme-preview-reactify" aria-hidden="true">
+                                    <i></i><b></b><em></em>
+                                </span>
+                                <span><strong>Reactify Light</strong><small>Slate, blue and teal</small></span>
+                                <i class="fa fa-check account-theme-check"></i>
+                            </label>
+                            <label class="account-theme-card" data-theme-option="classic">
+                                <input type="radio" name="accountTheme" value="classic" />
+                                <span class="account-theme-preview account-theme-preview-classic" aria-hidden="true">
+                                    <i></i><b></b><em></em>
+                                </span>
+                                <span><strong>TMIV Classic</strong><small>Original blue and red</small></span>
+                                <i class="fa fa-check account-theme-check"></i>
+                            </label>
+                        </div>
+                    </section>
                     <section class="account-notification-settings" aria-labelledby="chromeNotificationSettingTitle">
                         <div class="account-notification-icon"><i class="fa fa-bell"></i></div>
                         <div class="account-notification-copy">
@@ -717,7 +744,54 @@
     const chromeNotificationStoragePrefix = "tmiv.chromeNotifications.enabled:";
     let currentSettingsAccount = "";
     let chromeNotificationsEnabled = true;
+    const allowedUserThemes = ["reactify", "classic"];
+    const themeStoragePrefix = "tmiv.theme:";
+    let savedUserTheme = window.tmivTheme || "reactify";
+    let selectedUserTheme = savedUserTheme;
     window.tmivChromeNotificationsEnabled = true;
+
+    function getThemeStorageKey() {
+        const account = String(currentSettingsAccount || _loginUser || "anonymous")
+            .trim()
+            .toLowerCase();
+        return `${themeStoragePrefix}${account}`;
+    }
+
+    function readThemePreference() {
+        try {
+            const accountTheme = localStorage.getItem(getThemeStorageKey());
+            const globalTheme = localStorage.getItem("tmiv.theme");
+            const theme = accountTheme || globalTheme || "reactify";
+            return allowedUserThemes.includes(theme) ? theme : "reactify";
+        } catch {
+            return "reactify";
+        }
+    }
+
+    function renderThemePreference() {
+        $("input[name='accountTheme']").each(function () {
+            const isSelected = this.value === selectedUserTheme;
+            $(this).prop("checked", isSelected);
+            $(this).closest(".account-theme-card").toggleClass("is-selected", isSelected);
+        });
+    }
+
+    function applyThemePreference(theme, persist) {
+        const nextTheme = allowedUserThemes.includes(theme) ? theme : "reactify";
+        selectedUserTheme = nextTheme;
+        document.documentElement.dataset.appTheme = nextTheme;
+        window.tmivTheme = nextTheme;
+        renderThemePreference();
+        if (persist) {
+            savedUserTheme = nextTheme;
+            try {
+                localStorage.setItem("tmiv.theme", nextTheme);
+                localStorage.setItem(getThemeStorageKey(), nextTheme);
+            } catch (error) {
+                console.warn("Unable to save interface theme preference.", error);
+            }
+        }
+    }
 
     function getChromeNotificationStorageKey() {
         const account = String(currentSettingsAccount || _loginUser || "anonymous")
@@ -815,6 +889,8 @@
                 if (!response?.success) return;
                 const profile = response.data;
                 currentSettingsAccount = profile.accountName || _loginUser || "";
+                savedUserTheme = readThemePreference();
+                applyThemePreference(savedUserTheme, false);
                 applyChromeNotificationPreference(readChromeNotificationPreference(), false);
                 selectedUserRole = (profile.role || "").toUpperCase();
                 userRoleOptions = profile.roles?.length ? profile.roles : fallbackRoleOptions;
@@ -849,6 +925,7 @@
         refreshUserRoleSettings(true);
     });
     $("#closeUserSettings, #cancelUserSettings, .user-settings-backdrop").on("click", function () {
+        applyThemePreference(savedUserTheme, false);
         setUserSettingsModalVisible(false);
     });
     $("#userRoleOptions").on("change", "input[name='userWorkflowRole']", function () {
@@ -860,6 +937,9 @@
         window.tmivChromeNotificationsEnabled = chromeNotificationsEnabled;
         updateChromeNotificationPermissionStatus();
     });
+    $("#accountThemeOptions").on("change", "input[name='accountTheme']", function () {
+        applyThemePreference(this.value, false);
+    });
     $("#saveUserSettings").on("click", function () {
         if (!selectedUserRole) {
             appNotify({ message: "Please select a role.", type: "warning" });
@@ -867,6 +947,7 @@
         }
 
         const $button = $(this).prop("disabled", true).addClass("is-saving");
+        applyThemePreference(selectedUserTheme, true);
         applyChromeNotificationPreference(
             $("#enableChromeNotifications").prop("checked") === true,
             true);
@@ -1658,9 +1739,9 @@
         display: inline-flex;
         align-items: center;
         gap: 9px;
-        color: #fff;
-        background: rgba(255, 255, 255, .12);
-        border: 1px solid rgba(255, 255, 255, .2);
+        color: var(--theme-header-text);
+        background: color-mix(in srgb, var(--theme-header-text) 8%, transparent);
+        border: 1px solid color-mix(in srgb, var(--theme-header-text) 16%, transparent);
         border-radius: 12px;
         cursor: pointer;
         transition: background .18s ease, transform .18s ease, border-color .18s ease;
@@ -1668,8 +1749,8 @@
 
     .user-account-trigger:hover,
     .user-account-trigger[aria-expanded="true"] {
-        background: rgba(255, 255, 255, .2);
-        border-color: rgba(255, 255, 255, .36);
+        background: color-mix(in srgb, var(--theme-header-text) 14%, transparent);
+        border-color: color-mix(in srgb, var(--theme-header-text) 24%, transparent);
         transform: translateY(-1px);
     }
 
@@ -1681,8 +1762,8 @@
         flex: 0 0 auto;
         color: #fff;
         font-weight: 700;
-        background: linear-gradient(145deg, #ff5b68, #c7162b);
-        box-shadow: 0 4px 12px rgba(112, 15, 28, .28);
+        background: var(--theme-primary);
+        box-shadow: 0 4px 12px var(--theme-primary-ring);
     }
 
     .user-account-avatar {
@@ -1704,7 +1785,7 @@
     .user-account-name {
         max-width: 110px;
         overflow: hidden;
-        color: #fff;
+        color: var(--theme-header-text);
         font-size: 12px;
         font-weight: 650;
         text-overflow: ellipsis;
@@ -1713,14 +1794,14 @@
 
     .user-account-role {
         margin-top: 3px;
-        color: rgba(255, 255, 255, .74);
+        color: color-mix(in srgb, var(--theme-header-text) 72%, transparent);
         font-size: 10px;
         letter-spacing: .035em;
         text-transform: uppercase;
     }
 
     .user-account-chevron {
-        color: rgba(255, 255, 255, .76);
+        color: color-mix(in srgb, var(--theme-header-text) 76%, transparent);
         transition: transform .18s ease;
     }
 
@@ -1735,11 +1816,11 @@
         right: 14px;
         width: 310px;
         padding: 10px;
-        color: #1f2937;
-        background: #fff;
-        border: 1px solid #e7eaf0;
+        color: var(--theme-text);
+        background: var(--theme-surface);
+        border: 1px solid var(--theme-border);
         border-radius: 16px;
-        box-shadow: 0 18px 50px rgba(15, 23, 42, .2);
+        box-shadow: var(--theme-shadow-lg);
     }
 
     .user-menu-heading {
@@ -1747,7 +1828,7 @@
         align-items: center;
         gap: 12px;
         padding: 10px;
-        background: linear-gradient(135deg, #fff6f7, #fff);
+        background: var(--theme-primary-soft);
         border-radius: 12px;
     }
 
@@ -1764,13 +1845,13 @@
     }
 
     .user-menu-heading strong {
-        color: #172033;
+        color: var(--theme-text-strong);
         font-size: 14px;
     }
 
     .user-menu-heading div > span {
         margin-top: 3px;
-        color: #7b8495;
+        color: var(--theme-muted);
         font-size: 11px;
     }
 
@@ -1779,7 +1860,7 @@
         align-items: center;
         gap: 7px;
         padding: 11px 12px 8px;
-        color: #718096;
+        color: var(--theme-muted);
         font-size: 10px;
     }
 
@@ -1798,7 +1879,7 @@
         grid-template-columns: 35px 1fr auto;
         align-items: center;
         gap: 10px;
-        color: #273246;
+        color: var(--theme-text);
         text-align: left;
         background: transparent;
         border: 0;
@@ -1806,7 +1887,7 @@
     }
 
     .user-settings-entry:hover {
-        background: #f6f7fa;
+        background: var(--theme-surface-hover);
     }
 
     .user-settings-entry span:nth-child(2) {
@@ -1816,7 +1897,7 @@
 
     .user-settings-entry small {
         margin-top: 2px;
-        color: #8a93a3;
+        color: var(--theme-muted);
     }
 
     .user-settings-icon {
@@ -1825,8 +1906,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        color: #c7162b;
-        background: #fff0f2;
+        color: var(--theme-primary);
+        background: var(--theme-primary-soft);
         border-radius: 10px;
     }
 
@@ -1851,7 +1932,7 @@
     .user-settings-backdrop {
         position: absolute;
         inset: 0;
-        background: rgba(12, 18, 31, .58);
+        background: var(--theme-overlay);
         backdrop-filter: blur(3px);
     }
 
@@ -1861,9 +1942,9 @@
         max-height: calc(100vh - 48px);
         overflow: auto;
         padding: 26px;
-        background: #fff;
+        background: var(--theme-surface);
         border-radius: 22px;
-        box-shadow: 0 28px 80px rgba(7, 12, 24, .32);
+        box-shadow: var(--theme-shadow-lg);
         animation: userSettingsEnter .2s ease-out;
     }
 
@@ -1879,7 +1960,7 @@
     }
 
     .user-settings-kicker {
-        color: #c7162b;
+        color: var(--theme-primary);
         font-size: 10px;
         font-weight: 750;
         letter-spacing: .16em;
@@ -1887,24 +1968,24 @@
 
     .user-settings-header h2 {
         margin: 5px 0 6px;
-        color: #172033;
+        color: var(--theme-text-strong);
         font-size: 23px;
         font-weight: 700;
     }
 
     .user-settings-header p {
         margin: 0;
-        color: #737d8e;
+        color: var(--theme-muted);
         font-size: 13px;
     }
 
     .user-settings-close {
         width: 36px;
         height: 36px;
-        color: #677184;
+        color: var(--theme-muted);
         font-size: 24px;
         line-height: 1;
-        background: #f4f5f7;
+        background: var(--theme-surface-hover);
         border: 0;
         border-radius: 11px;
     }
@@ -1916,6 +1997,142 @@
         gap: 10px;
     }
 
+    .account-theme-settings {
+        margin-top: 18px;
+        padding: 15px;
+        background: var(--theme-surface-muted);
+        border: 1px solid var(--theme-border);
+        border-radius: 14px;
+    }
+
+    .account-setting-heading {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .account-setting-heading > div:last-child {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .account-setting-heading strong {
+        color: var(--theme-text-strong);
+        font-size: 14px;
+    }
+
+    .account-setting-heading span {
+        color: var(--theme-muted);
+        font-size: 11px;
+    }
+
+    .account-theme-icon {
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        color: var(--theme-primary);
+        background: var(--theme-primary-soft);
+        border-radius: 12px;
+    }
+
+    .account-theme-options {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .account-theme-card {
+        position: relative;
+        min-width: 0;
+        padding: 10px 34px 10px 10px;
+        display: grid;
+        grid-template-columns: 62px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        background: var(--theme-surface);
+        border: 1px solid var(--theme-border);
+        border-radius: 12px;
+        transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .account-theme-card:hover {
+        border-color: var(--theme-primary);
+        transform: translateY(-1px);
+    }
+
+    .account-theme-card.is-selected {
+        border-color: var(--theme-primary);
+        box-shadow: 0 0 0 3px var(--theme-primary-ring);
+    }
+
+    .account-theme-card input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .account-theme-card > span:nth-of-type(2) {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .account-theme-card strong {
+        color: var(--theme-text-strong);
+        font-size: 12px;
+    }
+
+    .account-theme-card small {
+        overflow: hidden;
+        color: var(--theme-muted);
+        font-size: 10px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .account-theme-preview {
+        position: relative;
+        width: 62px;
+        height: 42px;
+        overflow: hidden;
+        background: #f5f7fa;
+        border: 1px solid #dfe5ed;
+        border-radius: 7px;
+    }
+
+    .account-theme-preview i,
+    .account-theme-preview b,
+    .account-theme-preview em {
+        position: absolute;
+        display: block;
+    }
+
+    .account-theme-preview i { inset: 0 auto 0 0; width: 17px; background: #566077; }
+    .account-theme-preview b { inset: 0 0 auto 17px; height: 9px; background: #fff; border-bottom: 1px solid #e2e7ef; }
+    .account-theme-preview em { left: 23px; right: 6px; top: 15px; height: 17px; background: #fff; border-left: 3px solid #5d95f5; box-shadow: 0 1px 3px rgba(35,49,75,.12); }
+    .account-theme-preview-classic i { background: #f9fafc; }
+    .account-theme-preview-classic b { background: #3c8dbc; border: 0; }
+    .account-theme-preview-classic em { border-left-color: #e84a5f; }
+
+    .account-theme-check {
+        position: absolute;
+        top: 9px;
+        right: 9px;
+        color: transparent;
+        font-size: 11px;
+    }
+
+    .account-theme-card.is-selected .account-theme-check {
+        color: var(--theme-primary);
+    }
+
     .account-notification-settings {
         margin-top: 18px;
         padding: 15px;
@@ -1923,8 +2140,8 @@
         grid-template-columns: 42px minmax(0, 1fr) auto;
         align-items: center;
         gap: 12px;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        background: var(--theme-surface-muted);
+        border: 1px solid var(--theme-border);
         border-radius: 14px;
     }
 
@@ -1934,8 +2151,8 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        color: #2563eb;
-        background: #dbeafe;
+        color: var(--theme-primary);
+        background: var(--theme-primary-soft);
         border-radius: 12px;
     }
 
@@ -1947,13 +2164,13 @@
     }
 
     .account-notification-copy strong {
-        color: #172033;
+        color: var(--theme-text-strong);
         font-size: 14px;
     }
 
     .account-notification-copy span,
     .account-notification-copy small {
-        color: #737d8e;
+        color: var(--theme-muted);
         font-size: 11px;
         line-height: 1.45;
     }
@@ -2000,7 +2217,7 @@
     }
 
     .account-setting-switch input:checked + .account-setting-slider {
-        background: #2563eb;
+        background: var(--theme-primary);
     }
 
     .account-setting-switch input:checked + .account-setting-slider::before {
@@ -2008,7 +2225,7 @@
     }
 
     .account-setting-switch input:focus-visible + .account-setting-slider {
-        outline: 3px solid rgba(37, 99, 235, .25);
+        outline: 3px solid var(--theme-primary-ring);
         outline-offset: 2px;
     }
 
@@ -2019,21 +2236,21 @@
         display: flex;
         flex-direction: column;
         cursor: pointer;
-        background: #fafbfc;
-        border: 1px solid #e5e8ed;
+        background: var(--theme-surface-muted);
+        border: 1px solid var(--theme-border);
         border-radius: 14px;
         transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease;
     }
 
     .user-role-card:hover {
-        border-color: #d5a4aa;
+        border-color: var(--theme-primary);
         transform: translateY(-1px);
     }
 
     .user-role-card.is-selected {
-        background: #fff7f8;
-        border-color: #d52a3f;
-        box-shadow: 0 7px 18px rgba(199, 22, 43, .1);
+        background: var(--theme-primary-soft);
+        border-color: var(--theme-primary);
+        box-shadow: 0 7px 18px var(--theme-primary-ring);
     }
 
     .user-role-card input {
@@ -2043,14 +2260,14 @@
     }
 
     .user-role-code {
-        color: #172033;
+        color: var(--theme-text-strong);
         font-size: 16px;
         font-weight: 750;
     }
 
     .user-role-description {
         margin-top: 5px;
-        color: #717b8c;
+        color: var(--theme-muted);
         font-size: 11px;
         line-height: 1.4;
     }
@@ -2072,8 +2289,8 @@
 
     .user-role-card.is-selected .user-role-check {
         color: #fff;
-        background: #c7162b;
-        border-color: #c7162b;
+        background: var(--theme-primary);
+        border-color: var(--theme-primary);
     }
 
     .user-settings-note {
@@ -2081,14 +2298,14 @@
         padding: 10px 12px;
         display: flex;
         gap: 8px;
-        color: #667085;
+        color: var(--theme-muted);
         font-size: 11px;
-        background: #f6f8fb;
+        background: var(--theme-surface-muted);
         border-radius: 10px;
     }
 
     .user-settings-note i {
-        color: #c7162b;
+        color: var(--theme-primary);
     }
 
     .user-settings-footer {
@@ -2114,9 +2331,9 @@
 
     .user-settings-save {
         color: #fff;
-        background: linear-gradient(135deg, #d82339, #ad1023);
+        background: var(--theme-primary);
         border: 0;
-        box-shadow: 0 8px 18px rgba(199, 22, 43, .24);
+        box-shadow: 0 8px 18px var(--theme-primary-ring);
     }
 
     .user-settings-save:disabled {
@@ -2128,6 +2345,7 @@
         .user-account-copy { display: none; }
         .user-account-trigger { min-width: 0; }
         .user-role-options { grid-template-columns: 1fr; }
+        .account-theme-options { grid-template-columns: 1fr; }
         .user-settings-dialog { padding: 20px; }
     }
 
@@ -2216,8 +2434,8 @@
     }
 
     #tablist > ul > li {
-        background: var(--c-f8fafc) !important;
-        border: 1px solid var(--c-e2e8f0) !important;
+        background: var(--theme-surface-muted) !important;
+        border: 1px solid var(--theme-border) !important;
         border-radius: 30px !important;
         margin: 0 !important;
         padding: 4px 14px !important;
@@ -2226,7 +2444,7 @@
         justify-content: center !important;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         cursor: pointer !important;
-        box-shadow: 0 1px 3px var(--c-rgba-0-0-0-0-02) !important;
+        box-shadow: var(--theme-shadow-sm) !important;
     }
 
     /* Tab Link */
@@ -2234,7 +2452,7 @@
         font-family: 'Outfit', 'Inter', sans-serif !important;
         font-size: 13px !important;
         font-weight: 600 !important;
-        color: var(--c-475569) !important;
+        color: var(--theme-text) !important;
         padding: 4px 6px !important;
         text-decoration: none !important;
         outline: none !important;
@@ -2246,7 +2464,7 @@
     /* Close Tab Button */
     #tablist > ul > li .close-tab-btn {
         font-size: 10px !important;
-        color: var(--c-94a3b8) !important;
+        color: var(--theme-muted) !important;
         cursor: pointer !important;
         padding: 4px !important;
         margin-left: 6px !important;
@@ -2261,41 +2479,41 @@
 
     /* Hover State (Inactive Tab) */
     #tablist > ul > li:not(.ui-tabs-active):hover {
-        background: var(--c-f1f5f9) !important;
-        border-color: var(--c-cbd5e1) !important;
+        background: var(--theme-surface-hover) !important;
+        border-color: var(--theme-border-strong) !important;
         transform: translateY(-1px) !important;
         box-shadow: 0 4px 8px var(--c-rgba-0-0-0-0-04) !important;
     }
 
     #tablist > ul > li:not(.ui-tabs-active):hover a {
-        color: var(--c-1e293b) !important;
+        color: var(--theme-text-strong) !important;
     }
 
     #tablist > ul > li:not(.ui-tabs-active) .close-tab-btn:hover {
-        background: var(--c-fee2e2) !important;
-        color: var(--c-ef4444) !important;
+        background: color-mix(in srgb, var(--theme-danger) 14%, transparent) !important;
+        color: var(--theme-danger) !important;
     }
 
     /* Active Tab State */
     #tablist > ul > li.ui-tabs-active {
-        background: linear-gradient(135deg, var(--c-3b82f6) 0%, var(--c-2563eb) 100%) !important;
-        border-color: var(--c-2563eb) !important;
-        box-shadow: 0 4px 12px var(--c-rgba-37-99-235-0-25) !important;
+        background: var(--theme-tab-active) !important;
+        border-color: var(--theme-tab-active) !important;
+        box-shadow: var(--theme-tab-active-shadow) !important;
         transform: translateY(-1px) !important;
     }
 
     #tablist > ul > li.ui-tabs-active a {
-        color: var(--c-ffffff) !important;
+        color: var(--theme-on-primary) !important;
         text-shadow: 0 1px 2px var(--c-rgba-0-0-0-0-1) !important;
     }
 
     #tablist > ul > li.ui-tabs-active .close-tab-btn {
-        color: var(--c-ffffff) !important;
+        color: var(--theme-on-primary) !important;
     }
 
     #tablist > ul > li.ui-tabs-active .close-tab-btn:hover {
         background: var(--c-rgba-255-255-255-0-2) !important;
-        color: var(--c-ffffff) !important;
+        color: var(--theme-on-primary) !important;
     }
 
     /* Progress and Icons inside tab */
@@ -2324,7 +2542,7 @@
 
     #tablist > ul > li.ui-tabs-active div[id*="_progressSuccessIcon"] i,
     #tablist > ul > li.ui-tabs-active div[id*="_progressErrorIcon"] i {
-        color: var(--c-ffffff) !important;
+        color: var(--theme-on-primary) !important;
     }
     .square-btn {
         width: 42px;

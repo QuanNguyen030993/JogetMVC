@@ -1,0 +1,121 @@
+:root,
+:root[data-app-theme="reactify"] {
+    color-scheme: light;
+
+    /* Layout */
+    --collapsed-ml: -15%;
+    --collapsed-mr: 5%;
+    --collapsed-form-mr: 0%;
+    --rightdock-width: 20%;
+    --sidebar-w: 260px;
+    --gap: 12px;
+    --node: 30px;
+
+    /* Reactify palette */
+    --theme-primary: #5d95f5;
+    --theme-primary-hover: #4b84e8;
+    --theme-primary-soft: #edf4ff;
+    --theme-primary-ring: rgba(93, 149, 245, .2);
+    --theme-on-primary: #ffffff;
+    --theme-tab-active: #5d95f5;
+    --theme-tab-active-hover: #4b84e8;
+    --theme-tab-active-shadow: 0 4px 12px rgba(93, 149, 245, .28);
+    --theme-secondary: #00c7bd;
+    --theme-warning: #ffb31a;
+    --theme-danger: #ff5353;
+    --theme-success: #16c784;
+    --theme-page: #f5f7fa;
+    --theme-surface: #ffffff;
+    --theme-surface-muted: #f8fafc;
+    --theme-surface-hover: #f1f5f9;
+    --theme-border: #e2e7ef;
+    --theme-border-strong: #cfd7e3;
+    --theme-text: #38435a;
+    --theme-text-strong: #253047;
+    --theme-muted: #7c879d;
+    --theme-sidebar: #566077;
+    --theme-sidebar-hover: #626d86;
+    --theme-sidebar-active: rgba(255, 255, 255, .12);
+    --theme-sidebar-text: #f7f9fd;
+    --theme-header: #ffffff;
+    --theme-header-text: #536079;
+    --theme-overlay: rgba(25, 34, 52, .54);
+    --theme-shadow-sm: 0 2px 10px rgba(35, 49, 75, .07);
+    --theme-shadow-md: 0 12px 32px rgba(35, 49, 75, .12);
+    --theme-shadow-lg: 0 24px 70px rgba(35, 49, 75, .2);
+    --theme-quotation: #5d95f5;
+    --theme-policy: #00c7bd;
+
+    /* Existing component aliases */
+    --bg: var(--theme-page);
+    --card: var(--theme-surface);
+    --panel: var(--theme-surface);
+    --border: var(--theme-border);
+    --text: var(--theme-text);
+    --muted: var(--theme-muted);
+    --brand: var(--theme-primary);
+    --focus: var(--theme-primary);
+    --focusSoft: var(--theme-primary-ring);
+    --nodeBorder: rgba(56, 67, 90, .24);
+    --line: rgba(56, 67, 90, .18);
+    --quotation: var(--theme-quotation);
+    --policy: var(--theme-policy);
+    --both: #7c6ee6;
+    --return: var(--theme-danger);
+    --loop: var(--theme-warning);
+    --active: var(--theme-warning);
+    --done: var(--theme-success);
+    --pending: #9aa5b7;
+    --dx-grid-surface: var(--theme-surface);
+    --dx-grid-header: #f7f9fc;
+    --dx-grid-header-strong: #eef2f7;
+    --dx-grid-header-text: var(--theme-text-strong);
+    --dx-grid-filter: #fbfcfe;
+    --dx-grid-filter-border: var(--theme-border-strong);
+    --dx-grid-border: var(--theme-border);
+    --dx-grid-border-soft: #edf1f6;
+    --dx-grid-text: var(--theme-text);
+    --dx-grid-muted: var(--theme-muted);
+    --dx-grid-primary: var(--theme-primary);
+    --dx-grid-primary-soft: var(--theme-primary-soft);
+    --dx-grid-hover: #f8fbff;
+    --dx-grid-selected: #e8f1ff;
+    --dx-grid-radius: 0px;
+}
+
+:root[data-app-theme="classic"] {
+    --theme-primary: #e84a5f;
+    --theme-primary-hover: #c7162b;
+    --theme-primary-soft: #fff0f2;
+    --theme-primary-ring: rgba(232, 74, 95, .18);
+    --theme-tab-active: #e84a5f;
+    --theme-tab-active-hover: #c7162b;
+    --theme-tab-active-shadow: 0 4px 12px rgba(232, 74, 95, .26);
+    --theme-secondary: #16a34a;
+    --theme-page: #f4f7fb;
+    --theme-surface-muted: #fafbfc;
+    --theme-surface-hover: #f4f4f5;
+    --theme-border: #dbe2ea;
+    --theme-border-strong: #cbd5e1;
+    --theme-text: #243447;
+    --theme-text-strong: #172033;
+    --theme-muted: #6b7c93;
+    --theme-sidebar: #f9fafc;
+    --theme-sidebar-hover: #f4f4f5;
+    --theme-sidebar-active: #f4f4f5;
+    --theme-sidebar-text: #444444;
+    --theme-header: #3c8dbc;
+    --theme-header-text: #ffffff;
+    --theme-quotation: #2563eb;
+    --theme-policy: #16a34a;
+}
+
+/* Compatibility aliases used by older pages. */
+:root {
+    --c-0077cc: #0077cc;
+    --c-1861ac: #1861ac;
+    --c-1b6ec2: #1b6ec2;
+    --c-e5e5e5: #e5e5e5;
+    --c-ffffff: #ffffff;
+    --c-rgba-0-0-0-05: rgba(0, 0, 0, .05);
+}

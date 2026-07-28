@@ -241,8 +241,9 @@
                              $(`<div id="${item.id}">`).dxButton({ text: item.text, visible: false}).appendTo(itemElement);
                          });
                      }
-                },  { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2)}
-    ]}
+                }
+                    ]
+                }, { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that, that2) }
                ]
     
     });

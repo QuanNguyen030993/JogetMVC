@@ -1,9 +1,9 @@
 ﻿.skin-re .main-header .navbar {
-    background-color: #3c8dbc
+    background-color: var(--theme-header)
 }
 
     .skin-re .main-header .navbar .nav > li > a {
-        color: #fff
+        color: var(--theme-header-text)
     }
         .skin-re .main-header .navbar .nav > li > a:hover,
         .skin-re .main-header .navbar .nav > li > a:active,
@@ -13,15 +13,15 @@
         .skin-re .main-header .navbar .nav .open > a:focus,
         .skin-re .main-header .navbar .nav > .active > a {
             background: rgba(0,0,0,0.1);
-            color: #f6f6f6
+            color: var(--theme-header-text)
         }
 
     .skin-re .main-header .navbar .sidebar-toggle {
-        color: #fff
+        color: var(--theme-header-text)
     }
 
         .skin-re .main-header .navbar .sidebar-toggle:hover {
-            color: #f6f6f6;
+            color: var(--theme-header-text);
             background: rgba(0,0,0,0.1)
         }
 
@@ -30,7 +30,7 @@
     }
 
         .skin-re .main-header .navbar .sidebar-toggle:hover {
-            background-color: #367fa9
+            background-color: var(--theme-primary-hover)
         }
 
 @media (max-width:767px) {
@@ -43,23 +43,23 @@
     }
 
         .skin-re .main-header .navbar .dropdown-menu li a:hover {
-            background: #367fa9
+            background: var(--theme-primary-hover)
         }
 }
 
 .skin-re .main-header .logo {
     width: 70%;
-    color: #fff;
+    color: var(--theme-header-text);
     border-bottom: 0 solid transparent;
     border-radius: 5px;
 }
 
     .skin-re .main-header .logo:hover {
-        background-color: #3b8ab8
+        background-color: var(--theme-primary-hover)
     }
 
 .skin-re .main-header li.user-header {
-    background-color: #3c8dbc
+    background-color: var(--theme-header)
 }
 
 .skin-re .content-header {
@@ -67,11 +67,11 @@
 }
 
 .skin-re .wrapper {
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    background: linear-gradient( 135deg, #5b6fdc 0%, #5e9fd6 40%, #8fbfd3 70%, #e2b1c4 100% );
+    box-shadow: var(--theme-shadow-sm);
+    background: var(--theme-header);
 }
     .skin-re .main-sidebar {
-        background-color: #f9fafc
+        background-color: var(--theme-sidebar)
     }
 
 .skin-re .main-sidebar {
@@ -81,7 +81,7 @@
 
 .skin-re .user-panel > .info,
 .skin-re .user-panel > .info > a {
-    color: #444
+    color: var(--theme-sidebar-text)
 }
 
 .skin-re .sidebar-menu > li {
@@ -91,8 +91,8 @@
 }
 
     .skin-re .sidebar-menu > li.header {
-        color: #848484;
-        background: #f9fafc
+        color: var(--theme-muted);
+        background: var(--theme-sidebar)
     }
 
     .skin-re .sidebar-menu > li > a {
@@ -102,12 +102,12 @@
 
     .skin-re .sidebar-menu > li:hover > a,
     .skin-re .sidebar-menu > li.active > a {
-        color: #000;
-        background: #f4f4f5
+        color: var(--theme-sidebar-text);
+        background: var(--theme-sidebar-active)
     }
 
     .skin-re .sidebar-menu > li.active {
-        border-left-color: #3c8dbc
+        border-left-color: var(--theme-primary)
     }
 
         .skin-re .sidebar-menu > li.active > a {
@@ -115,11 +115,11 @@
         }
 
     .skin-re .sidebar-menu > li > .treeview-menu {
-        background: #f4f4f5
+        background: var(--theme-sidebar-hover)
     }
 
 .skin-re .sidebar a {
-    color: #444
+    color: var(--theme-sidebar-text)
 }
 
     .skin-re .sidebar a:hover {
@@ -127,12 +127,12 @@
     }
 
 .skin-re .sidebar-menu .treeview-menu > li > a {
-    color: #777
+    color: color-mix(in srgb, var(--theme-sidebar-text) 72%, transparent)
 }
 
     .skin-re .sidebar-menu .treeview-menu > li.active > a,
     .skin-re .sidebar-menu .treeview-menu > li > a:hover {
-        color: #000
+        color: var(--theme-sidebar-text)
     }
 
 .skin-re .sidebar-menu .treeview-menu > li.active > a {
@@ -190,4 +190,18 @@
 
 .skin-re .main-footer {
     border-top-color: #d2d6de
+}
+
+html,
+body.skin-re {
+    color: var(--theme-text);
+    background: var(--theme-page);
+}
+
+.skin-re .main-header.wrapper {
+    border-bottom: 1px solid var(--theme-border);
+}
+
+.skin-re #notificationBtn svg path {
+    fill: var(--theme-header-text) !important;
 }
