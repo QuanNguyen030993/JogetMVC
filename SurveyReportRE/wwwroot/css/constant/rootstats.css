@@ -66,6 +66,28 @@
     --grid-toolbar-button-height: 26px;
     --grid-command-button-size: 24px;
     --grid-action-icon-size: 13px;
+    --overview-header-padding-y: 6px;
+    --overview-header-padding-x: 8px;
+    --overview-section-padding: 6px;
+    --overview-section-gap: 6px;
+    --overview-scroll-edge: 2px;
+    --overview-tree-reserve: 52px;
+    --overview-control-rail-width: 46px;
+    --overview-control-rail-inset: 4px;
+    --overview-button-height: 26px;
+    --overview-button-padding-x: 6px;
+    --overview-float-header-padding-y: 4px;
+    --overview-float-header-padding-x: 6px;
+    --overview-form-group-padding: 6px;
+    --overview-form-group-gap: 6px;
+    --overview-form-field-gap-y: 4px;
+    --overview-form-field-gap-x: 4px;
+    --overview-remarks-min-height: 120px;
+    --overview-idle-clock-size: 42px;
+    --overview-group-toggle-size: 20px;
+    --overview-editor-padding-y: 3px;
+    --overview-editor-padding-x: 6px;
+    --overview-uploader-padding: 4px;
 
     /* Colors gathered from CSS files */
     --c-0077cc: #0077cc;

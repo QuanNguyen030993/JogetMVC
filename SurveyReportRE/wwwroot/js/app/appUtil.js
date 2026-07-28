@@ -5623,6 +5623,35 @@ function setDeptSectionCollapsed(section, collapsed) {
     setSmoothCollapsibleState($content, collapsed, { duration: 300 });
 }
 
+function normalizeDxFormGroupCaption(value) {
+    return String(value || "").replace(/\s+/g, " ").trim().toLocaleLowerCase();
+}
+
+// Applies the default state declared by viewFieldAdjust(formId, captions).
+// This is intentionally idempotent so it can run after every DevExtreme render.
+function applyDxFormDefaultCollapsedGroups(root) {
+    const $root = root instanceof jQuery ? root : $(root);
+    if (!$root.length) return;
+
+    $root.find(".dx-form-group-toggle").addBack(".dx-form-group-toggle").each(function () {
+        const $group = $(this);
+        const $form = $group.closest(".dx-form");
+        const formElement = $form.get(0);
+        const defaultGroups = formElement && formElement.dxFormDefaultCollapsedGroups;
+
+        if (!(defaultGroups instanceof Set) || !defaultGroups.size) return;
+
+        const $caption = $group.children(".dx-form-group-caption").first();
+        const captionKey = normalizeDxFormGroupCaption($caption.text());
+        if (!captionKey || !defaultGroups.has(captionKey)) return;
+
+        const $content = $group.children(".dx-form-group-content").first();
+        $group.addClass("is-collapsed");
+        $caption.attr("aria-expanded", "false");
+        setSmoothCollapsibleState($content, true, { duration: 0 });
+    });
+}
+
 // Enables accessible expand/collapse behavior for captioned DevExtreme Form
 // groups and the Comments groups used by Quotation/Policy Issuance.
 // The handler is delegated so it also covers groups rendered later by partials.
@@ -5658,6 +5687,7 @@ function enableDxFormGroupToggle(root) {
                     "aria-expanded": "true"
                 });
                 $group.addClass("dx-form-group-toggle");
+                applyDxFormDefaultCollapsedGroups($group);
             });
     }
 

@@ -1028,6 +1028,7 @@ aside {
 /* Overview status is revealed only after its status and PIC text are complete. */
 .overview-status-pill {
     display: inline-flex;
+    flex: 1 1 auto;
     align-items: center;
     width: auto;
     min-width: 0;
@@ -1057,7 +1058,7 @@ aside {
 }
 
 .overview-status-pill.is-ready {
-    max-width: min(560px, 55vw);
+    max-width: 100%;
     padding: 3px 10px 3px 4px;
     border-color: rgba(148, 163, 184, .34);
     opacity: 1;
@@ -1091,9 +1092,13 @@ aside {
 }
 
 .overview-status-owner {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100%;
     overflow: hidden;
     color: #475569;
     font-weight: 650;
+    white-space: nowrap;
     text-overflow: ellipsis;
 }
 
@@ -1192,7 +1197,7 @@ aside {
 }
 
 .qt-cardHeader {
-    padding: 12px 12px 10px;
+    padding: var(--overview-header-padding-y) var(--overview-header-padding-x);
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
@@ -1217,7 +1222,7 @@ aside {
 
 
 .pi-cardHeader {
-    padding: 12px 12px 10px;
+    padding: var(--overview-header-padding-y) var(--overview-header-padding-x);
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
@@ -1239,6 +1244,98 @@ aside {
         font-size: 13px;
         color: #fff;
     }
+
+:is(.qt-cardHeader, .pi-cardHeader) {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.overview-header-main,
+.overview-header-flow,
+.overview-header-actions {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 6px;
+}
+
+.overview-header-main {
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
+.overview-header-main > .h {
+    flex: 0 0 auto;
+}
+
+.overview-header-flow {
+    flex: 0 1 auto;
+}
+
+.overview-header-actions {
+    flex: 0 1 auto;
+    max-width: 55%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+}
+
+.overview-header-actions::-webkit-scrollbar {
+    display: none;
+}
+
+/* Compact controls in the overview toolbar and sticky department headers. */
+:is(.overview-header-flow, .overview-header-actions, .overview-scroll .dept-header) .dx-button {
+    min-width: var(--overview-button-height) !important;
+    height: var(--overview-button-height) !important;
+    min-height: var(--overview-button-height) !important;
+    border-radius: 6px !important;
+    box-shadow: none;
+}
+
+:is(.overview-header-flow, .overview-header-actions, .overview-scroll .dept-header) .dx-button-content {
+    padding: 3px var(--overview-button-padding-x) !important;
+}
+
+:is(.overview-header-flow, .overview-header-actions, .overview-scroll .dept-header)
+    .dx-button-has-icon:not(.dx-button-has-text) {
+    width: var(--overview-button-height) !important;
+}
+
+:is(.overview-header-flow, .overview-header-actions, .overview-scroll .dept-header)
+    .dx-button-has-icon:not(.dx-button-has-text) .dx-button-content {
+    padding: 4px !important;
+}
+
+:is(.overview-header-flow, .overview-header-actions, .overview-scroll .dept-header) .dx-button .dx-icon {
+    width: 14px;
+    height: 14px;
+    font-size: 13px !important;
+    line-height: 14px;
+}
+
+:is(.overview-header-flow, .overview-header-actions, .overview-scroll .dept-header) .dx-button-text {
+    font-size: 11px;
+    line-height: 14px;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) > .card {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
 
 
 
@@ -1396,22 +1493,31 @@ aside {
 
 .overview-wrap {
     position: relative;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .overview-scroll {
     position: relative;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     height: calc(100vh - 140px);
     overflow: auto;
-    padding: 0 66px 12px 10px;
+    padding: 0 var(--overview-tree-reserve) var(--overview-scroll-edge) var(--overview-scroll-edge);
     scroll-behavior: smooth;
+    box-sizing: border-box;
 }
 
 .dept-section {
     background: var(--theme-surface);
     border: 1px solid var(--theme-border);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 16px;
+    border-radius: 10px;
+    padding: var(--overview-section-padding);
+    margin-bottom: var(--overview-section-gap);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     border-left: 6px solid var(--theme-border-strong);
@@ -1432,7 +1538,22 @@ aside {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-height: 30px;
+    padding: var(--overview-float-header-padding-y) var(--overview-float-header-padding-x);
+    gap: 6px;
+    box-sizing: border-box;
     margin-bottom: 10px;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-header .dept-form-header {
+    min-width: 0;
+    padding: 2px 0 !important;
+    margin-bottom: 0 !important;
+    gap: 6px !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-header .dept-form-header__assign {
+    min-width: 0 !important;
 }
 .dept-body {
     min-height: 200px;
@@ -1509,11 +1630,21 @@ aside {
 /* Tree */
 .dept-tree {
     position: absolute;
-    right: 14px;
-    top: 110px;
-    width: 54px;
+    right: var(--overview-control-rail-inset);
+    top: 78px;
+    width: var(--overview-control-rail-width);
+    padding: 7px 0;
     z-index: 30;
     pointer-events: none;
+    box-sizing: border-box;
+}
+
+/* Each loaded request owns a slim auxiliary workflow-control rail. */
+.overview-control-pane {
+    border-left: 1px solid var(--theme-border);
+    border-radius: 10px 0 0 10px;
+    background: color-mix(in srgb, var(--theme-surface-muted) 72%, transparent);
+    box-shadow: -4px 0 12px rgba(31, 42, 55, .035);
 }
 
 .dept-tree .dept-idle-clock {
@@ -4193,13 +4324,17 @@ text-overflow: ellipsis;
 
 
 .admin-tool-btn {
-    width: 20px;
-    height: 20px;
+    display: grid;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    place-items: center;
     border-radius: 50%;
     border: none;
     background: #2563eb;
     color: white;
-    font-size: 20px;
+    font-size: 12px;
+    line-height: 1;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,.25);
     transition: .2s;
@@ -6356,9 +6491,11 @@ textarea {
         0 12px 28px rgba(15, 23, 42, .24) !important;
 }*/
     .overview-scroll .dept-section > .dept-header.dept-header-floated {
-        margin-left: -30px !important;
-        width: 103%;
-        margin-top: -18px !important;
+        width: calc(100% + var(--overview-section-padding) + var(--overview-section-padding));
+        padding: var(--overview-float-header-padding-y) var(--overview-float-header-padding-x) !important;
+        margin-top: calc(0px - var(--overview-section-padding)) !important;
+        margin-right: calc(0px - var(--overview-section-padding)) !important;
+        margin-left: calc(0px - var(--overview-section-padding)) !important;
         border-top-left-radius: 0px !important;
         border-top-right-radius: 0px !important;
         background: var(--theme-surface) !important;
@@ -6525,6 +6662,312 @@ textarea {
     padding-left: var(--form-pane-side-padding) !important;
 }
 
+/* Authoritative density for every Quotation / Policy Issuance department.
+   Older form-specific rules use 12-20px padding, so keep this scoped to the
+   two overview roots and let the shared tokens win. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-section {
+    padding: var(--overview-section-padding) !important;
+    margin-bottom: var(--overview-section-gap) !important;
+    border-radius: 10px !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-section > .dept-header {
+    padding: var(--overview-float-header-padding-y) var(--overview-float-header-padding-x) !important;
+    margin: calc(0px - var(--overview-section-padding)) calc(0px - var(--overview-section-padding)) var(--overview-section-gap) !important;
+    gap: 6px !important;
+    border-top-left-radius: 9px !important;
+    border-top-right-radius: 9px !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer) {
+    min-width: 0;
+    margin-bottom: var(--overview-form-group-gap) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-body {
+    min-height: 0 !important;
+    padding: var(--overview-scroll-edge) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer) .dx-form-group {
+    padding: var(--overview-form-group-padding) !important;
+    margin-top: 0 !important;
+    margin-bottom: var(--overview-form-group-gap) !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer) .dx-form-group-caption {
+    padding-bottom: 4px !important;
+    margin-bottom: 6px !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer)
+    .dx-layout-manager .dx-field-item:not(.dx-first-row) {
+    padding-top: var(--overview-form-field-gap-y) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer)
+    .dx-layout-manager .dx-field-item:not(.dx-first-col) {
+    padding-left: var(--overview-form-field-gap-x) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer)
+    .dx-layout-manager .dx-field-item:not(.dx-last-col) {
+    padding-right: var(--overview-form-field-gap-x) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer)
+    .dx-form-group-with-caption > .dx-form-group-content {
+    margin-top: 2px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+}
+
+/* DevExtreme keeps 10/15px cell gutters on generated form rows. Normalize the
+   actual first/last row and column classes so the outer group padding is the
+   only edge spacing for these request forms. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dx-layout-manager .dx-field-item {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-layout-manager .dx-field-item.dx-first-row {
+    padding-top: 0 !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-layout-manager .dx-field-item.dx-last-row {
+    padding-bottom: 0 !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-layout-manager .dx-field-item:is(.dx-first-col, .dx-col-0) {
+    padding-left: 0 !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-layout-manager .dx-field-item.dx-last-col {
+    padding-right: 0 !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-layout-manager .dx-field-item.dx-flex-layout.dx-label-v-align {
+    align-items: center;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-layout-manager .dx-label-h-align.dx-flex-layout {
+    column-gap: 0;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-layout-manager .dx-field-item-label-location-left {
+    padding-right: var(--overview-form-field-gap-x) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-layout-manager .dx-field-item-label-location-right {
+    padding-left: var(--overview-form-field-gap-x) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-layout-manager .dx-field-item-optional .dx-field-item-label-content {
+    padding-bottom: 2px !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-layout-manager .dx-field-item-optional-mark {
+    margin-left: 3px;
+}
+
+/* dxForm captions and composer captions share one full-width toggle header.
+   The pseudo icon remains inside the caption hit area at the far right. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dx-form-group-toggle, .comment-group-toggle) {
+    padding: var(--overview-form-group-padding) !important;
+    margin-bottom: var(--overview-form-group-gap) !important;
+    border: 1px solid var(--theme-border) !important;
+    border-radius: 8px !important;
+    background: var(--theme-surface-muted) !important;
+    box-shadow: none !important;
+    box-sizing: border-box;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dx-form-group-toggle > .dx-form-group-caption,
+        .comment-group-toggle > .dept-title) {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-height: var(--overview-group-toggle-size);
+    padding: 2px calc(var(--overview-group-toggle-size) + 6px) 4px 0 !important;
+    margin: 0 0 6px !important;
+    border-bottom: 1px solid var(--theme-border) !important;
+    box-sizing: border-box;
+    cursor: pointer;
+    user-select: none;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dx-form-group-toggle > .dx-form-group-caption,
+        .comment-group-toggle > .dept-title)::after {
+    content: "\25BE";
+    position: absolute;
+    top: 50%;
+    right: 2px;
+    width: var(--overview-group-toggle-size);
+    height: var(--overview-group-toggle-size);
+    color: var(--theme-muted);
+    border: 1px solid transparent;
+    border-radius: 5px;
+    font-size: 13px;
+    line-height: calc(var(--overview-group-toggle-size) - 2px);
+    text-align: center;
+    transform: translateY(-50%);
+    transform-origin: center;
+    transition: transform .18s ease, color .18s ease, background-color .18s ease;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dx-form-group-toggle > .dx-form-group-caption,
+        .comment-group-toggle > .dept-title):is(:hover, :focus-visible)::after {
+    color: var(--theme-primary);
+    background: var(--theme-primary-soft);
+    border-color: var(--theme-border-strong);
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dx-form-group-toggle, .comment-group-toggle).is-collapsed
+    > :is(.dx-form-group-caption, .dept-title) {
+    margin-bottom: 0 !important;
+    border-bottom-color: transparent !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dx-form-group-toggle, .comment-group-toggle).is-collapsed
+    > :is(.dx-form-group-caption, .dept-title)::after {
+    transform: translateY(-50%) rotate(-90deg);
+}
+
+/* Compact DevExtreme editors while preserving space for the invalid badge. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-texteditor:not(.dx-tagbox) .dx-texteditor-input {
+    min-height: 24px;
+    padding: var(--overview-editor-padding-y) var(--overview-editor-padding-x) !important;
+    box-sizing: border-box;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-texteditor.dx-show-invalid-badge:not(.dx-tagbox) .dx-texteditor-input {
+    padding-right: 22px !important;
+}
+
+/* DevExtreme adds 1em through uploader wrapper pseudo-elements even when the
+   uploader is empty. Remove that hidden whitespace inside request forms. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-fileuploader.dx-widget.dx-show-invalid-badge,
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-fileuploader.dx-widget.dx-fileuploader-empty {
+    padding: 0 !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-fileuploader :is(.dx-fileuploader-wrapper, .dx-fileuploader-content) {
+    padding: 0 !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-fileuploader .dx-fileuploader-input-wrapper {
+    padding: var(--overview-uploader-padding) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-fileuploader .dx-fileuploader-input-wrapper::before,
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-fileuploader .dx-fileuploader-input-wrapper::after {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dx-fileuploader-empty .dx-fileuploader-files-container {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Stage animation classes should never reintroduce layout whitespace. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer)
+    .form-stage-part.form-stage-ready.visible,
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer).form-stage-part.form-stage-ready.visible {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dept-upperbody, .dept-lowerbody, .dept-footer).form-stage-part.form-stage-ready.visible {
+    padding: 0 !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .actionBarDept {
+    padding: 6px 8px !important;
+    margin-top: var(--overview-form-group-gap) !important;
+    gap: 6px !important;
+    border-radius: 8px !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .actionBarDept :is(.htmleditor, .htmleditor .tmiv-html-editor) {
+    min-height: var(--overview-remarks-min-height) !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .actionBarDept .actionRight {
+    gap: 6px !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .actionBarDept .dx-button {
+    min-height: 28px;
+    padding: 0 !important;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .actionBarDept .dx-button-content {
+    padding: 3px 7px !important;
+}
+
+/* Smaller idle countdown without changing the workflow node dimensions. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-tree .dept-idle-clock {
+    top: -50px;
+    right: 2px;
+    width: var(--overview-idle-clock-size);
+    height: var(--overview-idle-clock-size);
+    padding: 6px 3px 3px;
+    gap: 1px;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-tree .dept-idle-clock::before {
+    top: 3px;
+    height: 4px;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-idle-clock-label {
+    font-size: 7px;
+    letter-spacing: .08em;
+}
+
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-idle-clock-value {
+    font-size: 9px;
+}
+
 @media (max-width: 1366px) {
     .dExForm {
         padding: 6px;
@@ -6536,23 +6979,23 @@ textarea {
     }
 
     .overview-scroll {
-        padding-right: 58px;
-        padding-bottom: 8px;
-        padding-left: 8px;
+        padding-right: var(--overview-tree-reserve);
+        padding-bottom: var(--overview-scroll-edge);
+        padding-left: var(--overview-scroll-edge);
     }
 
     .dept-section {
-        padding: 12px;
-        margin-bottom: 12px;
+        padding: var(--overview-section-padding);
+        margin-bottom: var(--overview-section-gap);
     }
 
     .dept-section .dept-header {
-        margin: -12px -12px 10px -12px !important;
+        margin: calc(0px - var(--overview-section-padding)) calc(0px - var(--overview-section-padding)) 6px !important;
     }
 
     .overview-scroll .dept-section > .dept-header.dept-header-floated {
-        margin-left: -13px !important;
-        margin-right: -13px !important;
+        margin-left: calc(0px - var(--overview-section-padding)) !important;
+        margin-right: calc(0px - var(--overview-section-padding)) !important;
     }
 }
 

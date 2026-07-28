@@ -6273,9 +6273,21 @@
             }
         }
 
-           function viewFieldAdjust(formId) {
-            var form = $("#" + formId).dxForm("instance");
+           function viewFieldAdjust(formId, defaultCollapsedGroups) {
+            var $formElement = $("#" + formId);
+            var form = $formElement.dxForm("instance");
             if (!form) return;
+
+            var collapsedGroups = Array.isArray(defaultCollapsedGroups)
+                ? defaultCollapsedGroups
+                    .map(groupCaption => String(groupCaption || "").replace(/\s+/g, " ").trim().toLocaleLowerCase())
+                    .filter(Boolean)
+                : [];
+
+            // Keep the requested defaults on the dxForm element. The group-toggle
+            // observer reads this value again whenever DevExtreme rebuilds the form.
+            var formElement = $formElement.get(0);
+            formElement.dxFormDefaultCollapsedGroups = new Set(collapsedGroups);
 
             var items = form.option("items");
 
@@ -6306,9 +6318,16 @@
             }
 
             processItems(items);
-               itemsStyle(items);
+            itemsStyle(items);
             // set lại items sau khi chỉnh sửa
             form.option("items", items);
+
+            // Also cover a form whose DOM was not rebuilt by option("items").
+            window.requestAnimationFrame(function () {
+                if (typeof applyDxFormDefaultCollapsedGroups === "function") {
+                    applyDxFormDefaultCollapsedGroups(formElement);
+                }
+            });
         }
         function tryParseJSON(object, msgIfFail){
             try

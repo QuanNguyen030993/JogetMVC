@@ -11,7 +11,7 @@
 <div id="@Id("overviewRoot")" class="pane pane-right">
     <section class="card">
         <div class="@Css("cardHeader")">
-            <div style="display:flex;align-items:center;gap:10px;">
+            <div class="overview-header-main">
                 <div class="h">@Model.Title</div>
                 @* <span id="@ViewIdHelper.DetailStatus(moduleCode,quotationId)" class="statusTag">-</span> *@
                 <span id="@ViewIdHelper.StageDeptPill(moduleCode,quotationId)"
@@ -19,10 +19,10 @@
                       aria-live="polite"
                       aria-busy="true"></span>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;">
+            <div class="overview-header-flow">
                 <div id="@ViewIdHelper.PanelHoverInFlow(moduleCode,quotationId)"></div>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;">
+            <div class="overview-header-actions">
                 <div id="@Id("btnRefreshOverview")"></div>
                 <div id="@ViewIdHelper.BtnCollapseAllTab(moduleCode,quotationId)"></div>
                 <div id="@ViewIdHelper.BtnToggleReferenceFields(moduleCode,quotationId)"></div>
