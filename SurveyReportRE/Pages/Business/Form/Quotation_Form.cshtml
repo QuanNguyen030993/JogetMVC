@@ -1030,19 +1030,23 @@ Note:
 
 
                 
-            $(`#${formModuleKeyQt}-roleSelect`).dxSelectBox({
-                items: QtRoles,
-                value: state.currentUserRole,
-                stylingMode: "outlined",
-                onValueChanged: (e) => {
-                    state.currentUserRole = e.value;
-                    _role = e.value;
-                    $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
-                    applyEditLock();
-                    updateHints();
-                    DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
-                }
-            });
+            const $roleSelect = $(`#${window.QuotationIdManager.roleSelect(quotationViewInstanceId)}`);
+            if (String(window._isDebugMode).toLowerCase() === "true" && $roleSelect.length && !$roleSelect.hasClass("dx-selectbox")) {
+                $roleSelect.dxSelectBox({
+                    items: QtRoles,
+                    value: state.currentUserRole,
+                    stylingMode: "outlined",
+                    width: "100%",
+                    onValueChanged: (e) => {
+                        state.currentUserRole = e.value;
+                        _role = e.value;
+                        $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
+                        applyEditLock();
+                        updateHints();
+                        DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
+                    }
+                });
+            }
         }
 
         function updateHints() {

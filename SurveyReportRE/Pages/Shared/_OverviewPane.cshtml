@@ -5,6 +5,7 @@
     string Id(string name) => $"{Model.Prefix}-{name}_{Model.Id}";
     string Css(string name) => $"{Model.Prefix}-{name}";
     var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
+    var maintenanceInstanceId = string.IsNullOrWhiteSpace(Model.Id) ? "individual" : Model.Id;
     var quotationId = Convert.ToInt64(ViewData["Id"]);
 }
 
@@ -35,7 +36,7 @@
                     <div id="@Id("adminFloatBtn")"
                             class="admin-tool-btn"
                             title="Maintenance">
-                        🔧
+                        <i class="fa fa-wrench" aria-hidden="true"></i>
                     </div>
 
                 </div>
@@ -134,6 +135,11 @@
                     <span>${'@Model.Guid'}</span>
                 </div>
 
+                <div class="admin-row maintenance-role-row">
+                    <label>Debug role</label>
+                    <div id="@(Model.Prefix)-roleSelect_@maintenanceInstanceId" class="maintenance-role-select"></div>
+                </div>
+
 
                 <div class="admin-row">
                     <label>Person in Charge (PIC)</label>
@@ -155,6 +161,8 @@
 
 
         $("body").append(panel);
+        panel.find(".maintenance-role-row")
+            .toggle(String(window._isDebugMode).toLowerCase() === "true");
 
         function parseMaintenanceMap(value) {
             if (!value) return {};

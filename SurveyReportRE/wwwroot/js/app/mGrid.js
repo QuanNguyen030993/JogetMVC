@@ -87,6 +87,25 @@ var MGrid = class MGrid {
                 if (!gridOptions)
                     return;
 
+                this.container.addClass("mgrid-host");
+                if (!that.mGridOption.height) {
+                    // Fill the remainder of the loaded form instead of using a
+                    // fixed viewport subtraction. This also accounts for page
+                    // headings (for example SLA configuration) above the grid.
+                    gridOptions.height = function () {
+                        const host = that.container && that.container[0];
+                        if (!host) return Math.max(160, window.innerHeight - 130);
+
+                        const hostRect = host.getBoundingClientRect();
+                        const boundary = host.closest(".content-wrapper, .dExForm");
+                        const boundaryRect = boundary && boundary.getBoundingClientRect();
+                        const availableBottom = boundaryRect
+                            ? Math.min(boundaryRect.bottom, window.innerHeight)
+                            : window.innerHeight;
+                        return Math.max(160, Math.floor(availableBottom - hostRect.top));
+                    };
+                }
+
                 this.component = this.container
                     .dxDataGrid(gridOptions)
                     .dxDataGrid("instance");
@@ -1153,7 +1172,7 @@ var MGridOption = class MGridOption {
                     },
                     masterDetail: this.masterDetail,
                     width: "100%",
-                    height: this.height ? this.height : window.innerHeight - 130, // == null ? "inherit"
+                    height: this.height || undefined,
                     columns: this.columns,
                     customizeColumns: tryExecute(this.onCustomizeColumns.bind(this)),
                     onKeyDown: tryExecute(this.onKeyDown.bind(this)),

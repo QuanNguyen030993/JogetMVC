@@ -8,7 +8,7 @@
         new MGrid(null, $(`#dataGrid_@SLAModel.ModelName`), new SLAGridOption('@SLAModel.ModelName', "User"), null);
     });
 </script>
-<div class="sla-list-page">
+<div class="dExForm sla-list-page">
     <div class="sla-list-heading">
         <div>
             <h2>SLA configuration</h2>
@@ -21,10 +21,23 @@
 
 <style>
     .sla-list-page {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
         padding: 12px;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    .sla-list-page > .mgrid-host {
+        flex: 1 1 auto;
+        min-height: 0;
     }
 
     .sla-list-heading {
+        flex: 0 0 auto;
         display: flex;
         align-items: center;
         justify-content: space-between;

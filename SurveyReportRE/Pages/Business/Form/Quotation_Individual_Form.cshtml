@@ -884,10 +884,13 @@ Note:
                 $(`#${formModuleKeyQt}-formPM`).dxForm("instance")?.option("readOnly", roPM);
                  }, 1);
 
-                $(`#${formModuleKeyQt}-roleSelect`).dxSelectBox({
+                const $roleSelect = $(`#${window.QuotationIdManager.roleSelect("individual")}`);
+                if (String(window._isDebugMode).toLowerCase() === "true" && $roleSelect.length && !$roleSelect.hasClass("dx-selectbox")) {
+                $roleSelect.dxSelectBox({
                     items: QtRoles,
                     value: state.currentUserRole,
                     stylingMode: "outlined",
+                    width: "100%",
                     onValueChanged: (e) => {
                         state.currentUserRole = e.value;
                         $(`#${formModuleKeyQt}-loginRoleLabel`).text(state.currentUserRole);
@@ -896,6 +899,7 @@ Note:
                         DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
                     }
                 });
+                }
             }
 
             function updateHints() {

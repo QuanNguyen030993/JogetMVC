@@ -663,8 +663,11 @@ Note:
             $(`#${formModuleKeyPi}-formTS`).dxForm("instance")?.option("readOnly", roTS);
             $(`#${formModuleKeyPi}-formPM`).dxForm("instance")?.option("readOnly", roPM);
 
-            $(`#${formModuleKeyPi}-roleSelect`).dxSelectBox({
+            const $roleSelect = $(`#${window.PolicyIssuanceIdManager.roleSelect("individual")}`);
+            if (String(window._isDebugMode).toLowerCase() === "true" && $roleSelect.length && !$roleSelect.hasClass("dx-selectbox")) {
+            $roleSelect.dxSelectBox({
           items: Roles, value: state.currentUserRole, stylingMode:"outlined",
+          width: "100%",
           onValueChanged: (e) => {
             state.currentUserRole = e.value;
             $("#loginRoleLabel").text(state.currentUserRole);
@@ -673,6 +676,7 @@ Note:
             DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
           }
         });
+            }
         }
 
         function updateHints() {

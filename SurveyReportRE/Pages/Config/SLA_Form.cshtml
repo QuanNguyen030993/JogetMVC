@@ -6,8 +6,11 @@
 <style>
     .sla-user-page {
         width: min(100%, 980px);
+        height: 100%;
+        min-height: 0;
         margin: 0 auto;
         padding: 12px;
+        overflow: auto;
         box-sizing: border-box;
     }
 
@@ -181,7 +184,7 @@
             new LMKTSLAForm(_deptInput, null, _formConfig, mFormOption);
     // });
 </script>
-<div class="sla-user-page">
+<div class="dExForm sla-user-page">
     <div class="sla-user-hero">
         <div class="sla-user-hero-icon"><i class="fas fa-clock"></i></div>
         <div>

@@ -502,17 +502,20 @@
                     </a>
                 </div>
             </div>
-            <!-- ROLE -->
-            <div class="admin-float-swicher">
-                <p id="returnToSuperUser"></p>
-                <div id="qt-roleSelect"> </div>
-                <div id="pi-roleSelect"> </div>
-                <div id="environmentLabel" style="color: red;"></div>
-                <div id="environmentJogetLabel" style="color: red;"></div>
-            </div>
             <!--Tab list-->
             <div id="tablist" class="ui-tabs-nav">
                 <ul></ul>
+            </div>
+
+            <!-- Global maintenance status. Per-form debug controls live in each
+                 form's Maintenance Info panel so multiple tabs never share IDs. -->
+            <div id="managementMaintenance" class="management-maintenance" aria-label="Maintenance status">
+                <div id="environmentLabel" class="management-environment-badge" title="Current TMIV environment">
+                    <i class="fa fa-server" aria-hidden="true"></i>
+                    <span>Environment</span>
+                    <strong id="environmentValue"></strong>
+                </div>
+                <div id="returnToSuperUser" class="management-return-admin"></div>
             </div>
              
             <!--Login Info-->
@@ -688,8 +691,10 @@
         _isSuperUser = @Html.Raw(ViewData["IsSuperUser"]);
         _isDebugMode = `@Html.Raw(ViewData["IsDebugMode"])`;
         var _notifyEnv = `@Html.Raw(ViewData["NotifyEnv"])`;
-        if (_notifyEnv  == "true")
-            $("#environmentLabel").text(`(TMIV Environment: @ViewData["Environment"])`);
+        if (_notifyEnv == "true") {
+            $("#environmentValue").text(`@ViewData["Environment"]`);
+            $("#environmentLabel").addClass("is-visible");
+        }
         // if (_notifyEnv  == "true")
         //     $("#environmentJogetLabel").text(`(Joget Environment: @ViewData["JogetEnvironment"])`);
         if (_isDebugMode == "true"){
@@ -1479,7 +1484,14 @@
      document.addEventListener("DOMContentLoaded", function () {
         const pushMenuBtn = document.querySelector('[data-toggle="push-menu"]');
         if (!pushMenuBtn) return;
+        const syncLoadedFormLayout = function () {
+            // DevExtreme measures forms and grids at render time. Recalculate
+            // once immediately and once after the 300ms sidebar transition.
+            window.dispatchEvent(new Event("resize"));
+        };
         pushMenuBtn.addEventListener("click", function () {
+            window.requestAnimationFrame(syncLoadedFormLayout);
+            window.setTimeout(syncLoadedFormLayout, 340);
             setTimeout(function () {
                 const body = document.body;
 
@@ -2871,12 +2883,50 @@
         line-height: var(--management-header-height) !important;
     }
 
-    .management-topbar .admin-float-swicher {
+    .management-topbar .management-maintenance {
         max-height: var(--management-header-control-height);
         display: flex;
         align-items: center;
-        gap: 3px;
+        gap: 5px;
+        margin-left: 4px;
+        flex: 0 0 auto;
+    }
+
+    .management-environment-badge {
+        display: none;
+        height: 26px;
+        align-items: center;
+        gap: 5px;
+        padding: 0 8px;
+        border: 1px solid rgba(245, 158, 11, .4);
+        border-radius: 8px;
+        background: linear-gradient(135deg, #fff9e8, #fff3c4);
+        color: #8a4b08;
+        box-shadow: 0 2px 8px rgba(120, 53, 15, .12);
+        white-space: nowrap;
+    }
+
+    .management-environment-badge.is-visible {
+        display: inline-flex;
+    }
+
+    .management-environment-badge > span {
+        color: #a16207;
+        font-size: var(--management-font-meta);
+        text-transform: uppercase;
+        letter-spacing: .035em;
+    }
+
+    .management-environment-badge > strong {
+        max-width: 94px;
         overflow: hidden;
+        text-overflow: ellipsis;
+        color: #713f12;
+        font-size: var(--management-font-body);
+    }
+
+    .management-return-admin:empty {
+        display: none;
     }
 
     .management-topbar #tablist {
@@ -2908,23 +2958,39 @@
     .management-topbar #tablist > .content-wrapper {
         position: fixed;
         top: var(--management-header-height);
+        bottom: 0;
         right: 0;
         left: var(--management-sidebar-width);
-        width: auto;
-        min-height: calc(100vh - var(--management-header-height));
-        margin-top: 0;
+        width: auto !important;
+        max-width: none !important;
+        height: auto;
+        min-height: 0;
+        margin-top: 0 !important;
+        margin-right: 0 !important;
+        margin-left: 0 !important;
         padding: var(--form-loaded-inset);
         box-sizing: border-box;
+        overflow: hidden;
+        transition: left .3s ease-in-out;
     }
 
     .sidebar-mini.sidebar-collapse .management-topbar #tablist > .content-wrapper {
         left: var(--management-sidebar-collapsed-width);
+        width: auto !important;
+        margin-left: 0 !important;
     }
 
     .management-topbar #tablist > .content-wrapper > div,
     .management-topbar #tablist > .content-wrapper .dExForm {
         max-width: 100%;
         box-sizing: border-box;
+    }
+
+    .management-topbar #tablist > .content-wrapper > div {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        overflow: auto;
     }
 
     .management-topbar #tablist > ul > li {
@@ -3072,5 +3138,70 @@
         .sidebar-mini.sidebar-collapse .management-topbar #tablist > .content-wrapper {
             left: 0;
         }
+    }
+
+    /* Final Management typography mapping. Keep the clickable Workflow
+       Management logo as the largest text across the shell and its dialogs. */
+    .management-topbar .logo-lg {
+        font-size: var(--management-font-logo) !important;
+    }
+
+    .management-topbar #tablist > ul > li a,
+    .management-header-actions #btnNew .dx-button-text {
+        font-size: var(--management-font-body) !important;
+    }
+
+    .management-topbar .management-maintenance,
+    .management-header-actions .user-account-name,
+    .user-account-menu,
+    .user-settings-modal {
+        font-size: var(--management-font-body) !important;
+    }
+
+    .management-header-actions .user-account-avatar,
+    .management-header-actions .user-account-chevron,
+    .user-menu-avatar,
+    .user-settings-icon,
+    .user-account-role,
+    .user-menu-session,
+    .user-settings-entry small {
+        font-size: var(--management-font-small) !important;
+    }
+
+    .management-header-actions .user-account-role,
+    .user-settings-kicker,
+    .account-theme-card small {
+        font-size: var(--management-font-meta) !important;
+    }
+
+    .user-menu-heading strong,
+    .user-settings-header h2,
+    .account-setting-heading strong,
+    .user-role-code,
+    .launcher-title,
+    .launcher-text,
+    .card-title {
+        font-size: var(--management-font-title) !important;
+    }
+
+    .user-menu-heading div > span,
+    .user-settings-header p,
+    .account-theme-card strong,
+    .account-notification-copy strong,
+    .user-settings-cancel,
+    .user-settings-save {
+        font-size: var(--management-font-body) !important;
+    }
+
+    .account-setting-heading span,
+    .account-notification-copy small,
+    .user-role-description,
+    .user-settings-note,
+    .card-desc {
+        font-size: var(--management-font-small) !important;
+    }
+
+    .user-settings-close {
+        font-size: var(--management-font-title) !important;
     }
 </style>

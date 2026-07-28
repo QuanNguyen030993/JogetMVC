@@ -59,6 +59,14 @@
     --management-menu-item-padding-x: 10px;
     --management-submenu-item-padding-y: 4px;
 
+    /* Management typography scale. Workflow Management is the visual ceiling;
+       every page title, menu, grid and form label steps down from it. */
+    --management-font-logo: 12px;
+    --management-font-title: 11px;
+    --management-font-body: 10px;
+    --management-font-small: 9px;
+    --management-font-meta: 8px;
+
     /* Compact loaded forms, split panes and DevExtreme grid actions. */
     --form-loaded-inset: 6px;
     --form-pane-padding: 4px;
@@ -136,7 +144,7 @@
     --form-status-warning-text: #8b650f;
     --form-status-border: rgba(83, 96, 121, .1);
 
-    --form-group-title-size: 13px;
+    --form-group-title-size: var(--management-font-title, 11px);
     --form-group-title-weight: 700;
     --form-group-title-color: var(--theme-primary, #5d95f5);
     --form-group-title-letter-spacing: .05em;

@@ -60,7 +60,11 @@ window.QuotationIdManager = {
 
     // Control elements
     btnToggleLeftPane: function () { return `${this.prefix}-btnToggleLeftPane`; },
-    roleSelect: function () { return `${this.prefix}-roleSelect`; },
+    roleSelect: function (quotationId) {
+        return quotationId === undefined || quotationId === null || quotationId === ""
+            ? `${this.prefix}-roleSelect`
+            : `${this.prefix}-roleSelect_${quotationId}`;
+    },
 
     // Tree navigation
     treeStack: function (quotationId) { return `${this.prefix}-treeStack_${quotationId}`; },

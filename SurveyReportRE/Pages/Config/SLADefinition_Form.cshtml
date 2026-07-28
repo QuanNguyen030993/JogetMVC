@@ -8,8 +8,11 @@
 <style>
     .sla-designer {
         width: min(100%, 1100px);
+        height: 100%;
+        min-height: 0;
         margin: 0 auto;
         padding: 12px;
+        overflow: auto;
         box-sizing: border-box;
     }
 
@@ -413,7 +416,7 @@
     }
     });
 </script>
-<div id="slaDesigner_@ViewData["Id"]" class="sla-designer">
+<div id="slaDesigner_@ViewData["Id"]" class="dExForm sla-designer">
 
     <!-- Header -->
     <div class="sla-header">

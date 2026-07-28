@@ -373,12 +373,6 @@ aside {
 .custom-label-margin {
     margin-left: -165px !important;
 }
-.admin-float-swicher {
-    margin-left: 1%;
-    position: fixed;
-    top: 90%;
-    z-index: 9999;
-}
 /*
 .admin-float-btn {
     margin-left: 14%%;
@@ -4317,8 +4311,9 @@ text-overflow: ellipsis;
 */
 .admin-float {
     position: absolute;
-    right: 5px;
-    top: 13%;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
     z-index: 9999;
 }
 
@@ -4329,34 +4324,38 @@ text-overflow: ellipsis;
     height: 24px;
     padding: 0;
     place-items: center;
-    border-radius: 50%;
-    border: none;
-    background: #2563eb;
-    color: white;
-    font-size: 12px;
+    border-radius: 7px;
+    border: 1px solid rgba(37, 99, 235, .28);
+    background: linear-gradient(145deg, #eff6ff, #dbeafe);
+    color: #2563eb;
+    font-size: 11px;
     line-height: 1;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,.25);
-    transition: .2s;
+    box-shadow: 0 3px 10px rgba(37, 99, 235, .18);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 
 
     .admin-tool-btn:hover {
-        transform: scale(1.08);
+        transform: translateY(-1px);
+        border-color: rgba(37, 99, 235, .55);
+        box-shadow: 0 5px 14px rgba(37, 99, 235, .24);
     }
 
 
 .admin-info-panel {
     display: none;
-    position: absolute;
-    right: 0;
-    top: 15%;
-    width: min(360px, calc(100vw - 24px));
-    background: white;
-    border-radius: 10px;
-    padding: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
-    border: 1px solid #e5e7eb;
+    position: fixed;
+    right: 10px;
+    top: calc(var(--management-header-height, 34px) + 8px);
+    width: min(350px, calc(100vw - 20px));
+    max-height: calc(100vh - var(--management-header-height, 34px) - 18px);
+    overflow: auto;
+    background: #fff;
+    border-radius: 12px;
+    padding: 11px;
+    box-shadow: 0 16px 42px rgba(15, 23, 42, .2);
+    border: 1px solid #dbe3ee;
     z-index: 20000;
 }
 
@@ -4372,7 +4371,11 @@ text-overflow: ellipsis;
     justify-content: space-between;
     align-items: center;
     font-weight: 600;
-    margin-bottom: 12px;
+    margin: -11px -11px 5px;
+    padding: 9px 11px;
+    border-bottom: 1px solid #e2e8f0;
+    border-radius: 12px 12px 0 0;
+    background: linear-gradient(135deg, #f8fafc, #eef4fb);
     color: #111827;
 }
 
@@ -4838,6 +4841,19 @@ body .dx-datagrid .dx-datagrid-header-panel {
     background: var(--dx-grid-surface);
 }
 
+.maintenance-role-select {
+    width: 100%;
+}
+
+.maintenance-role-select .dx-texteditor-container {
+    min-height: 28px;
+}
+
+.maintenance-role-select .dx-texteditor-input {
+    min-height: 28px;
+    padding: 4px 8px;
+}
+
 body .dx-datagrid .dx-toolbar {
     margin: 0;
     padding: 0;
@@ -4910,8 +4926,7 @@ body .dx-datagrid .dx-datagrid-headers {
 }
 
 body .dx-datagrid .dx-header-row > td {
-    padding-top: 8px;
-    padding-bottom: 8px;
+    padding: 5px 7px;
     border-color: var(--dx-grid-border);
     background: transparent !important;
     color: var(--dx-grid-header-text) !important;
@@ -4935,7 +4950,7 @@ body .dx-datagrid .dx-header-filter {
 }
 
 body .dx-datagrid .dx-filter-row > td {
-    padding: 6px 7px;
+    padding: 4px 6px;
     border-color: var(--dx-grid-filter-border) !important;
     background: var(--dx-grid-filter) !important;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .85);
@@ -4973,8 +4988,7 @@ body .dx-datagrid .dx-datagrid-rowsview {
 }
 
 body .dx-datagrid .dx-data-row > td {
-    padding-top: 7px;
-    padding-bottom: 7px;
+    padding: 5px 7px;
     border-color: var(--dx-grid-border-soft);
     color: var(--dx-grid-text);
     vertical-align: middle;
@@ -5065,7 +5079,7 @@ body .dx-datagrid .dx-datagrid-summary-item {
 }
 
 body .dx-datagrid .dx-datagrid-pager {
-    padding: 7px 10px;
+    padding: 4px 7px;
     border-top: 1px solid var(--dx-grid-border);
     background: #fff;
     color: var(--dx-grid-muted);
@@ -5074,10 +5088,10 @@ body .dx-datagrid .dx-datagrid-pager {
 body .dx-datagrid .dx-pager .dx-page,
 body .dx-datagrid .dx-pager .dx-page-size,
 body .dx-datagrid .dx-pager .dx-navigate-button {
-    min-width: 30px;
-    min-height: 30px;
-    margin: 0 2px;
-    padding: 6px 9px;
+    min-width: 24px;
+    min-height: 24px;
+    margin: 0 1px;
+    padding: 3px 6px;
     border-radius: 6px;
     color: #475569;
 }
@@ -5134,8 +5148,8 @@ body .dx-datagrid .dx-invalid > .dx-texteditor-container {
 
     body .dx-datagrid .dx-header-row > td,
     body .dx-datagrid .dx-data-row > td {
-        padding-top: 8px;
-        padding-bottom: 8px;
+        padding-top: 5px;
+        padding-bottom: 5px;
     }
 }
 
@@ -7286,4 +7300,100 @@ textarea {
 :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-footer .tmiv-tool-item.active {
     color: var(--form-remarks-focus) !important;
     background: var(--form-remarks-tool-active) !important;
+}
+
+/* ========================================================================== */
+/* Management typography scale
+   Workflow Management is the largest text. Loaded menus, grids and request
+   forms share the same compact hierarchy instead of inheriting 13-16px rules. */
+/* ========================================================================== */
+body.skin-re {
+    font-size: var(--management-font-body);
+}
+
+body.skin-re .sidebar-menu > li > a {
+    font-size: var(--management-font-body) !important;
+}
+
+body.skin-re .sidebar-menu li.header {
+    font-size: var(--management-font-meta) !important;
+    letter-spacing: .04em;
+}
+
+body.skin-re .sidebar-menu .treeview-menu > li > a {
+    font-size: var(--management-font-small) !important;
+}
+
+body.skin-re .sidebar-menu :is(.pull-right-container, .treeview-menu .fa),
+body.skin-re .sidebar-menu > li > a > :is(.fa, .glyphicon, .ion) {
+    font-size: var(--management-font-body) !important;
+}
+
+body.skin-re .dx-datagrid {
+    font-size: var(--management-font-body) !important;
+}
+
+body.skin-re .dx-datagrid :is(.dx-toolbar-label, .dx-toolbar-label > div) {
+    font-size: var(--management-font-title) !important;
+}
+
+body.skin-re .dx-datagrid .dx-header-row > td,
+body.skin-re .dx-datagrid .dx-data-row > td,
+body.skin-re .dx-datagrid .dx-group-row > td,
+body.skin-re .dx-datagrid .dx-datagrid-summary-item {
+    font-size: var(--management-font-body) !important;
+}
+
+body.skin-re .dx-datagrid :is(.dx-filter-row, .dx-datagrid-search-panel, .dx-pager) {
+    font-size: var(--management-font-small) !important;
+}
+
+body.skin-re .dx-datagrid .dx-datagrid-nodata {
+    font-size: var(--management-font-body) !important;
+}
+
+body.skin-re .dx-datagrid td[class*="dx-command"] .dx-link {
+    font-size: var(--management-font-title) !important;
+}
+
+body.skin-re :is(.dExForm, [id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) {
+    font-size: var(--management-font-body);
+}
+
+body.skin-re :is(.dExForm, [id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dx-widget, .dx-texteditor-input, .dx-button-text, .tmiv-html-content) {
+    font-size: var(--management-font-body) !important;
+}
+
+body.skin-re :is(.dExForm, [id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dx-field-item-label-text, .dx-field-item-optional-mark, .dx-placeholder,
+        .dept-hint, .dept-updated, .statusTag, .overview-status-pill) {
+    font-size: var(--management-font-small) !important;
+}
+
+body.skin-re :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.qt-cardHeader .h, .pi-cardHeader .h, .dept-header .dept-title,
+        .actionBarDept .dept-title, .dx-form-group-caption) {
+    font-size: var(--management-font-title) !important;
+}
+
+body.skin-re :is(.overview-header-flow, .overview-header-actions, .overview-scroll .dept-header)
+    .dx-button .dx-icon,
+body.skin-re .dx-datagrid .dx-button .dx-icon {
+    font-size: var(--management-font-title) !important;
+}
+
+body.skin-re :is(.dExForm, [id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dx-icon, .dept-toggle-icon),
+body.skin-re :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    :is(.dx-form-group-caption, .dept-title)::after {
+    font-size: var(--management-font-title) !important;
+}
+
+body.skin-re .dx-overlay-wrapper :is(.dx-list-item, .dx-menu-item, .dx-popup-content) {
+    font-size: var(--management-font-body);
+}
+
+body.skin-re .dx-overlay-wrapper .dx-popup-title {
+    font-size: var(--management-font-title) !important;
 }
