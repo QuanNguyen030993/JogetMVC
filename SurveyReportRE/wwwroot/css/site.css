@@ -667,7 +667,10 @@ aside {
 }
 
 .attachment-drop-zone.is-disabled {
-    display: none;
+    opacity: .55;
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(.25);
 }
 
 .attachment-drop-zone__icon {

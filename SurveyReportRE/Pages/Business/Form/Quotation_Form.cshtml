@@ -1035,7 +1035,7 @@ Note:
                      $(`#${formId}`).dxForm("instance")?.repaint();
                     setAttachmentPermissionForSection(
                         `#${formModuleKeyQt}-sec_${item}_@ViewData["Id"]`,
-                        _isSuperUser ? true : !roleApply[item]
+                        !roleApply[item]
                     );
                 });
                

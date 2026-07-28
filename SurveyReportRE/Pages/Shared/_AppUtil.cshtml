@@ -3936,6 +3936,10 @@
 
             function renderAttachmentListLazy(list, attList_Host, options) {
                 options = options || {};
+                const sectionPermission = attList_Host?.closest(".dept-section").data("attachmentCanEdit");
+                if (sectionPermission !== undefined) {
+                    options.uploaderAllow = !!sectionPermission;
+                }
                 const batchSize = options.batchSize || 8;
                 const delay = options.delay || 0;
                 const onDeleted = options.onDeleted;
@@ -4528,6 +4532,9 @@
                     .attr("aria-disabled", canEdit ? "false" : "true")
                     .attr("tabindex", canEdit ? "0" : "-1");
                 $section.find(".attachment-delete-action").toggle(!!canEdit);
+                $section.find(".att-item-selectbox.dx-selectbox").each(function () {
+                    $(this).dxSelectBox("instance")?.option("disabled", !canEdit);
+                });
             }
 
 
@@ -4683,6 +4690,14 @@
                     onClick: async function (ev) {
                         ev.event?.stopPropagation?.();
 
+                        const liveSectionPermission = $(ev.element)
+                            .closest(".dept-section")
+                            .data("attachmentCanEdit");
+                        if (liveSectionPermission === false) {
+                            DevExpress.ui.notify("This attachment section is read-only for the selected role.", "warning", 1800);
+                            return;
+                        }
+
                         if (!id) {
                             DevExpress.ui.notify("Missing id", "warning", 2000);
                             return;
@@ -4735,6 +4750,7 @@
                         valueExpr: "id",
                         displayExpr: "text",
                         value: currentFieldName,
+                        disabled: options?.uploaderAllow === false,
                         searchEnabled: true,
                         placeholder: "Select category...",
                         onValueChanged: function(e) {
