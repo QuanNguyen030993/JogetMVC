@@ -1004,7 +1004,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
+    padding: 5px;
 }
 
     .comment-editor-header h4 {
@@ -1023,7 +1023,7 @@
     border-radius: 999px;
     background: #eff6ff;
     color: #2563eb;
-    font-size: 0.8rem;
+    font-size: 12px;
     font-weight: 600;
 }
 /*
@@ -1037,7 +1037,7 @@
 .comment-item {
     display: flex;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 5px;
     border-radius: 12px;
     background: #f8fafc;
     border: 1px solid #eef2f7;
@@ -1058,6 +1058,7 @@
 
 .comment-body {
     flex: 1;
+    font-size:12px;
 }
 
 .comment-meta {
@@ -1326,7 +1327,7 @@ textarea {
     }
 
     .comment-send-btn i {
-        font-size: 14px;
+        font-size: 12px;
     }
 
 .comment-editor-card {

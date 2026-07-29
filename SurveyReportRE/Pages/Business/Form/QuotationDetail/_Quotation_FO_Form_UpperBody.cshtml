@@ -21,22 +21,7 @@
         </div>
     </div> *@
 <script>
-             var sectionId =  "qt-body_@(dept)_RES";
 
-     var thatRes = new Object();
-      thatRes.ModelName = "Quotation";
-      thatRes.moduleName = "default";
-      thatRes.editorType = "dxFileUploader"
-      thatRes.id = @quotationId;
-      thatRes.guid = "@quotationGuid" ;
-      thatRes.sectionName = "@(dept)";
-      thatRes.titleName = "Upload RES Form";
-      thatRes.uploaderAllow = _role == "@dept";
-      thatRes.data = { SectionName: `${sectionId}_${thatRes.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: thatRes.moduleName, FormId: "@(QTViewIdHelper.Form(dept, quotationId))" }; //{"SectionName":"default_FO_410"}
-      $(`<div class="dExForm">`).dxForm({
-        items:  [{ itemType: "group", name:"resAttachment", caption: "RES Attachment", colCount: 1, items:  attachmentByCase(thatRes) }],
-         // items: [{ itemType: "group", items: searchFormControls }],
-      }).appendTo($(`#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)`));
 
     //  // window.QuotationPage.resButtonComponent =
     //  $("#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)").dxButton({

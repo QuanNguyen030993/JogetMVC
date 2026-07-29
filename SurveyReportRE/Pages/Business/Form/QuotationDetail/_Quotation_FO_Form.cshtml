@@ -57,6 +57,23 @@
     that2.uploaderAllow = _role == "@dept";
     that2.data = { SectionName: `${sectionId}_${that2.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
 
+         var sectionId =  "qt-body_@(dept)_RES";
+
+     var thatRes = new Object();
+      thatRes.ModelName = "Quotation";
+      thatRes.moduleName = "default";
+      thatRes.editorType = "dxFileUploader"
+      thatRes.id = @quotationId;
+      thatRes.guid = "@quotationGuid" ;
+      thatRes.sectionName = "@(dept)";
+      thatRes.titleName = "Upload RES Form";
+      thatRes.uploaderAllow = _role == "@dept";
+      thatRes.data = { SectionName: `${sectionId}_${thatRes.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: thatRes.moduleName, FormId: "@(QTViewIdHelper.Form(dept, quotationId))" }; //{"SectionName":"default_FO_410"}
+      // $(`<div class="dExForm">`).dxForm({
+      //   items:  [{ itemType: "group", name:"resAttachment", caption: "RES Attachment", colCount: 1, items:  attachmentByCase(thatRes) }],
+      //    // items: [{ itemType: "group", items: searchFormControls }],
+      // }).appendTo($(`#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)`));
+
      var acceptDecisionV2 = {
         buttonId: acceptButtonId,
         statusId: acceptStatusId,
@@ -212,7 +229,8 @@
 
                  { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3},
                 
-                            ]},
+                            ]}
+                            ,  { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2)},
                         {
                         itemType: "group",
                         name: "decision@(dept)Group",
@@ -243,7 +261,8 @@
                      }
                 }
                     ]
-                }, { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that, that2) }
+                }, { itemType: "group", caption: "Attachment", colCount:1, items: attachmentByCase(that, that2) },
+                { itemType: "group", name:"resAttachment", caption: "RES Attachment", colCount: 1, items:  attachmentByCase(thatRes) }
                ]
     
     });

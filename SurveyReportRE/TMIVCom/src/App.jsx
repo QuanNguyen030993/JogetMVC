@@ -316,6 +316,23 @@ function App() {
         </div>
       </section>
 
+ <section className="section">
+        <div className="section-title">Comment Editor </div>
+        <div style={{ padding: '16px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <CommentEditor
+           value = 'hello'
+          placeholder = 'Add comment...'
+          emptyText = 'No comments.'
+          submitLabel = 'Send'
+          headerTitle = 'Comments'
+          headerSubtitle = ''
+          authorName = 'You'
+          roleName = 'Contributor'
+          className = ''/>
+        </div>
+      </section>
+
+
       <section className="section">
         <div className="section-title">Comment Editor & Route (Ý kiến và Định hướng chuyển phòng ban)</div>
         <div style={{ padding: '16px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>

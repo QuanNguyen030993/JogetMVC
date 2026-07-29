@@ -72,36 +72,7 @@
 
             
 
-            { 
-                itemType: "group", 
-                caption: "Attachment", 
-                colCount: 1, 
-                items: [
-                    {
-                        dataField: "quotation",
-                        colSpan: 1,
-                        label: { text: "Uploaded Quotation" },
-                        template: function (data, itemElement) {
-                            createEditor(that, itemElement, $("<div>"), that);
-                          
-                        }
-                    },
-                    {
-                        dataField: "supportingDocument",
-                        colSpan: 2,
-                        template: function (data, itemElement) {
-                            createEditor(that2, itemElement, $(`<div>`), that2);
-                        }
-                    },
-                    {
-                        dataField: "document",
-                        colSpan: 2,
-                        template: function (data, itemElement) {
-                            createEditor(that3, itemElement, $(`<div>`), that3);
-                        }
-                    }
-                ]
-            },
+            
                 {itemType: "group",caption: "Request Date",colCount:2,items: [
             {
                                   dataField: "requestedDate",
@@ -162,20 +133,36 @@
 
                  { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3},
 
-                            ]},
-                            {
-                                itemType: "group",
-                                name: "decision@(dept)Group",
-                                cssClass: "workflow-decision-group pi-decision-group-@(dept)",
-                                elementAttr: {
-                                    id: "pi-decision-group-@(dept)-@(policyIssuanceId)",
-                                    "data-form-group-name": "decision@(dept)Group",
-                                    "data-route-dept": "@dept"
-                                },
-                                caption: "Client Confirm",
-                                colCount: 2,
-                                items: []
-                            }
+                            ]},{
+                itemType: "group",
+                caption: "Attachment",
+                colCount: 1,
+                items: [
+                    {
+                        dataField: "quotation",
+                        colSpan: 1,
+                        label: { text: "Uploaded Quotation" },
+                        template: function (data, itemElement) {
+                            createEditor(that, itemElement, $("<div>"), that);
+
+                        }
+                    },
+                    {
+                        dataField: "supportingDocument",
+                        colSpan: 2,
+                        template: function (data, itemElement) {
+                            createEditor(that2, itemElement, $(`<div>`), that2);
+                        }
+                    },
+                    {
+                        dataField: "document",
+                        colSpan: 2,
+                        template: function (data, itemElement) {
+                            createEditor(that3, itemElement, $(`<div>`), that3);
+                        }
+                    }
+                ]
+            }
 
                ]
     

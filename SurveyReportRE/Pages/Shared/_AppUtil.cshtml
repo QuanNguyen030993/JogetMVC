@@ -3002,151 +3002,155 @@
                 }
             }
 
-            function initDepartmentAssignees(moduleKey, data , timeout = _delayRenderAssigneeBox) {
-                var pageLayout = window.QuotationPage;
-                var stateLayout = pageLayout.state;
-                stateLayout.isAssigneeBoxRender = false;
-                if (moduleKey == "qt")
-                    $.each(qtDeptModuleCode, function (itemIndex, item) {
-                        setTimeout(() => {
-                                var currentPic = getDefaultPicByDept(item,  data[item]);
-                                if (data[item]) {
-                                    const sectionId = `#${moduleKey}-sec_${item}_${data[item].id}`;
-                                    const $section = $(sectionId);
-                                    if (currentPic) {
-                                        $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
-                                    } else {
-                                        $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
-                                    }
-                                }
-                                    if (data[item])
-                                            renderDepartmentAssigneeBox(`#${window.QuotationIdManager.assigneeBox(item, data[item].id)}`, {
-                                groupName: item,
-                                    dataForm: data[item],
-                                    onClosed: function (itemChild) { //onChanged: function (itemChild, editor) {
-                                        // var  itemChild =    e.component.option("selectedItems") || []
-                                    if (!stateLayout.isAssigneeBoxRender) return;
-                                    var formId = window.QuotationIdManager.form(item,this.dataForm.id);
-                                    var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
-                                    var store = ds;
-                                    var PICs = {};
-                                    try {
-                                        PICs = JSON.parse(this.dataForm.pIC || this.dataForm.pic || "{}");
-                                    } catch (e) {
-                                        PICs = {};
-                                    }
+            // function initDepartmentAssignees(moduleKey, data , timeout = _delayRenderAssigneeBox) {
+            //     var pageLayout = window.QuotationPage;
+            //     var stateLayout = pageLayout.state;
+            //     stateLayout.isAssigneeBoxRender = false;
+            //     if (moduleKey == "qt")
+            //         $.each(qtDeptModuleCode, function (itemIndex, item) {
+            //             setTimeout(() => {
+            //                     var currentPic = getDefaultPicByDept(item,  data[item]);
+            //                     if (data[item]) {
+            //                         const sectionId = `#${moduleKey}-sec_${item}_${data[item].id}`;
+            //                         const $section = $(sectionId);
+            //                         if (currentPic) {
+            //                             $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+            //                         } else {
+            //                             $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+            //                         }
+            //                     }
+            //                         if (data[item])
+            //                                 renderDepartmentAssigneeBox(`#${window.QuotationIdManager.assigneeBox(item, data[item].id)}`, {
+            //                     groupName: item,
+            //                         dataForm: data[item],
+            //                         onClosed: function (itemChild) { //onChanged: function (itemChild, editor) {
+            //                             // var  itemChild =    e.component.option("selectedItems") || []
 
-                                    if (!itemChild || !Array.isArray(itemChild)) return;
+            //                             debugger
+            //                         if (!stateLayout.isAssigneeBoxRender) return;
+            //                         var formId = window.QuotationIdManager.form(item,this.dataForm.id);
+            //                         var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
+            //                         var store = ds;
+            //                         var PICs = {};
+            //                         try {
+            //                             PICs = JSON.parse(this.dataForm.pIC || this.dataForm.pic || "{}");
+            //                         } catch (e) {
+            //                             PICs = {};
+            //                         }
 
-                                    const accounts = itemChild
-                                        .map(x => x?.emailName)
-                                        .filter(Boolean);
+            //                         if (!itemChild || !Array.isArray(itemChild)) return;
 
-                                    const sectionId = `#${moduleKey}-sec_${item}_${this.dataForm.id}`;
-                                    const $section = $(sectionId);
-                                    if (accounts.length > 0) {
-                                        $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
-                                    } else {
-                                        $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
-                                    }
+            //                         const accounts = itemChild
+            //                             .map(x => x?.emailName)
+            //                             .filter(Boolean);
 
-                                    if (accounts.length === 0) return;
+            //                         const sectionId = `#${moduleKey}-sec_${item}_${this.dataForm.id}`;
+            //                         const $section = $(sectionId);
+            //                         if (accounts.length > 0) {
+            //                             $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+            //                         } else {
+            //                             $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+            //                         }
 
-
-                                    // loại currentPic nếu cần
-                                    const filteredAccounts = accounts.filter(x => x !== currentPic);
+            //                         if (accounts.length === 0) return;
 
 
-                                    PICs[item] = filteredAccounts.join(",");
+            //                         // loại currentPic nếu cần
+            //                         const filteredAccounts = accounts.filter(x => x !== currentPic);
 
 
-                                    var data = new Object();
-                                    data.pIC = JSON.stringify(PICs);
-                                    persistDepartmentAssignment(
-                                        "Quotation",
-                                        this.dataForm.id,
-                                        item,
-                                        store,
-                                        data,
-                                        formId
-                                    );
-                                }
-                            });
-                        }, timeout);
-                    });
-                if (moduleKey == "pi")
-                    $.each(piDeptModuleCode, function (itemIndex, item) {
-                        setTimeout(() => {
-                        var currentPic = getDefaultPicByDept(item, data[item]);
-                        if (data[item]) {
-                            const sectionId = `#${moduleKey}-sec_${item}_${data[item].id}`;
-                            const $section = $(sectionId);
-                            if (currentPic) {
-                                $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
-                            } else {
-                                $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
-                            }
-                        }
-                        if (data[item])
-                                renderDepartmentAssigneeBox(`#${window.PolicyIssuanceIdManager.assigneeBox(item, data[item].id)}`, {
-                                    groupName: item,
-                                    dataForm: data[item],
-                                    //value: formItems.lmktAssigneeId || null,
-                                        onClosed: function (itemChild) {
-                                    if (!stateLsayout.isAssigneeBoxRender) return;
-                                    var formId = window.PolicyIssuanceIdManager.form(item, this.dataForm.id);
-                                    var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
-                                    var store = ds;
-                                    var PICs = {};
-                                    try {
-                                        PICs = JSON.parse(this.dataForm.pIC || this.dataForm.pic || "{}");
-                                    } catch (e) {
-                                        PICs = {};
-                                    }
-
-                                    if (!itemChild || !Array.isArray(itemChild)) return;
-
-                                    const accounts = itemChild
-                                        .map(x => x?.emailName)
-                                        .filter(Boolean);
-
-                                    const sectionId = `#${moduleKey}-sec_${item}_${this.dataForm.id}`;
-                                    const $section = $(sectionId);
-                                    if (accounts.length > 0) {
-                                        $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
-                                    } else {
-                                        $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
-                                    }
-
-                                    if (accounts.length === 0) return;
+            //                         PICs[item] = filteredAccounts.join(",");
 
 
-                                    // loại currentPic nếu cần
-                                    const filteredAccounts = accounts.filter(x => x !== currentPic);
+            //                         var data = new Object();
+            //                         data.pIC = JSON.stringify(PICs);
+            //                         persistDepartmentAssignment(
+            //                             "Quotation",
+            //                             this.dataForm.id,
+            //                             item,
+            //                             store,
+            //                             data,
+            //                             formId
+            //                         );
+
+            //                     }
+            //                 });
+            //             }, timeout);
+            //         });
+            //     if (moduleKey == "pi")
+            //         $.each(piDeptModuleCode, function (itemIndex, item) {
+            //             setTimeout(() => {
+            //             var currentPic = getDefaultPicByDept(item, data[item]);
+            //             if (data[item]) {
+            //                 const sectionId = `#${moduleKey}-sec_${item}_${data[item].id}`;
+            //                 const $section = $(sectionId);
+            //                 if (currentPic) {
+            //                     $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+            //                 } else {
+            //                     $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+            //                 }
+            //             }
+            //             if (data[item])
+            //                     renderDepartmentAssigneeBox(`#${window.PolicyIssuanceIdManager.assigneeBox(item, data[item].id)}`, {
+            //                         groupName: item,
+            //                         dataForm: data[item],
+            //                         //value: formItems.lmktAssigneeId || null,
+            //                             onClosed: function (itemChild) {
+            //                                 debugger
+            //                         if (!stateLsayout.isAssigneeBoxRender) return;
+            //                         var formId = window.PolicyIssuanceIdManager.form(item, this.dataForm.id);
+            //                         var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
+            //                         var store = ds;
+            //                         var PICs = {};
+            //                         try {
+            //                             PICs = JSON.parse(this.dataForm.pIC || this.dataForm.pic || "{}");
+            //                         } catch (e) {
+            //                             PICs = {};
+            //                         }
+
+            //                         if (!itemChild || !Array.isArray(itemChild)) return;
+
+            //                         const accounts = itemChild
+            //                             .map(x => x?.emailName)
+            //                             .filter(Boolean);
+
+            //                         const sectionId = `#${moduleKey}-sec_${item}_${this.dataForm.id}`;
+            //                         const $section = $(sectionId);
+            //                         if (accounts.length > 0) {
+            //                             $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+            //                         } else {
+            //                             $section.find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+            //                         }
+
+            //                         if (accounts.length === 0) return;
 
 
-                                    PICs[item] = filteredAccounts.join(",");
+            //                         // loại currentPic nếu cần
+            //                         const filteredAccounts = accounts.filter(x => x !== currentPic);
+
+
+            //                         PICs[item] = filteredAccounts.join(",");
 
 
 
-                                    var data = new Object();
-                                    data.pIC = JSON.stringify(PICs);
-                                    persistDepartmentAssignment(
-                                        "PolicyIssuance",
-                                        this.dataForm.id,
-                                        item,
-                                        store,
-                                        data,
-                                        formId
-                                    );
-                                }
-                            });
-                        }, timeout);
-                    });
-                setTimeout(() => {
-                    stateLayout.isAssigneeBoxRender = true;
-                }, timeout + 100);
-                }
+            //                         var data = new Object();
+            //                         data.pIC = JSON.stringify(PICs);
+            //                         persistDepartmentAssignment(
+            //                             "PolicyIssuance",
+            //                             this.dataForm.id,
+            //                             item,
+            //                             store,
+            //                             data,
+            //                             formId
+            //                         );
+            //                     }
+            //                 });
+            //             }, timeout);
+            //         });
+            //     setTimeout(() => {
+            //         stateLayout.isAssigneeBoxRender = true;
+            //     }, timeout + 100);
+            //     }
 
         /**
          * Render assignment theo Promise de loading tong co the doi dxTagBox bind PIC.
@@ -3189,6 +3193,7 @@
                         return workflowPage?.state?.currentUserRole || _role;
                     },
                     onClosed: function (selectedItems) {
+                        debugger
                         if (!renderState.isAssigneeBoxRender || !Array.isArray(selectedItems)) return;
 
                         const formId = idManager.form(dept, this.dataForm.id);
@@ -3205,16 +3210,24 @@
                         const accounts = selectedItems
                             .map(item => item?.accountName || item?.emailName)
                             .filter(Boolean);
-                        $section
+
+                          if (picMap[dept] == accounts.join(","))
+                                    {
+                    
+
+                        // Giu nguyen full selection. Loai currentPic tai day se lam PIC cu
+                        // bi mat chi vi user mo roi dong dropdown ma khong sua gi.
+                       
+
+                                    }
+                                    else {
+                                            $section
                             .find(".dept-upperbody, .dept-body, .dept-lowerbody")
                             .toggle(accounts.length > 0);
                         $section
                             .find(".dept-footer")
                             .toggle(accounts.length > 0 || getActiveStage() === dept);
-
-                        // Giu nguyen full selection. Loai currentPic tai day se lam PIC cu
-                        // bi mat chi vi user mo roi dong dropdown ma khong sua gi.
-                        picMap[dept] = accounts.join(",");
+                                         picMap[dept] = accounts.join(",");
                         this.dataForm.pIC = JSON.stringify(picMap);
                         persistDepartmentAssignment(
                             schemeName,
@@ -3223,7 +3236,8 @@
                             store,
                             { pIC: this.dataForm.pIC },
                             formId
-                        );
+                        );}
+
                     }
                 });
             }
@@ -3435,7 +3449,7 @@
                 valueExpr: "accountName",
                 displayExpr: "fullName",
                 height: 38,
-                width: 400,
+                width: 300,
                 value: selectedValues,
                 readOnly: !canEdit,
                 hint: canEdit

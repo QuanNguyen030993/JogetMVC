@@ -990,7 +990,7 @@ useEffect(() => {
                     setImageRotation(rotationDegrees)
                 }
                 style={{
-                    width: 56,
+                    width: 40,
                     border: "1px solid #ccc",
                     borderRadius: 4,
                     padding: "2px 4px",
@@ -1000,7 +1000,7 @@ useEffect(() => {
                 }}
                 title="Rotate selected image degree"
             />
-            <button
+            {/* <button
                 type="button"
                 onClick={() => setImageRotation(rotationDegrees)}
                 style={{
@@ -1012,9 +1012,14 @@ useEffect(() => {
                 }}
             >
                 ↻
-            </button>
+            </button> */}
         </div>
-
+    <div
+        className="tmiv-tool-item"
+        onClick={() => setImageRotation(rotationDegrees)}
+    >
+        ↻
+    </div>
     <div
         className="tmiv-tool-item"
         onClick={() => {

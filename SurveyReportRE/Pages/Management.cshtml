@@ -1368,12 +1368,12 @@
             },
             contentTemplate: function (contentEl) {
                const $toolbar = $(`
-                    <div style="padding:10px;display:flex;gap:8px;align-items:center;margin-bottom:5px;">
+                    <div style="padding:5px;display:flex;gap:8px;align-items:center;margin-bottom:5px;">
                       <div id="notifMarkAllBtn"></div>
                       <div id="notifCategorySelect" style="flex:1;min-width:0;"></div>
                       <div style="margin-left:auto; opacity:.7; font-size:12px;" id="notifHint"></div>
                     </div>
-                    <div id="notifList" style="padding: 10px"></div>
+                    <div id="notifList" style="padding: 5px"></div>
                 `);
 
                 $(contentEl).append($toolbar);
@@ -1431,7 +1431,7 @@
                         const typeBadge = `<span title="${typeMeta.label}" style="padding:2px 6px;border-radius:6px;font-size:10px;font-weight:700;background:${typeMeta.background};color:${typeMeta.color};margin-right:6px;text-transform:uppercase;">${typeMeta.shortLabel}</span>`;
 
                         const $notificationItem = $(`
-                            <div class="notif-list-item" style="padding:10px 8px; border-bottom:1px solid var(--c-rgba-0-0-0-06);">
+                            <div class="notif-list-item" style="padding:5px 8px; border-bottom:1px solid var(--c-rgba-0-0-0-06);">
                               <div style="display:flex; gap:8px; align-items:flex-start;">
                                 <div style="width:10px; margin-top:6px;">
                                   <span style="display:${isUnread ? "inline-block" : "none"}; width:8px; height:8px; border-radius:50%; background:var(--c-ff3b30);"></span>
@@ -1856,13 +1856,47 @@
     }
 
 
-     $("#btnNew").dxButton({
-        text: "New request",
-        icon: "plus",
-        onClick: () => openModuleLauncherPopup()
-     });
+     // $("#btnNew").dxButton({
+     //    text: "New request",
+     //    icon: "plus",
+     //    // elementAttr: {
+     //    //     class: "plus-icon-btn"
+     //    // },
+     //    onClick: () => openModuleLauncherPopup()
+     // });
       // ================= MODULE POPUP =================
 
+
+          $("#btnNew").dxButton({
+       type: "normal",
+       stylingMode: "contained",
+       template: function (data, container) {
+           $(`
+    <div>
+    <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 512 512"
+                        xmlns="http://www.w3.org/2000/svg">
+    <circle
+                           cx="256"
+                           cy="256"
+                           r="256"
+                           fill=var(--theme-primary) />
+    <path
+                           d="M256 140V372M140 256H372"
+                           stroke="white"
+                           stroke-width="36"
+                           stroke-linecap="round" />
+    </svg>
+    <span style="font-size: 11px;">
+                        New request
+    </span>
+    </div>
+           `).appendTo(container);
+       },
+       onClick: () => openModuleLauncherPopup()
+    });
 
     $(window).on('scroll', function () {
         handleFloating();
@@ -1992,7 +2026,7 @@
 
     .user-menu-heading strong {
         color: var(--theme-text-strong);
-        font-size: 14px;
+        font-size: 12px;
     }
 
     .user-menu-heading div > span {
@@ -2165,7 +2199,7 @@
 
     .account-setting-heading strong {
         color: var(--theme-text-strong);
-        font-size: 14px;
+        font-size: 12px;
     }
 
     .account-setting-heading span {
@@ -2311,7 +2345,7 @@
 
     .account-notification-copy strong {
         color: var(--theme-text-strong);
-        font-size: 14px;
+        font-size: 12px;
     }
 
     .account-notification-copy span,
@@ -2869,7 +2903,7 @@
     .action-card {
         width: 100%;
         min-width: 0;
-        height: auto;
+        height: calc(75vh);
         border-radius: clamp(14px, 2vw, 28px);
         overflow: hidden;
         background: var(--c-ffffff);
@@ -2904,8 +2938,8 @@
 
 
     .card-body {
-        min-height: clamp(122px, 22vh, 210px);
-        height: auto;
+        /* min-height: clamp(122px, 22vh, 210px); */
+        height: calc(55vh);
         text-align: center;
         padding: clamp(12px, 1.6vw, 20px);
         box-sizing: border-box;
