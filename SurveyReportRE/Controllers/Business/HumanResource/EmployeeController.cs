@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using ERPCore.ControllerUtil;
+using Dapper;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
@@ -185,6 +186,34 @@ public class EmployeeController : BaseControllerApi<Employee>
                     code = item.Key,
                     description = item.Value
                 })
+            }
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetMyGuideEligibility([FromQuery] decimal maxLoginHours = 0)
+    {
+        var accountName = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration)?.Trim();
+        if (string.IsNullOrWhiteSpace(accountName))
+            return Unauthorized(new { success = false, message = "Current user is not available." });
+
+        await using var connection = new SqlConnection(_BaseRepository._connectionString);
+        var totalLoginHours = await connection.QuerySingleOrDefaultAsync<decimal?>(@"
+            SELECT TotalLoginHours
+            FROM dbo.Employee WITH (NOLOCK)
+            WHERE AccountName = @AccountName AND Deleted = 0",
+            new { AccountName = accountName }) ?? 0;
+
+        maxLoginHours = Math.Max(0, maxLoginHours);
+        return Ok(new
+        {
+            success = true,
+            data = new
+            {
+                accountName,
+                totalLoginHours,
+                maxLoginHours,
+                showGuide = maxLoginHours <= 0 || totalLoginHours < maxLoginHours
             }
         });
     }

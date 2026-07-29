@@ -3403,6 +3403,33 @@
             const $el = $(selector);
             if ($el.length === 0) return;
 
+            const $assignWrapper = $el.closest(".dept-form-header__assign");
+            const departmentName = String(settings.groupName || "").trim().toUpperCase();
+            let $assignmentStatus = $();
+
+            if ($assignWrapper.length) {
+                const statusId = `${$el.attr("id")}-detail-status`;
+                $assignmentStatus = $(document.getElementById(statusId));
+                if (!$assignmentStatus.length) {
+                    $assignmentStatus = $("<div>", {
+                        id: statusId,
+                        class: "assignee-detail-status",
+                        role: "status",
+                        "aria-live": "polite"
+                    }).insertAfter($assignWrapper);
+                }
+                $assignmentStatus.text(`Assign someone to view details for the ${departmentName} section.`);
+            }
+
+            const syncAssignmentStatus = function (values) {
+                if (!$assignmentStatus.length) return;
+                const needsAssignee = !Array.isArray(values) || values.length === 0;
+                $assignmentStatus
+                    .toggleClass("is-visible", needsAssignee)
+                    .attr("aria-hidden", needsAssignee ? "false" : "true");
+            };
+            syncAssignmentStatus(selectedValues);
+
             // Nap datasource truoc khi gan value. Voi CustomStore, chi option("value")
             // co the khien TagBox render key truoc khi byKey tra ve va hien sai PIC.
             let employees = [];
@@ -3540,6 +3567,7 @@
                                             || { accountName: accountName, fullName: accountName });
 
                                     editor.option("value", current);
+                                    syncAssignmentStatus(current);
                                     editor.getDataSource()?.reload?.();
 
                                     if (typeof settings.onChanged === "function") {
@@ -3562,6 +3590,7 @@
                 onClosed: function (e) {
                     if (!canEditDepartmentAssignee(settings)) return;
                     const items = e.component.option("selectedItems") || [];
+                    syncAssignmentStatus(e.component.option("value"));
                     if (typeof settings.onClosed === "function") {
                         settings.onClosed(items, e.component, false);
                     }

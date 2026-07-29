@@ -7,6 +7,8 @@
 @await Html.PartialAsync("_FormStageDelay")
 @await Html.PartialAsync("_AppUtil")
 <script src="~/js/app/appUtil.js"></script>
+<link rel="stylesheet" href="~/css/app/user-guide.css" asp-append-version="true" />
+<script src="~/js/app/userGuide.js" asp-append-version="true"></script>
 @await Html.PartialAsync("_EnumConstant")
 @await Html.PartialAsync("_EntityConstant")
 <script>
@@ -44,6 +46,9 @@
                         .attr("data-source-url", url)
                         .attr("data-source-caption", caption || "")
                         .data("source-data", sourceData);
+                    window.setTimeout(function () {
+                        window.UserGuide?.startEligible?.();
+                    }, 350);
                 }
                 catch (e) {
                     appNotify({ message: e.message, type: 'error' });
@@ -654,6 +659,13 @@
             <!--Login Info-->
             <div class="management-header-actions">
                 <div id="btnNew"></div>
+                <button id="userGuideLauncher"
+                        class="ug-guide-launcher"
+                        type="button"
+                        title="User guides"
+                        aria-label="Open user guides">
+                    <i class="fa fa-compass" aria-hidden="true"></i>
+                </button>
                 <div id="notificationBtn" class="notif-wrapper square-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="30" height="30" viewBox="0 0 256 256" xml:space="preserve">
                     <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
@@ -704,6 +716,9 @@
             </div>
    
             @await Html.PartialAsync("_SPAReference")
+            <script>
+                window.UserGuide?.bindLauncher("#userGuideLauncher");
+            </script>
             <div id="mainPopup"></div>
             <div id="outlinePopup"></div>
             <div id="loadingPopup"></div>
