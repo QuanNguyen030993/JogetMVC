@@ -782,6 +782,16 @@
                             onClick() {
                                 var gridInstance = $(`#dataGrid_Quotation_Request`).dxDataGrid("instance");
                                 var selectedItems = gridInstance.getSelectedRowsData();
+                                if (!selectedItems.length) {
+                                    DevExpress.ui.notify("Please select at least one confirmed Quotation.", "warning", 1800);
+                                    return;
+                                }
+
+                                var routeForm = $("#policyIssuanceFromQuotationOptions").dxForm("instance");
+                                var routeValidation = routeForm ? routeForm.validate() : { isValid: false };
+                                if (!routeValidation.isValid) return;
+                                var skipTS = routeForm.option("formData").skipTS;
+
                                      makeMiniLoadingPanel("Initiate Policy Issuance", "Please wait...");
                                         var result = new Object();
                                             result.payload = new Object();
@@ -810,6 +820,11 @@
                                       policyIssuance.StageAccount = _loginUser;
                                       policyIssuance.CopyFromGuid = item.guid;
                                       policyIssuance.QuotationId = item.id;
+                                      policyIssuance.ActionStatus = JSON.stringify({
+                                          EntryMode: "FromQuotation",
+                                          SkipTS: skipTS,
+                                          FO: "Draft"
+                                      });
 
                                     policyIssuances.push(policyIssuance);
                                  });
@@ -845,6 +860,117 @@
 
             }
 
+        function newPolicyIssuanceEndorseForm() {
+            var popup = makePopup("large", "Policy Issuance Endorse Request");
+            popup.option({
+                title: "Policy Issuance - Endorse Request",
+                contentTemplate: function (container) {
+                    var passingParams = {
+                        UITabId: "PolicyIssuance_Endorse_Request_Form",
+                        pageNum: 0
+                    };
+
+                    appendElementViewInsideAsync(
+                        "/Business/Form/PopupDetail/PolicyIssuance_Endorse_Request_Form",
+                        passingParams,
+                        container,
+                        "PolicyIssuance_Endorse_Request_Form",
+                        "appendTo"
+                    ).then(function (form) {
+                        var scrollView = popupStandardContentByScroll(form.option("container"));
+                        scrollView.appendTo(container);
+                    }).catch(function (error) {
+                        console.error("Unable to load Policy Issuance Endorse form:", error);
+                        appNotifyError("Unable to load Policy Issuance Endorse form.");
+                    });
+
+                    return container;
+                },
+                toolbarItems: [{
+                    widget: "dxButton",
+                    toolbar: "bottom",
+                    location: "after",
+                    options: {
+                        text: "Cancel",
+                        onClick: function () {
+                            popup.hide();
+                        }
+                    }
+                }, {
+                    widget: "dxButton",
+                    toolbar: "bottom",
+                    location: "after",
+                    options: {
+                        stylingMode: "contained",
+                        type: "success",
+                        text: "Create Request",
+                        onClick: function () {
+                            var form = $("#policyIssuanceEndorseRequestForm").dxForm("instance");
+                            if (!form) {
+                                DevExpress.ui.notify("The Endorse form is still loading.", "warning", 1500);
+                                return;
+                            }
+
+                            var validation = form.validate();
+                            if (!validation.isValid) return;
+
+                            var data = form.option("formData") || {};
+                            var policyIssuance = {
+                                RequestType: "Endorsement",
+                                RequestTypeId: data.requestTypeId || null,
+                                RequestDate: data.requestDate,
+                                DueDate: data.dueDate || null,
+                                PolicyNo: data.policyNo,
+                                PolicyHolderId: data.policyHolderId || "",
+                                ClientId: data.clientId || null,
+                                ClientName: data.clientName,
+                                Subject: data.subject,
+                                Notes: data.notes || "",
+                                StageAccount: _loginUser,
+                                PIC: JSON.stringify({ FO: _loginUser, TS: "", PM: "" }),
+                                TurnAroundTimeAttributes: JSON.stringify({
+                                    FO: { AcceptDate: new Date(), CompleteDate: "" },
+                                    TS: { AcceptDate: "", CompleteDate: "" },
+                                    UW: { AcceptDate: "", CompleteDate: "" },
+                                    LMKT: { AcceptDate: "", CompleteDate: "" },
+                                    PM: { AcceptDate: "", CompleteDate: "" }
+                                }),
+                                ActionStatus: JSON.stringify({
+                                    EntryMode: "DirectEndorse",
+                                    SkipTS: data.skipTS,
+                                    FO: "Draft"
+                                })
+                            };
+
+                            var formData = new FormData();
+                            formData.append("PolicyIssuanceData", JSON.stringify([policyIssuance]));
+
+                            makeMiniLoadingPanel("Initiate Policy Issuance", "Please wait...");
+                            renderBrowserLoading({ payload: { progressvalue: 25 } });
+
+                            $.ajax({
+                                url: "/api/PolicyIssuance/CreatePolicyIssuance",
+                                type: "POST",
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                success: function () {
+                                    renderBrowserLoading({ payload: { progressvalue: 100 } });
+                                    DevExpress.ui.notify("Endorse request created at FO.", "success", 1800);
+                                    popup.hide();
+                                },
+                                error: function (xhr) {
+                                    renderBrowserLoading({ payload: { progressvalue: 100 } });
+                                    appNotifyError(`${xhr.responseJSON?.detail || xhr.statusText}<br/>${xhr.responseJSON?.message || xhr.responseText}`);
+                                }
+                            });
+                        }
+                    }
+                }]
+            });
+
+            popup.show();
+        }
 
         function newQuotationApprovalForm() {
             var popup = makePopup("large", "Res");

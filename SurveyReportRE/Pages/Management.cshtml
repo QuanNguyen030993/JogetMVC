@@ -1797,6 +1797,26 @@
 
             </div>
 
+            <div class="action-card policy" id="btnPolicyEndorse">
+
+                <div class="card-image">
+                    <img src="img/PolicyIssuance_Client.png">
+                </div>
+
+                <div class="card-body">
+                    <div class="card-icon policy-icon">&#9998;</div>
+
+                    <div class="card-title">
+                        Policy Issuance - Endorse
+                    </div>
+
+                    <div class="card-desc">
+                        Create a direct endorsement request and start at FO
+                    </div>
+                </div>
+
+            </div>
+
 
         </div>
 
@@ -1820,6 +1840,10 @@
                });
                $("#btnPolicy").on("click", function () {
                    newPolicyIssuanceForm();
+                   moduleLauncherPopup.hide();
+               });
+               $("#btnPolicyEndorse").on("click", function () {
+                   newPolicyIssuanceEndorseForm();
                    moduleLauncherPopup.hide();
                });
            }

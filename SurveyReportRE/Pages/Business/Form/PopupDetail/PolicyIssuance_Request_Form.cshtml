@@ -34,6 +34,7 @@
     <div id="dataGrid_Quotation_Request">
         @* <div id="qrSummary" style="margin-bottom:12px;"></div> *@
         <div id="PolicyIssuanceRequestForm"></div>
+        <div id="policyIssuanceFromQuotationOptions" style="margin-bottom:16px;"></div>
 
         <div class="toolbarRow">
             <div class="sectionTitle" style="margin:0;"></div>
@@ -55,6 +56,32 @@
 
 
     <script>
+        $("#policyIssuanceFromQuotationOptions").dxForm({
+            formData: { skipTS: null },
+            labelMode: "floating",
+            items: [{
+                dataField: "skipTS",
+                editorType: "dxRadioGroup",
+                label: { text: "Skip TS after FO review?" },
+                editorOptions: {
+                    items: [
+                        { text: "No - route to TS", value: false },
+                        { text: "Yes - bypass TS", value: true }
+                    ],
+                    displayExpr: "text",
+                    valueExpr: "value",
+                    layout: "horizontal"
+                },
+                validationRules: [{
+                    type: "custom",
+                    message: "Please select whether the request skips TS.",
+                    validationCallback: function (e) {
+                        return e.value === true || e.value === false;
+                    }
+                }]
+            }]
+        });
+
         var mGridOption = new Object();
         mGridOption.isAllowRowMenu = false;
         mGridOption.selection =  { mode: "multiple" };

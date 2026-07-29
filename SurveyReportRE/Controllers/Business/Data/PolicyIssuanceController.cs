@@ -255,6 +255,45 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         foreach (PolicyIssuance item in PolicyIssuanceData)
         {
 
+            if (IsDirectEndorseRequest(item, out bool? skipTs))
+            {
+                if (!string.Equals(item.RequestType?.Trim(), "Endorsement", StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest(new
+                    {
+                        message = "Direct Policy Issuance is only available for Endorsement requests."
+                    });
+                }
+
+                if (string.IsNullOrWhiteSpace(item.PolicyNo))
+                {
+                    return BadRequest(new
+                    {
+                        message = "Policy No is required for an Endorsement request."
+                    });
+                }
+
+                if (!item.ClientId.HasValue || string.IsNullOrWhiteSpace(item.ClientName))
+                {
+                    return BadRequest(new
+                    {
+                        message = "Client is required for an Endorsement request."
+                    });
+                }
+
+                if (!skipTs.HasValue)
+                {
+                    return BadRequest(new
+                    {
+                        message = "Please select whether the Endorsement request skips TS."
+                    });
+                }
+
+                // A direct Endorse request must not be linked to a quotation.
+                item.QuotationId = null;
+                item.CopyFromGuid = null;
+            }
+
             PolicyIssuance = new PolicyIssuance();
 
             JsonConvert.PopulateObject(JsonConvert.SerializeObject(item), PolicyIssuance);
@@ -384,6 +423,35 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         };
         ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         return Ok();
+    }
+
+    private static bool IsDirectEndorseRequest(PolicyIssuance item, out bool? skipTs)
+    {
+        skipTs = null;
+        if (string.IsNullOrWhiteSpace(item.ActionStatus)) return false;
+
+        try
+        {
+            JObject metadata = JObject.Parse(item.ActionStatus);
+            string? entryMode = metadata.GetValue("EntryMode", StringComparison.OrdinalIgnoreCase)?.ToString();
+            if (!string.Equals(entryMode, "DirectEndorse", StringComparison.OrdinalIgnoreCase)) return false;
+
+            JToken? skipToken = metadata.GetValue("SkipTS", StringComparison.OrdinalIgnoreCase);
+            if (skipToken?.Type == JTokenType.Boolean)
+            {
+                skipTs = skipToken.Value<bool>();
+            }
+            else if (bool.TryParse(skipToken?.ToString(), out bool parsedSkipTs))
+            {
+                skipTs = parsedSkipTs;
+            }
+
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     [HttpPost]
