@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import CustomGrid from './components/CustomGrid';
+import HandsomGrid from './components/HandsomGrid';
 import HtmlEditor from './components/HtmlEditor';
 import DateBox from './components/DateBox';
 import CommentEditor from './components/CommentEditor';
@@ -12,6 +13,7 @@ import DropDownBox from './components/DropDownBox';
 import CustomForm from './components/CustomForm';
 import FileUploader from "./components/FileUploader";
 import { notify } from './components/Notification';
+import { startTour } from './components/TourGuide';
   
 
           
@@ -166,6 +168,52 @@ function App() {
     notify("Đã khởi động lại đồng hồ đếm ngược 5 giây! ⏱️", "info", 2000);
   };
 
+  const runTourGuide = () => {
+    const steps = [
+      {
+        element: '.header h1',
+        title: 'Chào mừng bạn đến với TMIVCom! 👋',
+        content: 'Đây là bộ thư viện Reusable Controls tùy chỉnh dành cho dự án SurveyReportRE.',
+        position: 'bottom'
+      },
+      {
+        element: '#tour-timer-widget',
+        title: 'Đồng hồ đếm ngược sự kiện ⏱️',
+        content: 'Bộ kiểm tra đếm ngược tự động kích hoạt thông báo Toast nổi sau 5 giây.',
+        position: 'bottom'
+      },
+      {
+        element: '#tour-customgrid-section',
+        title: 'CustomGrid hiện đại 📊',
+        content: 'Lưới dữ liệu thông minh hỗ trợ kéo thả cột, nhóm cột, phân trang và chỉnh sửa trực tiếp.',
+        position: 'top'
+      },
+      {
+        element: '#tour-handsomgrid-section',
+        title: 'HandsomGrid Spreadsheet Excel Style 📝',
+        content: 'Bảng tính Excel siêu nhẹ hỗ trợ phím mũi tên di chuyển, sao chép dán dữ liệu trực tiếp và menu chuột phải.',
+        position: 'top'
+      },
+      {
+        element: '#tour-uploader-section',
+        title: 'Trình tải tệp đính kèm 📎',
+        content: 'Hỗ trợ kéo thả tệp, hiển thị icon theo loại file và các hành động xem thử, tải xuống, xóa tệp.',
+        position: 'top'
+      },
+      {
+        element: '#tour-comments-section',
+        title: 'Ý kiến định hướng phòng ban 💬',
+        content: 'Cho phép người dùng nhập ý kiến và chọn chuyển phòng ban xử lý tiếp theo.',
+        position: 'top'
+      }
+    ];
+
+    startTour(steps, {
+      onComplete: () => notify("Chúc mừng! Bạn đã hoàn thành Tour hướng dẫn. 🎉", "success"),
+      onExit: () => notify("Đã thoát Tour hướng dẫn.", "info")
+    });
+  };
+
 
     const uploaderRef = useRef(null);
 
@@ -201,6 +249,34 @@ function App() {
         SectionName: "Underwriting"
     });
 
+    const handsomGridColumns = [
+        { dataField: 'code', caption: 'Mã số', dataType: 'string', width: '100px' },
+        { dataField: 'name', caption: 'Tên nhân sự', dataType: 'string', width: '180px' },
+        { dataField: 'salary', caption: 'Lương (USD)', dataType: 'number', width: '120px' },
+        { dataField: 'active', caption: 'Đang hoạt động', dataType: 'boolean', width: '120px' },
+        { 
+            dataField: 'deptId', 
+            caption: 'Phòng ban', 
+            dataType: 'lookup',
+            width: '200px',
+            lookup: {
+                dataSource: [
+                    { id: 'UW', name: 'Phòng Bảo hiểm' },
+                    { id: 'CLAIM', name: 'Phòng Bồi thường' },
+                    { id: 'IT', name: 'Phòng CNTT' }
+                ],
+                valueExpr: 'id',
+                displayExpr: 'name'
+            }
+        }
+    ];
+
+    const [handsomRows, setHandsomRows] = useState([
+        { code: 'NV-001', name: 'Nguyễn Văn UW', salary: 1200, active: true, deptId: 'UW' },
+        { code: 'NV-002', name: 'Trần Thị Claim', salary: 1400, active: false, deptId: 'CLAIM' },
+        { code: 'NV-003', name: 'Lê Văn IT', salary: 1800, active: true, deptId: 'IT' }
+    ]);
+
     const handleUploaded = () => {
         console.log("Upload thành công");
     };
@@ -231,13 +307,35 @@ function App() {
   return (
     <div className="tmivcom-app">
       <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
-        <div>
-          <h1>TMIVCom Reusable Controls</h1>
-          <p>Custom React controls for ASP.NET integration: grid and HTML editor.</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+          <div>
+            <h1>TMIVCom Reusable Controls</h1>
+            <p>Custom React controls for ASP.NET integration: grid and HTML editor.</p>
+          </div>
+          <button
+            type="button"
+            onClick={runTourGuide}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: '#2563eb',
+              color: '#ffffff',
+              fontWeight: 'bold',
+              fontSize: '13px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            🚀 Hướng dẫn hệ thống (Tour)
+          </button>
         </div>
 
         {/* Live Countdown Timer Widget */}
-        <div style={{
+        <div id="tour-timer-widget" style={{
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
@@ -281,7 +379,7 @@ function App() {
         </div>
       </header>
 
-      <section className="section">
+      <section className="section" id="tour-customgrid-section">
         <div className="section-title">Custom Grid - DARK Mode (Mockup Style, drag rows, selection, compact)</div>
         <div style={{ padding: '16px', background: '#1e293b', borderRadius: '8px' }}>
           <CustomGrid
@@ -296,7 +394,21 @@ function App() {
           />
         </div>
       </section>
-      <section className="section">
+
+      <section className="section" id="tour-handsomgrid-section">
+        <div className="section-title">HandsomGrid (Spreadsheet Excel Style - Di chuyển phím mũi tên, Enter để sửa, Ctrl+C/V để copy paste)</div>
+        <div style={{ padding: '16px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <HandsomGrid
+            columns={handsomGridColumns}
+            rows={handsomRows}
+            onRowsChange={setHandsomRows}
+            theme="light"
+            height="300px"
+          />
+        </div>
+      </section>
+
+      <section className="section" id="tour-uploader-section">
         <div className="section-title">File Uploader</div>
         <div style={{ padding: '16px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <FileUploader
@@ -333,7 +445,7 @@ function App() {
       </section>
 
 
-      <section className="section">
+      <section className="section" id="tour-comments-section">
         <div className="section-title">Comment Editor & Route (Ý kiến và Định hướng chuyển phòng ban)</div>
         <div style={{ padding: '16px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <CommentEditorRoute

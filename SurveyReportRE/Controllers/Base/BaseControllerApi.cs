@@ -35,6 +35,13 @@ namespace ERPCore.Controllers.Base
     [AllowAnonymous]
     public class BaseControllerApi<T> : ControllerBase where T : class, new()
     {
+        private enum DocumentStorageTarget
+        {
+            Local,
+            Nas,
+            SharePoint
+        }
+
         private readonly IBaseRepository<T> _BaseRepository;
         internal IHttpContextAccessor _httpContextAccessor { get; set; }
         internal ILogger<T> _loggerT { get; set; }
@@ -737,12 +744,13 @@ namespace ERPCore.Controllers.Base
             IFormFile file,
             string folder,
             IBaseRepository<Document> documentRepository,
+            DocumentStorageTarget storageTarget,
             CancellationToken cancellationToken)
         {
-            var sharePointStorage = HttpContext.RequestServices
-                .GetRequiredService<ISharePointDocumentStorage>();
-            if (sharePointStorage.IsEnabled)
+            if (storageTarget == DocumentStorageTarget.SharePoint)
             {
+                var sharePointStorage = HttpContext.RequestServices
+                    .GetRequiredService<ISharePointDocumentStorage>();
                 await using var uploadStream = file.OpenReadStream();
                 var remoteFileName =
                     $"{document.Guid}_{System.IO.Path.GetFileName(file.FileName)}";
@@ -779,29 +787,51 @@ namespace ERPCore.Controllers.Base
                 return;
             }
 
-            if (!System.IO.Directory.Exists(BLOB_PATH))
+            var storageFolder = storageTarget == DocumentStorageTarget.Nas
+                ? document.SubDirectory
+                : System.IO.Path.Combine(BLOB_PATH, folder);
+            if (string.IsNullOrWhiteSpace(storageFolder))
             {
-                Directory.CreateDirectory(BLOB_PATH);
+                throw new InvalidOperationException(
+                    $"The {storageTarget} document storage path is not configured.");
             }
 
-            var localFolder = System.IO.Path.Combine(BLOB_PATH, folder);
-            if (!System.IO.Directory.Exists(localFolder))
+            if (!System.IO.Directory.Exists(storageFolder))
             {
-                Directory.CreateDirectory(localFolder);
+                Directory.CreateDirectory(storageFolder);
             }
 
-            var localFilePath = System.IO.Path.Combine(
-                localFolder,
+            var filePath = System.IO.Path.Combine(
+                storageFolder,
                 $"{document.Guid}{document.FileType}");
             await using var sourceStream = file.OpenReadStream();
             await using var destinationStream = new FileStream(
-                localFilePath,
+                filePath,
                 FileMode.Create,
                 FileAccess.Write,
                 FileShare.None,
                 bufferSize: 81920,
                 useAsync: true);
             await sourceStream.CopyToAsync(destinationStream, cancellationToken);
+        }
+
+        private string ResolveDocumentSubDirectory(
+            string folder,
+            DocumentStorageTarget storageTarget)
+        {
+            if (storageTarget != DocumentStorageTarget.Nas)
+            {
+                return System.IO.Path.Combine(folder);
+            }
+
+            var nasPath = _BaseRepository._baseConfiguration["NasStorage:Path"];
+            if (string.IsNullOrWhiteSpace(nasPath))
+            {
+                throw new InvalidOperationException(
+                    "NasStorage:Path is required for NAS document uploads.");
+            }
+
+            return System.IO.Path.Combine(nasPath, folder);
         }
 
         private static Document CreateUploadedDocument(
@@ -861,9 +891,9 @@ namespace ERPCore.Controllers.Base
             }
         }
 
-        [HttpPost]
-        public virtual async Task<IActionResult> AsyncUploadFile()
-        {// Use blog settings while override this method instead
+        private async Task<IActionResult> UploadRequestFileAsync(
+            DocumentStorageTarget storageTarget)
+        {
             IBaseRepository<Document> _documentRepository = new BaseRepository<Document>(_BaseRepository._baseConfiguration, _httpContextAccessor);
             IFormFileCollection files = ((FormCollection)(Request.Form)).Files;
             string folder = Request.Headers["Folder"];
@@ -887,12 +917,14 @@ namespace ERPCore.Controllers.Base
                         sectionName,
                         department,
                         data);
+                    document.SubDirectory = ResolveDocumentSubDirectory(folder, storageTarget);
                     document = await _documentRepository.InsertData(document);
                     await StoreUploadedDocumentAsync(
                         document,
                         file,
                         folder,
                         _documentRepository,
+                        storageTarget,
                         HttpContext.RequestAborted);
 
                     return Ok(new
@@ -905,7 +937,10 @@ namespace ERPCore.Controllers.Base
                 catch (Exception exception)
                 {
                     await RemoveFailedDocumentRecordAsync(_documentRepository, document);
-                    _loggerT.LogError(exception, "Async document upload failed.");
+                    _loggerT.LogError(
+                        exception,
+                        "Async document upload to {StorageTarget} failed.",
+                        storageTarget);
                     return StatusCode(StatusCodes.Status502BadGateway, new
                     {
                         success = false,
@@ -917,10 +952,31 @@ namespace ERPCore.Controllers.Base
                 return Ok(new { success = false, message = "No file uploaded" });
         }
 
-
+        /// <summary>Uploads a Document to the default local BlobStorage path.</summary>
         [HttpPost]
-        public virtual async Task<IActionResult> AsyncUploadSingleFile(IFormFile file)
-        {// Use blog settings while override this method instead
+        public virtual Task<IActionResult> AsyncUploadFile()
+        {
+            return UploadRequestFileAsync(DocumentStorageTarget.Local);
+        }
+
+        /// <summary>Uploads a Document to the configured NAS path.</summary>
+        [HttpPost]
+        public virtual Task<IActionResult> AsyncUploadFileNAS()
+        {
+            return UploadRequestFileAsync(DocumentStorageTarget.Nas);
+        }
+
+        /// <summary>Uploads a Document to SharePoint through Microsoft Graph.</summary>
+        [HttpPost]
+        public virtual Task<IActionResult> AsyncUploadFileSharePoint()
+        {
+            return UploadRequestFileAsync(DocumentStorageTarget.SharePoint);
+        }
+
+        private async Task<IActionResult> UploadSingleFileAsync(
+            IFormFile file,
+            DocumentStorageTarget storageTarget)
+        {
             IBaseRepository<Document> _documentRepository = new BaseRepository<Document>(_BaseRepository._baseConfiguration, _httpContextAccessor);
             string folder = Request.Headers["Folder"];
             string guid = Request.Headers["RecordGuid"];
@@ -940,12 +996,14 @@ namespace ERPCore.Controllers.Base
                         guid,
                         sectionName,
                         department);
+                    document.SubDirectory = ResolveDocumentSubDirectory(folder, storageTarget);
                     document = await _documentRepository.InsertData(document);
                     await StoreUploadedDocumentAsync(
                         document,
                         file,
                         folder,
                         _documentRepository,
+                        storageTarget,
                         HttpContext.RequestAborted);
 
                     return Ok(new
@@ -958,7 +1016,10 @@ namespace ERPCore.Controllers.Base
                 catch (Exception exception)
                 {
                     await RemoveFailedDocumentRecordAsync(_documentRepository, document);
-                    _loggerT.LogError(exception, "Async single document upload failed.");
+                    _loggerT.LogError(
+                        exception,
+                        "Async single document upload to {StorageTarget} failed.",
+                        storageTarget);
                     return StatusCode(StatusCodes.Status502BadGateway, new
                     {
                         success = false,
@@ -968,6 +1029,27 @@ namespace ERPCore.Controllers.Base
             }
             else
                 return Ok(new { success = false, message = "No file uploaded" });
+        }
+
+        /// <summary>Uploads one explicitly bound Document file to local storage.</summary>
+        [HttpPost]
+        public virtual Task<IActionResult> AsyncUploadSingleFile(IFormFile file)
+        {
+            return UploadSingleFileAsync(file, DocumentStorageTarget.Local);
+        }
+
+        /// <summary>Uploads one explicitly bound Document file to NAS storage.</summary>
+        [HttpPost]
+        public virtual Task<IActionResult> AsyncUploadSingleFileNAS(IFormFile file)
+        {
+            return UploadSingleFileAsync(file, DocumentStorageTarget.Nas);
+        }
+
+        /// <summary>Uploads one explicitly bound Document file to SharePoint.</summary>
+        [HttpPost]
+        public virtual Task<IActionResult> AsyncUploadSingleFileSharePoint(IFormFile file)
+        {
+            return UploadSingleFileAsync(file, DocumentStorageTarget.SharePoint);
         }
 
 

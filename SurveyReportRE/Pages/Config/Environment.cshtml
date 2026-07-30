@@ -239,29 +239,89 @@
     //         console.log("Marker drag end:", id, pos);
     //     }
     // });
-    $("#fileuploader").fileuploader({
-        guid: "3b6f39cc-8a18-4ce3-a8d2-cceb2757a111",
-        controllerName: "Document",
-        titleName: "Click to select or drag files here",
+    const uploadDemoGuid = "3b6f39cc-8a18-4ce3-a8d2-cceb2757a111";
 
+    $("#localFileUploader").fileuploader({
+        guid: uploadDemoGuid,
+        controllerName: "Document",
+        titleName: "Select or drag files to upload locally",
+        uploadUrl: "/api/Document/AsyncUploadFile",
         data: {
             ModuleName: "PolicyIssuance",
-            code: "POL001",
-            SectionName: "UW"
+            code: "UPLOAD-DEMO",
+            SectionName: "LOCAL"
         },
-
-        specificFolder: "PolicyDocs",
-
+        specificFolder: "EnvironmentDemoLocal",
         onUploaded: function () {
-            console.log("Upload thành công");
+            console.log("Local upload completed");
         },
-
         onDeleted: function (file) {
-            console.log("Đã xóa", file);
-        },
+            console.log("Local file deleted", file);
+        }
+    });
 
-        onChange: function (files) {
-            console.log("Danh sách file", files);
+    $("#nasFileUploader").fileuploader({
+        guid: uploadDemoGuid,
+        controllerName: "Document",
+        titleName: "Select or drag files to upload to NAS",
+        uploadUrl: "/api/Document/AsyncUploadFileNAS",
+        data: {
+            ModuleName: "PolicyIssuance",
+            code: "UPLOAD-DEMO",
+            SectionName: "NAS"
+        },
+        specificFolder: "EnvironmentDemoNas",
+        onUploaded: function () {
+            console.log("NAS upload completed");
+        },
+        onDeleted: function (file) {
+            console.log("NAS file deleted", file);
+        }
+    });
+
+    $("#sharePointFileUploader").fileuploader({
+        guid: uploadDemoGuid,
+        controllerName: "Document",
+        titleName: "Select or drag files to upload to SharePoint",
+        uploadUrl: "/api/Document/AsyncUploadFileSharePoint",
+        data: {
+            ModuleName: "PolicyIssuance",
+            code: "UPLOAD-DEMO",
+            SectionName: "SHAREPOINT"
+        },
+        specificFolder: "EnvironmentDemoSharePoint",
+        onUploaded: function () {
+            console.log("SharePoint upload completed");
+        },
+        onDeleted: function (file) {
+            console.log("SharePoint file deleted", file);
+        }
+    });
+
+    $("#handsomGrid").tmivhandsomgrid({
+        columns: [
+            { dataField: "code", caption: "Mã số", dataType: "string", width: "160px" },
+            { dataField: "salary", caption: "Lương", dataType: "number", width: "180px" }
+        ],
+        rows: [
+            { code: "NV001", salary: 15000000 },
+            { code: "NV002", salary: 18500000 },
+            { code: "NV003", salary: 22000000 }
+        ],
+        height: "280px",
+        onRowsChange: function (rows) {
+            console.log("HandsomGrid rows changed", rows);
+        }
+    });
+
+    $("#getHandsomGridValue").dxButton({
+        text: "Lấy dữ liệu HandsomGrid",
+        type: "default",
+        icon: "exportselected",
+        onClick: function () {
+            const rows = $("#handsomGrid").tmivhandsomgrid("value");
+            $("#handsomGridResult").text(JSON.stringify(rows, null, 2));
+            console.log("HandsomGrid value", rows);
         }
     });
 
@@ -286,7 +346,40 @@
 <div id="surveyGrid"></div>
 <div id="commentBox"></div>
 <div id="flow"> </div>
-<div id="fileuploader"> </div>
+<section style="margin-top: 30px; padding: 20px; border-top: 2px dashed var(--c-0284c7); background: var(--c-f8fafc);">
+    <h3 style="font-family: sans-serif; color: var(--c-0f172a); margin-bottom: 6px;">Document upload examples</h3>
+    <p style="margin: 0 0 18px; color: var(--c-475569);">
+        All three controls create Document records; only the physical storage destination is different.
+    </p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        <div style="padding: 16px; border: 1px solid var(--c-cbd5e1); border-radius: 8px; background: white;">
+            <h4 style="margin: 0 0 4px; color: var(--c-0f172a);">Local storage</h4>
+            <code style="display: block; margin-bottom: 12px; color: var(--c-475569);">/api/Document/AsyncUploadFile</code>
+            <div id="localFileUploader"></div>
+        </div>
+        <div style="padding: 16px; border: 1px solid var(--c-cbd5e1); border-radius: 8px; background: white;">
+            <h4 style="margin: 0 0 4px; color: var(--c-0f172a);">NAS server</h4>
+            <code style="display: block; margin-bottom: 12px; color: var(--c-475569);">/api/Document/AsyncUploadFileNAS</code>
+            <div id="nasFileUploader"></div>
+        </div>
+        <div style="padding: 16px; border: 1px solid var(--c-cbd5e1); border-radius: 8px; background: white;">
+            <h4 style="margin: 0 0 4px; color: var(--c-0f172a);">SharePoint</h4>
+            <code style="display: block; margin-bottom: 12px; color: var(--c-475569);">/api/Document/AsyncUploadFileSharePoint</code>
+            <div id="sharePointFileUploader"></div>
+        </div>
+    </div>
+</section>
+
+<section style="margin-top: 30px; padding: 20px; border-top: 2px dashed var(--c-0284c7); background: var(--c-f8fafc);">
+    <h3 style="font-family: sans-serif; color: var(--c-0f172a); margin-bottom: 6px;">HandsomGrid example</h3>
+    <p style="margin: 0 0 18px; color: var(--c-475569);">
+        Edit cells directly, then use the button to read the current rows with
+        <code>$("#handsomGrid").tmivhandsomgrid("value")</code>.
+    </p>
+    <div id="handsomGrid"></div>
+    <div id="getHandsomGridValue" style="margin-top: 14px;"></div>
+    <pre id="handsomGridResult" style="min-height: 64px; margin: 14px 0 0; padding: 12px; overflow: auto; border: 1px solid var(--c-cbd5e1); border-radius: 6px; background: white; color: var(--c-0f172a);">[]</pre>
+</section>
 
 <div style="margin-top: 30px; padding: 20px; border-top: 2px dashed var(--c-0284c7); background: var(--c-f8fafc);">
     <h3 style="font-family: sans-serif; color: var(--c-0f172a); margin-bottom: 12px;">TMIV Map Demo</h3>

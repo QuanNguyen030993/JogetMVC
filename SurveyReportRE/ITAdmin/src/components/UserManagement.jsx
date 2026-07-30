@@ -4,6 +4,7 @@ import { API_BASE_URL } from '../config';
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/Users/GetAll`)
@@ -20,6 +21,14 @@ const UserManagement = () => {
         setLoading(false);
       });
   }, []);
+
+  const filteredUsers = users.filter((user) => {
+    const name = (user.fullname || user.name || '').toLowerCase();
+    const username = (user.username || '').toLowerCase();
+    const email = (user.email || '').toLowerCase();
+    const term = searchTerm.toLowerCase();
+    return name.includes(term) || username.includes(term) || email.includes(term);
+  });
 
   if (loading) {
     return (
@@ -38,40 +47,51 @@ const UserManagement = () => {
     <section className="panel user-management">
       <div className="panel-header">
         <h2>Người dùng IT</h2>
-        <button type="button">Thêm người dùng</button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Tìm kiếm..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: '180px', height: '28px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+          />
+          <button type="button">Thêm người dùng</button>
+        </div>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Họ tên</th>
-            <th>Tên tài khoản</th>
-            <th>Email</th>
-            <th>Trạng thái</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user, idx) => (
-            <tr key={user.id || user.email || user.username || idx}>
-              <td>{user.fullname || user.name || 'N/A'}</td>
-              <td>{user.username || 'N/A'}</td>
-              <td>{user.email || 'N/A'}</td>
-              <td>{user.active ? 'Hoạt động' : 'Khóa'}</td>
-              <td>
-                <button type="button" style={{ marginRight: '8px' }}>Sửa</button>
-                <button type="button">Khóa</button>
-              </td>
-            </tr>
-          ))}
-          {users.length === 0 && (
+      <div className="user-management-table-wrap" style={{ width: '100%', overflowY: 'auto', maxHeight: '420px' }}>
+        <table>
+          <thead>
             <tr>
-              <td colSpan="5" style={{ textAlign: 'center', color: '#6b7280' }}>
-                Không tìm thấy người dùng nào
-              </td>
+              <th>Họ tên</th>
+              <th>Tên tài khoản</th>
+              <th>Email</th>
+              <th>Trạng thái</th>
+              <th>Hành động</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredUsers.map((user, idx) => (
+              <tr key={user.id || user.email || user.username || idx}>
+                <td>{user.fullname || user.name || 'N/A'}</td>
+                <td>{user.username || 'N/A'}</td>
+                <td>{user.email || 'N/A'}</td>
+                <td>{user.active ? 'Hoạt động' : 'Khóa'}</td>
+                <td>
+                  <button type="button" style={{ marginRight: '8px' }}>Sửa</button>
+                  <button type="button">Khóa</button>
+                </td>
+              </tr>
+            ))}
+            {filteredUsers.length === 0 && (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center', color: '#6b7280' }}>
+                  Không tìm thấy người dùng nào
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 };

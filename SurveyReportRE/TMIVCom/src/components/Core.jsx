@@ -3,6 +3,8 @@ import HtmlEditor from "../components/HtmlEditor.jsx";
 import CustomGrid from "../components/CustomGrid.jsx"; 
 import CommentEditor from "../components/CommentEditor.jsx";
 import CommentEditorRoute from "../components/CommentEditorRoute.jsx";
+import HandsomGrid from "../components/HandsomGrid.jsx";
+import TourGuide, { startTour } from "../components/TourGuide.jsx";
 import TextBox from "../components/TextBox.jsx";
 import NumberBox from "../components/NumberBox.jsx";
 import CheckBox from "../components/CheckBox.jsx";
@@ -704,6 +706,76 @@ $.fn.tmivcommenteditorroute = function(arg1, arg2, arg3) {
     return this;
 };
 
+$.fn.tmivhandsomgrid = function(arg1, arg2, arg3) {
+    if (typeof arg1 === "string") {
+        if (arg1 === "option") {
+            if (arguments.length === 2 && this.length === 1) {
+                const instance = roots.get(this[0]);
+                return instance?.ref?.current?.option?.(arg2) ?? instance?.options?.[arg2];
+            }
+
+            this.each(function() {
+                const instance = roots.get(this);
+                if (!instance) return;
+
+                if (instance.ref?.current) {
+                    instance.ref.current.option?.(arg2, arg3);
+                } else {
+                    instance.options[arg2] = arg3;
+                    const Component = controls[instance.name];
+                    instance.root.render(
+                        <Component ref={instance.ref} {...instance.options}/>
+                    );
+                }
+            });
+            return this;
+        }
+    }
+
+    if (typeof arg1 === "object" || typeof arg1 === "undefined") {
+        return this.each(function() {
+            mount(this, "HandsomGrid", arg1 || {});
+        });
+    }
+
+    return this;
+};
+
+$.fn.tmivtourguide = function(arg1, arg2, arg3) {
+    if (typeof arg1 === "string") {
+        if (arg1 === "option") {
+            if (arguments.length === 2 && this.length === 1) {
+                const instance = roots.get(this[0]);
+                return instance?.ref?.current?.option?.(arg2) ?? instance?.options?.[arg2];
+            }
+
+            this.each(function() {
+                const instance = roots.get(this);
+                if (!instance) return;
+
+                if (instance.ref?.current) {
+                    instance.ref.current.option?.(arg2, arg3);
+                } else {
+                    instance.options[arg2] = arg3;
+                    const Component = controls[instance.name];
+                    instance.root.render(
+                        <Component ref={instance.ref} {...instance.options}/>
+                    );
+                }
+            });
+            return this;
+        }
+    }
+
+    if (typeof arg1 === "object" || typeof arg1 === "undefined") {
+        return this.each(function() {
+            mount(this, "TourGuide", arg1 || {});
+        });
+    }
+
+    return this;
+};
+
 register(
     "DateBox",
     DateBox
@@ -778,9 +850,22 @@ register(
     CommentEditorRoute
 );
 
+register(
+    "HandsomGrid",
+    HandsomGrid
+);
+
+register(
+    "TourGuide",
+    TourGuide
+);
+
 window.TMIVCom.notify = notify;
+window.TMIVCom.startTour = startTour;
+
 if (typeof $ !== "undefined") {
     $.tmivnotify = notify;
+    $.tmivtourguide = startTour;
 }
 
 // Test notification demo for TMIVCom library (triggers 5 seconds after load)
@@ -799,4 +884,4 @@ if (typeof window !== "undefined") {
     //}, 5000);
 }
 
-export default { DateBox, HtmlEditor, CustomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify };
+export default { DateBox, HtmlEditor, CustomGrid, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify, TourGuide, startTour };

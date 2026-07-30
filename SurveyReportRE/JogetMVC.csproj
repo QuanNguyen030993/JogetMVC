@@ -21,7 +21,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Remove="Controllers\Config\GuideStepController.cs" />
 		<Compile Remove="Controllers\RiskEvaluationController .cs" />
 		<Compile Remove="Controllers\SurveyResultStatusController.cs" />
 		<Compile Remove="Controllers\UWSurveyController.cs" />

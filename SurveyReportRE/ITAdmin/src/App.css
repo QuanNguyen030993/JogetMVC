@@ -57,6 +57,7 @@ button {
   color: inherit;
   border-radius: 10px;
   transition: background 0.2s ease;
+  font-size: 11px;
 }
 
 .sidebar nav button:hover,
@@ -83,7 +84,7 @@ button {
 
 .topbar h1 {
   margin: 0;
-  font-size: 2rem;
+  font-size: 12px;
 }
 
 .topbar p {
@@ -896,5 +897,110 @@ button {
     grid-template-columns: 1fr;
     gap: 16px;
   }
+}
+
+/* Global padding overrides for cards, panels, and dashboard containers */
+.panel,
+.chart-card,
+.card,
+.flow-sidebar-card,
+.flow-form-card,
+.flow-empty-state,
+.menu-tools,
+.menu-preview,
+.menu-property,
+.dg-toolbox,
+.dg-center,
+.dg-settings,
+.toolbox,
+.canvas,
+.property,
+.active-users-panel,
+.evaluation-panel,
+.database-card,
+.sla-sidebar-card,
+.sla-form-card,
+.sql-form-card,
+.sql-logs-card,
+.notification-settings-card,
+.notification-grid-card,
+.tat-analytics-card,
+.mail-designer-sidebar,
+.mail-designer-canvas,
+.mail-designer-property,
+.kpi-mini-card,
+.url-log-item,
+.flow-palette-item,
+.flow-toolbar,
+.info-panel,
+.user-management th,
+.user-management td,
+.user-management button,
+.panel-header button {
+  padding: 5px !important;
+}
+
+/* Global padding overrides for form components */
+input,
+select,
+textarea,
+.tmivcom-textbox input,
+.tmivcom-numberbox input,
+.tmivcom-selectbox-input,
+.tmivcom-selectbox-input input,
+.tmivcom-dropdownbox-input,
+.tmivcom-dropdownbox-input input,
+.flow-actions input,
+.flow-form-card input,
+.flow-form-card select,
+.flow-form-card textarea,
+.menu-property input,
+.menu-property select,
+.filter-input-wrap input,
+.filter-input-wrap select,
+.grid-cell input {
+  padding: 5px !important;
+  box-sizing: border-box;
+}
+
+/* Global proportional font size reduction */
+/* Headings / Titles -> 12px */
+h1, h2, h3, h4, h5, h6,
+.brand,
+.kpi-mini-val,
+.user-management h2,
+.panel-header h2 {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+/* Contents / Body texts -> 11px */
+body,
+p,
+span,
+label,
+input,
+select,
+textarea,
+button,
+table,
+td,
+th,
+a,
+li,
+ul,
+ol,
+strong,
+b,
+small,
+pre,
+code,
+.sidebar nav button,
+.kpi-mini-label,
+.user-management td,
+.user-management th,
+.user-management button,
+.panel-header button {
+  font-size: 11px !important;
 }
 
