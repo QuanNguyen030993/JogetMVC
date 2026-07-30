@@ -229,7 +229,117 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         }
         return Ok(null);
     }
+    [HttpPost]
+    public async Task<IActionResult> CreatePolicyIssuanceEndorsement([FromForm] PolicyIssuanceRequest quotationData)
+    {
+        try
+        {
 
+            SignalRResult result = new SignalRResult
+            {
+                status = "Preparing quotation creation...",
+                tabName = "PolicyIssuance Creation",
+                subTabContent = "Preparing quotation data...",
+                data = quotationData,
+                progressvalue = 0,
+                type = "inprogress"
+            };
+            IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
+            OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration));
+            //Pending at ajax 
+            //ControllerHelper.SignalRResponse("R_InitializeLoading", new { payload = result, connectionId = onlineUser.ConnectionId}, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+            List<EnumData> siteEnums = new List<EnumData>();
+            siteEnums = await _enumDataRepository.EnumData("BranchOffice");
+            List<EnumData> requestTypes = new List<EnumData>();
+            requestTypes = await _enumDataRepository.EnumData("requestType");
+
+            IFormFileCollection files = null;
+            files = ((FormCollection)(Request.Form)).Files;
+            PolicyIssuance quotation = new PolicyIssuance();
+            List<FormatCodeNo> tableRQConfig = new List<FormatCodeNo>();
+            tableRQConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(PolicyIssuance) + "RequestCode");
+            string requestNo = ControllerUtil.GenerateNumberSeq(tableRQConfig, _formatCodeNoRepository, nameof(PolicyIssuance));
+            quotationData.PolicyIssuanceData = JsonConvert.DeserializeObject<PolicyIssuanceData>(Request.Form["PolicyIssuanceData"]);
+            quotation = quotationData.PolicyIssuanceData.PolicyIssuance;
+            EnumData hardCodeTypeRequest = requestTypes.FirstOrDefault(f => f.Value == "Endorsement");
+            quotation.RequestTypeId = hardCodeTypeRequest.Id;
+            quotation.RequestType = hardCodeTypeRequest.Value;
+            quotation.PolicyIssuanceRequest = requestNo;
+            List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
+            tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(PolicyIssuance) + "Code");
+            quotation.PolicyIssuanceCode = await ControllerUtil.GenerateNumberSeqAsync(tableConfig, _formatCodeNoRepository, nameof(PolicyIssuance));
+
+
+
+            //After insert quotation
+            WorkflowDefinition workflowDefinition = new WorkflowDefinition();
+            workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.WorkflowCode == _businessConfig.CurrentValue.Workflow.PolicyIssuance);
+            if (workflowDefinition != null)
+            {
+                await NotificationHandle(
+                workflowDefinition,
+                JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotation)),
+                JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotationData.PolicyIssuanceData)),
+                siteEnums,
+                 null
+                );
+
+                result = new SignalRResult
+                {
+                    status = "Creating quotations...",
+                    data = quotation,
+                    tabName = "Quotation Creation",
+                    subTabContent = "Creating the requested quotation records...",
+                    progressvalue = 75,//quotationComplete,
+                    type = "inprogress"
+                };
+                ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+            }
+            else
+            {
+                result = new SignalRResult
+                {
+                    status = "Policy issuance creation failed.",
+                    data = quotation,
+                    tabName = "Policy Issuance Creation",
+                    subTabContent = "Unable to create policy issuances because the policy issuance workflow was not found.",
+                    progressvalue = 100,//quotationComplete,
+                    type = "error"
+                };
+                ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+                return BadRequest(new { detail = "Initial Quotation Error", message = "Flow not found!" });
+            }
+
+
+            result = new SignalRResult
+            {
+                status = "PolicyIssuance creation completed.",
+                data = quotationData,
+                tabName = "PolicyIssuance Creation",
+                subTabContent = "The quotation records were created successfully.",
+                progressvalue = 100,
+                type = "complete"
+            };
+            ControllerHelper.SignalRResponse(_usersSessionRepository, "R_OverviewLoading", new { payload = result, connectionId = onlineUser.ConnectionId }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "PolicyIssuanceController.OverviewLoading failed.");
+            SignalRResult result = new SignalRResult();
+            result = new SignalRResult
+            {
+                status = "PolicyIssuance creation failed.",
+                data = null,
+                tabName = "PolicyIssuance Creation",
+                subTabContent = "An unexpected error occurred while creating the quotation records.",
+                progressvalue = 100,
+                type = "error"
+            };
+            return BadRequest(ex.Message);
+
+        }
+    }
     [HttpPost]
     public async Task<IActionResult> CreatePolicyIssuance([FromForm] List<PolicyIssuance> PolicyIssuanceData)
     {

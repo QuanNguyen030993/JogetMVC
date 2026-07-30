@@ -1,12 +1,13 @@
 ﻿@page "{pageNum:int?}"
 @using JogetMVC.Model
 @using Newtonsoft.Json
-@model Quotation_Request_FormModel
+@model PolicyIssuance_Endorsement_Request_FormModel
 @{
-    string prefix = "qt";
+    string prefix = "pi";
     string dept = "FO";
-    ViewBag.Title = "Quotation";
+    ViewBag.Title = "PolicyIssuance";
     ViewData["Id"] = 0;
+    ViewBag.Title = "Policy Issuance";
 }
 
 <style>
@@ -74,9 +75,9 @@
     }
 </style>
 
-    <div id="form_Quotation_Request_Form"></div>
-    <div id="requestPage">
-        <div id="quotationRequestForm"></div>
+<div id="form_PolicyIssuance_Endorsement_Request_Form"></div>
+    <div id="@(prefix)_requestPage">
+    <div id="policyIssuanceEndorsementRequestForm"></div>
 @* 
         <div class="sectionTitle">Attachment</div>
         <div id="attachmentGrid"></div> *@
@@ -93,20 +94,19 @@
     </div>
 
     <script>
-        var shouldShow = false;
         var lineText = "";
         var productText = "";
         var policyNoText = "";
            var guid= crypto.randomUUID();
-                var sectionId =  "qt-body_@(dept)_";
+                var sectionId =  "@(prefix)-body_@(dept)_";
                          var that = new Object();
-                         that.ModelName = "Quotation";
+                         that.ModelName = "PolicyIssuance";
                          that.moduleName = "default";
                          that.editorType = "dxFileUploader"
                          that.id = 0;
                          that.guid =guid ;
                          that.sectionName = "@(dept)";
-                         that.titleName = "Upload Quotation";
+                         that.titleName = "Upload PolicyIssuance";
                          that.uploaderAllow = true;
                          that.data = { SectionName: `${sectionId}_${that.moduleName}_0`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept, 0))" }; //{"SectionName":"default_FO_410"}
 
@@ -256,7 +256,7 @@
 
        
 
-            var that = $("#quotationRequestForm").dxForm({
+            var that = $("#policyIssuanceEndorsementRequestForm").dxForm({
                 formData: vm,
                 colCount: 2,
                 rowCount: 3,
@@ -407,24 +407,20 @@
                         {
                             dataField: "subject",
                             colSpan: 2,
-                            editorType: "dxTextArea"//,
-                            // validationRules: [{ type: "required" }]
+                            editorType: "dxTextArea"
                         },
 
                         {
                                     dataField: "requestTypeId",
                                     label: { text: "Request Type" },
                                     editorType: "dxSelectBox",
+                                    disabled: true,
+                                    value: _enums.requestType.find(f => f.value == "Endorsement"),
                                     editorOptions: {
-                                        ...makeSelectBoxEditorOptions(_enums.requestType),
-
-                                        onValueChanged: function (e) {
-                                            togglePolicyField(e);
-                                        }
                                     }
                                 },
                         { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
-                        { dataField: "policyNo",name: "policyNo", visible: shouldShow ,label: { text: "Policy No" }, editorType: "dxTextBox"
+                        { dataField: "policyNo",name: "policyNo", visible: true ,label: { text: "Policy No" }, editorType: "dxTextBox"
                         , editorOptions: {
                             onValueChanged: function (e){
                             that.formInstance = that.dxForm("instance"); 
@@ -447,133 +443,30 @@
                             } },
                        { dataField: "reinsuranceId", isRequired: true, label: { text: "Reinsurance" }, editorType: "dxSelectBox", editorOptions: { keyExpr: "id", displayExpr: "value", items: _enums.reInsuranceType } },
 
-                        {
-                            itemType: "empty",
-                            colCount: 2,
-                            visible: false,
-                            label: { text: "Is Survey ?" },
-                            template: function (data, itemElement) {
-                                var form = data.component;
-                                var fd = form.option("formData") || {};
-
-                                var $wrap = $("<div>").addClass("survey-field-wrap");
-                                var $row = $("<div>").addClass("survey-field-row").appendTo($wrap);
-
-                                var $switchHost = $("<div>").appendTo($row);
-                                $("<div>").addClass("survey-field-spacer").appendTo($row);
-
-                                var $accWrap = $("<div>").addClass("survey-acc-wrap").appendTo($wrap);
-
-                                $switchHost.dxSwitch({
-                                    value: !!fd.surveyNeeded,
-                                    onValueChanged: function (e) {
-                                        form.option("formData.surveyNeeded", e.value);
-                                        $accWrap.toggle(!!e.value);
-
-                                        var acc = $accWrap.find(".survey-acc").dxAccordion("instance");
-                                        if (acc) acc.option("selectedIndex", e.value ? 0 : -1);
-                                    }
-                                });
-
-                                var $acc = $("<div>").addClass("survey-acc").appendTo($accWrap);
-
-                                function updatePic(dept, account) {
-                                    var current = ensurePicKeys(safeParseJson(form.option("formData.PIC")));
-                                    current[dept] = account || null;
-                                    form.option("formData.PIC", JSON.stringify(current));
-
-                                    var picEditor = form.getEditor?.("PIC");
-                                    if (picEditor) picEditor.option("value", form.option("formData.PIC"));
-                                }
-
-                                $acc.dxAccordion({
-                                    multiple: false,
-                                    collapsible: true,
-                                    selectedIndex: fd.surveyNeeded ? 0 : -1,
-                                    animationDuration: 180,
-                                    dataSource: [{ key: "survey", title: "SURVEY PIC" }],
-                                    itemTitleTemplate: (it) => $("<div>").addClass("acc-title").text(it.title),
-                                    itemTemplate: (it, idx, el) => {
-                                        var $body = $("<div>").addClass("acc-body");
-                                        $("<div>").text("Title").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
-                                        var $preview = $("<div>").css("marginTop", 10).appendTo($body);
-
-                                        fd.reTitle = `Request survey to ${fd.clientName} by ${_loginUser}`;
-
-                                        $("<div>").text("Department").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
-                                        var $dept = $("<div>").css("marginTop", 10).appendTo($body);
-
-                                        $("<div>").text("Member").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
-                                        var $accText = $("<div>").css("marginTop", 10).appendTo($body);
-
-                                        $("<div>").text("Message to RE").css("marginTop", 10).css("fontWeight", "bold").appendTo($body);
-                                        var $MsgText = $("<div>").css("marginTop", 10).appendTo($body);
-
-                                        $dept.dxSelectBox({
-                                            items: DEPTS,
-                                            value: "RE",
-                                            label: "Department",
-                                            labelMode: "static"
-                                        });
-
-                                        $accText.dxSelectBox({
-                                            items: REMEMS,
-                                            label: "Member",
-                                            labelMode: "static",
-                                            onValueChanged: function(e){
-                                                fd.rePIC = e.value;
-                                            }
-                                        });
-
-                                        $MsgText.dxTextArea({
-                                            value: "",
-                                            label: "RE Message",
-                                            labelMode: "static",
-                                            placeholder: "Message to RE team",
-                                            onValueChanged: function(e){
-                                                fd.reMsg = e.value;
-                                            }
-                                        });
-
-                                        $preview.dxTextBox({
-                                            value: `Request survey to ${fd.clientName} by ${_loginUser}`,
-                                            readOnly: true,
-                                            height: 50,
-                                            label: "RE Title",
-                                            labelMode: "static"
-                                        });
-
-                                        $(el).append($body);
-                                    }
-                                });
-
-                                $accWrap.toggle(!!fd.surveyNeeded);
-                                itemElement.append($wrap);
-                            }
-                        }
+                      
 
             ]},
                         
-                            {
-                        itemType: "group",
-                        colCount: 1,
+                        //     {
+                        // itemType: "group",
+                        // colCount: 1,
                         
-                        caption: "Attachment",
-                            items:[
+                        // caption: "Attachment",
+                        //     items:[
                                 
-                                    {
-                                        dataField: "quotationQuantity",
-                                        isRequired: true,
-                                        editorType: "dxNumberBox",
-                                        editorOptions: { min: 1 },
-                                        validationRules: [{ type: "required" }]
-                                   },...attachmentByCase(that)
-                                ]
+                        //             {
+                        //                 dataField: "policyIssuanceQuantity",
+                        //                 isRequired: true,
+                        //                 editorType: "dxNumberBox",
+                        //                 editorOptions: { min: 1 },
+                        //                 validationRules: [{ type: "required" }]
+                        //            },...attachmentByCase(that)
+                        //         ]
 
 
                          
                       
-                        },
+                        // },
                         {
                         itemType: "group",
                         colCount: 2,
@@ -618,7 +511,7 @@
                                 template: function (data, itemElement) {
                               var deptData = {TS :  { pIC: JSON.stringify({TS: ""}), pic:JSON.stringify({TS: ""})},pic: JSON.stringify({TS:""} ) ,pIC: JSON.stringify({TS: ""}), id: 0, sectionName: "TS", code: "..." } ;
                                  
-                              var assigneeBoxId = `${window.QuotationIdManager.assigneeBox('TS', deptData.id)}`;
+                              var assigneeBoxId = `${window.PolicyIssuanceIdManager.assigneeBox('TS', deptData.id)}`;
                              var assigneeBox = $(`<div id="${assigneeBoxId}">`)
                                 assigneeBox.appendTo(itemElement);
                                 $("<div id='assignBox' class='dExForm'>").appendTo(itemElement);
@@ -714,59 +607,6 @@
                 contentTemplate: function (content) {
                     content.empty();
 
-                      //   debugger
-                      // $.ajax({
-                      //       url: "api/Employee/GetAssignableByGroup",
-                      //       type: "GET",
-                      //       dataType: "json",
-                      //       data: {
-                      //           group:  vm.assignedTeamOrRole || "TS",
-                      //           excludeCurrent: true,
-                      //           keyword: ""
-                      //       }
-                      //       }).then(function (res) {
-                      //       $("<div id='assignBox'>").appendTo(content).dxForm({
-                      //           formData: {
-                      //               to: currentEntry.to,
-                      //               branchId: currentEntry.areaId,
-                      //               notes: currentEntry.notes,
-                      //               deptTarget: vm.assignedTeamOrRole
-                      //           },
-                      //           colCount: 1,
-                      //           labelMode: "floating",
-                      //           items: [
-                      //               {
-                      //                   dataField: "to",
-                      //                   editorType: "dxSelectBox",
-                      //                   validationRules: [{ type: "required" }],
-                      //                   editorOptions: {
-                      //                       dataSource: res.data,
-                      //                       displayExpr: "fullName",
-                      //                       valueExpr: "accountName",
-                      //                       searchEnabled: true
-                      //                   }
-                      //           },
-                      //           {
-                      //               dataField: "branchId",
-                      //               visible: false,
-                      //               editorType: "dxNumberBox",
-                      //               label: { text: "Branch" },
-                      //               editorOptions: {
-                      //                   minHeight: 90
-                      //               }
-                      //           },
-                      //               {
-                      //                   dataField: "notes",
-                      //                   editorType: "dxTextArea",
-                      //                   label: { text: "Notes" },
-                      //                   editorOptions: {
-                      //                       minHeight: 90
-                      //                   }
-                      //               }
-                      //           ]
-                      //       });
-                      //   });
-
                 },
                 toolbarItems: [
                     {
@@ -812,70 +652,6 @@
                 ]
             });
 
-            // function openPopupForNew() {
-            //     if (!isManual()) {
-            //         DevExpress.ui.notify("Switch Assignment Mode to 'Manual assign' to add entries.", "warning", 1800);
-            //         return;
-            //     }
-            //     popupMode = "new";
-            //     currentEntry = entryTemplate();
-            //               var popup = $("#assigneePopup").dxPopup("instance");
-            //              popup.option("title", "New Assignee Entry");
-            //           $.ajax({
-            //                 url: "api/Employee/GetAssignableByGroup",
-            //                 type: "GET",
-            //                 dataType: "json",
-            //                 data: {
-            //                     group:  vm.assignedTeamOrRole || "TS",
-            //                     excludeCurrent: true,
-            //                     keyword: ""
-            //                 }
-            //             }).then(function (res) {
-            //                 _enums.assignee.push(...res.data);
-            //                 popup.option("contentTemplate", function (content) {
-            //                   $("<div id='assignBox' class='dExForm'>").appendTo(content).dxForm({
-            //                     formData: {
-            //                         to: _enums.assignee[0].accountName,
-            //                         branchId: _enums.assignee[0].areaId,
-            //                         notes: "",
-            //                         deptTarget: vm.assignedTeamOrRole
-            //                     },
-            //                     colCount: 1,
-            //                     labelMode: "floating",
-            //                     items: [
-            //                         {
-            //                             dataField: "to",
-            //                             editorType: "dxSelectBox",
-            //                             validationRules: [{ type: "required" }],
-            //                             editorOptions: {
-            //                                 dataSource: res.data,
-            //                                 displayExpr: "fullName",
-            //                                 valueExpr: "accountName",
-            //                                 searchEnabled: true
-            //                             }
-            //                     },
-            //                     {
-            //                         dataField: "branchId",
-            //                         visible: false,
-            //                         editorType: "dxNumberBox",
-            //                         label: { text: "Branch" }
-            //                     },
-            //                         {
-            //                             dataField: "notes",
-            //                             editorType: "dxTextArea",
-            //                             label: { text: "Notes" }
-            //                         }
-            //                     ]
-            //                 });
-            //           });
-
-            //                 popup.show();
-            //             });
-                            
-                            
-               
-            // }
-
             function openPopupForEdit(row) {
                 if (!isManual()) {
                     DevExpress.ui.notify("This list is for Manual assign mode.", "warning", 1600);
@@ -903,7 +679,7 @@
             }
 
             // refreshAssignmentUI();
-    viewFieldAdjust("quotationRequestForm");
+    viewFieldAdjust("policyIssuanceEndorsementRequestForm");
     function renderOccupationTag(value, container) {
 
         var obj = {};
@@ -951,13 +727,13 @@
         // `);
         container.html(html);
     }
-    function togglePolicyField(e) {
-        const form = $("#quotationRequestForm").dxForm("instance");
-        var getRequestType = _enums.requestType.find(f => f.id == e.value);
-        // Ví dụ: chỉ hiển thị khi value = 'POLICY'
-        shouldShow = getRequestType.value === "Endorsement";
-        form.itemOption("headerInformation.policyNo", "visible", shouldShow);
-        form.repaint();
-    }
-
+    // function togglePolicyField(e) {
+    //     const form = $("#policyIssuanceEndorsementRequestForm").dxForm("instance");
+    //     var getRequestType = _enums.requestType.find(f => f.id == e.value);
+    //     // Ví dụ: chỉ hiển thị khi value = 'POLICY'
+    //     shouldShow = getRequestType.value === "Endorsement";
+    //     form.itemOption("headerInformation.policyNo", "visible", shouldShow);
+    //     form.repaint();
+    // }
+    console.log(_enums.requestType.find(f => f.value == "Endorsement"));
     </script>

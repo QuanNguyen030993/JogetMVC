@@ -1843,7 +1843,7 @@
                    moduleLauncherPopup.hide();
                });
                $("#btnPolicyEndorse").on("click", function () {
-                   newPolicyIssuanceEndorseForm();
+                   newPolicyIssuanceEndorsementForm();
                    moduleLauncherPopup.hide();
                });
            }
@@ -2822,14 +2822,6 @@
         line-height: 1.2;
     }
 
-    .launcher-grid {
-        display: flex;
-        justify-content: center;
-        align-items: stretch;
-        gap: 34px;
-        flex-wrap: wrap;
-        width: 100%;
-    }
 
     .launcher-item {
         width: 12vw;
@@ -2932,7 +2924,7 @@
         width: 100%;
         max-width: 1080px;
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         align-items: flex-start;
         gap: clamp(12px, 2.5vw, 40px);
     }
@@ -3332,8 +3324,8 @@
     .management-topbar #tablist > ul > li .close-tab-btn {
         width: 14px !important;
         height: 14px !important;
-        margin: 0 0 0 3px !important;
-        padding: 2px !important;
+        margin: 3px 0 0 3px !important;
+        /* padding: 2px !important; */
         font-size: 8px !important;
     }
 

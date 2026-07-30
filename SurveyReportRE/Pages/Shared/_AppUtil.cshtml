@@ -450,7 +450,7 @@
                             onClick() {
                                 var form = $(`#quotationRequestForm`).dxForm("instance");
                                 if (!form) {
-                                    DevExpress.ui.notify("Quotation form is still loading.", "warning", 1500);
+                                    DevExpress.ui.notify("Quotation form is still required missing fields.", "warning", 1500);
                                     return;
                                 }
 
@@ -601,115 +601,115 @@
                         location: 'after',
                         options: {
                             stylingMode: 'contained',
-                            type: 'info',
+                            type: 'default',
                             text: "Complete",
                             onClick() {
 
-                           if ($("#quotationRequestForm").dxForm("instance").validate().isValid)
-                           {
-                                        makeMiniLoadingPanel("Initiate Quotation", "Please wait...");
-                                    var result = new Object();
-                                        result.payload = new Object();
-                                        result.payload.progressvalue = 25;
-                                            renderBrowserLoading(result);
-                                var entryForm = $(`#assignBox`).dxForm().dxForm("instance");
-                                var entrySummaryForm = $(`#quotationRequestForm`).dxForm().dxForm("instance");
-                                var submitData = entryForm?.option("formData") || {};
-                                var submitSummaryData = entrySummaryForm.option("formData");
-                                    // console.log(submitSummaryData);
-                                var quotationData = new Object();
-                                quotationData.Quotation = new Object();
-                                quotationData.Quotation = ObjectPopulateKey(submitSummaryData, true, false);
-                                var makeRequestAccount = _loginUser;
+                               if ($("#quotationRequestForm").dxForm("instance").validate().isValid)
+                               {
+                                            makeMiniLoadingPanel("Initiate Quotation", "Please wait...");
+                                        var result = new Object();
+                                            result.payload = new Object();
+                                            result.payload.progressvalue = 25;
+                                                renderBrowserLoading(result);
+                                    var entryForm = $(`#assignBox`).dxForm().dxForm("instance");
+                                    var entrySummaryForm = $(`#quotationRequestForm`).dxForm().dxForm("instance");
+                                    var submitData = entryForm?.option("formData") || {};
+                                    var submitSummaryData = entrySummaryForm.option("formData");
+                                        // console.log(submitSummaryData);
+                                    var quotationData = new Object();
+                                    quotationData.Quotation = new Object();
+                                    quotationData.Quotation = ObjectPopulateKey(submitSummaryData, true, false);
+                                    var makeRequestAccount = _loginUser;
 
-                                quotationData.Quotation.RequestedDate = submitSummaryData.createDate;
-                                quotationData.Quotation.PIC = { FO: makeRequestAccount, TS: "", UW: "", LKMT: "" };
-                                quotationData.Quotation.TurnAroundTimeAttributes = {
-                                            FO: { AcceptDate: new Date(), CompleteDate: new Date() }
-                                            , TS: { AcceptDate: "", CompleteDate: "" }
-                                            , UW: { AcceptDate: "", CompleteDate: "" }
-                                            , LMKT: { AcceptDate: "", CompleteDate: "" }
-                                            , PM: { AcceptDate: "", CompleteDate: "" }
-                                    };
-                                quotationData.Quotation.TurnAroundTimeAttributes = JSON.stringify(quotationData.Quotation.TurnAroundTimeAttributes);
-                                quotationData.Quotation.PIC[submitData?.deptTarget] = submitData?.to || "";
-                                quotationData.Quotation.PIC = JSON.stringify(quotationData.Quotation.PIC);
-                                quotationData.Quotation.StageAccount = submitData?.to || "";
-                                quotationData.Quotation.StageDept = submitSummaryData.assignedTeamOrRole;
-                                quotationData.Quotation.QuotationStatus = "TS Pending";
-                                quotationData.Quotation.WorkflowStatus = "TS Pending";
-                                quotationData.Quotation.BranchId = submitData?.branchId;
-                                quotationData.Quotation.ProductId = quotationData.Quotation.ProductId.id;
-                                quotationData.Quotation.LineId = quotationData.Quotation.LineId.id;
-                                quotationData.Quotation.ReinsuranceId = quotationData.Quotation.ReinsuranceId.id;
-                                quotationData.Quotation.BranchCode = _branch;
-                                quotationData.Attributes = new Object();
-                                quotationData.Attributes.SectionName = sectionName;
+                                    quotationData.Quotation.RequestedDate = submitSummaryData.createDate;
+                                    quotationData.Quotation.PIC = { FO: makeRequestAccount, TS: "", UW: "", LKMT: "" };
+                                    quotationData.Quotation.TurnAroundTimeAttributes = {
+                                                FO: { AcceptDate: new Date(), CompleteDate: new Date() }
+                                                , TS: { AcceptDate: "", CompleteDate: "" }
+                                                , UW: { AcceptDate: "", CompleteDate: "" }
+                                                , LMKT: { AcceptDate: "", CompleteDate: "" }
+                                                , PM: { AcceptDate: "", CompleteDate: "" }
+                                        };
+                                    quotationData.Quotation.TurnAroundTimeAttributes = JSON.stringify(quotationData.Quotation.TurnAroundTimeAttributes);
+                                    quotationData.Quotation.PIC[submitData?.deptTarget] = submitData?.to || "";
+                                    quotationData.Quotation.PIC = JSON.stringify(quotationData.Quotation.PIC);
+                                    quotationData.Quotation.StageAccount = submitData?.to || "";
+                                    quotationData.Quotation.StageDept = submitSummaryData.assignedTeamOrRole;
+                                    quotationData.Quotation.QuotationStatus = "TS Pending";
+                                    quotationData.Quotation.WorkflowStatus = "TS Pending";
+                                    quotationData.Quotation.BranchId = submitData?.branchId;
+                                    quotationData.Quotation.ProductId = quotationData.Quotation.ProductId.id;
+                                    quotationData.Quotation.LineId = quotationData.Quotation.LineId.id;
+                                    quotationData.Quotation.ReinsuranceId = quotationData.Quotation.ReinsuranceId.id;
+                                    quotationData.Quotation.BranchCode = _branch;
+                                    quotationData.Attributes = new Object();
+                                    quotationData.Attributes.SectionName = sectionName;
 
-                                quotationData.StartingDept = "FO";
-
-
-                                var attributesData = new Object();
-                                attributesData.Attributes = new Object();
-                                var uploader = $(`#fileUpload_${sectionName}_${id}`).dxFileUploader("instance");
+                                    quotationData.StartingDept = "FO";
 
 
-                                var formData = new FormData();
-                                formData.append("QuotationData",JSON.stringify(quotationData));
-                                if (uploader){
-                                var files = uploader.option("value");
+                                    var attributesData = new Object();
+                                    attributesData.Attributes = new Object();
+                                    var uploader = $(`#fileUpload_${sectionName}_${id}`).dxFileUploader("instance");
 
-                                for (var i = 0; i < files.length; i++) {
-                                    formData.append("Files", files[i]);
+
+                                    var formData = new FormData();
+                                    formData.append("QuotationData",JSON.stringify(quotationData));
+                                    if (uploader){
+                                    var files = uploader.option("value");
+
+                                    for (var i = 0; i < files.length; i++) {
+                                        formData.append("Files", files[i]);
+                                        }
                                     }
-                                }
 
-                                result.payload.progressvalue = 50;
-                                renderBrowserLoading(result);
-                                $.ajax({
-                                    url: "/api/Quotation/CreateQuotation",
-                                    type: "POST",
-                                    data: formData,
-                                    processData: false,
-                                    contentType: false,
-                                    success: function (res) {
-                                            DevExpress.ui.notify("Quotation created!", "success", 1200);
-                                    },
-                                    error: function (xhr) {
-                                         result.payload.progressvalue = 100;
-                                         renderBrowserLoading(result);
-                                         appNotifyError(`${xhr.responseJSON?.detail || xhr.statusText} <br/>${xhr.responseJSON?.message || xhr.responseText}`);
-                                    }
-                                });
-
-                                if (submitSummaryData.surveyNeeded) {
-                                    var notificationData = new Object();
-                                    notificationData.Notification = new Object();
-                                    notificationData.Notification.Title = submitSummaryData.reTitle;//submitSummaryData.subject;
-                                    notificationData.Notification.Message = submitSummaryData.reMsg;
-                                    notificationData.Notification.IsRead = false;
-                                    notificationData.Notification.Url = "Link URL";
-                                    notificationData.Notification.Resource = `${_loginUser}_${_role}`;
-                                    notificationData.Notification.System = "WM";
-                                    notificationData.Notification.ReceivedBy = submitSummaryData.rePIC;  // Assign RE member ?
-                                    notificationData.MKTSurveyRequest = new Object();
-                                    notificationData.MKTSurveyRequest.ClientName = submitSummaryData.clientName;
-                                    notificationData.MKTSurveyRequest.ProductName = submitSummaryData.productName;
-                                    notificationData.MKTSurveyRequest.LineName = submitSummaryData.lineName;
-                                    notificationData.MKTSurveyRequest.MKTPIC = "";
-                                    notificationData.MKTSurveyRequest.MKTPICAccount = _loginUser;
-                                    notificationData.MKTSurveyRequest.DueDate = submitSummaryData.dueDate;
-                                    //notificationData.connectionId = "huan.lt";
-                                    notificationData.connectionId = submitSummaryData.rePIC;
-                                    ajaxPost('api/Utility/NotifyAnother', notificationData, {
-                                        onSuccess: function (response) {
+                                    result.payload.progressvalue = 50;
+                                    renderBrowserLoading(result);
+                                    $.ajax({
+                                        url: "/api/Quotation/CreateQuotation",
+                                        type: "POST",
+                                        data: formData,
+                                        processData: false,
+                                        contentType: false,
+                                        success: function (res) {
+                                                DevExpress.ui.notify("Quotation created!", "success", 1200);
                                         },
-                                        onError: function (err) {
+                                        error: function (xhr) {
+                                             result.payload.progressvalue = 100;
+                                             renderBrowserLoading(result);
+                                             appNotifyError(`${xhr.responseJSON?.detail || xhr.statusText} <br/>${xhr.responseJSON?.message || xhr.responseText}`);
                                         }
                                     });
+
+                                    if (submitSummaryData.surveyNeeded) {
+                                        var notificationData = new Object();
+                                        notificationData.Notification = new Object();
+                                        notificationData.Notification.Title = submitSummaryData.reTitle;//submitSummaryData.subject;
+                                        notificationData.Notification.Message = submitSummaryData.reMsg;
+                                        notificationData.Notification.IsRead = false;
+                                        notificationData.Notification.Url = "Link URL";
+                                        notificationData.Notification.Resource = `${_loginUser}_${_role}`;
+                                        notificationData.Notification.System = "WM";
+                                        notificationData.Notification.ReceivedBy = submitSummaryData.rePIC;  // Assign RE member ?
+                                        notificationData.MKTSurveyRequest = new Object();
+                                        notificationData.MKTSurveyRequest.ClientName = submitSummaryData.clientName;
+                                        notificationData.MKTSurveyRequest.ProductName = submitSummaryData.productName;
+                                        notificationData.MKTSurveyRequest.LineName = submitSummaryData.lineName;
+                                        notificationData.MKTSurveyRequest.MKTPIC = "";
+                                        notificationData.MKTSurveyRequest.MKTPICAccount = _loginUser;
+                                        notificationData.MKTSurveyRequest.DueDate = submitSummaryData.dueDate;
+                                        //notificationData.connectionId = "huan.lt";
+                                        notificationData.connectionId = submitSummaryData.rePIC;
+                                        ajaxPost('api/Utility/NotifyAnother', notificationData, {
+                                            onSuccess: function (response) {
+                                            },
+                                            onError: function (err) {
+                                            }
+                                        });
+                                    }
+                                         popupInstance.hide();
                                 }
-                                     popupInstance.hide();
-                            }
                             },
                         },
                     }]
@@ -860,117 +860,292 @@
 
             }
 
-        function newPolicyIssuanceEndorseForm() {
-            var popup = makePopup("large", "Policy Issuance Endorse Request");
-            popup.option({
-                title: "Policy Issuance - Endorse Request",
-                contentTemplate: function (container) {
-                    var passingParams = {
-                        UITabId: "PolicyIssuance_Endorse_Request_Form",
-                        pageNum: 0
-                    };
+            function newPolicyIssuanceEndorsementForm() {
+        var popup = makePopup("large", "Policy Issuance Endorsement Request");
+        popup.option({
+            title: "Policy Issuance - Endorsement Request",
+            contentTemplate: function (container) {
+                var passingParams = {
+                    UITabId: "PolicyIssuance_Endorsement_Request_Form",
+                    pageNum: 0
+                };
 
-                    appendElementViewInsideAsync(
-                        "/Business/Form/PopupDetail/PolicyIssuance_Endorse_Request_Form",
-                        passingParams,
-                        container,
-                        "PolicyIssuance_Endorse_Request_Form",
-                        "appendTo"
-                    ).then(function (form) {
-                        var scrollView = popupStandardContentByScroll(form.option("container"));
-                        scrollView.appendTo(container);
-                    }).catch(function (error) {
-                        console.error("Unable to load Policy Issuance Endorse form:", error);
-                        appNotifyError("Unable to load Policy Issuance Endorse form.");
-                    });
+                appendElementViewInsideAsync(
+                    "/Business/Form/PopupDetail/PolicyIssuance_Endorsement_Request_Form",
+                    passingParams,
+                    container,
+                    "PolicyIssuance_Endorsement_Request_Form",
+                    "appendTo"
+                ).then(function (form) {
+                    var scrollView = popupStandardContentByScroll(form.option("container"));
+                    scrollView.appendTo(container);
+                }).catch(function (error) {
+                    console.error("Unable to load Policy Issuance Endorsement form:", error);
+                    appNotifyError("Unable to load Policy Issuance Endorsement form.");
+                });
 
-                    return container;
-                },
-                toolbarItems: [{
-                    widget: "dxButton",
-                    toolbar: "bottom",
-                    location: "after",
-                    options: {
-                        text: "Cancel",
-                        onClick: function () {
-                            popup.hide();
-                        }
-                    }
-                }, {
-                    widget: "dxButton",
-                    toolbar: "bottom",
-                    location: "after",
-                    options: {
-                        stylingMode: "contained",
-                        type: "success",
-                        text: "Create Request",
-                        onClick: function () {
-                            var form = $("#policyIssuanceEndorseRequestForm").dxForm("instance");
-                            if (!form) {
-                                DevExpress.ui.notify("The Endorse form is still loading.", "warning", 1500);
-                                return;
-                            }
-
-                            var validation = form.validate();
-                            if (!validation.isValid) return;
-
-                            var data = form.option("formData") || {};
-                            var policyIssuance = {
-                                RequestType: "Endorsement",
-                                RequestTypeId: data.requestTypeId || null,
-                                RequestDate: data.requestDate,
-                                DueDate: data.dueDate || null,
-                                PolicyNo: data.policyNo,
-                                PolicyHolderId: data.policyHolderId || "",
-                                ClientId: data.clientId || null,
-                                ClientName: data.clientName,
-                                Subject: data.subject,
-                                Notes: data.notes || "",
-                                StageAccount: _loginUser,
-                                PIC: JSON.stringify({ FO: _loginUser, TS: "", PM: "" }),
-                                TurnAroundTimeAttributes: JSON.stringify({
-                                    FO: { AcceptDate: new Date(), CompleteDate: "" },
-                                    TS: { AcceptDate: "", CompleteDate: "" },
-                                    UW: { AcceptDate: "", CompleteDate: "" },
-                                    LMKT: { AcceptDate: "", CompleteDate: "" },
-                                    PM: { AcceptDate: "", CompleteDate: "" }
-                                }),
-                                ActionStatus: JSON.stringify({
-                                    EntryMode: "DirectEndorse",
-                                    SkipTS: data.skipTS,
-                                    FO: "Draft"
-                                })
-                            };
-
-                            var formData = new FormData();
-                            formData.append("PolicyIssuanceData", JSON.stringify([policyIssuance]));
-
-                            makeMiniLoadingPanel("Initiate Policy Issuance", "Please wait...");
-                            renderBrowserLoading({ payload: { progressvalue: 25 } });
-
-                            $.ajax({
-                                url: "/api/PolicyIssuance/CreatePolicyIssuance",
-                                type: "POST",
-                                data: formData,
-                                processData: false,
-                                contentType: false,
-                                success: function () {
-                                    renderBrowserLoading({ payload: { progressvalue: 100 } });
-                                    DevExpress.ui.notify("Endorse request created at FO.", "success", 1800);
-                                    popup.hide();
-                                },
-                                error: function (xhr) {
-                                    renderBrowserLoading({ payload: { progressvalue: 100 } });
-                                    appNotifyError(`${xhr.responseJSON?.detail || xhr.statusText}<br/>${xhr.responseJSON?.message || xhr.responseText}`);
+                return container;
+            },
+            toolbarItems: [{
+                        widget: 'dxButton',
+                        toolbar: 'bottom',
+                        location: 'after',
+                        options: {
+                            stylingMode: 'contained',
+                            type: 'normal',
+                            text: "Demo Data",
+                            onClick() {
+                                var form = $(`#policyIssuanceEndorsementRequestForm`).dxForm("instance");
+                                if (!form) {
+                                    DevExpress.ui.notify("PolicyIssuance form is still loading.", "warning", 1500);
+                                    return;
                                 }
-                            });
-                        }
-                    }
-                }]
-            });
 
-            popup.show();
-        }
+                                var now = new Date();
+                                var dueDate = new Date(now);
+                                dueDate.setDate(dueDate.getDate() + 7);
+                                        var payload = {
+                                                assignedTeamOrRole: "TS",
+                                                assignees: {},
+                                                assignmentMode: "manual",
+
+                                                businessChannel: {
+                                                    name: "BusinessChannel",
+                                                    value: "Direct (DIR)",
+                                                    key: "",
+                                                    code: "",
+                                                    sysTableId: null,
+                                                    sysTableName: "",
+                                                    mappingField: "",
+                                                    enumOrder: 0,
+                                                    id: 173,
+                                                    guid: "852bccc3-e537-4225-b686-2724beec518e",
+                                                    rowOrder: null
+                                                },
+
+                                                businessOccupation: "AAAAAAA",
+                                                clientId: 1128,
+                                                clientName: "DAO DUY THANG",
+                                                createDate: now,
+                                                dueDate: dueDate,
+
+                                                lineId: {
+                                                    id: 1,
+                                                    code: "LI1",
+                                                    value: "Fire & Property, BI" // ✅ fix &amp;
+                                                },
+
+                                                lineCode: "LI1",
+                                                lineName: "Fire & Property, BI",
+
+                                                PIC: _loginUser,
+                                                policyNo: `DEMO-${Date.now()}`,
+
+                                                productCode: "PC2",
+                                                productId: {
+                                                    id: 2,
+                                                    code: "PC2",
+                                                    value: "Industrial All Risks",
+                                                    lineId: 1
+                                                },
+
+                                                productName: "Industrial All Risks",
+
+                                                reinsuranceId: {
+                                                    name: "reInsuranceType",
+                                                    value: "NO FAC OUT",
+                                                    key: "",
+                                                    code: "",
+                                                    sysTableId: 10056,
+                                                    sysTableName: "",
+                                                    mappingField: "",
+                                                    enumOrder: 0,
+                                                    id: 144,
+                                                    guid: "ca0e7c80-1fcc-4bdb-8cc7-3a4209b72f2b",
+                                                    rowOrder: null
+                                                },
+
+                                                reqDate: now,
+                                                reqPerson: _loginUser,
+                                                requestTypeId: 149,
+                                                requestedDate: now,
+
+                                                stageAccount: _loginUser,
+                                                stageDept: "TS",
+
+                                                subject: `Demo quotation ${now.toLocaleString()}`,
+                                                turnAroundTimeAttributes: "",
+
+                                                quotationQuantity: 2,
+
+                                                startingDept: "FO",
+                                                businessChannelName: "Direct (DIR)"
+                                            };
+                                    form.option("formData", payload);
+
+                                    // Demo mode supplies assignment data automatically so the
+                                    // production Complete flow can submit without manual input.
+                                    var branch = (_enums.BranchOffice || []).find(f => f.code === _branch)
+                                        || (_enums.BranchOffice || [])[0];
+                                    var assignmentData = {
+                                        to: _loginUser,
+                                        branchId: branch?.id || null,
+                                        notes: "Auto-generated demo quotation",
+                                        deptTarget: "TS"
+                                    };
+                                    var $assignBox = $("#assignBox");
+                                    var assignmentForm = $assignBox.dxForm("instance");
+                                    if (!assignmentForm) {
+                                        assignmentForm = $assignBox.dxForm({
+                                            visible: false,
+                                            formData: assignmentData
+                                        }).dxForm("instance");
+                                    } else {
+                                        assignmentForm.option("formData", assignmentData);
+                                    }
+
+                                    // Invoke the same handler as the Complete button.
+                                    setTimeout(function () {
+                                        var completeItem = (popupInstance.option("toolbarItems") || [])
+                                            .find(item => item.options?.text === "Complete");
+                                        if (completeItem?.options?.onClick) {
+                                            completeItem.options.onClick();
+                                        }
+                                    }, 0);
+                                },
+                            },
+                        },{
+                widget: "dxButton",
+                toolbar: "bottom",
+                location: "after",
+                options: {
+                    text: "Cancel",
+                    onClick: function () {
+                        popup.hide();
+                    }
+                }
+            }, {
+                widget: "dxButton",
+                toolbar: "bottom",
+                location: "after",
+                options: {
+                    stylingMode: "contained",
+                    type: "success",
+                    text: "Create Request",
+                    onClick: function () {
+
+                               if ($("#policyIssuanceEndorsementRequestForm").dxForm("instance").validate().isValid)
+                               {
+                                            makeMiniLoadingPanel("Initiate PolicyIssuance", "Please wait...");
+                                        var result = new Object();
+                                            result.payload = new Object();
+                                            result.payload.progressvalue = 25;
+                                                renderBrowserLoading(result);
+                                    var entryForm = $(`#assignBox`).dxForm().dxForm("instance");
+                                    var entrySummaryForm = $(`#policyIssuanceEndorsementRequestForm`).dxForm().dxForm("instance");
+                                    var submitData = entryForm?.option("formData") || {};
+                                    var submitSummaryData = entrySummaryForm.option("formData");
+                                        // console.log(submitSummaryData);
+                                    var policyIssuanceData = new Object();
+                                    policyIssuanceData.PolicyIssuance = new Object();
+                                    policyIssuanceData.PolicyIssuance = ObjectPopulateKey(submitSummaryData, true, false);
+                                    var makeRequestAccount = _loginUser;
+
+                                    policyIssuanceData.PolicyIssuance.RequestedDate = submitSummaryData.createDate;
+                                    policyIssuanceData.PolicyIssuance.PIC = { FO: makeRequestAccount, TS: "", UW: "", LKMT: "" };
+                                    policyIssuanceData.PolicyIssuance.TurnAroundTimeAttributes = {
+                                                FO: { AcceptDate: new Date(), CompleteDate: new Date() }
+                                                , TS: { AcceptDate: "", CompleteDate: "" }
+                                                , UW: { AcceptDate: "", CompleteDate: "" }
+                                                , LMKT: { AcceptDate: "", CompleteDate: "" }
+                                                , PM: { AcceptDate: "", CompleteDate: "" }
+                                        };
+                                    policyIssuanceData.PolicyIssuance.TurnAroundTimeAttributes = JSON.stringify(policyIssuanceData.PolicyIssuance.TurnAroundTimeAttributes);
+                                    policyIssuanceData.PolicyIssuance.PIC[submitData?.deptTarget] = submitData?.to || "";
+                                    policyIssuanceData.PolicyIssuance.PIC = JSON.stringify(policyIssuanceData.PolicyIssuance.PIC);
+                                    policyIssuanceData.PolicyIssuance.StageAccount = submitData?.to || "";
+                                    policyIssuanceData.PolicyIssuance.StageDept = submitSummaryData.assignedTeamOrRole;
+                                    policyIssuanceData.PolicyIssuance.PolicyIssuanceStatus = "TS Pending";
+                                    policyIssuanceData.PolicyIssuance.WorkflowStatus = "TS Pending";
+                                    policyIssuanceData.PolicyIssuance.BranchId = submitData?.branchId;
+                                    policyIssuanceData.PolicyIssuance.ProductId = policyIssuanceData.PolicyIssuance.ProductId.id;
+                                    policyIssuanceData.PolicyIssuance.LineId = policyIssuanceData.PolicyIssuance.LineId.id;
+                                    policyIssuanceData.PolicyIssuance.ReinsuranceId = policyIssuanceData.PolicyIssuance.ReinsuranceId.id;
+                                    policyIssuanceData.PolicyIssuance.BranchCode = _branch;
+                                    // policyIssuanceData.Attributes = new Object();
+                                    // policyIssuanceData.Attributes.SectionName = sectionName;
+
+                                    policyIssuanceData.StartingDept = "FO";
+
+
+                                    // var attributesData = new Object();
+                                    // attributesData.Attributes = new Object();
+                                    // var uploader = $(`#fileUpload_${sectionName}_${id}`).dxFileUploader("instance");
+
+
+                                    var formData = new FormData();
+                                    formData.append("PolicyIssuanceData",JSON.stringify(policyIssuanceData));
+                                    // if (uploader){
+                                    // var files = uploader.option("value");
+
+                                    // for (var i = 0; i < files.length; i++) {
+                                    //     formData.append("Files", files[i]);
+                                    //     }
+                                    // }
+
+                                    result.payload.progressvalue = 50;
+                                    renderBrowserLoading(result);
+                                    $.ajax({
+                                        url: "/api/PolicyIssuance/CreatePolicyissuanceEndorsement",
+                                        type: "POST",
+                                        data: formData,
+                                        processData: false,
+                                        contentType: false,
+                                        success: function (res) {
+                                                DevExpress.ui.notify("PolicyIssuance created!", "success", 1200);
+                                        },
+                                        error: function (xhr) {
+                                             result.payload.progressvalue = 100;
+                                             renderBrowserLoading(result);
+                                             appNotifyError(`${xhr.responseJSON?.detail || xhr.statusText} <br/>${xhr.responseJSON?.message || xhr.responseText}`);
+                                        }
+                                    });
+
+                                    if (submitSummaryData.surveyNeeded) {
+                                        var notificationData = new Object();
+                                        notificationData.Notification = new Object();
+                                        notificationData.Notification.Title = submitSummaryData.reTitle;//submitSummaryData.subject;
+                                        notificationData.Notification.Message = submitSummaryData.reMsg;
+                                        notificationData.Notification.IsRead = false;
+                                        notificationData.Notification.Url = "Link URL";
+                                        notificationData.Notification.Resource = `${_loginUser}_${_role}`;
+                                        notificationData.Notification.System = "WM";
+                                        notificationData.Notification.ReceivedBy = submitSummaryData.rePIC;  // Assign RE member ?
+                                        notificationData.MKTSurveyRequest = new Object();
+                                        notificationData.MKTSurveyRequest.ClientName = submitSummaryData.clientName;
+                                        notificationData.MKTSurveyRequest.ProductName = submitSummaryData.productName;
+                                        notificationData.MKTSurveyRequest.LineName = submitSummaryData.lineName;
+                                        notificationData.MKTSurveyRequest.MKTPIC = "";
+                                        notificationData.MKTSurveyRequest.MKTPICAccount = _loginUser;
+                                        notificationData.MKTSurveyRequest.DueDate = submitSummaryData.dueDate;
+                                        //notificationData.connectionId = "huan.lt";
+                                        notificationData.connectionId = submitSummaryData.rePIC;
+                                        ajaxPost('api/Utility/NotifyAnother', notificationData, {
+                                            onSuccess: function (response) {
+                                            },
+                                            onError: function (err) {
+                                            }
+                                        });
+                                    }
+                                         popup.hide();
+                                }
+                            }
+                }
+            }]
+        });
+
+        popup.show();
+    }
 
         function newQuotationApprovalForm() {
             var popup = makePopup("large", "Res");
@@ -1931,6 +2106,7 @@
                 if (k === "quotation refused") return { css: "rejected", text: raw };
                 if (k === "done") return { css: "done", text: raw };
                 if (k === "complete") return { css: "complete", text: raw };
+                if (k === "issued") return { css: "accepted", text: raw };
                 if (k.includes("complete")) return { css: "complete", text: raw };
                 if (k === "dispose") return { css: "dispose", text: raw };
                 if (k === "archive") return { css: "archive", text: raw };
@@ -7798,7 +7974,7 @@
                 const $content = $("<span>").addClass("overview-status-content");
 
                 const $state = $("<span>")
-                    .addClass(`overview-status-state statusTag ${safeStatusClass}`)
+                    .addClass(`overview-status-state statusTagInForm ${safeStatusClass}`)
                     .text(statusText)
                     .appendTo($content);
                 if (detailStatusId) $state.attr("id", detailStatusId);

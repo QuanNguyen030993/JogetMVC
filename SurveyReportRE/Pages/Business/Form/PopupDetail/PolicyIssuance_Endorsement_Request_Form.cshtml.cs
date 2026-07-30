@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace ERPCore.Pages
 {
-    public class PolicyIssuance_Endorse_Request_FormModel : PageModel
+    public class PolicyIssuance_Endorsement_Request_FormModel : PageModel
     {
         public void OnGet(int? pageNum)
         {

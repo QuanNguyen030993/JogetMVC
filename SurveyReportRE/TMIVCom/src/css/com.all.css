@@ -621,6 +621,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    width: 100%;
+    justify-content: center;
 }
 
 .grid-cell:not(.editing-cell) .grid-cell-content > .statusTag {

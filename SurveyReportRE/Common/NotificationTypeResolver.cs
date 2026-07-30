@@ -82,7 +82,7 @@ public static class NotificationTypeResolver
         if (ContainsAny(eventText, "accept", "accepted")) return NotificationTypeKeys.Accept;
         if (ContainsAny(eventText, "fail", "failed", "reject", "rejected", "decline", "declined", "error"))
             return NotificationTypeKeys.Fail;
-        if (ContainsAny(eventText, "success", "successful", "complete", "completed", "done", "approve", "approved"))
+        if (ContainsAny(eventText, "success", "successful", "complete", "completed", "done", "approve", "approved", "issued"))
             return NotificationTypeKeys.Success;
         if (ContainsAny(eventText, "assign", "assigned")) return NotificationTypeKeys.Assign;
         if ((step?.IsStart ?? false) || ContainsAny(eventText, "initial", "initialize", "start"))
