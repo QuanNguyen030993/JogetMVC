@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.AspNetCore.SignalR;
 using ERPCore.Models.Config;
 using SautinSoft.Document;
 using Serilog;
@@ -47,13 +48,16 @@ var loggerConfiguration = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
     .MinimumLevel.Override("System", LogEventLevel.Warning)
-                    .Enrich.FromLogContext()
-                    .WriteTo.Console()
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
     .WriteTo.File(
         path: Path.Combine(builder.Environment.ContentRootPath, "Logs", "app-log-.txt"),
         restrictedToMinimumLevel: LogEventLevel.Information,
         rollingInterval: RollingInterval.Day
-    );
+    )
+    .WriteTo.Sink(
+        new RealtimeErrorLogSink(),
+        restrictedToMinimumLevel: LogEventLevel.Error);
 
 if (!string.IsNullOrEmpty(connectionLogString))
 {
@@ -63,15 +67,14 @@ if (!string.IsNullOrEmpty(connectionLogString))
              logEvent.Level == LogEventLevel.Error || 
              logEvent.Level == LogEventLevel.Fatal
         )
-        .WriteTo.Sink(new RealtimeErrorLogSink())
-                    .WriteTo.MSSqlServer(
+        .WriteTo.MSSqlServer(
             connectionString: connectionLogString,
-                            sinkOptions: new Serilog.Sinks.MSSqlServer.MSSqlServerSinkOptions
-                            {
-                                TableName = "Logs",
-                                AutoCreateSqlTable = true
-                            }
-                        )
+            sinkOptions: new Serilog.Sinks.MSSqlServer.MSSqlServerSinkOptions
+            {
+                TableName = "Logs",
+                AutoCreateSqlTable = true
+            }
+        )
     );
 }
 
@@ -96,9 +99,8 @@ builder.Services.AddSignalR(options => {
     options.KeepAliveInterval = TimeSpan.FromSeconds(double.Parse(builder.Configuration.GetSection("SignalRConfig:KeepAliveInterval").Value));
     options.ClientTimeoutInterval = TimeSpan.FromSeconds(double.Parse(builder.Configuration.GetSection("SignalRConfig:ClientTimeoutInterval").Value)); // client timeout > keepalive
 });
-builder.Services.AddHostedService<RealtimeErrorLogBroadcastService>();
-
 builder.Services.AddSingleton<MemoryPresenceStore>();
+builder.Services.AddHostedService<RealtimeErrorLogBroadcastService>();
 builder.Services.AddControllers();
 builder.Services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
 builder.Services.AddScoped(typeof(IHttpRequestAuditLogWriter), typeof(HttpRequestAuditLogWriter));
@@ -111,7 +113,6 @@ builder.Services.AddHttpClient("SharePointGraph", client =>
 builder.Services.AddSingleton<ISharePointDocumentStorage, GraphSharePointDocumentStorage>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddSingleton(connectionString);
-
 
 //-------------------------------------------
 //Comment out if Allow anomymous for debugging 
@@ -127,7 +128,6 @@ builder.Services.AddAuthorization(options =>
 
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 
 builder.Services.Configure<BlobStorageSettings>(builder.Configuration.GetSection("BlobStorage"));
@@ -233,9 +233,6 @@ app.UseMiddleware<HttpRequestAuditMiddleware>();
 app.MapRazorPages();
 app.MapControllers();
 app.MapHub<FileProcessingHub>("/fileProcessingHub");
-app.UseMiddleware<CookieImpersonationMiddleware>();
-app.UseMiddleware<HttpRequestAuditMiddleware>();
-app.UseSession();
 app.MapDefaultControllerRoute();
 app.MapControllerRoute(
     name: "default",
