@@ -17326,7 +17326,7 @@ input.dx-hidden {
 
 .dx-datagrid-headers .dx-datagrid-table .dx-row > td {
     border-bottom: 1px solid #ddd;
-    background-color: #337ab7;
+    background-color: #ffffff;
 }
 
 .dx-datagrid-filter-row .dx-menu .dx-overlay-content {
@@ -32822,6 +32822,7 @@ textarea {
     align-items: center;
     width: auto;
     min-height: 30px;
+    margin-left: 10%;
     padding: 4px 9px;
     border: 1px solid #fcd34d;
     border-radius: 6px;

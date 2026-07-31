@@ -815,18 +815,32 @@ public class QuotationController : BaseControllerApi<Quotation>
 
         foreach (string recipient in recipients)
         {
-            var notification = new Notification
-            {
-                Title = title,
-                Message = message,
-                IsRead = false,
-                Resource = $"{recipient}_{dept}",
-                System = "WM",
-                RecordGuid = quotation.Guid,
-                Type = assignTypeId,
-                ReceivedBy = recipient,
-                Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation))
-            };
+            NotificationTemplate notificationTemplate = new NotificationTemplate();
+            notificationTemplate.Title = title;
+            notificationTemplate.Content = message;
+            //var notification = new Notification
+            //{
+            //    Title = title,
+            //    Message = message,
+            //    IsRead = false,
+            //    Resource = $"{recipient}_{dept}",
+            //    System = "WM",
+            //    RecordGuid = quotation.Guid,
+            //    Type = assignTypeId,
+            //    ReceivedBy = recipient,
+            //    Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation))
+            //};
+
+
+            Notification notification = new Notification();
+            notification = ControllerUtil.BuildNotification(quotation
+                , assignTypeId
+                , recipient
+                , notificationTemplate
+                , nameof(AssignTask)
+                );
+
+
             // The receiver reloads immediately when SignalR arrives, so persist first.
             await _notificationRepository.InsertData(notification);
             await ControllerHelper.SignalRResponse(
@@ -962,18 +976,29 @@ public class QuotationController : BaseControllerApi<Quotation>
 
         foreach (string recipient in recipients)
         {
-            var notification = new Notification
-            {
-                Title = title,
-                Message = message,
-                IsRead = false,
-                Resource = $"{recipient}_{dept}",
-                System = "WM",
-                RecordGuid = quotation.Guid,
-                Type = acceptTypeId,
-                ReceivedBy = recipient,
-                Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation))
-            };
+            //var notification = new Notification
+            //{
+            //    Title = title,
+            //    Message = message,
+            //    IsRead = false,
+            //    Resource = $"{recipient}_{dept}",
+            //    System = "WM",
+            //    RecordGuid = quotation.Guid,
+            //    Type = acceptTypeId,
+            //    ReceivedBy = recipient,
+            //    Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation))
+            //};
+            NotificationTemplate notificationTemplate = new NotificationTemplate();
+            notificationTemplate.Title = title;
+            notificationTemplate.Content = message;
+
+            Notification notification = new Notification();
+            notification = ControllerUtil.BuildNotification(quotation
+                , acceptTypeId
+                , recipient
+                , notificationTemplate
+                , nameof(AcceptTask)
+                );
             await _notificationRepository.InsertData(notification);
             await ControllerHelper.SignalRResponse(
                 _usersSessionRepository,
@@ -1025,16 +1050,17 @@ public class QuotationController : BaseControllerApi<Quotation>
             }
                         instanceWorkflow.RecordGuid = quotation.Guid;
 
-            var (resolvedNodeId, resolvedDeptCode) = Util.ResolveWorkflowJumps(
-                workflowDefinition.WorkflowNodes,
-                stepsWorkflow.TNodeId ?? "",
-                Newtonsoft.Json.Linq.JObject.FromObject((object)quotation)
-            );
-            if (!string.IsNullOrEmpty(resolvedNodeId))
-            {
-                stepsWorkflow.TNodeId = resolvedNodeId;
-                stepsWorkflow.ToNodeId = resolvedDeptCode;
-            }
+            //Problem
+            //var (resolvedNodeId, resolvedDeptCode) = Util.ResolveWorkflowJumps(
+            //    workflowDefinition.WorkflowNodes,
+            //    stepsWorkflow.TNodeId ?? "",
+            //    Newtonsoft.Json.Linq.JObject.FromObject((object)quotation)
+            //);
+            //if (!string.IsNullOrEmpty(resolvedNodeId))
+            //{
+            //    stepsWorkflow.TNodeId = resolvedNodeId;
+            //    stepsWorkflow.ToNodeId = resolvedDeptCode;
+            //}
 
             instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
             instanceWorkflow.CurrentStepId = new Guid();
@@ -1129,17 +1155,41 @@ public class QuotationController : BaseControllerApi<Quotation>
             foreach (string memberName in picsStr.Split(","))
             {
 
+                //dynamic transferObject = new
+                //{
+                //    DOMAIN_NAME,
+                //    Title = Util.ReplaceDynamicProperties(notificationTitle.Title, quotation),
+                //    Subject = Util.ReplaceDynamicProperties(notificationTitle.Content, quotation),
+                //    Guid = quotation.Guid,
+                //    ReceivedBy = memberName,
+                //    Id = quotation.Id,
+                //    Code = quotation.QuotationCode,
+                //    ModuleName = nameof(Quotation),
+                //    QuotationId = quotation.Id,
+                //    CopyFromGuid = quotation.Guid
+                //};
+
+
                 NotificationRequest notification = new NotificationRequest();
                 Notification Notification = new Notification();
-                Notification.Title = notificationTitle.Title;
-                Notification.Message = notificationTitle.Content;
-                Notification.IsRead = false;
-                Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
-                Notification.System = "WM";
-                Notification.RecordGuid = quotation.Guid;
-                Notification.Type = notificationTitle.TypeId;
+                Notification = ControllerUtil.BuildNotification(
+                    quotation,
+                    notificationTitle.TypeId,
+                    memberName,
+                    notificationTitle,
+                    nameof(NotificationHandle)
+                    );
 
-                Notification.ReceivedBy = memberName;
+
+                //Notification.Title = Util.ReplaceDynamicProperties(notificationTitle.Title,quotation);
+                //Notification.Message = Util.ReplaceDynamicProperties(notificationTitle.Content, quotation);
+                //Notification.IsRead = false;
+                //Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
+                //Notification.System = "WM";
+                //Notification.RecordGuid = quotation.Guid;
+                //Notification.Type = notificationTitle.TypeId;
+
+                //Notification.ReceivedBy = memberName;
                 notification.Notification = Notification;
                 notification.connectionId = memberName;
                 notification.tabPublicUrl = Util.URLObjectMaking(quotation);

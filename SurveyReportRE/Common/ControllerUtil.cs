@@ -23,6 +23,8 @@ using ERPCore.Models.Migration.Business.Social;
 using ERPCore.Common;
 using ERPCore.Models.Business.Migration.Config;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
+using System.Runtime.CompilerServices;
+using ERPCore.Models.Migration.Business.MasterData;
 
 namespace ERPCore.ControllerUtil
 {
@@ -159,40 +161,40 @@ namespace ERPCore.ControllerUtil
             return (PICMain, PICLeader, PICHOD);
 
         }
-        public static async Task<Notification> Notify(
-            dynamic transferObject,
-            long? notificationTypeId = null,
-            bool sendRealtime = true)
-        {
-            string DOMAIN_NAME = transferObject.DOMAIN_NAME;
-            NotificationRequest notification = new NotificationRequest();
-            Notification Notification = BuildNotification(transferObject, notificationTypeId);
-            notification.Notification = Notification;
-            notification.connectionId = transferObject.ReceivedBy;
-            notification.tabPublicUrl = NotificationURLObjectMaking(transferObject);
-            IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
+        //public static async Task<Notification> Notify(
+        //    dynamic transferObject,
+        //    long? notificationTypeId = null,
+        //    bool sendRealtime = true)
+        //{
+        //    string DOMAIN_NAME = transferObject.DOMAIN_NAME;
+        //    NotificationRequest notification = new NotificationRequest();
+        //    Notification Notification = BuildNotification(transferObject, notificationTypeId, );
+        //    notification.Notification = Notification;
+        //    notification.connectionId = transferObject.ReceivedBy;
+        //    notification.tabPublicUrl = NotificationURLObjectMaking(transferObject);
+        //    IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
 
-            foreach (string item in transferObject.ReceivedBy.Split(','))
-            {
-                if (!sendRealtime) break;
-                string[] connectionIds = onlineUsers
-                    .Where(user => SameRealtimeAccount(user.User, item, DOMAIN_NAME))
-                    .Select(user => user.ConnectionId)
-                    .Where(id => !string.IsNullOrWhiteSpace(id))
-                    .Distinct()
-                    .ToArray();
-                if (connectionIds.Length > 0)
-                {
-                    await FileProcessingHub._hubContext.Clients.Clients(connectionIds).SendAsync("R_NotificationReceive",
-                              new
-                              {
-                                  title = notification?.Notification?.Title ?? "",
-                                  message = notification?.Notification?.Message ?? ""
-                              });
-                }
-            }
-            return Notification;
-        }
+        //    foreach (string item in transferObject.ReceivedBy.Split(','))
+        //    {
+        //        if (!sendRealtime) break;
+        //        string[] connectionIds = onlineUsers
+        //            .Where(user => SameRealtimeAccount(user.User, item, DOMAIN_NAME))
+        //            .Select(user => user.ConnectionId)
+        //            .Where(id => !string.IsNullOrWhiteSpace(id))
+        //            .Distinct()
+        //            .ToArray();
+        //        if (connectionIds.Length > 0)
+        //        {
+        //            await FileProcessingHub._hubContext.Clients.Clients(connectionIds).SendAsync("R_NotificationReceive",
+        //                      new
+        //                      {
+        //                          title = notification?.Notification?.Title ?? "",
+        //                          message = notification?.Notification?.Message ?? ""
+        //                      });
+        //        }
+        //    }
+        //    return Notification;
+        //}
 
        
 
@@ -202,7 +204,11 @@ namespace ERPCore.ControllerUtil
             long? notificationTypeId = null)
         {
             string DOMAIN_NAME = transferObject.DOMAIN_NAME;
-            Notification = BuildNotification(transferObject, notificationTypeId, Notification);
+            NotificationTemplate notificationTemplate = new NotificationTemplate();
+            notificationTemplate.Title = Notification.Title;
+            notificationTemplate.Content = Notification.Message;
+
+            Notification = BuildNotification(transferObject, notificationTypeId, transferObject.ReceivedBy, notificationTemplate, nameof(NotifySameEmail));
             NotificationRequest notification = new NotificationRequest();
             notification.Notification = Notification;
             notification.connectionId = transferObject.ReceivedBy;
@@ -251,24 +257,52 @@ namespace ERPCore.ControllerUtil
             return string.Equals(Normalize(left), Normalize(right), StringComparison.OrdinalIgnoreCase);
         }
 
-        private static Notification BuildNotification(
+        public static Notification BuildNotification(
             dynamic transferObject,
             long? notificationTypeId,
-            Notification? notification = null)
+            string member,
+            NotificationTemplate notificationTemplate = null,
+            [CallerMemberName] string callerName = "")
         {
-            notification ??= new Notification();
-            notification.Title = transferObject.Title;
-            notification.Message = transferObject.Subject;
+            //notification = new Notification();
+            //notification.Title = transferObject.Title;
+            //notification.Message = transferObject.Subject;
+            //notification.IsRead = false;
+            //notification.Url = JsonConvert.SerializeObject(NotificationURLObjectMaking(transferObject));
+            //notification.Resource = $"{transferObject.Resource}";
+            //notification.System = "WM";
+            //notification.RecordGuid = transferObject.Guid;
+            //notification.ReceivedBy = transferObject.ReceivedBy;
+            //notification.Type = notificationTypeId;
+            Notification notification = new Notification();
+            dynamic transferObjectIn = new
+            {
+                Title = Util.ReplaceDynamicProperties(notificationTemplate.Title, transferObject),
+                Subject = Util.ReplaceDynamicProperties(notificationTemplate.Content, transferObject),
+                Guid = transferObject.Guid,
+                ReceivedBy = member,
+                ModuleName = transferObject.GetType().Name,
+                QuotationId = transferObject.Id,
+                CopyFromGuid = transferObject.Guid
+            };
+
+
+            notification = new Notification();
+            notification.Title = Util.ReplaceDynamicProperties(transferObjectIn.Title, transferObject);
+            notification.Message = Util.ReplaceDynamicProperties(transferObjectIn.Subject, transferObject);
             notification.IsRead = false;
-            notification.Url = JsonConvert.SerializeObject(
-                NotificationURLObjectMaking(transferObject));
-            notification.Resource = $"{transferObject.Resource}";
-            notification.System = "WM";
-            notification.RecordGuid = transferObject.Guid;
-            notification.ReceivedBy = transferObject.ReceivedBy;
+            notification.Resource = $"{member}_{transferObject.GetType().Name}_{callerName}";
+            notification.System = "WorkflowManagement";
+            notification.RecordGuid = transferObjectIn.Guid;
             notification.Type = notificationTypeId;
+            notification.Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(transferObjectIn));
+            notification.ReceivedBy = member;
+
+
             return notification;
         }
+
+
 
         /// <summary>
         /// Builds the target stored with a notification. Policy Issuance records cloned

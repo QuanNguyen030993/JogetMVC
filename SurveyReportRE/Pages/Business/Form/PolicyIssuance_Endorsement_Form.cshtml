@@ -1,0 +1,1999 @@
+@page "{pageNum:int?}/{guid}"
+@using JogetMVC.Model
+@using Newtonsoft.Json
+@model PolicyIssuance_Endorsement_FormModel
+@{
+    var moduleCode = "pi";
+    var prefix = moduleCode;
+    var title = moduleCode == "pi" ? "PolicyIssuance Overview" : "Policy Issuance Overview";
+}
+@*
+Note:
+-Change style to site.css
+-Comment out menu topbar + sidebar
+-Call ajax to main table
+-Replace PolicyIssuance visible data fields, should replace by VS
+-Remove app div for scroll
+*@
+
+<style>
+    #pi-overviewRoot_@(ViewData["Id"]) {
+        position: relative;
+        height: calc(85vh);
+    }
+
+    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .cardBody,
+    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .pi-cardHeader {
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .pi-render-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 120;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        overflow: hidden;
+        border-radius: inherit;
+        background: color-mix(in srgb, var(--theme-page) 82%, transparent);
+        backdrop-filter: blur(3px);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .28s ease, visibility .28s ease;
+    }
+
+    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .pi-render-overlay {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .pi-render-overlay.is-leaving {
+        opacity: 0 !important;
+    }
+
+    .pi-loader-panel {
+        width: min(320px, calc(100% - 32px));
+        padding: 26px 28px 24px;
+        text-align: center;
+        border: 1px solid var(--theme-border);
+        border-radius: 20px;
+        background: color-mix(in srgb, var(--theme-surface) 88%, transparent);
+        box-shadow: var(--theme-shadow-md);
+    }
+
+    .pi-loader-icon-host {
+        display: grid;
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 15px;
+        place-items: center;
+    }
+
+    .pi-loader-icon-host > img,
+    .pi-loader-icon-host > svg {
+        display: block;
+        max-width: 64px;
+        max-height: 64px;
+        object-fit: contain;
+    }
+
+    .pi-loader-default-icon {
+        position: relative;
+        width: 52px;
+        height: 52px;
+        border: 4px solid var(--theme-primary-ring);
+        border-top-color: var(--theme-primary);
+        border-radius: 50%;
+        animation: piLoaderSpin .85s linear infinite;
+    }
+
+    .pi-loader-default-icon::after {
+        content: "";
+        position: absolute;
+        inset: 7px;
+        border: 3px solid color-mix(in srgb, var(--theme-secondary) 16%, transparent);
+        border-bottom-color: var(--theme-secondary);
+        border-radius: 50%;
+        animation: piLoaderSpin .65s linear infinite reverse;
+    }
+
+    .pi-loader-message {
+        margin-bottom: 15px;
+        color: var(--theme-text);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: .01em;
+    }
+
+    .pi-render-progress {
+        height: 3px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--theme-muted) 22%, transparent);
+    }
+
+    .pi-render-progress > span {
+        display: block;
+        width: 12%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary), var(--theme-primary));
+        background-size: 200% 100%;
+        animation: piProgressFlow 1.1s linear infinite;
+        transition: width .3s ease;
+    }
+
+    @@keyframes piLoaderSpin {
+        to { transform: rotate(360deg); }
+    }
+
+    @@keyframes piProgressFlow {
+        to { background-position: -200% 0; }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .pi-loader-default-icon,
+        .pi-loader-default-icon::after,
+        .pi-render-progress > span {
+            animation-duration: 1.8s;
+        }
+    }
+
+    .workflow-custom-route-host {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+    }
+</style>
+
+
+<body>
+
+
+    <div class="title">
+        <partial name="_OverviewPane" model='new OverviewPanePartialModel
+        {
+            Prefix = prefix,
+            ModuleCode = moduleCode,
+            Title = title,
+            Id = ViewData["Id"]?.ToString(),
+            Guid = ViewData["Guid"]?.ToString(),
+            CloneId = Convert.ToInt64(ViewData["CloneId"]),
+            CopyFromGuid = ViewData["CopyFromGuid"]?.ToString()
+        }' />
+
+    </div>
+@* 
+    <div class="actionBar">
+        <div class="">
+            <span class="pill">Record: <b id="pi-recordNo">Qu-10030</b></span>
+            <span class="pill">Login role: <b id="pi-loginRoleLabel"></b></span>
+            <span id="pi-focusDeptPill" class="pill">Focus section: </span>
+        </div>
+        <div class="actionRight">
+            <div id="pi-btnClientConfirm"></div>
+        </div>
+    </div> *@
+
+    <div id="branchOverlay" class="branchOverlay">
+        <div class="backdrop"></div>
+        <div class="branchPopup">
+            <div class="branchTitle">
+                <span>Submit Route</span>
+                <span class="branchHint">Choose next dept</span>
+            </div>
+            <div class="branchCanvas">
+                <svg width="100%" height="100%" viewBox="0 0 260 140" style="position:absolute;inset:0;"></svg>
+            </div>
+        </div>
+    </div>
+</body>
+<script type="text/javascript">
+    var PIC_JSON = `{}`;
+    var formModuleKeyPi = "pi";
+    var pICs = [];
+    var workflowStatus = "";
+    // if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
+    //     $('[data-toggle="push-menu"]').click();
+    //     isToggleMenu = true;
+    // }
+    var prefix = "@prefix";
+    var page = window.PolicyIssuancePage;
+    var state = page.state;
+    var copyFromGuid = "@(ViewData["CopyFromGuid"])";
+    state.nextStep = new Object();
+    state.nextStep.flowSteps = [];
+    state.nextStep.currentStep = 1;
+    state.nextStep.instanceWorkflow = new Object();
+
+    state.currentUserRole = _role;
+    state.focusDept = _role == "IT" ? "FO" : _role;
+
+    state.quotes = [];
+    state.selectedId = null;
+    state.selectedGuid = null;
+    state.selectedCodeNo = null;
+    state.selectedAttachmentId = null;
+    state.stageDept = null;
+    state.quoteDetails = {};
+    state.quotePaging = {
+        skip: 0,
+        take: 20,
+        loading: false,
+        done: false,
+        firstLoadDone: false
+    };
+    var firstRender = true;
+    setTimeout(() => {
+        const policyIssuanceViewInstanceId = "@ViewData["Id"]";
+        const policyIssuanceViewInstanceKey = `${formModuleKeyPi}:${policyIssuanceViewInstanceId}`;
+        const policyIssuanceOverviewRootId = `${formModuleKeyPi}-overviewRoot_${policyIssuanceViewInstanceId}`;
+        enableDxFormGroupToggle(`#${policyIssuanceOverviewRootId}`);
+     const QtRoles = piDeptModuleCode;
+        $(`#${formModuleKeyPi}-loginRoleLabel`).text(state.currentUserRole);
+
+        $(document)
+            .off(`overviewMaintenanceRoleChanged.pi-${policyIssuanceViewInstanceId}`)
+            .on(`overviewMaintenanceRoleChanged.pi-${policyIssuanceViewInstanceId}`, function (_, detail) {
+                if (detail?.moduleCode !== formModuleKeyPi
+                    || String(detail.recordId) !== String(policyIssuanceViewInstanceId)) return;
+
+                state.currentUserRole = detail.role;
+                _role = detail.role;
+                $(`#${formModuleKeyPi}-loginRoleLabel`).text(detail.role);
+                applyEditLock();
+                updateHints();
+            });
+
+        var filter = "all";
+        var searchText = "";
+        var selectedGuid = null;
+        var selectedFromGuid = null;
+        var selectedAttachmentId = null;
+        var commentPanelOpened = false;
+        var stageDept = null;
+        var stageAccount = "";
+
+        var deptData = { FO: {}, TS: {}, PM: {} };
+        var remarkBoxs = { FO: {}, TS: {}, PM: {} };
+
+        state.piDetails = {};
+
+        const policyIssuanceRenderGate = (function () {
+            var sequence = 0;
+            var startedAt = 0;
+            var $root = $(`#${policyIssuanceOverviewRootId}`);
+            var $overlay = $root.children(".pi-render-overlay");
+
+            if (!$overlay.length) {
+                $overlay = $(`
+                    <div id="${formModuleKeyPi}-renderOverlay_${policyIssuanceViewInstanceId}" class="pi-render-overlay" role="status" aria-live="polite" aria-busy="true">
+                        <div class="pi-loader-panel">
+                            <div class="pi-loader-icon-host" aria-hidden="true">
+                                <div class="pi-loader-default-icon"></div>
+                            </div>
+                            <div class="pi-loader-message">Please wait…</div>
+                            <div class="pi-render-progress"><span></span></div>
+                        </div>
+                    </div>
+                `).appendTo($root);
+            }
+
+            function setLoadingIcon(source, options) {
+                var $host = $overlay.find(".pi-loader-icon-host").empty();
+                options = options || {};
+
+                function appendVisual(visual) {
+                    if (!visual) return;
+                    var $visual = visual.jquery ? visual : $(visual);
+                    if ($visual.length && !$visual.parent().is($host)) {
+                        $host.append($visual);
+                    }
+                }
+
+                if (!source) {
+                    $host.append('<div class="pi-loader-default-icon"></div>');
+                    return;
+                }
+
+                if (typeof source === "function") {
+                    appendVisual(source($host));
+                    return;
+                }
+
+                if (typeof source === "string") {
+                    $("<img>", {
+                        src: source,
+                        alt: options.alt || "",
+                        class: options.className || ""
+                    }).appendTo($host);
+                    return;
+                }
+
+                appendVisual(source);
+            }
+
+            function setPhase(_message, progress) {
+                progress = Math.max(0, Math.min(100, Number(progress) || 0));
+                $overlay.find(".pi-render-progress > span").css("width", `${Math.max(progress, 8)}%`);
+            }
+
+            function resetProgressiveContent() {
+                const $sections = $(`#${window.PolicyIssuanceIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
+                $sections.removeClass("visible");
+                $sections.find(".animate-step").removeClass("visible");
+            }
+
+            function begin(message) {
+                sequence += 1;
+                startedAt = performance.now();
+                $overlay.removeClass("is-leaving").attr("aria-busy", "true");
+                $root.addClass("pi-render-loading");
+                $root.find(".overview-status-pill")
+                    .removeClass("is-ready")
+                    .attr("aria-busy", "true");
+                resetProgressiveContent();
+                setPhase(message || "Loading policy issuance data…", 12);
+                return sequence;
+            }
+
+            async function complete(token) {
+                if (token !== sequence) return;
+                setPhase("Finalizing controls…", 92);
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+                var minimumVisibleTime = 320;
+                var remaining = minimumVisibleTime - (performance.now() - startedAt);
+                if (remaining > 0) {
+                    await new Promise(resolve => setTimeout(resolve, remaining));
+                }
+                if (token !== sequence) return;
+
+                animateOverviewSections(formModuleKeyPi);
+                setPhase("Ready", 100);
+                $overlay.addClass("is-leaving").attr("aria-busy", "false");
+                await new Promise(resolve => setTimeout(resolve, FormStageDelay.overlayDone));
+                if (token !== sequence) return;
+                $root.removeClass("pi-render-loading");
+                $overlay.removeClass("is-leaving");
+            }
+
+            function fail(token, message) {
+                if (token !== sequence) return;
+                setPhase(message || "Unable to load policy issuance", 100);
+                $overlay.attr("aria-busy", "false");
+                setTimeout(function () {
+                    if (token === sequence) $root.removeClass("pi-render-loading");
+                }, 900);
+            }
+
+            if (window.PolicyIssuanceLoadingIcon) {
+                setLoadingIcon(window.PolicyIssuanceLoadingIcon);
+            }
+
+            return { begin, setPhase, complete, fail, setLoadingIcon };
+        })();
+
+        // State cua pipeline chi nam trong instance Policy Issuance hien tai.
+        const policyIssuanceFormStages = createFormStageCoordinator(function (stageName) {
+            $(`#${policyIssuanceOverviewRootId}`).attr("data-render-stage", stageName);
+        });
+        const policyIssuanceDepartmentOrder = FormStageDelay.departmentOrder.policyIssuance;
+        const policyAssignmentLifecycle = { isAssigneeBoxRender: false };
+
+        window.OverviewViewRegistry = window.OverviewViewRegistry || {};
+        window.OverviewViewRegistry[policyIssuanceViewInstanceKey] = {
+            moduleCode: formModuleKeyPi,
+            recordId: policyIssuanceViewInstanceId,
+            rootId: policyIssuanceOverviewRootId,
+            renderGate: policyIssuanceRenderGate
+        };
+        window.PolicyIssuanceRenderGates = window.PolicyIssuanceRenderGates || {};
+        window.PolicyIssuanceRenderGates[policyIssuanceViewInstanceId] = policyIssuanceRenderGate;
+        window.PolicyIssuanceRenderGate = policyIssuanceRenderGate;
+
+        function money(n) {
+            return new Intl.NumberFormat("vi-VN", {
+                style: "currency",
+                currency: "VND"
+            }).format(n || 0);
+        }
+
+
+
+        function statusClass(raw) { return normalizeStatus(raw).css; }
+        function statusText(raw) { return normalizeStatus(raw).text; }
+
+      
+
+      
+
+        function getSelectedModel() {
+            if (state.selectedId && state.quoteDetails[state.selectedId]) {
+                return state.quoteDetails[state.selectedId];
+            }
+            const q = state.quotes.find(x => x.id === state.selectedId) || state.quotes[0];
+            return q || null;
+        }
+
+
+
+        function buildListUrl() {
+            const params = new URLSearchParams();
+            params.set("skip", state.quotePaging.skip);
+            params.set("take", state.quotePaging.take);
+
+            if (searchText) params.set("searchText", searchText);
+            if (filter && filter !== "all") params.set("policyIssuanceStatus", filter);
+            params.set("key", @Convert.ToInt32(ViewData["Id"]));
+            return `/api/PolicyIssuance/GetAll?${params.toString()}`;
+        }
+
+      
+
+        function loadPIDetail(id) {
+            if (!id) return Promise.resolve(null);
+            if (state.piDetails[id]) {
+                return Promise.resolve(state.piDetails[id]);
+            }
+            return $.ajax({
+                url: `/api/PolicyIssuance/GetAll?key=${id}`,
+                method: "GET",
+                contentType: "application/json"
+            }).then(detail => {
+                var item = Array.isArray(detail) ? detail[0] : detail;
+                if (item) {
+                    state.piDetails[id] = item;
+                }
+                return item;
+            });
+        }
+
+
+
+
+        async function syncSelectedState(q) {
+            if (!q) return;
+
+
+
+
+            state.selectedId =  q.id ?? null;
+            state.selectedGuid = q.guid ?? null;
+            selectedAttachmentId = q.documentId ?? null;
+            state.selectedCodeNo = q.quotationCode ?? null;
+            stageDept = String(q.stageDept || "").trim().toUpperCase() || null;
+            state.stageDept = stageDept;
+            state.comments = [];
+            state.pinNotes = [];
+
+            PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
+            var map = parsePicMap(PIC_JSON);
+            stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
+
+        }
+
+        async function loadPolicyIssuanceSectionComments() {
+            try {
+                const res = await loadSectionCommentsCached(state.selectedGuid);
+                const pinnedNotes = (res || []).map(x => ({
+                id: x.id,
+                section: x.currentDepartment,
+                fromSection: x.fromDepartment,
+                toSection: x.toDepartment,
+                type: x.type,
+                unread: !x.isRead,
+                isRead: !x.isRead,
+                linkedPin: x.isPinned,
+                isPinned: x.isPinned,
+                body: x.content,
+                text: x.content,
+                replies: 0,
+                fullText: x.content,
+                author: x.author,
+                urgent: false,
+                time: parseToGMT7(x.createdDate, 0)
+                }));
+                state.comments = pinnedNotes;
+                state.pinNotes = pinnedNotes.filter(f => f.isPinned);
+            } catch (error) {
+                state.comments = [];
+                state.pinNotes = [];
+                console.warn("Policy issuance comments could not be loaded.", error);
+            }
+            reloadState();
+        }
+
+        async function renderPolicyIssuancePersonInCharge() {
+            const q = getSelectedModel();
+            if (!q) return;
+            renderDeptCallouts(PIC_JSON);
+            let stageName = "";
+            try {
+                stageName = stageAccount && stageAccount !== "(Unassigned)"
+                    ? await getPersonInCharge(stageAccount)
+                    : "";
+            } catch (error) {
+                console.warn("Person in charge could not be resolved.", error);
+            }
+            revealOverviewPaneStatus(
+                `#${window.PolicyIssuanceIdManager.stageDeptPill(q.id)}`,
+                statusText(workflowStatus),
+                stageName,
+                statusClass(workflowStatus),
+                window.PolicyIssuanceIdManager.detailStatus(q.id)
+            );
+        }
+            function loadSelectedWorkflow() {
+
+              return ajaxGet(`/api/PolicyIssuance/GetPolicyIssuanceWorkflow/@ViewData["Guid"]`, null)
+                  .then(instance => {
+                      return ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance?.workflowDefinitionId ?? "00000000-0000-0000-0000-000000000000"}/${instance?.currentStep ?? 0}`, null)
+                              .then(data => {
+                            data = Array.isArray(data) ? data : [];
+                            state.nextStep.instanceWorkflow = instance;
+                            state.nextStep.flowSteps = data;
+                            state.nextStep.currentStep = instance?.currentStep ?? 0;
+                            // setNextStep(state.nextStep);
+                            // Route state chi duoc bind sau khi loading tong da dong va
+                            // tat ca dxForm/dxTagBox da co data.
+                            return policyIssuanceFormStages.enter("routeState").then(async function () {
+                                       
+                                        // var findRoute = data.find(f => !f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                         const customRoutes = data.filter(function (route) {
+                                             return String(route?.flowType || "").trim().toLowerCase() === "custom";
+                                         });
+                                         var findRoutes = data.filter(f => !f.isReturn
+                                             && String(f?.flowType || "").trim().toLowerCase() !== "custom"
+                                             && f.fromNodeId == stageDept
+                                             && f.fNodeId == state.nextStep.currentStep);
+
+                                             console.log(findRoutes);
+                                        // var findRouteReturn = data.find(f => f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
+                                        var findRouteReturns = data.filter(f => f.isReturn
+                                            && String(f?.flowType || "").trim().toLowerCase() !== "custom"
+                                            && f.fromNodeId == stageDept
+                                            && f.fNodeId == state.nextStep.currentStep);
+                                        var returnButtonId = window.PolicyIssuanceIdManager.btnReturnBranch(stageDept,@ViewData["Id"]);
+                                        var submitButtonId = window.PolicyIssuanceIdManager.btnSubmitBranch(stageDept,@ViewData["Id"]);
+                                        // var remarkBoxId = window.PolicyIssuanceIdManager.remarkBox(stageDept,@ViewData["Id"]);
+                                        if (piDeptModuleCode.find(f => f == stageDept))
+                                        {
+                                        var formId = window.PolicyIssuanceIdManager.form(stageDept,@ViewData["Id"]);
+                                        var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                         var tatObject = new Object();
+
+                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem") || {};
+                                         var actionStatusObject = tryParseJSON(formItems.actionStatus, "Submit Button ActionStatus Problem") || {};
+                                         var hasAcceptedRouteStatus = stageDept === "LMKT" && (actionStatusObject[`${stageDept}Button`] || actionStatusObject[stageDept]);
+                                         if (hasAcceptedRouteStatus) {
+                                             findRoutes = [];
+                                         }
+                                        const recordId = @ViewData["Id"];
+                                        const normalizeRouteDept = function (value) {
+                                            return String(value || "").trim().toUpperCase();
+                                        };
+                                        const normalizeRouteGroupKey = function (value) {
+                                            return normalizeRouteDept(value).replace(/[^A-Z0-9]/g, "");
+                                        };
+                                        const getRouteGroupKeys = function (routeData) {
+                                            const route = typeof routeData === "object" && routeData
+                                                ? routeData
+                                                : { fromNodeId: routeData };
+                                            return [
+                                                route.fromNodeId,
+                                                route.fromDeptCode,
+                                                route.departmentCode,
+                                                route.deptCode,
+                                                route.roleCode,
+                                                route.nodeName
+                                            ]
+                                                .map(normalizeRouteGroupKey)
+                                                .filter(function (value, index, values) {
+                                                    return value.length >= 2 && values.indexOf(value) === index;
+                                                });
+                                        };
+                                        const isSimilarRouteGroup = function (routeKeys, groupDept) {
+                                            const groupKey = normalizeRouteGroupKey(groupDept);
+                                            return routeKeys.some(function (routeKey) {
+                                                return routeKey === groupKey
+                                                    || routeKey.indexOf(groupKey) >= 0
+                                                    || groupKey.indexOf(routeKey) >= 0;
+                                            });
+                                        };
+                                        const ensureCustomRouteHost = function (routeData) {
+                                            const routeKeys = getRouteGroupKeys(routeData);
+                                            if (!routeKeys.length) return $();
+
+                                            let $host = $(`[data-route-custom-host][data-record-id="${recordId}"]`)
+                                                .filter(function () {
+                                                    return isSimilarRouteGroup(
+                                                        routeKeys,
+                                                        $(this).attr("data-route-dept"));
+                                                })
+                                                .first();
+                                            if ($host.length) return $host;
+
+                                            const groupIdPrefix = "pi-decision-group-";
+                                            const groupIdSuffix = `-${recordId}`;
+                                            let $decisionGroup = $(`[id^="${groupIdPrefix}"][id$="${groupIdSuffix}"]`)
+                                                .filter(function () {
+                                                    const groupId = this.id || "";
+                                                    const groupDept = groupId.substring(
+                                                        groupIdPrefix.length,
+                                                        groupId.length - groupIdSuffix.length);
+                                                    return isSimilarRouteGroup(routeKeys, groupDept);
+                                                })
+                                                .first();
+                                            if (!$decisionGroup.length) {
+                                                const fallbackDept = ["FO", "TS", "PM"]
+                                                    .find(function (dept) {
+                                                        return isSimilarRouteGroup(routeKeys, dept);
+                                                    });
+                                                if (fallbackDept) {
+                                                    const fallbackFormId = window.PolicyIssuanceIdManager.form(
+                                                        fallbackDept,
+                                                        recordId);
+                                                    $decisionGroup = $(`#${fallbackFormId} .pi-decision-group-${fallbackDept}`)
+                                                        .first()
+                                                        .attr({
+                                                            id: `${groupIdPrefix}${fallbackDept}${groupIdSuffix}`,
+                                                            "data-form-group-name": `decision${fallbackDept}Group`,
+                                                            "data-route-dept": fallbackDept
+                                                        });
+                                                }
+                                            }
+                                            if (!$decisionGroup.length) {
+                                                console.warn("No decision group id matched the custom route.", routeData);
+                                                return $();
+                                            }
+
+                                            const groupId = $decisionGroup.attr("id");
+                                            const groupDept = groupId.substring(
+                                                groupIdPrefix.length,
+                                                groupId.length - groupIdSuffix.length);
+                                            const $decisionArea = $decisionGroup
+                                                .find(".dx-form-group-content")
+                                                .first();
+                                            if (!$decisionArea.length) {
+                                                console.warn(`Decision content for group '${groupId}' was not found.`);
+                                                return $();
+                                            }
+
+                                            $host = $(`<div class="workflow-custom-route-host" data-route-custom-host="true" data-record-id="${recordId}" data-route-dept="${groupDept}"></div>`);
+                                            const $actionArea = $decisionArea
+                                                .find(".decision-action-row")
+                                                .first();
+                                            $host
+                                                .attr("data-route-group-id", groupId)
+                                                .appendTo($actionArea.length ? $actionArea : $decisionArea);
+                                            return $host;
+                                        };
+
+                                        $(`[data-route-custom-host][data-record-id="${recordId}"] [data-custom-route-button]`).each(function () {
+                                            $(this).dxButton("instance")?.dispose();
+                                            $(this).remove();
+                                        });
+
+                                        // const $uwRouteSlot = ensureCustomRouteHost({ fromNodeId: "UW" });
+                                        // const hasUwCustomRoute = customRoutes.some(function (route) {
+                                        //     return isSimilarRouteGroup(getRouteGroupKeys(route), "UW");
+                                        // });
+                                        // if ($uwRouteSlot.length) {
+                                        //     $uwRouteSlot
+                                        //         .removeClass("is-route-pending")
+                                        //         .toggleClass("has-flow-route", hasUwCustomRoute)
+                                        //         .toggleClass("is-fallback-ready", !hasUwCustomRoute)
+                                        //         .attr("data-has-flow-route", hasUwCustomRoute ? "true" : "false");
+                                        //     const fallbackInstance = $uwRouteSlot.find("[data-uw-route-fallback]").dxButton("instance");
+                                        //     if (fallbackInstance && !hasUwCustomRoute) {
+                                        //         fallbackInstance.option("disabled", stageDept !== "UW" || !!tatObject?.UW?.AcceptDate);
+                                        //     }
+                                        // }
+                                        for (const [routeIndex, route] of customRoutes.entries()) {
+                                            await policyIssuanceFormStages.pace(routeIndex);
+                                            const $routeHost = ensureCustomRouteHost(route);
+                                            if (!$routeHost.length) continue;
+                                            const routeDept = normalizeRouteDept($routeHost.attr("data-route-dept"));
+                                            if (!routeDept) continue;
+
+                                            const rawRouteKey = route?.routeId || route?.id || route?.actionCode || routeIndex;
+                                            const safeRouteKey = String(rawRouteKey).replace(/[^a-zA-Z0-9_-]/g, "_");
+                                            const customButtonId = `pi-custom-route-${recordId}-${routeDept}-${safeRouteKey}-${routeIndex}`;
+                                            const isCurrentRoute = routeDept === normalizeRouteDept(stageDept)
+                                                && route?.fNodeId == state.nextStep.currentStep;
+                                            const $customButton = $(`<div id="${customButtonId}" data-custom-route-button="true"></div>`)
+                                                .appendTo($routeHost);
+
+                                            $customButton.dxButton({
+                                                disabled: !isCurrentRoute,
+                                                text: route.displayStatus || route.actionName || route.actionCode || "Custom action",
+                                                icon: getTransitionButtonIcon(route, route.isReturn ? "undo" : ""),
+                                                type: route.isReturn ? "danger" : "info",
+                                                onClick: function () {
+                                                    const routeFormId = window.PolicyIssuanceIdManager.form(routeDept, recordId);
+                                                    const routeFormItems = $(`#${routeFormId}`).dxForm("instance")?.option("formData") || {};
+                                                    const content = remarkBoxs?.[routeDept]?.controlRemark?.value?.() || "";
+                                                    if (route.isReturn && !content) {
+                                                        appNotifyWarning("Please put your reason to remarks!", false);
+                                                        return;
+                                                    }
+                                                    routeFormItems.comment = content;
+                                                    if (route.isReturn) {
+                                                        returnToStep(formModuleKeyPi, state.nextStep, route, routeFormItems);
+                                                    } else {
+                                                        submitNextStep(formModuleKeyPi, state.nextStep, route, routeFormItems);
+                                                    }
+                                                }
+                                            });
+                                            applyTransitionButtonClass(`#${customButtonId}`, route);
+                                        }
+                                           try {
+                                            if (findRouteReturns?.length && tatObject) {
+
+                                                for (const [routeIndex, route] of findRouteReturns.entries()) {
+                                                    await policyIssuanceFormStages.pace(customRoutes.length + routeIndex);
+
+                                                    const buttonId =
+                                                        `${returnButtonId}_${route.routeId || route.actionCode}`;
+
+                                                    const routeButtonHost = `#${returnButtonId}`;
+
+                                                    if (!$(`#${buttonId}`).length) {
+                                                        $(`<div id="${buttonId}"></div>`)
+                                                            .appendTo(routeButtonHost);
+                                                    } else if (!$(`#${buttonId}`).parent().is(routeButtonHost)) {
+                                                        $(`#${buttonId}`).appendTo(routeButtonHost);
+                                                    }
+
+                                                    $(`#${buttonId}`).dxButton({
+                                                        disabled: false,
+                                                        text: route.displayStatus || "",
+                                                        icon: getTransitionButtonIcon(route, "undo"),
+                                                        type: "danger",
+                                                        onClick: function () {
+                                                            var content = remarkBoxs[stageDept].controlRemark.value();
+                                                            if (content)
+                                                                {
+                                                                formItems =
+                                                                    $(`#${formId}`)
+                                                                        .dxForm("instance")
+                                                                        ?.option("formData") || {};
+
+                                                                formItems.comment = content || "";
+
+                                                                returnToStep(
+                                                                    `${formModuleKeyPi}`,
+                                                                    state.nextStep,
+                                                                    route,
+                                                                    formItems
+                                                                );
+                                                                }
+                                                            else {
+                                                                appNotifyWarning("Please put your reason to remarks!",false);
+                                                            }
+                                                        }
+                                                    });
+                                                    applyTransitionButtonClass(`#${buttonId}`, route);
+                                                }
+                                            }
+                                        }
+                                        catch (exception) {
+                                            console.log("Return problem", exception);
+                                        }
+                                        try {
+
+                                            if (findRoutes?.length) {
+
+                                                for (const [routeIndex, route] of findRoutes.entries()) {
+                                                    await policyIssuanceFormStages.pace(
+                                                        customRoutes.length + findRouteReturns.length + routeIndex
+                                                    );
+
+                                                    const buttonId =
+                                                        `${submitButtonId}_${route.routeId || route.actionCode}`;
+
+                                                    const routeButtonHost = `#${submitButtonId}`;
+
+                                                    if (!$(`#${buttonId}`).length) {
+                                                        $(`<div id="${buttonId}"></div>`)
+                                                            .appendTo(routeButtonHost);
+                                                    } else if (!$(`#${buttonId}`).parent().is(routeButtonHost)) {
+                                                        $(`#${buttonId}`).appendTo(routeButtonHost);
+                                                    }
+
+                                                    $(`#${buttonId}`).dxButton({
+                                                        disabled: stageDept === "LMKT"
+                                                            ? false
+                                                            : (tatObject?.[stageDept]?.AcceptDate ? false : true),
+                                                        text: route.displayStatus || "",
+                                                        icon: getTransitionButtonIcon(route, "fa-solid fa-person-running"),
+                                                        type: "info",
+                                                        onClick: function () {
+
+                                                            var content =
+                                                                remarkBoxs[stageDept].controlRemark.value();
+
+                                                            formItems =
+                                                                $(`#${formId}`)
+                                                                    .dxForm("instance")
+                                                                    ?.option("formData") || {};
+
+                                                            formItems.comment = content || "";
+
+                                                            if (stageDept === "LMKT") {
+                                                                var currentTatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "LMKT SubmitBranch TAT Problem") || {};
+                                                                if (!currentTatObject[stageDept]) {
+                                                                    currentTatObject[stageDept] = {
+                                                                        AcceptDate: "",
+                                                                        CompleteDate: ""
+                                                                    };
+                                                                }
+                                                                if (!currentTatObject[stageDept].AcceptDate) {
+                                                                    currentTatObject[stageDept].AcceptDate = formatDateToString(new Date()).gmt7;
+                                                                }
+
+                                                                var currentActionStatus = tryParseJSON(formItems.actionStatus, "LMKT SubmitBranch ActionStatus Problem") || {};
+                                                                currentActionStatus[stageDept] = route.displayStatus || route.actionName || route.actionCode || "Submitted";
+                                                                currentActionStatus[`${stageDept}Button`] = {
+                                                                    text: route.displayStatus || route.actionName || route.actionCode || "Submitted",
+                                                                    actionCode: route.actionCode || "",
+                                                                    icon: getTransitionButtonIcon(route, "check"),
+                                                                    buttonClass: getTransitionButtonClass(route, "dx-button-info")
+                                                                };
+
+                                                                formItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
+                                                                formItems.actionStatus = JSON.stringify(currentActionStatus);
+                                                                ajaxPut('/api/PolicyIssuance/UpdateData',
+                                                                    {
+                                                                        key: formItems.id,
+                                                                        values: JSON.stringify(formItems)
+                                                                    },
+                                                                    {
+                                                                        onSuccess: function () { },
+                                                                        onError: function (err) { console.log("LMKT SubmitBranch status update problem", err); }
+                                                                    }
+                                                                );
+                                                                $(`#${submitButtonId}`).find(".dx-button").css("background-color", window.DecisionColors.accepted);
+                                                            }
+
+                                                            submitNextStep(
+                                                                `${formModuleKeyPi}`,
+                                                                state.nextStep,
+                                                                route,
+                                                                formItems
+                                                            );
+                                                        }
+                                                    });
+                                                    applyTransitionButtonClass(`#${buttonId}`, route);
+
+                                                }
+                                            }
+                                        }
+                                        catch (exception) {
+                                            console.log("Submit problem", exception);
+                                        }
+                                        }
+                                   });
+                            // });
+                        });
+
+                  });
+          }
+
+        async function loadQuotePage(reset = false) {
+            if (state.quotePaging.loading) return false;
+            if (!reset && state.quotePaging.done) return false;
+
+            if (reset) {
+                state.quotePaging.skip = 0;
+                state.quotePaging.done = false;
+                state.quotePaging.firstLoadDone = false;
+                state.quotes = [];
+                pICs = [];
+            }
+
+            state.quotePaging.loading = true;
+            try {
+                var data = await $.ajax({
+                    url: buildListUrl(),
+                    method: "GET",
+                    contentType: "application/json"
+                });
+                policyIssuanceRenderGate.setPhase("Policy issuance data received…", 38);
+
+                const rows = Array.isArray(data)
+                    ? data.map(item => ({ ...item, pIC: item.pic }))
+                    : [];
+
+                if (reset && rows.length === 0) {
+                    state.quotePaging.done = true;
+                    return false;
+                }
+
+                state.quotes = state.quotes.concat(rows);
+
+                state.quotePaging.skip += rows.length;
+                if (rows.length < state.quotePaging.take) {
+                    state.quotePaging.done = true;
+                }
+
+                if (!state.quotePaging.firstLoadDone && state.quotes.length > 0) {
+                    state.quotePaging.firstLoadDone = true;
+                    policyIssuanceRenderGate.setPhase("Binding policy issuance state…", 52);
+                    await syncSelectedState(state.quotes[0]);
+                    policyIssuanceRenderGate.setPhase("Initializing department forms…", 68);
+                    await renderDetail();
+                    policyIssuanceRenderGate.setPhase("Binding PIC assignments…", 86);
+                }
+                return true;
+            } catch (err) {
+                console.error("loadQuotePage error:", err);
+                DevExpress.ui.notify("Load policyIssuance list failed", "error", 1500);
+                return false;
+            } finally {
+                state.quotePaging.loading = false;
+            }
+        }
+
+
+        // Coalesce SignalR/action reloads so every section finishes rendering once.
+        var policyIssuanceReloadPromise = null;
+        function reloadPolicyIssuanceInstance() {
+            if (policyIssuanceReloadPromise) return policyIssuanceReloadPromise;
+
+            var renderToken = policyIssuanceRenderGate.begin("Refreshing policy issuance…");
+            policyIssuanceReloadPromise = (async function () {
+                while (state.quotePaging.loading) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+
+                // Chi load state, dxForm va PIC khi overlay con dang mo.
+                var loaded = await loadQuotePage(true);
+                if (!loaded) {
+                    policyIssuanceRenderGate.fail(renderToken, "Policy issuance refresh failed");
+                    return;
+                }
+
+                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                $.each(piDeptModuleCode, function (itemIndex, item) {
+                    var form = $(`#${window.PolicyIssuanceIdManager.form(item,@ViewData["Id"])}`).dxForm("instance");
+                    form?.repaint();
+                });
+                applyEditLock();
+                applyNodeHighlights();
+                applySectionFocusHighlight();
+                updateHints();
+                await policyIssuanceRenderGate.complete(renderToken);
+                firstRender = false;
+                await policyIssuanceFormStages.enter("personInCharge");
+                await renderPolicyIssuancePersonInCharge();
+                await loadSelectedWorkflow();
+                invalidateSectionCommentCache(state.selectedGuid);
+                await policyIssuanceFormStages.enter("comments");
+                await loadPolicyIssuanceSectionComments();
+            })().catch(function (err) {
+                console.error("reloadPolicyIssuanceComponents error:", err);
+                policyIssuanceRenderGate.fail(renderToken, "Policy issuance refresh failed");
+            })().finally(function () {
+                policyIssuanceReloadPromise = null;
+            });
+
+            return policyIssuanceReloadPromise;
+        }
+
+        window.OverviewViewRegistry[policyIssuanceViewInstanceKey].reload = reloadPolicyIssuanceInstance;
+        window.reloadPolicyIssuanceComponents = function(instanceId) {
+            var registry = window.OverviewViewRegistry || {};
+            if (instanceId !== undefined && instanceId !== null) {
+                return registry[`pi:${instanceId}`]?.reload?.();
+            }
+
+            var reloads = Object.keys(registry)
+                .filter(key => key.startsWith("pi:"))
+                .map(key => registry[key])
+                .filter(entry => entry && document.getElementById(entry.rootId) && typeof entry.reload === "function")
+                .map(entry => entry.reload());
+            return Promise.all(reloads);
+        };
+
+
+
+        function reloadState(){
+              $.each(piDeptModuleCode, function (itemIndex, item) {
+                commentPinModule(formModuleKeyPi,item, "@ViewData["Guid"]", state.pinNotes,@ViewData["Id"]);
+                loadCommentModule(formModuleKeyPi,item, "@ViewData["Guid"]", state.comments,@ViewData["Id"]);
+            });
+        }
+
+
+        async function renderDeptForms() {
+            policyIssuanceDepartmentOrder.forEach(function (item) {
+                policyIssuanceFormStages.prepareSection(
+                    `#${formModuleKeyPi}-sec_${item}_@ViewData["Id"]`
+                );
+            });
+
+            for (const item of policyIssuanceDepartmentOrder) {
+                var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
+                $(`#${formId}`).dxForm({ formData: deptData[item], readOnly: true, colCount: 1 });
+                await policyIssuanceFormStages.revealSection(
+                    `#${formModuleKeyPi}-sec_${item}_@ViewData["Id"]`,
+                    item
+                );
+            }
+            reloadState();
+            applyEditLock();
+            updateHints();
+            await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        }
+
+        
+        function applyEditLock() {
+            const roleApply = {};
+              $.each(piDeptModuleCode, function (itemIndex, item) {
+                roleApply[item]= !(state.currentUserRole === item);
+
+            });
+
+
+            setTimeout(() => {
+                 $.each(piDeptModuleCode, function (itemIndex, item) {
+                       var saveButtonId = window.PolicyIssuanceIdManager.btnSave(item,@ViewData["Id"]);
+                    $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
+                     var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
+                 $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
+                    $(`#${formId}`).dxForm("instance")?.repaint();
+                    setAttachmentPermissionForSection(
+                        `#${formModuleKeyPi}-sec_${item}_@ViewData["Id"]`,
+                        !roleApply[item]
+                    );
+                });
+               
+            }, 1);
+
+           
+
+            const $roleSelect = $(`#${window.PolicyIssuanceIdManager.roleSelect(policyIssuanceViewInstanceId)}`);
+            const canSwitchMaintenanceRole = String(window._isDebugMode).toLowerCase() === "true"
+                || String(window._isSuperUser).toLowerCase() === "true";
+            if (canSwitchMaintenanceRole && $roleSelect.length && !$roleSelect.hasClass("dx-selectbox")) {
+                $roleSelect.dxSelectBox({
+                    dataSource: QtRoles,
+                    value: state.currentUserRole,
+                    stylingMode: "outlined",
+                    width: "100%",
+                    onValueChanged: (e) => {
+                        state.currentUserRole = e.value;
+                        _role = e.value;
+                        $(`#${formModuleKeyPi}-loginRoleLabel`).text(state.currentUserRole);
+                        applyEditLock();
+                        updateHints();
+                        DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
+                    }
+                });
+            }
+        }
+        function updateHints() {
+            // $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
+
+            QtRoles.forEach(k => {
+                const canEdit = (state.currentUserRole === k);
+                const icon = canEdit
+                ? `<span class="lock editable" title="Editable" aria-label="Editable">
+                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                       <rect x="5" y="11" width="14" height="10" rx="2"/>
+                       <path d="M8 11V7a4 4 0 0 1 7.5-2"/>
+                       <path d="M12 15v2"/>
+                     </svg>
+                   </span>`
+                : `<span class="lock readonly" title="Read only" aria-label="Read only">
+                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                       <rect x="5" y="11" width="14" height="10" rx="2"/>
+                       <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+                       <path d="M12 15v2"/>
+                     </svg>
+                   </span>`;
+
+                $(`#${formModuleKeyPi}-hint_${k}_@ViewData["Id"]`).html(icon);
+            });
+        }
+
+        //     function updateCurrentStep(stepNo) {
+        //         var pageLayout = window.PolicyIssuancePage;
+        //         pageLayout.state.nextStep.currentStep = stepNo;
+        //     }
+
+        //         function setNextStep(nextStep) {
+        //     var pageLayout = window.PolicyIssuancePage;
+        //     pageLayout.state.nextStep = nextStep;
+        // }
+
+        function updateSectionUpdatedTime(q) {
+            let tat = {};
+            try {
+                tat = JSON.parse(q?.turnAroundTimeAttributes || "{}");
+            } catch (e) {
+                tat = {};
+            }
+
+            const map = {
+                FO: tat?.FO?.CompleteDate || null,
+                TS: tat?.TS?.CompleteDate || null,
+                UW: tat?.UW?.CompleteDate || null,
+                LMKT: tat?.LMKT?.CompleteDate || null,
+                PM: tat?.PM?.CompleteDate || null
+            };
+
+            Object.keys(map).forEach(dept => {
+            $(`#${formModuleKeyPi}-upd_${dept}_@ViewData["Id"]`).text("Updated: " + fmtTimeLocal(map[dept]));
+            });
+        }
+
+        function applyNodeHighlights() {
+            $(".dept-node").removeClass("status focus");
+            $(`.dept-node[data-key='${stageDept}']`).addClass("status");
+            $(`.dept-node[data-key='${state.focusDept}']`).addClass("focus");
+        }
+
+        function applySectionFocusHighlight() {
+            $(".dept-section").removeClass("focused");
+            $(`#${formModuleKeyPi}-sec_${state.focusDept}_@ViewData["Id"]`).addClass("focused");
+        }
+
+        function setupDeptTree() {
+            $(`.${formModuleKeyPi}-dept-tree.dept-node`).off("click.tree").on("click.tree", function (event) {
+                if ($(event.target).closest(".dept-subnode").length) return;
+                const key = $(this).data("key");
+                state.focusDept = key;
+
+                applyNodeHighlights();
+                applySectionFocusHighlight();
+                applyEditLock();
+                updateHints();
+                scrollToDept(formModuleKeyPi, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
+                setSectionCollapsed(state.focusDept, false);
+            });
+            bindDeptTreeScrollSpy(formModuleKeyPi, "@ViewData["Id"]");
+        }
+
+        function layoutTreeLine() {
+            const $stack = $(`#${PolicyIssuanceIdManager.treeStack(@ViewData["Id"])}`);
+            const $nodes = $stack.find(".dept-node");
+            const $line = $(`#${PolicyIssuanceIdManager.treeVLine(@ViewData["Id"])}`);
+            if (!$nodes.length) return;
+
+            const stackRect = $stack[0].getBoundingClientRect();
+            const first = $nodes[0].getBoundingClientRect();
+            const last = $nodes[$nodes.length - 1].getBoundingClientRect();
+
+            const topInside = (first.top - stackRect.top) + (first.height / 2);
+            const bottomInside = (last.top - stackRect.top) + (last.height / 2);
+
+            $line.css({ top: `${topInside}px`, height: `${bottomInside - topInside}px` });
+        }
+
+        function setSectionCollapsed(dept, collapsed) {
+            var $sec = $(`#${formModuleKeyPi}-sec_${dept}_@ViewData["Id"]`);
+            setDeptSectionCollapsed($sec, collapsed);
+        }
+
+        function bindSectionHeaderToggle() {
+            $.each(piDeptModuleCode, function(deptIndex, dept) {
+                var $sec = $(`#${formModuleKeyPi}-sec_${dept}_@ViewData["Id"]`);
+                if (!$sec.length) return;
+
+                $sec.find(".dept-header").off("click.sec").on("click.sec", function (e) {
+                    if ($(e.target).closest("a,button,.dx-button").length) return;
+                    var isCollapsed = $sec.hasClass("collapsed");
+                    setSectionCollapsed(dept, !isCollapsed);
+                });
+
+                $(`#${window.PolicyIssuanceIdManager.expandCollapsedBtn(dept, @ViewData["Id"])}`).dxButton({
+                     onClick: function () {
+                          var isCollapsed = $sec.hasClass("collapsed");
+                          setSectionCollapsed(dept, !isCollapsed);
+
+                     }
+                });
+            });
+        }
+
+        const HoverAjax = (function () {
+            function debounce(fn, wait) {
+                let t = null;
+                return function (...args) {
+                    clearTimeout(t);
+                    t = setTimeout(() => fn.apply(this, args), wait);
+                };
+            }
+
+
+            const loadAuditLogs = debounce(function (quoteNo, quoteId) {
+                document.documentElement.style.setProperty("--rightdock-width", "20%");
+                $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
+                $("#rightCommentList").html(`<div style="color:var(--c-6b7280);font-size:12px;padding:6px 4px;">Loading…</div>`);
+                const q = `OnSystem`;
+                $.ajax({
+                    url: `/api/CommentLog/ExecuteCustomQuery?refField=RecordGuid&refKey=${encodeURIComponent(state.selectedGuid)},${encodeURIComponent(copyFromGuid)}&refOperator=in`,
+                    method: "POST",
+                    async: true,
+                    contentType: "application/json",
+                    data: JSON.stringify(q),
+                    success: function (data) { $("#rightCommentList").html(window.renderAuditLogs(data)); },
+                    error: function () {
+                        $("#rightCommentList").html(`<div style="color:var(--c-ef4444);font-size:12px;font-weight:700;padding:6px 4px;">Failed to load audit logs</div>`);
+                    }
+                });
+            }, 180);
+            const attachmentLogLoad = debounce(function (quoteNo, quoteId, attachmentId) {
+                document.documentElement.style.setProperty("--rightdock-width", "70%");
+                $("#rightCommentSub").text(`Attachment log - ${quoteNo}`);
+                var guid = "@(ViewData["CopyFromGuid"])";
+                $.ajax({
+                    url: `/api/Document/GetByKey?recordGuid=${guid}`,
+                    method: "GET",
+                    success: function (data) {
+                        const mappedData = data.map(x => {
+                            let dept = "";
+                            try {
+                                if (x.attributes) {
+                                    const attr = tryParseJSON(x.attributes, "Attribute Problem");
+                                    dept = attr.Department || "";
+                                }
+                            } catch (e) {
+                                console.warn("Invalid attributes JSON", x.attributes);
+                            }
+
+                            return {
+                                ...x,
+                                department: dept
+                            };
+                        });
+                        const $preview = $("#rightDockItem");
+
+
+                        // tạo container grid
+                        const $grid = $("<div>").appendTo($preview);
+
+                        $grid.dxDataGrid({
+                            dataSource: mappedData,
+                            keyExpr: "id",
+
+                            //hoặc
+
+                            height: "95%",
+                            scrolling: {
+                                mode: "infinity" // hoặc "virtual"
+                            },
+
+
+                            filterBuilder: { fields: this.columns },
+                            filterBuilderPopup: { position: { of: window, at: "top", my: "top", offset: { y: 10 } }, },
+                            errorRowEnabled: true,
+                            hoverStateEnabled: true,
+                            allowColumnReordering: true,
+                            allowColumnResizing: true,
+                            columnResizingMode: 'widget',
+                            columnHidingEnabled: false,
+                            columnAutoWidth: true,
+                            showColumnLines: true,
+                            // columnChooser: { allowSearch: true, enabled: true },
+                            // columnFixing: { enabled: true },
+                            sorting: { mode: 'multiple' },
+                            showBorders: true,
+                            filterRow: { visible: true },
+                            loadPanel: { showPane: false, text: null },
+                            filterPanel: { visible: true },
+                            groupPanel: { visible: true, allowColumnDragging: true, emptyPanelText: "" },
+                            headerFilter: { visible: true, allowSearch: true },
+                            sorting: {
+                                mode: "single"
+                            },
+
+                            columns: [
+                                {
+                                    dataField: "fileName",
+                                    caption: "Attachment",
+                                    cellTemplate: function (container, options) {
+                                        const $item = createAttachmentItem(options.data);
+                                        $item.css({
+                                            opacity: 1,
+                                            transform: "none",
+                                            transition: "none"
+                                        });
+                                        $(container).append($item);
+                                    }
+
+                                },
+                                {
+                                    dataField: "department",
+                                    caption: "Department",
+                                    width: 150
+                                }, ,
+                                {
+                                    dataField: "author",
+                                    caption: "Author",
+                                    width: 150
+                                },
+                                {
+                                    dataField: "date",
+                                    caption: "Date",
+                                    dataType: "datetime",
+                                    format: "dd/MM/yyyy HH:mm",
+                                    sortOrder: "desc" // ✅ SORT TĂNG DẦN
+                                }
+                            ]
+                        });
+                    },
+                    error: function () {
+                    }
+                });
+
+
+            }, 180);
+
+            const loadReferenceFields = debounce(function (quoteNo, quoteId) {
+                document.documentElement.style.setProperty("--rightdock-width", "20%");
+                $("#rightCommentSub").text(`Common fields - ${quoteNo}`);
+                var _formConfig = new MFormOption();
+                _formConfig.originModelName = "PolicyIssuance";
+                _formConfig.formElementName = "PolicyIssuance";
+                _formConfig.colCount = 1;
+                _formConfig.container = $(`<div id="form_PolicyIssuance_${quoteId}" style="padding: 10px">`);
+                var form = new ReferencePolicyIssuanceForm(quoteId, null, _formConfig, _formConfig);
+                form.container.appendTo($("#rightCommentList"));
+            }, 180);
+
+            const previewPolicyIssuance = debounce(function (quoteNo, quoteId, attachmentId) {
+                document.documentElement.style.setProperty("--rightdock-width", "70%");
+                $("#rightCommentSub").text(`Preview policyIssuance - ${quoteNo}`);
+                $("<iframe>")
+                    .attr("id", `${formModuleKeyPi}-pdfViewer_${quoteId}`)
+                    .attr("src", "")
+                    .css({ width: "100%", height: "600px", border: "1px solid var(--c-cccccc)" })
+                    .appendTo($("#rightCommentList"));
+
+                $.ajax({
+                    url: `/api/Utility/GetPdfFile/${attachmentId}`,
+                    method: "GET",
+                    xhrFields: { responseType: "blob" },
+                    success: function (blob) {
+                        const fileURL = URL.createObjectURL(blob);
+                        $(`#${formModuleKeyPi}-pdfViewer_${quoteId}`).attr("src", fileURL);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error loading PDF:", error);
+                    }
+                });
+            }, 180);
+
+            function openRightCommentPanel() {
+                const $dock = $("#rightCommentDock");
+                commentPanelOpened = true;
+                document.body.classList.add("hasRightPanel");
+                $dock.removeClass("is-closing").addClass("is-open");
+                $("#rightCommentList").empty();
+            }
+
+            function closeRightCommentPanel() {
+                const $dock = $("#rightCommentDock");
+                commentPanelOpened = false;
+                document.body.classList.remove("hasRightPanel");
+                $dock.removeClass("is-open").addClass("is-closing");
+
+                setTimeout(() => {
+                    $dock.removeClass("is-closing");
+                }, 300);
+            }
+
+            function bind() {
+                $("#headerWidgetsPanel").empty();
+
+                $(`<div id="${formModuleKeyPi}-btnToggleReferenceFieldsMini">`).dxButton({
+                    icon: "fas fa-sliders-h",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        openRightCommentPanel();
+                        loadReferenceFields(state.selectedCodeNo, state.selectedId);
+                    }
+                }).appendTo($("#headerWidgetsPanel"));
+
+                $(`<div id="${formModuleKeyPi}-btnToggleCommentMini" style="margin-left: 10px">`).dxButton({
+                    icon: "comment",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        openRightCommentPanel();
+                        loadAuditLogs(state.selectedCodeNo, state.selectedId);
+                    }
+                }).appendTo($("#headerWidgetsPanel"));
+
+                $(`#${window.PolicyIssuanceIdManager.btnToggleComment(@ViewData["Id"])}`).dxButton({
+                    text: "Audit log",
+                    icon: "comment",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        clearContent();
+                        if (!commentPanelOpened) {
+                            openRightCommentPanel();
+                            loadAuditLogs(state.selectedCodeNo, state.selectedId);
+                        } else {
+                            closeRightCommentPanel();
+                        }
+                    }
+                });
+
+
+                $(`#${window.PolicyIssuanceIdManager.btnAttachmentLog(@ViewData["Id"])}`).dxButton({
+                    text: "Attachment log",
+                    icon: "fas fa-paperclip",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        clearContent();
+                        if (!commentPanelOpened) {
+                            openRightCommentPanel();
+                            attachmentLogLoad(state.selectedCodeNo, state.selectedId, selectedAttachmentId);
+                        } else {
+                            closeRightCommentPanel();
+                        }
+                    }
+                });
+
+
+                $(`#${formModuleKeyPi}-btnCollapseAllTab`).dxButton({
+                    text: "Collapse All Sections",
+                    type: "normal",
+                    stylingMode: "contained",
+                    onClick: () => {
+                        $.each(piDeptModuleCode, function (itemIndex, item) {
+                            setSectionCollapsed(item, true);
+                        });
+                    }
+                });
+
+                    $(`#${window.PolicyIssuanceIdManager.btnToggleComment(@ViewData["Id"])}`).dxButton({
+        text: "Audit logs",
+        icon: "comment",
+        type: "normal",
+        stylingMode: "contained",
+        onClick: () => {
+            if (!commentPanelOpened) {
+                openRightCommentPanel();
+                loadAuditLogs(state.selectedCodeNo, state.selectedId);
+            } else {
+                closeRightCommentPanel();
+            }
+        }
+    });
+
+    // $(`#${window.PolicyIssuanceIdManager.btnToggleReferenceFields(@ViewData["Id"])}`).dxButton({
+    //     text: "Common fields",
+    //     icon: "fas fa-sliders-h",
+    //     type: "normal",
+    //     stylingMode: "contained",
+    //     onClick: () => {
+    //         if (!commentPanelOpened) {
+    //             openRightCommentPanel();
+    //             loadReferenceFields(state.selectedCodeNo, state.selectedId);
+    //         } else {
+    //             closeRightCommentPanel();
+    //         }
+    //     }
+    // });
+
+    $(`#${window.PolicyIssuanceIdManager.btnPreview(@ViewData["Id"])}`).dxButton({
+        text: "Preview",
+        icon: "fas fa-eye",
+        type: "normal",
+        stylingMode: "contained",
+        onClick: () => {
+            if (!commentPanelOpened) {
+                openRightCommentPanel();
+                previewPolicyIssuance(state.selectedCodeNo, state.selectedId, state.selectedAttachmentId);
+            } else {
+                closeRightCommentPanel();
+            }
+        }
+    });
+
+    var toggleHideWorkflow = false;
+
+    $(`#${window.PolicyIssuanceIdManager.panelHoverInFlow(@ViewData["Id"])}`).dxButton({
+        text: "Workflow",
+        readOnly: true,
+        type: "normal",
+        stylingMode: "contained",
+        onClick: () => {
+            if (!toggleHideWorkflow) {
+                $(`#${window.PolicyIssuanceIdManager.flowPanel(@ViewData["Id"])}`).empty();
+                $(`#${window.PolicyIssuanceIdManager.flowHistoryPanel(@ViewData["Id"])}`).show();
+                $(`#${window.PolicyIssuanceIdManager.flowPanel(@ViewData["Id"])}`).show();
+                toggleHideWorkflow = true;
+                reloadWorkflow("@(ViewData["Guid"])", @(ViewData["Id"]),state.stageDept, formModuleKeyPi);
+            } else {
+                $(`#${window.PolicyIssuanceIdManager.flowHistoryPanel(@ViewData["Id"])}`).hide();
+                $(`#${window.PolicyIssuanceIdManager.flowPanel(@ViewData["Id"])}`).hide();
+                toggleHideWorkflow = false;
+            }
+        }
+    });
+
+                $("#btnCloseRightComment").off("click").on("click", function () {
+                    closeRightCommentPanel();
+                });
+            }
+
+            return { bind, loadAuditLogs, loadReferenceFields, openRightCommentPanel, closeRightCommentPanel };
+        })();
+
+       function resetOverviewAnimation(prefix) {
+            const $sections = $(`#${window.PolicyIssuanceIdManager.overviewScroll(@ViewData["Id"])} section.dept-section`);
+            $sections.removeClass("visible");
+            $sections.each(function () {
+                const $section = $(this);
+                $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody, .dx-fileuploader, .attachment, .att-preview, .att-list, .att-item")
+                    .addClass("animate-step")
+                    .removeClass("visible");
+                // $(`#${prefix}-treeStack .dept-node[data-key='${$section.attr('id').replace(prefix + '-sec', '')}'] .dept-callout`)
+                //     .addClass("animate-step")
+                //     .removeClass("visible");
+            });
+        }
+
+        function animateOverviewSections() {
+            const sequence = policyIssuanceDepartmentOrder;
+            sequence.forEach((dept, idx) => {
+                const sectionId = `#${formModuleKeyPi}-sec_${dept}_@ViewData["Id"]`;
+                const $section = $(sectionId);
+                if (!$section.length) return;
+
+                setTimeout(() => {
+                    $section.addClass("visible");
+
+                    const $assigneeCallout = $(`#${formModuleKeyPi}-treeStack .dept-node[data-key='${dept}'] .dept-callout`);
+                    $assigneeCallout.addClass("animate-step");
+                    setTimeout(() => {
+                        $assigneeCallout.addClass("visible");
+                    }, 100);
+
+                    const $fields = $section.find(".dept-header, .dept-upperbody, .dept-body, .dept-lowerbody");
+                    setTimeout(() => {
+                        $fields.addClass("visible");
+                    }, 220);
+
+                    const $attachments = $section.find(".dx-fileuploader, .attachment, .att-preview, .att-list, .att-item");
+                    setTimeout(() => {
+                        $attachments.addClass("animate-step visible");
+                    }, 360);
+                }, idx * 180);
+            });
+            resetOverviewAnimation(prefix);
+        }
+
+        async function renderDetail() {
+            var q = getSelectedModel();
+            if (!q) return;
+            window.updateOverviewMaintenanceInfo?.(formModuleKeyPi, @ViewData["Id"], q);
+            await policyIssuanceFormStages.enter("shell");
+            // resetOverviewAnimation();
+
+            $(`#${formModuleKeyPi}-recordNo`).text(q.policyIssuanceCode);
+             workflowStatus = q.workflowStatus ?? q.status;
+
+
+
+
+            const ensureActiveRemarkEditor = function () {
+                if (!stageDept || !window.PolicyIssuanceIdManager.validateDepartment(stageDept)) return null;
+
+                const actionBarId = window.PolicyIssuanceIdManager.actionBarDept(stageDept, @ViewData["Id"]);
+                const actionBar = document.getElementById(actionBarId);
+                if (!actionBar) {
+                    console.warn("Active policy issuance action bar was not found.", {
+                        stageDept: stageDept,
+                        actionBarId: actionBarId
+                    });
+                    return null;
+                }
+
+                $(actionBar).closest(".dept-footer").show();
+                $(actionBar).css("display", "block");
+                const editorControl = TinyMCEElementMaker(
+                    ".htmleditor",
+                    stageDept,
+                    @ViewData["Id"],
+                    remarkBoxs?.[stageDept]?.controlRemark,
+                    "pi");
+                remarkBoxs[stageDept] = {
+                    id: q.id,
+                    sectionName: stageDept,
+                    controlRemark: editorControl
+                };
+                return editorControl;
+            };
+
+            $.each(piDeptModuleCode, function (itemIndex, item) {
+                deptData[item] = { ...q, id: q.id, sectionName: item, code: q.policyIssuanceCode };
+                if (stageDept === item) {
+                    ensureActiveRemarkEditor();
+                }
+                else {
+                    $(`#${PolicyIssuanceIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "none" });
+                }
+                
+            });
+
+
+            await policyIssuanceFormStages.enter("formData");
+            await renderDeptForms();
+            applyNodeHighlights();
+            applySectionFocusHighlight();
+            updateHints();
+            updateSectionUpdatedTime(q);
+            await policyIssuanceFormStages.enter("assignment");
+            await renderAssignment(
+                formModuleKeyPi,
+                deptData,
+                policyAssignmentLifecycle,
+                firstRender ? FormStageDelay.assignment : FormStageDelay.reloadAssignment
+            );
+            ensureActiveRemarkEditor();
+            scrollToDept(formModuleKeyPi, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
+             var stageDept = q.stageDept;
+                if (workflowStatus === "Issued" || workflowStatus === "Canceled") {
+
+                    let icon, colorClass, text;
+
+                    if (workflowStatus === "Issued") {
+                        icon = "✔";
+                        colorClass = "status-success";
+                        text = "Issued";
+                    }  
+                    if (workflowStatus === "Canceled") {
+                        icon = "✖";
+                        colorClass = "status-fail";
+                        text = "Canceled";
+                    }
+
+                    // Tạo node mới
+                    var newNode = `
+
+                        <div class="${formModuleKeyPi}-dept-tree dept-node status" data-key="${workflowStatus}" data-target="#${formModuleKeyPi}-sec-${text}">
+
+                            <div class="dept-callout animate-step visible" data-pic-for="${text}" style="color: var(--c-rgba-17-24-39-0-85);">
+                                <span class="co-icon"></span>
+                                <span class="co-text">${workflowStatus}</span>
+                            </div>
+
+                            <div class="dept-circle ${colorClass}">${icon}</div>
+                        </div>
+                    `;
+
+                    $(`#${formModuleKeyPi}-treeStack_@Convert.ToInt32(ViewData["Id"])`).append(newNode);
+
+                }
+
+            // TinyMCEElementMaker(`.htmleditor`);
+
+            // animateOverviewSections();
+            // var stageDept = q.stageDept;
+            //     if (workflowStatus === "PolicyIssuance confirmed" || workflowStatus === "PolicyIssuance refused") {
+
+            //         let icon, colorClass, text;
+
+            //         if (workflowStatus === "PolicyIssuance confirmed") {
+            //             icon = "✔";
+            //             colorClass = "status-success";
+            //             text = "Confirmed";
+            //         }
+            //         if (workflowStatus === "PolicyIssuance refused") {
+            //             icon = "✖";
+            //             colorClass = "status-fail";
+            //             text = "Refused";
+            //         }
+
+            //         // Tạo node mới
+            //         var newNode = `
+
+            //             <div class="${formModuleKeyPi}-dept-tree dept-node status" data-key="${workflowStatus}" data-target="#${formModuleKeyPi}-sec-${text}">
+
+            //                 <div class="dept-callout animate-step visible" data-pic-for="${text}" style="color: var(--c-rgba-17-24-39-0-85);">
+            //                     <span class="co-icon"></span>
+            //                     <span class="co-text">${workflowStatus}</span>
+            //                 </div>
+
+            //                 <div class="dept-circle ${colorClass}">${icon}</div>
+            //             </div>
+            //         `;
+
+            //         $(`#${formModuleKeyPi}-treeStack_@Convert.ToInt32(ViewData["Id"])`).append(newNode);
+
+            //     }
+        }
+
+        //Select items
+
+        function bindInfiniteScroll() {
+            const $scroller = $(".quote-pane-scroll");
+
+            $scroller.off("scroll.quote").on("scroll.quote", function () {
+                const el = this;
+                const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 120;
+                if (nearBottom) {
+                    loadQuotePage(false);
+                }
+            });
+        }
+
+        function initMainPaneSplitter() {
+            const grid = document.getElementById("mainContentGrid");
+            const splitter = document.getElementById("mainSplitter");
+            if (!grid || !splitter) return;
+
+            const MIN_LEFT = 260;
+            const MAX_LEFT = 520;
+            const COLLAPSED_LEFT = 0;
+            const SPLITTER_W = 10;
+            let isDragging = false;
+
+            function setLeftWidth(px) {
+                const total = grid.clientWidth;
+                const maxAllowed = Math.min(MAX_LEFT, total - 620 - SPLITTER_W);
+                const left = Math.max(MIN_LEFT, Math.min(px, maxAllowed));
+                grid.classList.remove("left-collapsed");
+                grid.style.gridTemplateColumns = `${left}px ${SPLITTER_W}px minmax(620px, 1fr)`;
+            }
+
+            function collapseLeft() {
+                grid.classList.add("left-collapsed");
+                grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
+            }
+
+            function expandLeftDefault() {
+                setLeftWidth(360);
+            }
+
+            splitter.addEventListener("mousedown", function (e) {
+                e.preventDefault();
+                isDragging = true;
+                splitter.classList.add("dragging");
+                document.body.style.cursor = "col-resize";
+                document.body.style.userSelect = "none";
+            });
+
+            window.addEventListener("mousemove", function (e) {
+                if (!isDragging) return;
+                const rect = grid.getBoundingClientRect();
+                const nextLeft = e.clientX - rect.left;
+                setLeftWidth(nextLeft);
+            });
+
+            window.addEventListener("mouseup", function () {
+                if (!isDragging) return;
+                isDragging = false;
+                splitter.classList.remove("dragging");
+                document.body.style.cursor = "";
+                document.body.style.userSelect = "";
+            });
+
+            $("#pi-btnToggleLeftPane").dxButton({
+                icon: "pin",
+                hint: "Thu gọn / mở rộng danh sách policyIssuance",
+                stylingMode: "text",
+                onClick: function () {
+                    if (grid.classList.contains("left-collapsed")) {
+                        expandLeftDefault();
+                    } else {
+                        collapseLeft();
+                    }
+                }
+            });
+
+            window.addEventListener("resize", function () {
+                if (grid.classList.contains("left-collapsed")) {
+                    grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
+                } else {
+                    const first = parseInt((grid.style.gridTemplateColumns || "").split(" ")[0], 10);
+                    if (!isNaN(first)) setLeftWidth(first);
+                }
+            });
+        }
+
+        function debounce(fn, delay) {
+            let t = null;
+            return function (...args) {
+                clearTimeout(t);
+                t = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        // $("#pi-searchBox").dxTextBox({
+        //     placeholder: "Search policyIssuances...",
+        //     stylingMode: "outlined",
+        //     mode: "search",
+        //     onValueChanged: debounce((e) => {
+        //         searchText = e.value || "";
+        //         loadQuotePage(true);
+        //     }, 350)
+        // });
+
+
+        function filterLocalQuotes(keyword) {
+            const t = String(keyword || "").trim().toLowerCase();
+            if (!t) return state.quotes.slice();
+
+            return state.quotes.filter(x =>
+                (x.policyIssuanceCode || "").toLowerCase().includes(t) ||
+                (x.clientName || "").toLowerCase().includes(t) ||
+                (x.productName || "").toLowerCase().includes(t) ||
+                (x.lineName || "").toLowerCase().includes(t) ||
+                String(x.requestNo || "").toLowerCase().includes(t)
+            );
+        }
+
+   
+
+        async function searchQuoteFromServer(keyword) {
+            const token = ++state.searchRequestToken;
+            state.serverSearchMode = true;
+            state.isSearching = true;
+
+
+            try {
+                const params = new URLSearchParams();
+                params.set("skip", 0);
+                params.set("take", 50);
+                if (keyword) params.set("searchText", keyword);
+
+                const data = await $.ajax({
+                    url: `/api/PolicyIssuance/GetAll?${params.toString()}`,
+                    method: "GET",
+                    contentType: "application/json"
+                });
+
+                if (token !== state.searchRequestToken) return;
+
+                state.displayQuotes = Array.isArray(data) ? data : [];
+            } catch (err) {
+                console.error(err);
+            } finally {
+            }
+        }
+
+        function clearSearchMode() {
+            state.isSearching = false;
+            state.serverSearchMode = false;
+            state.displayQuotes = [];
+            state.searchRequestToken++;
+        }
+
+        const triggerServerSearch = debounce(function (keyword) {
+            searchQuoteFromServer(keyword);
+        }, 700);
+
+        $("#pi-searchBox").dxTextBox({
+            placeholder: "Search policyIssuances...",
+            stylingMode: "outlined",
+            mode: "search",
+            onValueChanged: debounce((e) => {
+                state.displayQuotes = [];
+                state.isSearching = false;
+                state.serverSearchMode = false;
+                state.searchRequestToken = 0;
+                searchText = (e.value || "").trim();
+
+                if (!searchText) {
+                    clearSearchMode();
+                    return;
+                }
+
+                state.isSearching = true;
+
+                const localRows = filterLocalQuotes(searchText);
+
+                if (localRows.length > 0) {
+                    state.serverSearchMode = false;
+                    state.displayQuotes = localRows;
+                    // triggerServerSearch(searchText);
+                    state.isSearching = false;
+                } else {
+                    state.displayQuotes = [];
+                    triggerServerSearch(searchText);
+                    state.isSearching = false;
+                }
+            }, 250)
+        });
+
+        // $(`#${formModuleKeyPi}-btnClientConfirm`).dxButton({
+        //     text: "Submit To Policy Issuance",
+        //     icon: "check",
+        //     type: "success",
+        //     onClick: function () {
+        //        var policyIssuanceConvert = state.quotes.find(x => x.id == state.selectedId);
+        //         if (!policyIssuanceConvert) return;
+
+        //         var policyIssuance = new Object();
+        //         policyIssuance = ObjectPopulateKey(policyIssuanceConvert, true, false);
+        //         policyIssuance.RequestDate = new Date();
+        //         policyIssuance.PIC = {
+        //             FO: "",
+        //             TS: "",
+        //             PM: ""
+        //         };
+
+        //         policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
+        //         policyIssuance.StageDept = "FO";
+        //         policyIssuance.PolicyIssuanceStatus = "New";
+        //         policyIssuance.WorkflowStatus = "FO Pending";
+
+        //         ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
+        //             onSuccess: function () {
+        //                 DevExpress.ui.notify("PolicyIssuance submitted!", "info", 1200);
+        //             },
+        //             onError: function () { }
+        //         });
+        //     }
+        // });
+
+        $("#branchOverlay .backdrop").on("click", function () {
+            $("#branchOverlay").hide();
+            $("#branchOverlay .bnode.choice").removeClass("active");
+        });
+
+        HoverAjax.bind();
+
+
+         //SkeletionUI
+           bindSectionHeaderToggle();
+        setupDeptTree();
+
+        // bindInfiniteScroll();
+        // initMainPaneSplitter();
+
+        setTimeout(layoutTreeLine, 0);
+        window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
+
+
+
+        // bindSectionHeaderToggle();
+        // // bindQuoteCardClick();
+        // // bindInfiniteScroll();
+        // setupDeptTree();
+        // // initMainPaneSplitter();
+
+        // setTimeout(layoutTreeLine, 0);
+        // window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
+
+        var initialRenderToken = policyIssuanceRenderGate.begin("Loading policy issuance data…");
+        loadQuotePage(true).then(async (loaded) => {
+            if (!loaded) {
+                policyIssuanceRenderGate.fail(initialRenderToken, "Policy issuance data is unavailable");
+                return;
+            }
+            await loadPIDetail(@ViewData["Id"]);
+            applyNodeHighlights();
+            applySectionFocusHighlight();
+            updateHints();
+            await policyIssuanceRenderGate.complete(initialRenderToken);
+            firstRender = false;
+            await policyIssuanceFormStages.enter("personInCharge");
+            await renderPolicyIssuancePersonInCharge();
+            await loadSelectedWorkflow();
+            invalidateSectionCommentCache(state.selectedGuid);
+            await policyIssuanceFormStages.enter("comments");
+            await loadPolicyIssuanceSectionComments();
+        }).catch(function (err) {
+            console.error("Initial policy issuance render error:", err);
+            policyIssuanceRenderGate.fail(initialRenderToken, "Policy issuance data is unavailable");
+        });
+         }, _delayQuotationsLoadForm);
+</script>

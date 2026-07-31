@@ -621,18 +621,29 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
         foreach (string recipient in recipients)
         {
-            var notification = new Notification
-            {
-                Title = title,
-                Message = message,
-                IsRead = false,
-                Resource = $"{recipient}_{dept}",
-                System = "WM",
-                RecordGuid = policyIssuance.Guid,
-                Type = assignTypeId,
-                ReceivedBy = recipient,
-                Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(policyIssuance))
-            };
+            NotificationTemplate notificationTemplate = new NotificationTemplate();
+            notificationTemplate.Title = title;
+            notificationTemplate.Content = message;
+            //var notification = new Notification
+            //{
+            //    Title = title,
+            //    Message = message,
+            //    IsRead = false,
+            //    Resource = $"{recipient}_{dept}",
+            //    System = "WM",
+            //    RecordGuid = policyIssuance.Guid,
+            //    Type = assignTypeId,
+            //    ReceivedBy = recipient,
+            //    Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(policyIssuance))
+            //};
+
+            Notification notification = new Notification();
+            notification =  ControllerUtil.BuildNotification(policyIssuance
+                , assignTypeId
+                , recipient
+                , notificationTemplate
+                , nameof(AssignTask)
+                );
             await _notificationRepository.InsertData(notification);
             await ControllerHelper.SignalRResponse(
                 _usersSessionRepository,
@@ -774,18 +785,29 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
         foreach (string recipient in recipients)
         {
-            var notification = new Notification
-            {
-                Title = title,
-                Message = message,
-                IsRead = false,
-                Resource = $"{recipient}_{dept}",
-                System = "WM",
-                RecordGuid = policyIssuance.Guid,
-                Type = acceptTypeId,
-                ReceivedBy = recipient,
-                Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(policyIssuance))
-            };
+            NotificationTemplate notificationTemplate = new NotificationTemplate();
+            notificationTemplate.Title = title;
+            notificationTemplate.Content = message;
+            //var notification = new Notification
+            //{
+            //    Title = title,
+            //    Message = message,
+            //    IsRead = false,
+            //    Resource = $"{recipient}_{dept}",
+            //    System = "WM",
+            //    RecordGuid = policyIssuance.Guid,
+            //    Type = acceptTypeId,
+            //    ReceivedBy = recipient,
+            //    Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(policyIssuance))
+            //};
+            Notification notification = new Notification();
+            notification = ControllerUtil.BuildNotification(policyIssuance
+                , acceptTypeId
+                , recipient
+                , notificationTemplate
+                , nameof(AcceptTask)
+                );
+
             await _notificationRepository.InsertData(notification);
             await ControllerHelper.SignalRResponse(
                 _usersSessionRepository,

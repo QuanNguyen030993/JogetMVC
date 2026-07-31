@@ -581,21 +581,22 @@
                             //            startBrowserLoading(100000);
                             //     }}}
                             //     ,
-                        {
-                        widget: 'dxButton',
-                        toolbar: 'bottom',
-                        location: 'after',
+                    //     {
+                    //     widget: 'dxButton',
+                    //     toolbar: 'bottom',
+                    //     location: 'after',
 
-                        options: {
-                            stylingMode: 'contained',
-                            type: 'normal',
-                            text: "Save As Draft",
-                            onClick() {
+                    //     options: {
+                    //         stylingMode: 'contained',
+                    //         type: 'normal',
+                    //         text: "Save As Draft",
+                    //         onClick() {
 
-                                popupInstance.hide();
-                            },
-                        },
-                    }, {
+                    //             popupInstance.hide();
+                    //         },
+                    //     },
+                    // }, 
+                    {
                         widget: 'dxButton',
                         toolbar: 'bottom',
                         location: 'after',
@@ -758,20 +759,21 @@
                             })();
                         },
                     toolbarItems: [
-                    {
-                        widget: 'dxButton',
-                        toolbar: 'bottom',
-                        location: 'after',
-                        options: {
-                            stylingMode: 'contained',
-                            type: 'normal',
-                            text: "Save As Draft",
-                            onClick() {
+                    // {
+                    //     widget: 'dxButton',
+                    //     toolbar: 'bottom',
+                    //     location: 'after',
+                    //     options: {
+                    //         stylingMode: 'contained',
+                    //         type: 'normal',
+                    //         text: "Save As Draft",
+                    //         onClick() {
 
-                                popupInstance.hide();
-                            },
-                        },
-                    }, {
+                    //             popupInstance.hide();
+                    //         },
+                    //     },
+                    // }, 
+                    {
                         widget: 'dxButton',
                         toolbar: 'bottom',
                         location: 'after',
@@ -1188,20 +1190,21 @@
                     })();
                 },
                 toolbarItems: [
-                    {
-                        widget: 'dxButton',
-                        toolbar: 'bottom',
-                        location: 'after',
-                        options: {
-                            stylingMode: 'contained',
-                            type: 'normal',
-                            text: "Save As Draft",
-                            onClick() {
+                    // {
+                    //     widget: 'dxButton',
+                    //     toolbar: 'bottom',
+                    //     location: 'after',
+                    //     options: {
+                    //         stylingMode: 'contained',
+                    //         type: 'normal',
+                    //         text: "Save As Draft",
+                    //         onClick() {
 
-                                popupInstance.hide();
-                            },
-                        },
-                    }, {
+                    //             popupInstance.hide();
+                    //         },
+                    //     },
+                    // }, 
+                    {
                         widget: 'dxButton',
                         toolbar: 'bottom',
                         location: 'after',
@@ -5003,7 +5006,7 @@
                 debugger
                 const ext = String(extension || "").toLowerCase().replace(/^\./, "");
                 const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"];
-                const officeExtensions = ["doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp"];
+                const officeExtensions = ["doc", "docx", "xls", "xlsx","xlsm", "ppt", "pptx", "odt", "ods", "odp"];
                 const textExtensions = ["txt", "log", "md", "csv", "json", "xml", "yaml", "yml", "ini", "config", "sql", "js", "css", "html", "htm"];
 
                 if (imageExtensions.includes(ext)) {
@@ -7769,7 +7772,7 @@
             popup.option("onShown", function () {
                 var metaParts = [];
                 if (options.badge) metaParts.push(`<span class="rich-message-badge">${escapeHtml(options.badge)}</span>`);
-                if (options.author) metaParts.push(`<span><b>From:</b> ${escapeHtml(options.author)}</span>`);
+                if (options.author) metaParts.push(`<span><b>From:</b> ${escapeHtml(options.createdBy)}</span>`);
                 if (options.date) metaParts.push(`<span><b>Date:</b> ${escapeHtml(options.date)}</span>`);
                 $popupHost.find(".rich-message-meta").html(metaParts.join(""));
                 $popupHost.find(".rich-message-document").html(options.html || '<div class="rich-message-empty">No content</div>');
@@ -8951,7 +8954,7 @@
             ext = (ext || "").toLowerCase();
             if (ext === "not found on server") return "!";
             if (ext === "pdf") return "📕";
-            if (ext === "xls" || ext === "xlsx" || ext === "csv") return "📗";
+            if (ext === "xls" || ext === "xlsx" || ext === "xlsm"|| ext === "csv") return "📗";
             if (ext === "doc" || ext === "docx") return "📘";
             if (ext === "ppt" || ext === "pptx") return "📙";
             if (ext === "msg" || ext === "eml") return "✉️";

@@ -683,7 +683,42 @@ namespace ERPCore.Common
             var propertyAccess = Expression.Property(parameter, property.Name);
             return Expression.Lambda<Func<T, object>>(Expression.Convert(propertyAccess, typeof(object)), parameter);
         }
+        public static object GetPropertyValue(object obj, string propertyPath)
+        {
+            if (obj == null)
+                return null;
 
+            // Hỗ trợ nested property: {{Customer.Name}}
+            string[] properties = propertyPath.Split('.');
+
+            object current = obj;
+
+            foreach (var property in properties)
+            {
+                if (current == null)
+                    return null;
+
+                // JObject
+                if (current is JObject jObj)
+                {
+                    current = jObj[property];
+                    continue;
+                }
+
+                PropertyInfo propInfo = current.GetType().GetProperty(
+                property,
+                BindingFlags.Public |
+                BindingFlags.Instance |
+                BindingFlags.IgnoreCase);
+
+                if (propInfo == null)
+                    return null;
+
+                current = propInfo.GetValue(current);
+            }
+
+            return current;
+        }
         public static void HandleSystemAttribute<T>(T entity, string userName, CommandQueryType commandType) where T : class
         {
             //var userName = httpContextAccessor?.HttpContext?.User?.Identity?.Name.Replace("TOKIOMARINE\\","");
@@ -1587,44 +1622,44 @@ namespace ERPCore.Common
             }
             objectIn.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
         }
-      
-        public static Notification MakeNotificationFromEmail(Notification notification, MailQueue mailQueue,dynamic objectIn , WebConfig.IConfiguration configuration,out UrlCall urlCall)
-        {
-            urlCall = new UrlCall();
+      //Comment out 2026-07-31
+        //public static Notification MakeNotificationFromEmail(Notification notification, MailQueue mailQueue,dynamic objectIn , WebConfig.IConfiguration configuration,out UrlCall urlCall)
+        //{
+        //    urlCall = new UrlCall();
             
 
-            urlCall.Folder = "Business";
-            urlCall.Module = "Workflow";
-            urlCall.Controller = "SurveyWorkflow";
-            urlCall.Action = "Index";
-            urlCall.TypeAction = "View";
-            urlCall.Token = "";
-            urlCall.RecordGuidId = objectIn.Guid;
-            urlCall.Params = JsonConvert.SerializeObject(new
-            {
-                url = $"/Business/Form/{objectIn.GetType().Name}_Form/{objectIn.Id}",
-                caption = $"form_{objectIn.GetType().Name}_Form_{objectIn.Id}",
-                name = $"{objectIn.GetType().Name} {objectIn.Code}",
-                data = ""
-            });
-            urlCall.ExpireTime = DateTime.Now.AddDays(2);
-            urlCall.Expired = false;
-            string REDIRECT_MAIN_VIEW = configuration.GetSection("UrlConfig:RedirectMainView").Value;
-            //string redirectMainView = System.IO.Path.Combine(REDIRECT_MAIN_VIEW, typeof(UrlCall).Name, "ReturnView");
-            string redirectMainView = $"{REDIRECT_MAIN_VIEW}{typeof(UrlCall).Name}{"/ReturnView"}";
-            redirectMainView += $"?guid={urlCall.Guid}";
-            notification.IsRead = false;
+        //    urlCall.Folder = "Business";
+        //    urlCall.Module = "Workflow";
+        //    urlCall.Controller = "SurveyWorkflow";
+        //    urlCall.Action = "Index";
+        //    urlCall.TypeAction = "View";
+        //    urlCall.Token = "";
+        //    urlCall.RecordGuidId = objectIn.Guid;
+        //    urlCall.Params = JsonConvert.SerializeObject(new
+        //    {
+        //        url = $"/Business/Form/{objectIn.GetType().Name}_Form/{objectIn.Id}",
+        //        caption = $"form_{objectIn.GetType().Name}_Form_{objectIn.Id}",
+        //        name = $"{objectIn.GetType().Name} {objectIn.Code}",
+        //        data = ""
+        //    });
+        //    urlCall.ExpireTime = DateTime.Now.AddDays(2);
+        //    urlCall.Expired = false;
+        //    string REDIRECT_MAIN_VIEW = configuration.GetSection("UrlConfig:RedirectMainView").Value;
+        //    //string redirectMainView = System.IO.Path.Combine(REDIRECT_MAIN_VIEW, typeof(UrlCall).Name, "ReturnView");
+        //    string redirectMainView = $"{REDIRECT_MAIN_VIEW}{typeof(UrlCall).Name}{"/ReturnView"}";
+        //    redirectMainView += $"?guid={urlCall.Guid}";
+        //    notification.IsRead = false;
 
-            notification.Url = Util.URLObjectMaking(objectIn); //$"/Business/Form/{nameof(Quotation)}_Form/{objectIn.Id}";
-            notification.Resource = $"{objectIn.Resource}";
-            notification.System = "WM";
-            notification.Title = mailQueue.Subject;
-            notification.Message = mailQueue.HtmlBody;
-            notification.ReceivedBy = $"{mailQueue.ToName},{mailQueue.CC}";
-            notification.RecordGuid = objectIn.Guid;
+        //    notification.Url = Util.URLObjectMaking(objectIn); //$"/Business/Form/{nameof(Quotation)}_Form/{objectIn.Id}";
+        //    notification.Resource = $"{objectIn.Resource}";
+        //    notification.System = "WM";
+        //    notification.Title = mailQueue.Subject;
+        //    notification.Message = mailQueue.HtmlBody;
+        //    notification.ReceivedBy = $"{mailQueue.ToName},{mailQueue.CC}";
+        //    notification.RecordGuid = objectIn.Guid;
 
-            return notification;
-        }
+        //    return notification;
+        //}
         public static Dictionary<string, object> MakeQueryIntoDirectory(DataRow row)
         {
             var dictionary = new Dictionary<string, object>();
@@ -3801,7 +3836,17 @@ string? mainTableAlias = null
 
             return result;
         }
-
+        public static string ReplaceDynamicProperties(string template, object data)
+            {
+            if (string.IsNullOrWhiteSpace(template) || data == null)
+            return template;
+            return Regex.Replace(template, @"\{\{(.*?)\}\}", match =>
+            {
+            string propertyPath = match.Groups[1].Value.Trim();
+            object value = GetPropertyValue(data, propertyPath);
+            return value?.ToString() ?? string.Empty;
+            });
+            }
         public static (string ResolvedNodeId, string ResolvedDeptCode) ResolveWorkflowJumps(
             string workflowNodesJson,
             string startNodeId,

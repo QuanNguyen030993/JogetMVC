@@ -1274,10 +1274,10 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
         string contentTemplate = notificationTemplate.Content ?? "";
         string subject = comment;
-        if (contentTemplate.Contains("{{comment}}", StringComparison.OrdinalIgnoreCase))
+        if (contentTemplate.Contains("<comment>", StringComparison.OrdinalIgnoreCase))
         {
             contentTemplate = contentTemplate.Replace(
-                "{{comment}}",
+                "<comment>",
                 comment,
                 StringComparison.OrdinalIgnoreCase);
             subject = MailUtil.BodyContentHandle(contentTemplate, templateData).Trim();
@@ -1318,19 +1318,28 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         {
             NotificationRequest notification = new NotificationRequest();
             Notification Notification = new Notification();
-            Notification.Title = transferObject.Title;
-            Notification.Message = transferObject.Subject;
-            Notification.IsRead = false;
-            Notification.Resource = $"{item}_Flow";
-            Notification.System = "WM";
-            Notification.RecordGuid = transferObject.Guid;
-            Notification.Type = notificationTypeId;
 
-            Notification.ReceivedBy = item;
+            Notification = ControllerUtil.BuildNotification(
+                transferObject,
+                notificationTypeId,
+                item,
+                notificationTemplate,
+                callerName: nameof(SendWorkflowNotificationAsync)
+                );
+
+            //Notification.Title = Util.ReplaceDynamicProperties(transferObject.Title, transferObject) ;
+            //Notification.Message = Util.ReplaceDynamicProperties(transferObject.Subject, transferObject);
+            //Notification.IsRead = false;
+            //Notification.Resource = $"{item}_{transferObject.GetType().Name}";
+            //Notification.System = "WM";
+            //Notification.RecordGuid = transferObject.Guid;
+            //Notification.Type = notificationTypeId;
+            //Notification.Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(transferObject));
+            //Notification.ReceivedBy = item;
+
             notification.Notification = Notification;
             notification.connectionId = item;
             notification.tabPublicUrl = ControllerUtil.NotificationURLObjectMaking(transferObject);
-            Notification.Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(transferObject));
 
             await _notificationRepository.InsertData(Notification);
             await ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
