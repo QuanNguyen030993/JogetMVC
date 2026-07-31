@@ -146,7 +146,6 @@ OPTION (MAXRECURSION 24);";
         // Chuẩn hóa:
         // - cặp đầu tiên refField/refKey => refField/refKey
         // - các cặp sau => điều kiện AND
-        var normalizedParams = Util.NormalizeRefParams(rawRequestParams);
         IDictionary<string, object> dynamicObj = new ExpandoObject();
         foreach (var item in rawRequestParams)
         {
@@ -158,7 +157,7 @@ OPTION (MAXRECURSION 24);";
             {
                 var built = Util.LoadParamsBuildCustomQuery<object>(
                     baseQuery: query == "OnSystem" ? sysTable?.CustomQuery : Query,
-                    loadParams: normalizedParams,
+                    loadParams: Util.NormalizeRefParams(rawRequestParams),
                     defaultOrderBy: "CommentId",
                     defaultOrderDir: "DESC",
                     pkTieBreaker: "CommentId",

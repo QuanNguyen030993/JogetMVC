@@ -268,7 +268,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
             tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(PolicyIssuance) + "Code");
             quotation.PolicyIssuanceCode = await ControllerUtil.GenerateNumberSeqAsync(tableConfig, _formatCodeNoRepository, nameof(PolicyIssuance));
-
+            quotation.RequestDate = DateTime.Now;
 
 
             //After insert quotation

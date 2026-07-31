@@ -1079,7 +1079,7 @@ namespace ERPCore.Controllers.Base
                     {
                         var built = Util.LoadParamsBuildCustomQuery<object>(
                             baseQuery: sysTable.CustomQuery,
-                            loadParams: requestParams,
+                            loadParams: Util.NormalizeRefParams(requestParams),
                             defaultOrderBy: "Id",
                             defaultOrderDir: "DESC",
                             pkTieBreaker: "Id",

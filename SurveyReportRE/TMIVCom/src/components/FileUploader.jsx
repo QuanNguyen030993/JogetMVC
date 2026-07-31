@@ -81,28 +81,28 @@ const FileUploader = forwardRef(({
         return combine;
     };
 
-    const fetchAttachments = async () => {
-        if (!guid) return;
-        const combine = getFolderCombine();
-        let queryUrl = `/api/${controllerName}/GetByKey?recordGuid=${guid}&folder=${encodeURIComponent(combine)}`;
-        if (baseOnAttributes) {
-            queryUrl += "&isOutOfRule=true";
-        }
+    // const fetchAttachments = async () => {
+    //     if (!guid) return;
+    //     const combine = getFolderCombine();
+    //     let queryUrl = `/api/${controllerName}/GetByKey?recordGuid=${guid}&folder=${encodeURIComponent(combine)}`;
+    //     if (baseOnAttributes) {
+    //         queryUrl += "&isOutOfRule=true";
+    //     }
         
-        try {
-            const response = await fetch(queryUrl);
-            if (response.ok) {
-                const data = await response.json();
-                setFilesList(data || []);
-                onChange?.(data || []);
-            }
-        } catch (error) {
-            console.error("Failed to fetch attachments:", error);
-        }
-    };
+    //     try {
+    //         const response = await fetch(queryUrl);
+    //         if (response.ok) {
+    //             const data = await response.json();
+    //             setFilesList(data || []);
+    //             onChange?.(data || []);
+    //         }
+    //     } catch (error) {
+    //         console.error("Failed to fetch attachments:", error);
+    //     }
+    // };
 
     useEffect(() => {
-        fetchAttachments();
+        // fetchAttachments();
     }, [guid, getFolderCombine(), controllerName]);
 
     // Handle Upload AJAX action
@@ -166,13 +166,13 @@ const FileUploader = forwardRef(({
 
             setIsUploading(false);
             setUploadProgress(100);
-            safeNotify("Tải tệp đính kèm thành công! ✅", "success");
-            fetchAttachments();
+            safeNotify("Uploaded attachment successfully! ✅", "success");
+            // fetchAttachments();
             onUploaded?.();
         } catch (error) {
             console.error("Upload error:", error);
             setIsUploading(false);
-            safeNotify("Tải tệp thất bại. Vui lòng thử lại! ❌", "error");
+            safeNotify("Fail to upload attachment, please try again! ❌", "error");
         }
     };
 
@@ -241,7 +241,7 @@ const FileUploader = forwardRef(({
         const id = item.id || item.Id || item.attachmentId;
         if (!id) return;
         
-        if (!window.confirm("Bạn có chắc chắn muốn xóa tệp này không?")) {
+        if (!window.confirm("Are you sure to delete this file?")) {
             return;
         }
 
@@ -250,15 +250,15 @@ const FileUploader = forwardRef(({
                 method: "GET"
             });
             if (response.ok) {
-                safeNotify("Đã xóa tệp thành công! 🗑️", "success");
-                fetchAttachments();
+                safeNotify("Deleted attachment successfully! 🗑️", "success");
+                // fetchAttachments();
                 onDeleted?.(item);
             } else {
                 throw new Error("Deletion failed");
             }
         } catch (error) {
             console.error("Delete error:", error);
-            safeNotify("Xóa tệp thất bại!", "error");
+            safeNotify("Fail to delete attachment!", "error");
         }
     };
 
@@ -289,7 +289,7 @@ const FileUploader = forwardRef(({
             return filesList;
         },
         refresh() {
-            fetchAttachments();
+            // fetchAttachments();
         }
     }));
 
@@ -331,7 +331,7 @@ const FileUploader = forwardRef(({
                 </span>
             </div>
 
-            <div className="att-preview" style={{ marginTop: "10px" }}>
+            {/* <div className="att-preview" style={{ marginTop: "10px" }}>
                 {filesList.length === 0 ? (
                     <div style={{ opacity: 0.7, padding: "6px 2px" }}>No attachments</div>
                 ) : (
@@ -409,7 +409,7 @@ const FileUploader = forwardRef(({
                         );
                     })
                 )}
-            </div>
+            </div> */}
         </div>
     );
 });

@@ -1907,6 +1907,11 @@ VALUES
                 {
                     return dateValue;
                 }
+                Guid guid = Guid.Empty;
+                if (Guid.TryParse(s, out guid))
+                {
+                    return guid;
+                }
                 // datetime (optional)
                 if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime dt))
                 { 
@@ -2645,22 +2650,7 @@ VALUES
             // Ví dụ receivedBy=quan.nh
             //// =========================
 
-            //var combineParams = new Dictionary<string, string>();
-            //for (int i = 1; i <= 20; i++)
-            //{
-            //    var fieldKey = i == 1 ? "refField" : $"refField{i}";
-            //    var valueKey = i == 1 ? "refKey" : $"refKey{i}";
-
-            //    if (
-            //        allParams.TryGetValue(fieldKey, out var fieldName) &&
-            //        allParams.TryGetValue(valueKey, out var fieldValue) &&
-            //        !string.IsNullOrWhiteSpace(fieldName)
-            //    )
-            //    {
-            //        combineParams[fieldName] = fieldValue;
-            //    }
-            //}
-
+            
             var combineParams = new List<RefFilter>();
 
             for (int i = 1; i <= 20; i++)
@@ -2710,7 +2700,10 @@ VALUES
                         sql.Append($"{BuildColumnSql(actualColumn)} {op} {pName}");
                         parameters[pName] = item.Value;
                         break;
+                    case "in":
 
+
+                        break;
                     case "contains":
                         sql.Append($"{BuildColumnSql(actualColumn)} LIKE '%' + {pName} + '%'");
                         parameters[pName] = item.Value;
@@ -3034,7 +3027,7 @@ VALUES
         }
         public static SqlQueryBuildResult LoadParamsBuildCustomQuery<T>(
 string baseQuery,
-List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> loadParams,
+Dictionary<string, (string value, string operators)> loadParams,
 string defaultOrderBy = "Id",
 string defaultOrderDir = "DESC",
 int maxTake = 200,
@@ -3043,6 +3036,9 @@ string? pkTieBreaker = "Id",
 HashSet<string>? allowedColumns = null,
 string? mainTableAlias = null
 )
+
+
+
         {
             if (string.IsNullOrWhiteSpace(baseQuery))
                 throw new ArgumentException("baseQuery is required.");
@@ -3097,11 +3093,16 @@ string? mainTableAlias = null
             {
                 return dict.TryGetValue(key, out var value) ? value : null;
             }
-            var allParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            (string value, string operators)? GetTuple(Dictionary<string, (string value, string operators)> dict, string key)
+            {
+                return dict.TryGetValue(key, out var value) ? value : null;
+            }
+            var allParams = new Dictionary<string, (string value, string operators)>(StringComparer.OrdinalIgnoreCase);
 
             if (loadParams != null)
             {
-                var dict = loadParams.ToDictionary(x => x.Key, x => x.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+                var dict = loadParams.ToDictionary(x => x.Key, x => (x.Value.value.ToString(), x.Value.operators.ToString()), StringComparer.OrdinalIgnoreCase);
 
                 bool hasRefPair = dict.Keys.Any(k => k.StartsWith("refField", StringComparison.OrdinalIgnoreCase));
 
@@ -3128,14 +3129,19 @@ string? mainTableAlias = null
                 {
                     var fieldKey = "refField" + suffix;
                     var valueKey = "refKey" + suffix;
+                    var opKey = "refOperator" + suffix;
+
 
                     if (!dict.TryGetValue(fieldKey, out var field)) continue;
                     if (!dict.TryGetValue(valueKey, out var value)) continue;
 
-                    if (string.IsNullOrWhiteSpace(field) || string.IsNullOrWhiteSpace(value))
+                    if (string.IsNullOrWhiteSpace(field.Item1) || string.IsNullOrWhiteSpace(value.Item1))
                         continue;
 
-                    allParams[field] = value;
+                    allParams[field.Item1] = (value.Item1, value.Item2);
+
+
+                   
                 }
 
                 // =========================
@@ -3151,20 +3157,21 @@ string? mainTableAlias = null
 
                     // nếu có refField thì bỏ key
                     if (hasRefPair && string.Equals(key, "key", StringComparison.OrdinalIgnoreCase))
-                    { allParams["key"] = kv.Value;  continue; }
+                    { allParams["key"] = (kv.Value.Item1, kv.Value.Item2);  continue; }
 
-                    allParams[key] = kv.Value;
+                    allParams[key] = (kv.Value.Item1, kv.Value.Item2);
                 }
             }
 
-            int skip = ParseInt(Get(allParams, "skip"), 0);
-            int take = ParseInt(Get(allParams, "take"), ParseInt(Get(allParams, "pageSize"), 50));
+            int skip = ParseInt(GetTuple(allParams, "skip") != null ? GetTuple(allParams, "skip").Value.value : "0", 0);
+            int take = ParseInt(GetTuple(allParams, "take") != null ? GetTuple(allParams, "take").Value.value : "0",
+                       ParseInt(GetTuple(allParams, "pageSize") != null ?  GetTuple(allParams, "pageSize").Value.value : "0", 50));
 
             skip = Math.Max(skip, 0);
             take = Math.Clamp(take, 1, maxTake);
 
-            var mode = Get(allParams, "mode");
-            var pagingFlag = Get(allParams, "paging");
+            var mode = GetTuple(allParams, "mode") != null  ? GetTuple(allParams, "mode").Value.value : "";
+            var pagingFlag = GetTuple(allParams, "paging") != null ? GetTuple(allParams, "paging").Value.value : "";
 
             bool paging =
                 string.Equals(mode, "page", StringComparison.OrdinalIgnoreCase)
@@ -3282,7 +3289,7 @@ string? mainTableAlias = null
             }
 
             // DevExtreme filter
-            var filterJson = Get(allParams, "filter");
+            var filterJson = GetTuple(allParams, "filter") != null ? GetTuple(allParams, "filter") .Value.value : "";
             if (!string.IsNullOrWhiteSpace(filterJson))
             {
                 try
@@ -3425,8 +3432,8 @@ string? mainTableAlias = null
             foreach (var kv in allParams)
             {
                 var key = kv.Key;
-                var value = kv.Value;
-
+                var value = kv.Value.value;
+                var operators = kv.Value.operators;
                 if (reservedKeys.Contains(key)) continue;
                 if (string.IsNullOrWhiteSpace(value)) continue;
 
@@ -3437,21 +3444,87 @@ string? mainTableAlias = null
                 if (!safeColumns.Contains(actualColumn)) continue;
 
                 var pName = "@p" + (++pIndex);
-
                 sql.Append(" AND ");
-                sql.Append(BuildColumnSql(actualColumn));
-                sql.Append(" = ");
-                sql.Append(pName);
+                switch (operators)
+                {
+                    case "=":
+                    case "<>":
+                    case ">":
+                    case "<":
+                    case ">=":
+                    case "<=":
+                        sql.Append($"{BuildColumnSql(actualColumn)} = '%' + {pName} + '%'");
+                        parameters[pName] = value;
+                        break;
+                    case "in":
+                        {
+                            var values = value?.ToString()?
+                                .Split(
+                                    ',',
+                                    StringSplitOptions.RemoveEmptyEntries |
+                                    StringSplitOptions.TrimEntries)
+                                .Select(x => NormalizeToDbValue(x))
+                                .ToList()
+                                ?? [];
+
+                            if (values.Count == 0)
+                            {
+                                sql.Append("1 = 0");
+                                break;
+                            }
+
+                            var inParams = new List<string>();
+
+                            for (var i = 0; i < values.Count; i++)
+                            {
+                                var paramName = $"{pName}_{i}";
+
+                                inParams.Add($"{paramName}");
+                                parameters[paramName] = values[i];
+                            }
+
+                            sql.Append(
+                                $"{BuildColumnSql(actualColumn)} IN ({string.Join(",", inParams)})"
+                            );
+
+                            break;
+                        }
+                    case "contains":
+                        sql.Append($"{BuildColumnSql(actualColumn)} LIKE '%' + {pName} + '%'");
+                        parameters[pName] = value;
+                        break;
+
+                    case "notcontains":
+                        sql.Append($"{BuildColumnSql(actualColumn)} NOT LIKE '%' + {pName} + '%'");
+                        parameters[pName] = value;
+                        break;
+
+                    case "startswith":
+                        sql.Append($"{BuildColumnSql(actualColumn)} = '{pName}'");
+                        parameters[pName] = value;
+                        break;
+
+                    case "endswith":
+                        sql.Append($"{BuildColumnSql(actualColumn)} = '{pName}'");
+                        parameters[pName] = value;
+                        break;
+
+                    default:
+                        // fallback
+                        sql.Append($"{BuildColumnSql(actualColumn)} = {pName}");
+                        parameters[pName] = value;
+                        break;
+                }
                 sql.AppendLine();
 
-                parameters[pName] = value;
+                
             }
 
 
             // ORDER BY
             string? orderBySql = null;
 
-            var sortJson = Get(allParams, "sort");
+            var sortJson = GetTuple(allParams, "sort") != null ? GetTuple(allParams, "sort").Value.value : "";
             if (!string.IsNullOrWhiteSpace(sortJson))
             {
                 try
@@ -3494,8 +3567,8 @@ string? mainTableAlias = null
 
             if (string.IsNullOrWhiteSpace(orderBySql))
             {
-                string? requestedOrderBy = Get(allParams, "orderBy");
-                string? requestedOrderDir = Get(allParams, "orderDir");
+                string? requestedOrderBy = GetTuple(allParams, "orderBy") != null ? GetTuple(allParams, "orderBy").Value.value : "";
+                string? requestedOrderDir = GetTuple(allParams, "orderDir") != null ? GetTuple(allParams, "orderDir").Value.value : "";
 
                 if (!string.IsNullOrWhiteSpace(requestedOrderBy))
                 {
@@ -3569,13 +3642,93 @@ string? mainTableAlias = null
                 Parameters = parameters
             };
         }
-        public static List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>>
-NormalizeRefParams(
-    List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> requestParams,
-    string? pkTieBreaker = "Id")
+        //        public static List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>>
+        //NormalizeRefParams(
+        //    List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> requestParams,
+        //    string? pkTieBreaker = "Id")
+        //        {
+        //            var result = new List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>>();
+        //            if (requestParams == null || requestParams.Count == 0) return result;
+
+        //            var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        //            foreach (var kv in requestParams)
+        //            {
+        //                dict[kv.Key] = kv.Value.ToString();
+        //            }
+
+        //            // Giữ lại các param thường như skip/take/filter/sort...
+        //            foreach (var kv in requestParams)
+        //            {
+        //                var key = kv.Key ?? "";
+        //                if (!key.StartsWith("refField", StringComparison.OrdinalIgnoreCase) &&
+        //                    !key.StartsWith("refKey", StringComparison.OrdinalIgnoreCase))
+        //                {
+        //                    result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(
+        //                        kv.Key,
+        //                        kv.Value
+        //                    ));
+        //                }
+        //            }
+
+        //            // Cặp đầu tiên: refField + refKey
+        //            // Cặp sau: refField2/refKey2, refField3/refKey3...
+        //            var indexes = new List<string> { "" };
+
+        //            foreach (var key in dict.Keys)
+        //            {
+        //                if (key.StartsWith("refField", StringComparison.OrdinalIgnoreCase))
+        //                {
+        //                    var suffix = key.Substring("refField".Length); // "", "2", "3"...
+        //                    if (!indexes.Contains(suffix, StringComparer.OrdinalIgnoreCase))
+        //                        indexes.Add(suffix);
+        //                }
+        //            }
+
+        //            // sort: "" trước, rồi 2,3,4...
+        //            indexes = indexes
+        //                .Distinct(StringComparer.OrdinalIgnoreCase)
+        //                .OrderBy(x => string.IsNullOrEmpty(x) ? 0 : int.TryParse(x, out var n) ? n : int.MaxValue)
+        //                .ToList();
+
+        //            foreach (var suffix in indexes)
+        //            {
+        //                var refFieldKey = "refField" + suffix;
+        //                var refValueKey = "refKey" + suffix;
+
+        //                if (!dict.TryGetValue(refFieldKey, out var field)) continue;
+        //                if (!dict.TryGetValue(refValueKey, out var value)) continue;
+
+        //                field = field?.Trim();
+        //                value = value?.Trim();
+
+        //                if (string.IsNullOrWhiteSpace(field) || string.IsNullOrWhiteSpace(value))
+        //                    continue;
+
+        //                // optional: nếu muốn refField=key thì map qua pkTieBreaker
+        //                if (string.Equals(field, "key", StringComparison.OrdinalIgnoreCase) &&
+        //                    !string.IsNullOrWhiteSpace(pkTieBreaker))
+        //                {
+        //                    field = pkTieBreaker;
+        //                }
+
+        //                result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(
+        //                    field,
+        //                    value
+        //                ));
+        //            }
+
+        //            return result;
+        //        }
+        public static Dictionary<string, (string value, string operators)> NormalizeRefParams(
+            List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> requestParams,
+            string? pkTieBreaker = "Id")
         {
-            var result = new List<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>>();
-            if (requestParams == null || requestParams.Count == 0) return result;
+            var result = new Dictionary<string, (string value, string operators)>(
+                StringComparer.OrdinalIgnoreCase);
+
+            if (requestParams == null || requestParams.Count == 0)
+                return result;
 
             var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -3584,65 +3737,66 @@ NormalizeRefParams(
                 dict[kv.Key] = kv.Value.ToString();
             }
 
-            // Giữ lại các param thường như skip/take/filter/sort...
-            foreach (var kv in requestParams)
-            {
-                var key = kv.Key ?? "";
-                if (!key.StartsWith("refField", StringComparison.OrdinalIgnoreCase) &&
-                    !key.StartsWith("refKey", StringComparison.OrdinalIgnoreCase))
-                {
-                    result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(
-                        kv.Key,
-                        kv.Value
-                    ));
-                }
-            }
-
-            // Cặp đầu tiên: refField + refKey
-            // Cặp sau: refField2/refKey2, refField3/refKey3...
             var indexes = new List<string> { "" };
 
             foreach (var key in dict.Keys)
             {
                 if (key.StartsWith("refField", StringComparison.OrdinalIgnoreCase))
                 {
-                    var suffix = key.Substring("refField".Length); // "", "2", "3"...
+                    var suffix = key.Substring("refField".Length);
+
                     if (!indexes.Contains(suffix, StringComparer.OrdinalIgnoreCase))
+                    {
                         indexes.Add(suffix);
+                    }
                 }
             }
 
-            // sort: "" trước, rồi 2,3,4...
             indexes = indexes
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(x => string.IsNullOrEmpty(x) ? 0 : int.TryParse(x, out var n) ? n : int.MaxValue)
+                .OrderBy(x =>
+                    string.IsNullOrEmpty(x)
+                        ? 0
+                        : int.TryParse(x, out var n)
+                            ? n
+                            : int.MaxValue)
                 .ToList();
 
             foreach (var suffix in indexes)
             {
-                var refFieldKey = "refField" + suffix;
-                var refValueKey = "refKey" + suffix;
+                var refFieldKey = $"refField{suffix}";
+                var refValueKey = $"refKey{suffix}";
+                var refOperatorKey = $"refOperator{suffix}";
 
-                if (!dict.TryGetValue(refFieldKey, out var field)) continue;
-                if (!dict.TryGetValue(refValueKey, out var value)) continue;
+                if (!dict.TryGetValue(refFieldKey, out var field))
+                    continue;
+
+                if (!dict.TryGetValue(refValueKey, out var value))
+                    continue;
 
                 field = field?.Trim();
                 value = value?.Trim();
 
-                if (string.IsNullOrWhiteSpace(field) || string.IsNullOrWhiteSpace(value))
+                if (string.IsNullOrWhiteSpace(field) ||
+                    string.IsNullOrWhiteSpace(value))
+                {
                     continue;
+                }
 
-                // optional: nếu muốn refField=key thì map qua pkTieBreaker
                 if (string.Equals(field, "key", StringComparison.OrdinalIgnoreCase) &&
                     !string.IsNullOrWhiteSpace(pkTieBreaker))
                 {
                     field = pkTieBreaker;
                 }
 
-                result.Add(new KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>(
-                    field,
-                    value
-                ));
+                dict.TryGetValue(refOperatorKey, out var operators);
+
+                result[field] = (
+                    value,
+                    string.IsNullOrWhiteSpace(operators)
+                        ? "="
+                        : operators.Trim()
+                );
             }
 
             return result;

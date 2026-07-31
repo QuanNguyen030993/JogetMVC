@@ -103,7 +103,7 @@ public class QuotationWorkflowHistoryController : BaseControllerApi<QuotationWor
             {
                 var built = Util.LoadParamsBuildCustomQuery<object>(
                     baseQuery: query == "OnSystem" ? sysTable.CustomQuery : Query,
-                    loadParams: normalizedParams,
+                    loadParams: Util.NormalizeRefParams(rawRequestParams),
                     defaultOrderBy: "HistoryId",
                     defaultOrderDir: "DESC",
                     pkTieBreaker: "RecordGuid",

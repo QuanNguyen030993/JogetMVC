@@ -205,7 +205,7 @@ Note:
     var prefix = "@prefix";
     var page = window.PolicyIssuancePage;
     var state = page.state;
-
+    var copyFromGuid = "@(ViewData["CopyFromGuid"])";
     state.nextStep = new Object();
     state.nextStep.flowSteps = [];
     state.nextStep.currentStep = 1;
@@ -1220,7 +1220,7 @@ Note:
                 $("#rightCommentList").html(`<div style="color:var(--c-6b7280);font-size:12px;padding:6px 4px;">Loading…</div>`);
                 const q = `OnSystem`;
                 $.ajax({
-                    url: `/api/CommentLog/ExecuteCustomQuery?refField=RecordGuid&refKey=${encodeURIComponent(state.selectedGuid)}`,
+                    url: `/api/CommentLog/ExecuteCustomQuery?refField=RecordGuid&refKey=${encodeURIComponent(state.selectedGuid)},${encodeURIComponent(copyFromGuid)}&refOperator=in`,
                     method: "POST",
                     async: true,
                     contentType: "application/json",
