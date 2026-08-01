@@ -26,85 +26,62 @@ var _cacheOutlines = [];
 var _allScheme = [];
 var fetchTables = ["Outline", "DataGridConfig"];
 
-// Per-user UI preferences are kept locally for instant rendering and synced to
-// UsersCache so they follow the authenticated user across browser sessions.
+// UI preferences are intentionally browser-local. They belong to this user on
+// this machine only and are never synchronized to the application server.
 window.UserPreferenceCache = (function () {
-    const storageKey = "tmiv.user-preferences.v1";
-    const pendingWrites = new Map();
+    const storagePrefix = "tmiv.user-preferences.v1";
+    let activeStorageKey = "";
     let values = {};
-    let loadPromise = null;
-    let flushTimer = 0;
 
-    try {
-        values = JSON.parse(localStorage.getItem(storageKey) || "{}") || {};
-    } catch (error) {
-        values = {};
+    function getStorageKey() {
+        const browserUser = String(window._loginUser || "browser")
+            .trim()
+            .replace(/^.*\\/, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9._-]+/g, "-");
+        return `${storagePrefix}:${browserUser || "browser"}`;
     }
 
-    function persistLocal() {
+    function ensureLoaded() {
+        const storageKey = getStorageKey();
+        if (activeStorageKey === storageKey) return;
+        activeStorageKey = storageKey;
         try {
-            localStorage.setItem(storageKey, JSON.stringify(values));
+            values = JSON.parse(localStorage.getItem(activeStorageKey) || "{}") || {};
         } catch (error) {
-            console.warn("User preferences could not be written locally.", error);
+            values = {};
         }
     }
 
-    function load() {
-        if (loadPromise) return loadPromise;
-        loadPromise = fetch("/api/UsersCache/GetUserPreferences", {
-            credentials: "include"
-        })
-            .then(response => response.ok ? response.json() : null)
-            .then(response => {
-                if (response?.success && response.data && typeof response.data === "object") {
-                    values = Object.assign({}, response.data);
-                    persistLocal();
-                }
-                return values;
-            })
-            .catch(error => {
-                console.warn("Server user preferences are unavailable; local preferences will be used.", error);
-                return values;
-            });
-        return loadPromise;
-    }
-
-    function flush() {
-        window.clearTimeout(flushTimer);
-        flushTimer = 0;
-        const writes = Array.from(pendingWrites.entries());
-        pendingWrites.clear();
-
-        writes.forEach(([key, value]) => {
-            fetch("/api/UsersCache/SaveUserPreference", {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ key: key, value: value })
-            }).catch(error => {
-                console.warn(`User preference '${key}' could not be synced.`, error);
-            });
-        });
+    function persistLocal() {
+        ensureLoaded();
+        try {
+            localStorage.setItem(activeStorageKey, JSON.stringify(values));
+        } catch (error) {
+            console.warn("Browser user preferences could not be saved.", error);
+        }
     }
 
     function set(key, value) {
         if (!key) return;
+        ensureLoaded();
         values[key] = value;
         persistLocal();
-        pendingWrites.set(key, value);
-        window.clearTimeout(flushTimer);
-        flushTimer = window.setTimeout(flush, 500);
     }
 
     return Object.freeze({
-        load: load,
+        load: function () {
+            ensureLoaded();
+            return Promise.resolve(values);
+        },
         get: function (key, fallbackValue) {
-            return load().then(data => Object.prototype.hasOwnProperty.call(data, key)
-                ? data[key]
+            ensureLoaded();
+            return Promise.resolve(Object.prototype.hasOwnProperty.call(values, key)
+                ? values[key]
                 : fallbackValue);
         },
         set: set,
-        flush: flush
+        flush: persistLocal
     });
 })();
 

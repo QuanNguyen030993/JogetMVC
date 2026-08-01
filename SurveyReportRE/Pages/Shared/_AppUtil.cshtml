@@ -3577,6 +3577,16 @@
             const cacheKey = `assignable-batch|${branchCode.toLowerCase()}`;
 
             return getCachedEmployeeRequest(cacheKey, function () {
+                const browserCacheKey = `tmiv.assignable-batch.v1:${branchCode.toLowerCase()}`;
+                try {
+                    const cachedBatch = JSON.parse(sessionStorage.getItem(browserCacheKey) || "null");
+                    if (cachedBatch?.expiresAt > Date.now() && cachedBatch.response) {
+                        return cachedBatch.response;
+                    }
+                } catch (error) {
+                    sessionStorage.removeItem(browserCacheKey);
+                }
+
                 return $.ajax({
                     url: "/api/Employee/GetAssignableByGroups",
                     type: "GET",
@@ -3585,6 +3595,16 @@
                         branchCode: branchCode,
                         excludeCurrent: true
                     }
+                }).then(function (response) {
+                    try {
+                        sessionStorage.setItem(browserCacheKey, JSON.stringify({
+                            expiresAt: Date.now() + 1800000,
+                            response: response
+                        }));
+                    } catch (error) {
+                        console.warn("Assignable employee batch could not be cached in this browser.", error);
+                    }
+                    return response;
                 });
             }, 1800000).then(function (response) {
                 if (!response?.success || !response.data) return [];

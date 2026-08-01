@@ -182,18 +182,6 @@ if (!app.Environment.IsDevelopment())
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 app.UseSerilogRequestLogging();
-var contentTypeProvider = new FileExtensionContentTypeProvider();
-contentTypeProvider.Mappings[".doc"] = "application/msword";
-contentTypeProvider.Mappings[".docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-contentTypeProvider.Mappings[".xls"] = "application/vnd.ms-excel";
-contentTypeProvider.Mappings[".xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-contentTypeProvider.Mappings[".ppt"] = "application/vnd.ms-powerpoint";
-contentTypeProvider.Mappings[".pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-app.UseStaticFiles(new StaticFileOptions
-{
-    ContentTypeProvider = contentTypeProvider
-});
-
 app.UseRouting();
 app.UseSession();
 
@@ -223,6 +211,46 @@ if (app.Environment.IsDevelopment()
         await next();
     });
 }
+
+// The standalone admin portal under /dist is available only to the configured
+// application superusers. This guard runs before static files and before any
+// maintenance impersonation so authorization uses the authenticated identity.
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/dist", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.Headers["Cache-Control"] = "no-store, no-cache";
+        context.Response.Headers["Pragma"] = "no-cache";
+
+        if (context.User?.Identity?.IsAuthenticated != true)
+        {
+            await context.ChallengeAsync();
+            return;
+        }
+
+        if (!ControllerUtil.IsSuperUser(builder.Configuration, context.User.Identity.Name))
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            await context.Response.WriteAsync("Forbidden");
+            return;
+        }
+    }
+
+    await next();
+});
+
+var contentTypeProvider = new FileExtensionContentTypeProvider();
+contentTypeProvider.Mappings[".doc"] = "application/msword";
+contentTypeProvider.Mappings[".docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+contentTypeProvider.Mappings[".xls"] = "application/vnd.ms-excel";
+contentTypeProvider.Mappings[".xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+contentTypeProvider.Mappings[".ppt"] = "application/vnd.ms-powerpoint";
+contentTypeProvider.Mappings[".pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = contentTypeProvider
+});
+
 app.UseMiddleware<CookieImpersonationMiddleware>();
 app.UseAuthorization();
 app.UseMiddleware<HttpRequestAuditMiddleware>();
