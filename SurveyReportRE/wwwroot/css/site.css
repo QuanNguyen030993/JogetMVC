@@ -33199,6 +33199,15 @@ textarea {
     cursor: pointer;
 }
 
+/* Route belongs to the department currently holding the workflow stage. */
+.dept-node .dept-subnode[data-section-part="footer"] {
+    display: none;
+}
+
+.dept-node.status .dept-subnode[data-section-part="footer"] {
+    display: block;
+}
+
 .dept-node .dept-subnode:nth-child(2) {
     --fan-x: -39px;
     --fan-y: -32px;

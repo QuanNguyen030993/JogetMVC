@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using ERPCore.ControllerUtil;
 using Dapper;
+using Microsoft.Extensions.Caching.Memory;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
@@ -40,13 +41,75 @@ public class EmployeeController : BaseControllerApi<Employee>
     private readonly IBaseRepository<Users> _usersRepository;
     private readonly IBaseRepository<EnumData> _enumDataRepository;
     private readonly IConfiguration _configuration;
+    private readonly IMemoryCache _memoryCache;
 
-    public EmployeeController(IBaseRepository<Employee> BaseRepository, IHttpContextAccessor httpContextAccessor, IConfiguration configuration) : base(BaseRepository, httpContextAccessor)
+    public EmployeeController(
+        IBaseRepository<Employee> BaseRepository,
+        IHttpContextAccessor httpContextAccessor,
+        IConfiguration configuration,
+        IMemoryCache memoryCache) : base(BaseRepository, httpContextAccessor)
     {
         _BaseRepository = BaseRepository;
         _configuration = configuration;
         _usersRepository = new BaseRepository<Users>(configuration, httpContextAccessor);
         _enumDataRepository = new BaseRepository<EnumData>(configuration, httpContextAccessor);
+        _memoryCache = memoryCache;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAssignableByGroups(
+        [FromQuery] string branchCode,
+        [FromQuery] bool excludeCurrent = true)
+    {
+        var normalizedBranch = (branchCode ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(normalizedBranch))
+        {
+            return BadRequest(new { success = false, message = "Branch code is required." });
+        }
+
+        var cacheKey = $"employee:assignable-groups:{normalizedBranch.ToUpperInvariant()}";
+        var groupedEmployees = await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30);
+            entry.SlidingExpiration = TimeSpan.FromMinutes(10);
+
+            var branch = await _enumDataRepository.GetSingleObject(s => s.Code == normalizedBranch);
+            if (branch == null) return null;
+
+            var employees = await _BaseRepository.GetListObject(employee => employee.AreaId == branch.Id);
+            return employees
+                .Where(employee => !string.IsNullOrWhiteSpace(employee.Department))
+                .GroupBy(employee => employee.Department.Trim().ToUpperInvariant())
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.OrderBy(employee => employee.FullName).ToList(),
+                    StringComparer.OrdinalIgnoreCase);
+        });
+
+        if (groupedEmployees == null)
+        {
+            return Ok(new { success = false, data = new Dictionary<string, List<Employee>>() });
+        }
+
+        var currentLogin = (User?.Identity?.Name ?? "").Trim();
+        var currentAccount = currentLogin.Split('\\').LastOrDefault() ?? currentLogin;
+        var data = groupedEmployees.ToDictionary(
+            pair => pair.Key,
+            pair => excludeCurrent
+                ? pair.Value.Where(employee =>
+                    !string.Equals(employee.EmailName?.Trim(), currentAccount, StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(employee.AccountName?.Trim(), currentLogin, StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(employee.AccountName?.Trim(), currentAccount, StringComparison.OrdinalIgnoreCase))
+                    .ToList()
+                : pair.Value,
+            StringComparer.OrdinalIgnoreCase);
+
+        return Ok(new
+        {
+            success = true,
+            cachedForSeconds = 1800,
+            data
+        });
     }
     [HttpGet]
     public async Task<IActionResult> GetAssignableByGroup([FromQuery] GetAssignableByGroupRequest request)

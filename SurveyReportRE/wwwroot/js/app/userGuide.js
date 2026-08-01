@@ -597,6 +597,8 @@
                 </div>
                 <footer class="ug-studio-footer">
                     <button type="button" class="ug-button ug-secondary ug-export">Export JSON</button>
+                    <button type="button" class="ug-button ug-secondary ug-export-markdown">Export Markdown</button>
+                    <button type="button" class="ug-button ug-secondary ug-export-slides">Export Slides</button>
                     <button type="button" class="ug-button ug-danger ug-delete-guide">Delete guide</button>
                     <span class="ug-footer-spacer"></span>
                     <button type="button" class="ug-button ug-secondary ug-preview">Preview</button>
@@ -716,6 +718,22 @@
         setTimeout(() => URL.revokeObjectURL(link.href), 0);
     }
 
+    function exportGuideTour(guide, format, filename) {
+        const exporter = window.jQuery?.tmivexporttour || window.TMIVCom?.exportTour;
+        const steps = convertGuideStepsForControl(guide?.steps || []);
+        if (!steps.length) {
+            window.DevExpress?.ui?.notify?.("Add at least one guide step before exporting.", "warning", 3000);
+            return false;
+        }
+        if (typeof exporter !== "function") {
+            window.DevExpress?.ui?.notify?.("TMIV tour export is not available on this page.", "error", 3500);
+            return false;
+        }
+
+        exporter(steps, format, filename);
+        return true;
+    }
+
     function bindStudio(root) {
         root.querySelector(".ug-studio-close").addEventListener("click", () => root.classList.remove("is-visible"));
         root.querySelectorAll(".ug-tab").forEach(tab => tab.addEventListener("click", () => {
@@ -809,6 +827,14 @@
         root.querySelector(".ug-export").addEventListener("click", () => {
             updateDraftFromFields(root);
             downloadGuide(studioState.guide);
+        });
+        root.querySelector(".ug-export-markdown").addEventListener("click", () => {
+            updateDraftFromFields(root);
+            exportGuideTour(studioState.guide, "markdown", "huong-dan-he-thong");
+        });
+        root.querySelector(".ug-export-slides").addEventListener("click", () => {
+            updateDraftFromFields(root);
+            exportGuideTour(studioState.guide, "slides", "slides-trinh-chieu");
         });
         root.querySelector(".ug-delete-guide").addEventListener("click", async () => {
             if (!studioState.guide.id) return;

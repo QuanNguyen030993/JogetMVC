@@ -4,7 +4,7 @@ import CustomGrid from "../components/CustomGrid.jsx";
 import CommentEditor from "../components/CommentEditor.jsx";
 import CommentEditorRoute from "../components/CommentEditorRoute.jsx";
 import HandsomGrid from "../components/HandsomGrid.jsx";
-import TourGuide, { startTour } from "../components/TourGuide.jsx";
+import TourGuide, { startTour, exportTour } from "../components/TourGuide.jsx";
 import TextBox from "../components/TextBox.jsx";
 import NumberBox from "../components/NumberBox.jsx";
 import CheckBox from "../components/CheckBox.jsx";
@@ -867,10 +867,12 @@ register(
 
 window.TMIVCom.notify = notify;
 window.TMIVCom.startTour = startTour;
+window.TMIVCom.exportTour = exportTour;
 
 if (typeof $ !== "undefined") {
     $.tmivnotify = notify;
     $.tmivtourguide = startTour;
+    $.tmivexporttour = exportTour;
 }
 
 // Test notification demo for TMIVCom library (triggers 5 seconds after load)
@@ -889,4 +891,4 @@ if (typeof window !== "undefined") {
     //}, 5000);
 }
 
-export default { DateBox, HtmlEditor, CustomGrid, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify, TourGuide, startTour };
+export default { DateBox, HtmlEditor, CustomGrid, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify, TourGuide, startTour, exportTour };

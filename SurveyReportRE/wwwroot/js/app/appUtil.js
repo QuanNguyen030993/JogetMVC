@@ -26,6 +26,113 @@ var _cacheOutlines = [];
 var _allScheme = [];
 var fetchTables = ["Outline", "DataGridConfig"];
 
+// Per-user UI preferences are kept locally for instant rendering and synced to
+// UsersCache so they follow the authenticated user across browser sessions.
+window.UserPreferenceCache = (function () {
+    const storageKey = "tmiv.user-preferences.v1";
+    const pendingWrites = new Map();
+    let values = {};
+    let loadPromise = null;
+    let flushTimer = 0;
+
+    try {
+        values = JSON.parse(localStorage.getItem(storageKey) || "{}") || {};
+    } catch (error) {
+        values = {};
+    }
+
+    function persistLocal() {
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(values));
+        } catch (error) {
+            console.warn("User preferences could not be written locally.", error);
+        }
+    }
+
+    function load() {
+        if (loadPromise) return loadPromise;
+        loadPromise = fetch("/api/UsersCache/GetUserPreferences", {
+            credentials: "include"
+        })
+            .then(response => response.ok ? response.json() : null)
+            .then(response => {
+                if (response?.success && response.data && typeof response.data === "object") {
+                    values = Object.assign({}, response.data);
+                    persistLocal();
+                }
+                return values;
+            })
+            .catch(error => {
+                console.warn("Server user preferences are unavailable; local preferences will be used.", error);
+                return values;
+            });
+        return loadPromise;
+    }
+
+    function flush() {
+        window.clearTimeout(flushTimer);
+        flushTimer = 0;
+        const writes = Array.from(pendingWrites.entries());
+        pendingWrites.clear();
+
+        writes.forEach(([key, value]) => {
+            fetch("/api/UsersCache/SaveUserPreference", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ key: key, value: value })
+            }).catch(error => {
+                console.warn(`User preference '${key}' could not be synced.`, error);
+            });
+        });
+    }
+
+    function set(key, value) {
+        if (!key) return;
+        values[key] = value;
+        persistLocal();
+        pendingWrites.set(key, value);
+        window.clearTimeout(flushTimer);
+        flushTimer = window.setTimeout(flush, 500);
+    }
+
+    return Object.freeze({
+        load: load,
+        get: function (key, fallbackValue) {
+            return load().then(data => Object.prototype.hasOwnProperty.call(data, key)
+                ? data[key]
+                : fallbackValue);
+        },
+        set: set,
+        flush: flush
+    });
+})();
+
+window.createUserGridStateStoring = function (preferenceKey) {
+    return {
+        enabled: true,
+        type: "custom",
+        savingTimeout: 500,
+        customLoad: function () {
+            return window.UserPreferenceCache.get(`grid:${preferenceKey}`, null)
+                .then(state => state || {});
+        },
+        customSave: function (state) {
+            const columnState = (state?.columns || []).map(column => ({
+                dataField: column.dataField,
+                name: column.name,
+                visibleIndex: column.visibleIndex,
+                visible: column.visible,
+                width: column.width,
+                sortIndex: column.sortIndex,
+                sortOrder: column.sortOrder,
+                groupIndex: column.groupIndex
+            }));
+            window.UserPreferenceCache.set(`grid:${preferenceKey}`, { columns: columnState });
+        }
+    };
+};
+
 function initIndexedDB() {
     const request = indexedDB.open(_dbName, 1);
     request.onupgradeneeded = function (event) {
@@ -5687,6 +5794,46 @@ function enableDxFormGroupToggle(root) {
     const rootElement = $root.get(0);
     const namespace = ".dxFormGroupToggle";
 
+    function getPreferenceModule() {
+        const rootId = String($root.attr("id") || "").toLowerCase();
+        if (rootId.startsWith("qt-") || $root.find('[id^="qt-overviewRoot_"]').length) return "qt";
+        if (rootId.startsWith("pi-") || $root.find('[id^="pi-overviewRoot_"]').length) return "pi";
+        return "";
+    }
+
+    function getGroupPreferenceKey(group, type) {
+        const moduleCode = getPreferenceModule();
+        if (!moduleCode) return "";
+
+        const $group = $(group);
+        const sectionId = String($group.closest(".dept-section").attr("id") || "");
+        const departmentMatch = sectionId.match(/-sec_([a-z0-9]+)_/i);
+        const department = departmentMatch ? departmentMatch[1].toUpperCase() : "GENERAL";
+        const caption = type === "comment"
+            ? $group.children(".dept-title").first().text()
+            : $group.children(".dx-form-group-caption").first().text();
+        const captionKey = normalizeDxFormGroupCaption(caption)
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "");
+
+        return captionKey
+            ? `form-group:${moduleCode}:${department}:${type}:${captionKey}`
+            : "";
+    }
+
+    function applySavedGroupState($group, $caption, $content, type) {
+        const preferenceKey = getGroupPreferenceKey($group, type);
+        if (!preferenceKey) return;
+        $group.attr("data-user-preference-key", preferenceKey);
+
+        window.UserPreferenceCache.get(preferenceKey, null).then(function (collapsed) {
+            if (typeof collapsed !== "boolean" || !$group.get(0)?.isConnected) return;
+            $group.toggleClass("is-collapsed", collapsed);
+            $caption.attr("aria-expanded", String(!collapsed));
+            setSmoothCollapsibleState($content, collapsed, { duration: 0 });
+        });
+    }
+
     function prepareGroups(container) {
         $(container)
             .find(".dx-form-group-with-caption")
@@ -5713,6 +5860,7 @@ function enableDxFormGroupToggle(root) {
                 });
                 $group.addClass("dx-form-group-toggle");
                 applyDxFormDefaultCollapsedGroups($group);
+                applySavedGroupState($group, $caption, $content, "form");
             });
     }
 
@@ -5748,6 +5896,7 @@ function enableDxFormGroupToggle(root) {
                     "aria-expanded": "true"
                 });
                 $group.addClass("comment-group-toggle");
+                applySavedGroupState($group, $caption, $content, "comment");
             });
     }
 
@@ -5760,6 +5909,8 @@ function enableDxFormGroupToggle(root) {
         $group.toggleClass("is-collapsed", collapsed);
         $caption.attr("aria-expanded", String(!collapsed));
         setSmoothCollapsibleState($content, collapsed);
+        const preferenceKey = $group.attr("data-user-preference-key");
+        if (preferenceKey) window.UserPreferenceCache.set(preferenceKey, collapsed);
     }
 
     function toggleCommentGroup(caption) {
@@ -5771,6 +5922,8 @@ function enableDxFormGroupToggle(root) {
         $group.toggleClass("is-collapsed", collapsed);
         $caption.attr("aria-expanded", String(!collapsed));
         setSmoothCollapsibleState($content, collapsed);
+        const preferenceKey = $group.attr("data-user-preference-key");
+        if (preferenceKey) window.UserPreferenceCache.set(preferenceKey, collapsed);
     }
 
     $root.addClass("dx-form-groups-toggle-enabled comment-groups-toggle-enabled");

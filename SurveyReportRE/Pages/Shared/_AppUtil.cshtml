@@ -3570,6 +3570,46 @@
             return entry.promise;
         }
 
+        function getAssignableEmployeesByGroup(groupName, keyword) {
+            const branchCode = String(_branch || "").trim();
+            const normalizedGroup = String(groupName || "").trim().toUpperCase();
+            const normalizedKeyword = String(keyword || "").trim().toLowerCase();
+            const cacheKey = `assignable-batch|${branchCode.toLowerCase()}`;
+
+            return getCachedEmployeeRequest(cacheKey, function () {
+                return $.ajax({
+                    url: "/api/Employee/GetAssignableByGroups",
+                    type: "GET",
+                    dataType: "json",
+                    data: {
+                        branchCode: branchCode,
+                        excludeCurrent: true
+                    }
+                });
+            }, 1800000).then(function (response) {
+                if (!response?.success || !response.data) return [];
+
+                const groupKey = Object.keys(response.data).find(function (key) {
+                    return String(key).trim().toUpperCase() === normalizedGroup;
+                });
+                const employees = groupKey && Array.isArray(response.data[groupKey])
+                    ? response.data[groupKey]
+                    : [];
+                if (!normalizedKeyword) return employees;
+
+                return employees.filter(function (employee) {
+                    return [
+                        employee?.fullName,
+                        employee?.employeeCode,
+                        employee?.accountName,
+                        employee?.emailName
+                    ].some(function (value) {
+                        return String(value || "").toLowerCase().includes(normalizedKeyword);
+                    });
+                });
+            });
+        }
+
         function normalizeAssignmentAccount(value) {
             return String(value || "")
                 .trim()
@@ -3657,27 +3697,7 @@
                 load: function (loadOptions) {
                     loadOptions = loadOptions || {};
                     const keyword = loadOptions.searchValue || "";
-                    const cacheKey = [
-                        "assignable",
-                        String(_branch || "").toLowerCase(),
-                        String(settings.groupName || "").toLowerCase(),
-                        String(keyword).toLowerCase()
-                    ].join("|");
-                    return getCachedEmployeeRequest(cacheKey, function () {
-                        return $.ajax({
-                            url: "api/Employee/GetAssignableByGroup",
-                            type: "GET",
-                            dataType: "json",
-                            data: {
-                                group: settings.groupName,
-                                branchCode: _branch,
-                                excludeCurrent: true,
-                                keyword: keyword
-                            }
-                        });
-                    }, 1800000).then(function (res) {
-                        return res && res.success ? res.data : [];
-                    });
+                    return getAssignableEmployeesByGroup(settings.groupName, keyword);
                 },
 
                 byKey: function (key) {

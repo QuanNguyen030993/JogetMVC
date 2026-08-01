@@ -13,7 +13,7 @@ import DropDownBox from './components/DropDownBox';
 import CustomForm from './components/CustomForm';
 import FileUploader from "./components/FileUploader";
 import { notify } from './components/Notification';
-import { startTour } from './components/TourGuide';
+import { startTour, exportTour } from './components/TourGuide';
   
 
           
@@ -168,76 +168,66 @@ function App() {
     notify("Đã khởi động lại đồng hồ đếm ngược 5 giây! ⏱️", "info", 2000);
   };
 
-  const runTourGuide = () => {
-    const steps = [
-      {
-        element: '.header h1',
-        title: 'Chào mừng bạn đến với TMIVCom! 👋',
-        content: 'Đây là bộ thư viện <b>Reusable Controls</b> tùy chỉnh dành cho dự án <u>SurveyReportRE</u> (định dạng <i>HTML</i>).',
-        position: 'bottom'
-      },
-      {
-        element: '#tour-timer-widget',
-        title: 'Đồng hồ đếm ngược sự kiện ⏱️',
-        content: 'Bộ kiểm tra đếm ngược tự động kích hoạt thông báo Toast nổi sau 5 giây.',
-        position: 'bottom'
-      },
-      {
-        element: '#tour-customgrid-section',
-        title: 'CustomGrid hiện đại 📊',
-        content: 'Lưới dữ liệu thông minh hỗ trợ kéo thả cột, nhóm cột, phân trang và chỉnh sửa trực tiếp.',
-        position: 'top'
-      },
-      {
-        element: '#tour-handsomgrid-section',
-        title: 'HandsomGrid Spreadsheet Excel Style 📝',
-        content: 'Bảng tính Excel siêu nhẹ hỗ trợ:\n- Di chuyển bằng **phím mũi tên**\n- Chỉnh sửa trực tiếp bằng phím `Enter` hoặc `F2`\n- Copy & Paste trực tiếp dữ liệu qua phím nóng `Ctrl+C` / `Ctrl+V`',
-        position: 'top'
-      },
-      {
-        element: '#tour-uploader-section',
-        title: 'Trình tải tệp đính kèm 📎',
-        content: 'Hỗ trợ kéo thả tệp, hiển thị icon theo loại file và các hành động xem thử, tải xuống, xóa tệp.',
-        position: 'top'
-      },
-      {
-        element: '#tour-comments-section',
-        title: 'Ý kiến định hướng phòng ban 💬',
-        content: 'Cho phép người dùng nhập ý kiến và chọn chuyển phòng ban xử lý tiếp theo.',
-        position: 'top'
-      }
-    ];
+  const tourSteps = [
+    {
+      element: '.header h1',
+      title: 'Chào mừng bạn đến với TMIVCom! 👋',
+      content: 'Đây là bộ thư viện <b>Reusable Controls</b> tùy chỉnh dành cho dự án <u>SurveyReportRE</u> (định dạng <i>HTML</i>).',
+      position: 'bottom'
+    },
+    {
+      element: '#tour-timer-widget',
+      title: 'Đồng hồ đếm ngược sự kiện ⏱️',
+      content: 'Bộ kiểm tra đếm ngược tự động kích hoạt thông báo Toast nổi sau 5 giây.',
+      position: 'bottom'
+    },
+    {
+      element: '#tour-customgrid-section',
+      title: 'CustomGrid hiện đại 📊',
+      content: 'Lưới dữ liệu thông minh hỗ trợ kéo thả cột, nhóm cột, phân trang và chỉnh sửa trực tiếp.',
+      position: 'top'
+    },
+    {
+      element: '#tour-handsomgrid-section',
+      title: 'HandsomGrid Spreadsheet Excel Style 📝',
+      content: 'Bảng tính Excel siêu nhẹ hỗ trợ:\n- Di chuyển bằng **phím mũi tên**\n- Chỉnh sửa trực tiếp bằng phím `Enter` hoặc `F2`\n- Copy & Paste trực tiếp dữ liệu qua phím nóng `Ctrl+C` / `Ctrl+V`',
+      position: 'top'
+    },
+    {
+      element: '#tour-uploader-section',
+      title: 'Trình tải tệp đính kèm 📎',
+      content: 'Hỗ trợ kéo thả tệp, hiển thị icon theo loại file và các hành động xem thử, tải xuống, xóa tệp.',
+      position: 'top'
+    },
+    {
+      element: '#tour-comments-section',
+      title: 'Ý kiến định hướng phòng ban 💬',
+      content: 'Cho phép người dùng nhập ý kiến và chọn chuyển phòng ban xử lý tiếp theo.',
+      position: 'top'
+    }
+  ];
 
-    startTour(steps, {
+  const runTourGuide = () => {
+    startTour(tourSteps, {
       onComplete: () => notify("Chúc mừng! Bạn đã hoàn thành Tour hướng dẫn. 🎉", "success"),
       onExit: () => notify("Đã thoát Tour hướng dẫn.", "info")
     });
   };
 
   const runTourGuideJQuery = () => {
-    const steps = [
-      {
-        element: '.header h1',
-        title: 'JQuery Tour: Chào mừng 👋',
-        content: 'Chạy thử Tour bằng lệnh JQuery `$(document).tmivtourguide(steps)`.',
-        position: 'bottom'
-      },
-      {
-        element: '#tour-handsomgrid-section',
-        title: 'JQuery Tour: HandsomGrid 📝',
-        content: 'Bảng tính Excel siêu nhẹ hỗ trợ:\n- Chỉnh sửa trực tiếp\n- Sao chép & Dán từ **Excel** bằng `Ctrl+V`',
-        position: 'top'
-      }
-    ];
-
     if (typeof $ !== "undefined" || window.jQuery) {
       const jQueryInstance = typeof $ !== "undefined" ? $ : window.jQuery;
-      jQueryInstance(document).tmivtourguide(steps, {
+      jQueryInstance(document).tmivtourguide(tourSteps, {
         onExit: () => notify("Thoát JQuery Tour.", "info")
       });
     } else {
       notify("JQuery chưa được tải trên trang này!", "error");
     }
+  };
+
+  const handleExport = (format) => {
+    exportTour(tourSteps, format, 'huong-dan-su-dung-he-thong');
+    notify(`Đã trích xuất tài liệu hướng dẫn định dạng <b>${format.toUpperCase()}</b> thành công! 💾`, "success");
   };
 
 
@@ -423,6 +413,72 @@ function App() {
           </button>
         </div>
       </header>
+
+      {/* Onboarding Exporter Toolbar */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '12px',
+        background: '#ffffff',
+        padding: '12px 20px',
+        borderRadius: '10px',
+        border: '1px solid #e2e8f0',
+        marginBottom: '25px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+      }}>
+        <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>
+          📦 Trích xuất tài liệu hướng dẫn:
+        </span>
+        <button
+          type="button"
+          onClick={() => handleExport('markdown')}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '6px',
+            border: '1px solid #22c55e',
+            background: '#f0fdf4',
+            color: '#16a34a',
+            fontWeight: '600',
+            fontSize: '12px',
+            cursor: 'pointer'
+          }}
+        >
+          📄 Tải Markdown (.md)
+        </button>
+        <button
+          type="button"
+          onClick={() => handleExport('html-doc')}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '6px',
+            border: '1px solid #3b82f6',
+            background: '#eff6ff',
+            color: '#2563eb',
+            fontWeight: '600',
+            fontSize: '12px',
+            cursor: 'pointer'
+          }}
+        >
+          🌐 Tải HTML Manual (.html)
+        </button>
+        <button
+          type="button"
+          onClick={() => handleExport('html-slides')}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '6px',
+            border: '1px solid #f59e0b',
+            background: '#fffbeb',
+            color: '#d97706',
+            fontWeight: '600',
+            fontSize: '12px',
+            cursor: 'pointer'
+          }}
+        >
+          🖥️ Tải Slide Trình chiếu (HTML)
+        </button>
+      </div>
 
       <section className="section" id="tour-customgrid-section">
         <div className="section-title">Custom Grid - DARK Mode (Mockup Style, drag rows, selection, compact)</div>
