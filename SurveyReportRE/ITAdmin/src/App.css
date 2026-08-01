@@ -118,6 +118,8 @@ button {
   background: #f8fafc;
   border-radius: 18px;
   padding: 18px;
+  position: relative;
+  overflow: hidden;
 }
 
 .chart-card-header {
@@ -768,6 +770,8 @@ button {
 .realtime-chart-area {
   min-height: 260px;
   height: 260px;
+  position: relative;
+  overflow: hidden;
 }
 
 .realtime-kpi-row {

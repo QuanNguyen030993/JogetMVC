@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
+import EvaluationPanel from './EvaluationPanel';
 
 import {
   Area,
@@ -700,6 +701,7 @@ key={index}
 </div>
 
 <RealtimeApiMonitor />
+<EvaluationPanel />
 
 </div>
 

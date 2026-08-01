@@ -2512,7 +2512,7 @@ function markupStatusCSS(container, options, control = null) {
 }
 
 window.SystemWriteControls = Object.assign({
-    httpAuditRequest: false,
+    httpAuditRequest: true,
     errorClientLog: true,
     signalR: true
 }, window.SystemWriteControls || {});

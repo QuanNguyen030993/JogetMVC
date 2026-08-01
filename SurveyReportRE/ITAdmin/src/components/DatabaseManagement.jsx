@@ -17,6 +17,7 @@ export default function DatabaseManagement() {
     const [backupFileName, setBackupFileName] = useState("JogetMVC_Backup.bak");
     const [backingUp, setBackingUp] = useState(false);
     const [backupAlert, setBackupAlert] = useState(null);
+    const [optimizing, setOptimizing] = useState(false);
 
     // Script generator states
     const [selectedTables, setSelectedTables] = useState([]);
@@ -106,6 +107,33 @@ export default function DatabaseManagement() {
             setBackupAlert({ type: "error", message: e.message || "Lỗi kết nối mạng." });
         } finally {
             setBackingUp(false);
+        }
+    };
+
+    // Handle optimize database backup
+    const handleOptimizeBackup = async () => {
+        setOptimizing(true);
+        setBackupAlert(null);
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/DatabaseManagement/OptimizeBackup`, {
+                method: "POST"
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setBackupAlert({
+                    type: "success",
+                    message: data.message || "Tối ưu hóa và sao lưu (usp_Optimize_Backup) thành công!"
+                });
+            } else {
+                setBackupAlert({
+                    type: "error",
+                    message: data.message || "Lỗi không xác định khi thực hiện tối ưu hóa."
+                });
+            }
+        } catch (e) {
+            setBackupAlert({ type: "error", message: e.message || "Lỗi kết nối mạng." });
+        } finally {
+            setOptimizing(false);
         }
     };
 
@@ -285,6 +313,15 @@ export default function DatabaseManagement() {
                             disabled={backingUp}
                         >
                             {backingUp ? "⏳ Đang tiến hành sao lưu..." : "💾 Tiến hành Sao Lưu (Backup)"}
+                        </button>
+
+                        <button 
+                            className="db-btn db-btn-secondary" 
+                            style={{ width: "100%", justifyContent: "center", marginTop: "10px", background: "#0284c7", color: "white", borderColor: "#0284c7" }}
+                            onClick={handleOptimizeBackup}
+                            disabled={optimizing}
+                        >
+                            {optimizing ? "⏳ Đang tối ưu hóa..." : "⚡ Tối Ưu Hóa & Sao Lưu (usp_Optimize_Backup)"}
                         </button>
 
                         <div style={{ marginTop: "20px", fontSize: "0.82rem", color: "#64748b", background: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>

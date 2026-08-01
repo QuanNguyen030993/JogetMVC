@@ -9,7 +9,7 @@ DECLARE @Controls TABLE
 
 INSERT INTO @Controls (ParameterName, [Value])
 VALUES
-    (N'HttpAuditRequest', N'false'),
+    (N'HttpAuditRequest', N'true'),
     (N'ErrorClientLog', N'true'),
     (N'SignalR', N'true');
 

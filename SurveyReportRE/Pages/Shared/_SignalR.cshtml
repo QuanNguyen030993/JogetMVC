@@ -322,6 +322,29 @@ window.addEventListener("system-write-controls:changed", function (event) {
     $("#signalRCounter").text(`Session count from SignalR: (${signalRMessageCount})`);
 });
 
+window.setSignalRDiagnosticStatus = function (name, status, detail) {
+    if (window.SystemWriteControls?.signalR === false) return;
+
+    const panel = $("#signalRLazyLoadStatus");
+    if (!panel.length) return;
+
+    const normalizedStatus = ["loading", "complete", "error"].includes(status)
+        ? status
+        : "idle";
+    const labels = {
+        idle: "Idle",
+        loading: "Loading",
+        complete: "Completed",
+        error: "Failed"
+    };
+
+    panel.removeClass("is-idle is-loading is-complete is-error")
+        .addClass(`is-${normalizedStatus}`);
+    panel.find("span").text(`${name} (lazy load)`);
+    panel.find("b").text(labels[normalizedStatus]);
+    panel.find("small").text(detail || "");
+};
+
 function registerSignalREvent(eventName, callback) {
 
     connectionSignR.on(eventName, function (...args) {

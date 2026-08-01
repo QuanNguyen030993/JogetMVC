@@ -57,12 +57,28 @@
                                     { id: "ichigenka", text: "Ichigenka" }]
     };
 
+    const enumLazyLoadNames = Object.keys(_enums)
+        .filter(name => Array.isArray(_enums[name]) && _enums[name].length === 0);
 
-    $.each(_enums, function(index, item) {
-    if (!item.length)
-            ajaxGet(`/api/EnumData/FetchEnum/${index}`).done(res => {
-                if (res) _enums[index] = res;
-                if (index === "NotificationType") {
+    window.enumLazyLoadPromise = enumLazyLoadNames.length
+        ? (function () {
+            window.setSignalRDiagnosticStatus?.(
+                "FetchEnum",
+                "loading",
+                `Lazy loading ${enumLazyLoadNames.length} enum groups`);
+
+            return $.ajax({
+                url: "/api/EnumData/FetchEnumBatch",
+                method: "POST",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify(enumLazyLoadNames)
+            }).done(function (batch) {
+                enumLazyLoadNames.forEach(function (name) {
+                    _enums[name] = Array.isArray(batch?.[name]) ? batch[name] : [];
+                });
+
+                if (enumLazyLoadNames.includes("NotificationType")) {
                     if (typeof refreshNotificationTypeFilterData === "function") {
                         refreshNotificationTypeFilterData();
                     }
@@ -70,6 +86,17 @@
                         refreshNotifUI();
                     }
                 }
-        });
-    });
+
+                window.setSignalRDiagnosticStatus?.(
+                    "FetchEnum",
+                    "complete",
+                    `Loaded ${enumLazyLoadNames.length} enum groups in one batch`);
+            }).fail(function (xhr) {
+                window.setSignalRDiagnosticStatus?.(
+                    "FetchEnum",
+                    "error",
+                    `Lazy load failed (${xhr.status || "network"})`);
+            });
+        })()
+        : $.Deferred().resolve(_enums).promise();
 </script>

@@ -669,6 +669,11 @@
                                 </div>
                             </div>
                             <div id="signalRCounter" class="management-signalr-counter">Session count from SignalR: (0)</div>
+                            <div id="signalRLazyLoadStatus" class="management-signalr-task is-idle">
+                                <span>FetchEnum (lazy load)</span>
+                                <b>Idle</b>
+                                <small>Waiting for enum batch</small>
+                            </div>
                             <div class="management-signalr-detail-title">Called handlers</div>
                             <div id="signalRFunctionDetails" class="management-signalr-details">
                                 <span>No SignalR handler called yet.</span>
@@ -3208,6 +3213,59 @@
         color: var(--theme-muted, #64748b);
         font-size: 11px;
         line-height: 1.4;
+    }
+
+    .management-signalr-task {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 2px 8px;
+        margin-top: 8px;
+        padding: 7px 8px;
+        border-radius: 7px;
+        background: rgba(100, 116, 139, .09);
+        font-size: 10px;
+    }
+
+    .management-signalr-task > span {
+        overflow: hidden;
+        color: var(--theme-text, #334155);
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .management-signalr-task > b {
+        color: #64748b;
+    }
+
+    .management-signalr-task > small {
+        grid-column: 1 / -1;
+        color: var(--theme-muted, #64748b);
+        line-height: 1.35;
+    }
+
+    .management-signalr-task.is-loading {
+        background: rgba(245, 158, 11, .12);
+    }
+
+    .management-signalr-task.is-loading > b {
+        color: #b45309;
+    }
+
+    .management-signalr-task.is-complete {
+        background: rgba(34, 197, 94, .1);
+    }
+
+    .management-signalr-task.is-complete > b {
+        color: #15803d;
+    }
+
+    .management-signalr-task.is-error {
+        background: rgba(239, 68, 68, .1);
+    }
+
+    .management-signalr-task.is-error > b {
+        color: #b91c1c;
     }
 
     .management-signalr-detail-title {

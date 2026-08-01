@@ -14,7 +14,6 @@ import OverviewPanel from './components/OverviewPanel';
 import EnumDesign from './components/EnumDesign';
 import SlaDesign from './components/SlaDesign';
 import WorkflowRecover from './components/WorkflowRecover';
-import EvaluationPanel from './components/EvaluationPanel';
 import ActiveUsersPanel from './components/ActiveUsersPanel';
 import AspLogViewer from './components/AspLogViewer';
 import CustomGrid from '../../TMIVCom/src/components/CustomGrid'
@@ -436,7 +435,6 @@ function App() {
               disk={disk}
             />
             <ActiveUsersPanel users={onlineUsers} loading={onlineUsersLoading} error={onlineUsersError} />
-            <EvaluationPanel />
           </>
         );
     }

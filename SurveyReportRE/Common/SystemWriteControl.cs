@@ -13,7 +13,7 @@ public static class SystemWriteControl
 
     private static readonly SemaphoreSlim RefreshLock = new(1, 1);
     private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(10);
-    private static SystemWriteSettings _cached = new(false, true, true);
+    private static SystemWriteSettings _cached = new(true, true, true);
     private static DateTimeOffset _expiresAt = DateTimeOffset.MinValue;
 
     public static async Task<SystemWriteSettings> GetAsync(string connectionString)

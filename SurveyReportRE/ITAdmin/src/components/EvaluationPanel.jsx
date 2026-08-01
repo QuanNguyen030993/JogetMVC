@@ -104,7 +104,7 @@ export default function EvaluationPanel() {
   }, [rows, dimension, interval]);
 
   return (
-    <section className="evaluation-panel">
+    <div className="chart-card wide evaluation-panel" style={{ marginTop: 0 }}>
       <div className="evaluation-header">
         <div>
           <span className="evaluation-eyebrow">API evaluation</span>
@@ -169,7 +169,7 @@ export default function EvaluationPanel() {
           </ResponsiveContainer>
         )}
       </div>
-    </section>
+    </div>
   );
 }
 
