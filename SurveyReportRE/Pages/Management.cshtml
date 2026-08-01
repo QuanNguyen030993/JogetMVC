@@ -8,6 +8,7 @@
 @await Html.PartialAsync("_AppUtil")
 <script src="~/js/app/appUtil.js"></script>
 <link rel="stylesheet" href="~/css/app/user-guide.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/lib/tmivcom/style.css" asp-append-version="true" />
 <script src="~/js/app/userGuide.js" asp-append-version="true"></script>
 @await Html.PartialAsync("_EnumConstant")
 @await Html.PartialAsync("_EntityConstant")
@@ -648,11 +649,33 @@
             <!-- Global maintenance status. Per-form debug controls live in each
                  form's Maintenance Info panel so multiple tabs never share IDs. -->
             <div id="managementMaintenance" class="management-maintenance" aria-label="Maintenance status">
-                <div id="environmentLabel" class="management-environment-badge" title="Current TMIV environment">
-                    <i class="fa fa-server" aria-hidden="true"></i>
-                    <span>Environment</span>
-                    <strong id="environmentValue"></strong>
-                </div>
+                @if (string.Equals(ViewData["NotifyEnv"]?.ToString(), "true", StringComparison.OrdinalIgnoreCase))
+                {
+                    <div id="environmentLabel"
+                         class="management-environment-badge"
+                         tabindex="0"
+                         aria-describedby="environmentHoverInfo">
+                        <i class="fa fa-server" aria-hidden="true"></i>
+                        <span>Environment</span>
+                        <strong id="environmentValue">@ViewData["Environment"]</strong>
+                        <i class="fa fa-info-circle management-environment-info-icon" aria-hidden="true"></i>
+                        <div id="environmentHoverInfo" class="management-environment-hover" role="tooltip">
+                            <strong>Development diagnostics</strong>
+                            <div class="management-environment-hover-row">
+                                <span>SignalR</span>
+                                <div id="signalRMonitor" class="signalr-monitor signalr-disconnected">
+                                    <span class="signalr-dot"></span>
+                                    <span class="signalr-text">Offline</span>
+                                </div>
+                            </div>
+                            <div id="signalRCounter" class="management-signalr-counter">Session count from SignalR: (0)</div>
+                            <div class="management-signalr-detail-title">Called handlers</div>
+                            <div id="signalRFunctionDetails" class="management-signalr-details">
+                                <span>No SignalR handler called yet.</span>
+                            </div>
+                        </div>
+                    </div>
+                }
                 <div id="returnToSuperUser" class="management-return-admin"></div>
             </div>
              
@@ -662,9 +685,16 @@
                 <button id="userGuideLauncher"
                         class="ug-guide-launcher"
                         type="button"
-                        title="User guides"
-                        aria-label="Open user guides">
+                        title="Set up user guides"
+                        aria-label="Set up user guides">
                     <i class="fa fa-compass" aria-hidden="true"></i>
+                </button>
+                <button id="tmivTourGuideLauncher"
+                        class="ug-guide-launcher"
+                        type="button"
+                        title="Start UI tour"
+                        aria-label="Start UI tour">
+                    <i class="fa fa-map-signs" aria-hidden="true"></i>
                 </button>
                 <div id="notificationBtn" class="notif-wrapper square-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="30" height="30" viewBox="0 0 256 256" xml:space="preserve">
@@ -696,13 +726,6 @@
                             <span id="roleLabel">Workflow group not selected</span>
                         </div>
                     </div>
-                    <div class="user-menu-session">
-                        <div id="signalRMonitor" class="signalr-monitor signalr-disconnected">
-                            <span class="signalr-dot"></span>
-                            <span class="signalr-text">Offline</span>
-                        </div>
-                        <span id="signalRCounter">Session count from SignalR: (0)</span>
-                    </div>
                     <button id="openUserSettings" class="user-settings-entry" type="button">
                         <span class="user-settings-icon"><i class="fa fa-cog"></i></span>
                         <span><strong>Settings</strong><small>Role, theme and notifications</small></span>
@@ -717,7 +740,15 @@
    
             @await Html.PartialAsync("_SPAReference")
             <script>
-                window.UserGuide?.bindLauncher("#userGuideLauncher");
+                window.UserGuide?.bindLauncher("#userGuideLauncher", {
+                    adminOnly: true,
+                    allowManage: true,
+                    autoStart: false
+                });
+                window.UserGuide?.bindLauncher("#tmivTourGuideLauncher", {
+                    allowManage: false,
+                    autoStart: true
+                });
             </script>
             <div id="mainPopup"></div>
             <div id="outlinePopup"></div>
@@ -841,7 +872,6 @@
         _isDebugMode = `@Html.Raw(ViewData["IsDebugMode"])`;
         var _notifyEnv = `@Html.Raw(ViewData["NotifyEnv"])`;
         if (_notifyEnv == "true") {
-            $("#environmentValue").text(`@ViewData["Environment"]`);
             $("#environmentLabel").addClass("is-visible");
         }
         // if (_notifyEnv  == "true")
@@ -2074,23 +2104,6 @@
         font-size: 11px;
     }
 
-    .user-menu-session {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        padding: 11px 12px 8px;
-        color: var(--theme-muted);
-        font-size: 10px;
-    }
-
-    .user-menu-session-dot {
-        width: 7px;
-        height: 7px;
-        background: #27ae60;
-        border-radius: 50%;
-        box-shadow: 0 0 0 3px rgba(39, 174, 96, .12);
-    }
-
     .user-settings-entry {
         width: 100%;
         padding: 10px;
@@ -2925,7 +2938,7 @@
         max-width: 1080px;
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        align-items: flex-start;
+        align-items: stretch;
         gap: clamp(12px, 2.5vw, 40px);
     }
 
@@ -2934,7 +2947,9 @@
     .action-card {
         width: 100%;
         min-width: 0;
-        height: calc(75vh);
+        height: auto;
+        display: flex;
+        flex-direction: column;
         border-radius: clamp(14px, 2vw, 28px);
         overflow: hidden;
         background: var(--c-ffffff);
@@ -2953,7 +2968,8 @@
 
 
     .card-image {
-        height: clamp(100px, 20vh, 220px);
+        height: clamp(120px, 18vh, 180px);
+        flex: 0 0 auto;
         overflow: hidden;
     }
 
@@ -2969,8 +2985,9 @@
 
 
     .card-body {
-        /* min-height: clamp(122px, 22vh, 210px); */
-        height: calc(55vh);
+        min-height: 126px;
+        height: auto;
+        flex: 1 1 auto;
         text-align: center;
         padding: clamp(12px, 1.6vw, 20px);
         box-sizing: border-box;
@@ -3093,6 +3110,7 @@
 
     .management-environment-badge {
         display: none;
+        position: relative;
         height: 26px;
         align-items: center;
         gap: 5px;
@@ -3103,6 +3121,137 @@
         color: #8a4b08;
         box-shadow: 0 2px 8px rgba(120, 53, 15, .12);
         white-space: nowrap;
+    }
+
+    .management-environment-info-icon {
+        margin-left: 2px;
+        color: #b45309;
+        font-size: 12px;
+        opacity: .75;
+    }
+
+    .management-environment-hover {
+        position: absolute;
+        z-index: 12000;
+        top: calc(100% + 8px);
+        right: 0;
+        width: 260px;
+        padding: 12px;
+        border: 1px solid rgba(180, 83, 9, .22);
+        border-radius: 10px;
+        background: var(--theme-surface, #fff);
+        color: var(--theme-text, #1f2937);
+        box-shadow: 0 12px 30px rgba(15, 23, 42, .18);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-4px);
+        transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+        pointer-events: none;
+        white-space: normal;
+    }
+
+    .management-environment-hover::before {
+        content: "";
+        position: absolute;
+        top: -5px;
+        right: 18px;
+        width: 9px;
+        height: 9px;
+        border-top: 1px solid rgba(180, 83, 9, .22);
+        border-left: 1px solid rgba(180, 83, 9, .22);
+        background: var(--theme-surface, #fff);
+        transform: rotate(45deg);
+    }
+
+    .management-environment-badge:hover .management-environment-hover,
+    .management-environment-badge:focus .management-environment-hover,
+    .management-environment-badge:focus-within .management-environment-hover {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .management-environment-hover > strong {
+        display: block;
+        margin-bottom: 9px;
+        color: var(--theme-text, #1f2937);
+        font-size: 12px;
+    }
+
+    .management-environment-hover-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 8px;
+        border-top: 1px solid var(--theme-border, #e5e7eb);
+        font-size: 11px;
+    }
+
+    .management-environment-hover .signalr-monitor {
+        position: static;
+        top: auto;
+        right: auto;
+        display: inline-flex;
+        gap: 5px;
+        color: var(--theme-text, #1f2937);
+        font-size: 11px;
+    }
+
+    .management-environment-hover .signalr-dot {
+        width: 8px;
+        height: 8px;
+    }
+
+    .management-signalr-counter {
+        margin-top: 7px;
+        color: var(--theme-muted, #64748b);
+        font-size: 11px;
+        line-height: 1.4;
+    }
+
+    .management-signalr-detail-title {
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px solid var(--theme-border, #e5e7eb);
+        color: var(--theme-muted, #64748b);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .management-signalr-details {
+        display: grid;
+        gap: 4px;
+        max-height: 132px;
+        margin-top: 6px;
+        overflow-y: auto;
+        font-size: 10px;
+    }
+
+    .management-signalr-detail-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .management-signalr-detail-row code {
+        overflow: hidden;
+        color: var(--theme-text, #334155);
+        font-size: 10px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .management-signalr-detail-row b {
+        min-width: 24px;
+        padding: 1px 5px;
+        border-radius: 999px;
+        background: rgba(245, 158, 11, .14);
+        color: #92400e;
+        text-align: center;
     }
 
     .management-environment-badge.is-visible {
@@ -3475,7 +3624,6 @@
     .user-menu-avatar,
     .user-settings-icon,
     .user-account-role,
-    .user-menu-session,
     .user-settings-entry small {
         font-size: var(--management-font-small) !important;
     }

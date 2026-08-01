@@ -173,7 +173,7 @@ function App() {
       {
         element: '.header h1',
         title: 'Chào mừng bạn đến với TMIVCom! 👋',
-        content: 'Đây là bộ thư viện Reusable Controls tùy chỉnh dành cho dự án SurveyReportRE.',
+        content: 'Đây là bộ thư viện <b>Reusable Controls</b> tùy chỉnh dành cho dự án <u>SurveyReportRE</u> (định dạng <i>HTML</i>).',
         position: 'bottom'
       },
       {
@@ -191,7 +191,7 @@ function App() {
       {
         element: '#tour-handsomgrid-section',
         title: 'HandsomGrid Spreadsheet Excel Style 📝',
-        content: 'Bảng tính Excel siêu nhẹ hỗ trợ phím mũi tên di chuyển, sao chép dán dữ liệu trực tiếp và menu chuột phải.',
+        content: 'Bảng tính Excel siêu nhẹ hỗ trợ:\n- Di chuyển bằng **phím mũi tên**\n- Chỉnh sửa trực tiếp bằng phím `Enter` hoặc `F2`\n- Copy & Paste trực tiếp dữ liệu qua phím nóng `Ctrl+C` / `Ctrl+V`',
         position: 'top'
       },
       {
@@ -212,6 +212,32 @@ function App() {
       onComplete: () => notify("Chúc mừng! Bạn đã hoàn thành Tour hướng dẫn. 🎉", "success"),
       onExit: () => notify("Đã thoát Tour hướng dẫn.", "info")
     });
+  };
+
+  const runTourGuideJQuery = () => {
+    const steps = [
+      {
+        element: '.header h1',
+        title: 'JQuery Tour: Chào mừng 👋',
+        content: 'Chạy thử Tour bằng lệnh JQuery `$(document).tmivtourguide(steps)`.',
+        position: 'bottom'
+      },
+      {
+        element: '#tour-handsomgrid-section',
+        title: 'JQuery Tour: HandsomGrid 📝',
+        content: 'Bảng tính Excel siêu nhẹ hỗ trợ:\n- Chỉnh sửa trực tiếp\n- Sao chép & Dán từ **Excel** bằng `Ctrl+V`',
+        position: 'top'
+      }
+    ];
+
+    if (typeof $ !== "undefined" || window.jQuery) {
+      const jQueryInstance = typeof $ !== "undefined" ? $ : window.jQuery;
+      jQueryInstance(document).tmivtourguide(steps, {
+        onExit: () => notify("Thoát JQuery Tour.", "info")
+      });
+    } else {
+      notify("JQuery chưa được tải trên trang này!", "error");
+    }
   };
 
 
@@ -331,6 +357,25 @@ function App() {
             }}
           >
             🚀 Hướng dẫn hệ thống (Tour)
+          </button>
+          <button
+            type="button"
+            onClick={runTourGuideJQuery}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: '1px solid #cbd5e1',
+              background: '#ffffff',
+              color: '#1e293b',
+              fontWeight: 'bold',
+              fontSize: '13px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            🔌 Chạy Tour (JQuery)
           </button>
         </div>
 

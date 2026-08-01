@@ -33,7 +33,7 @@ public class GuideStepController : BaseControllerApi<GuideStep>
         public string Selector { get; set; } = "";
         public string Placement { get; set; } = "auto";
         public string Content { get; set; } = "";
-        public string Format { get; set; } = "markdown";
+        public string Format { get; set; } = "html";
         public int WaitTimeout { get; set; } = 5000;
     }
 
@@ -152,6 +152,7 @@ public class GuideStepController : BaseControllerApi<GuideStep>
             for (var index = 0; index < guide.Steps.Count; index++)
             {
                 var step = guide.Steps[index];
+                step.Format = NormalizeContentFormat(step.Format);
                 await connection.ExecuteAsync(insertSql, new
                 {
                     GuideKey = guide.Key,
@@ -167,22 +168,38 @@ public class GuideStepController : BaseControllerApi<GuideStep>
                     Selector = step.Selector ?? "",
                     Placement = step.Placement ?? "auto",
                     Content = step.Content ?? "",
-                    ContentFormat = step.Format ?? "markdown",
+                    ContentFormat = step.Format,
                     WaitTimeoutMs = Math.Clamp(step.WaitTimeout, 0, 30000),
                     IsEnabled = guide.Enabled,
                     UserName = accountName
                 }, transaction);
             }
 
+            var savedStepCount = await connection.ExecuteScalarAsync<int>(@"
+                SELECT COUNT(*)
+                FROM dbo.GuideStep
+                WHERE GuideKey = @GuideKey AND Deleted = 0",
+                new { GuideKey = guide.Key }, transaction);
+
+            if (savedStepCount != guide.Steps.Count)
+                throw new InvalidOperationException("The saved guide step count does not match the submitted data.");
+
             await transaction.CommitAsync();
             guide.Id = guide.Key;
-            return Ok(new { success = true, data = guide });
+            return Ok(new { success = true, data = guide, savedStepCount });
         }
         catch
         {
             await transaction.RollbackAsync();
             throw;
         }
+    }
+
+    private static string NormalizeContentFormat(string? format)
+    {
+        return string.Equals(format?.Trim(), "markdown", StringComparison.OrdinalIgnoreCase)
+            ? "markdown"
+            : "html";
     }
 
     [HttpDelete("{guideKey}")]

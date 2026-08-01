@@ -25,7 +25,6 @@ public sealed class HttpRequestAuditMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<HttpRequestAuditMiddleware> _logger;
-    private static bool AUDIT_LOG = false;
     //private readonly RecyclableMemoryStreamManager _ms = new();
 
     // Tùy chỉnh: chỉ log api
@@ -52,6 +51,7 @@ public sealed class HttpRequestAuditMiddleware
         _connectionString = ControllerUtil.ParseConnectionString(_connectionString, config);
 
 
+#if false
         List<Dictionary<string, object>> resultList = new List<Dictionary<string, object>>();
         using (SqlConnection connection = new SqlConnection(_connectionString))
         {
@@ -94,6 +94,7 @@ public sealed class HttpRequestAuditMiddleware
                 AUDIT_LOG = bool.Parse(valueStr);
             }
         }
+#endif
     }
 
     public async Task Invoke(HttpContext ctx, IHttpRequestAuditLogWriter writer)
@@ -102,6 +103,20 @@ public sealed class HttpRequestAuditMiddleware
 
         // Filter sớm
         if (OnlyApi && !req.Path.StartsWithSegments("/api"))
+        {
+            await _next(ctx);
+            return;
+        }
+
+        if (string.Equals(req.Path.Value, "/api/Constant/GetSystemWriteControls", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(req.Path.Value, "/api/ClientBrowserError/LogClientError", StringComparison.OrdinalIgnoreCase))
+        {
+            await _next(ctx);
+            return;
+        }
+
+        var writeSettings = await SystemWriteControl.GetAsync(_connectionString);
+        if (!writeSettings.HttpAuditRequest)
         {
             await _next(ctx);
             return;
@@ -141,7 +156,7 @@ public sealed class HttpRequestAuditMiddleware
             }
 
             // Ghi DB
-            await writer.WriteAsync(log, _connectionString, AUDIT_LOG);
+            await writer.WriteAsync(log, _connectionString, true);
 
             // Log kỹ thuật (optional)
             //_logger.LogInformation("HTTP {Method} {Path} => {Status} ({Elapsed} ms) TraceId={TraceId}",

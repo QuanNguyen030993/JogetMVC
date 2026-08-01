@@ -17,7 +17,7 @@ public class GuideStep : BaseModel
     public string Selector { get; set; } = "";
     public string Placement { get; set; } = "auto";
     public string Content { get; set; } = "";
-    public string ContentFormat { get; set; } = "markdown";
+    public string ContentFormat { get; set; } = "html";
     public int WaitTimeoutMs { get; set; } = 5000;
     public bool IsEnabled { get; set; } = true;
 }

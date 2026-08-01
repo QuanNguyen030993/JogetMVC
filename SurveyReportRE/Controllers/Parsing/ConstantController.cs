@@ -42,5 +42,17 @@ namespace ERPCore.Controllers.Config
 
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetSystemWriteControls()
+        {
+            var settings = await SystemWriteControl.GetAsync(_BaseRepository._connectionString);
+            return Ok(new
+            {
+                httpAuditRequest = settings.HttpAuditRequest,
+                errorClientLog = settings.ErrorClientLog,
+                signalR = settings.SignalR
+            });
+        }
+
     }
 }

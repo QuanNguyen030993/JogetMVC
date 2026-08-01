@@ -32,6 +32,10 @@ public class ClientBrowserErrorController : BaseControllerApi<ClientBrowserError
     [RequestSizeLimit(64 * 1024)]
     public async Task<IActionResult> LogClientError([FromBody] ClientBrowserError model)
     {
+        var writeSettings = await ERPCore.Common.SystemWriteControl.GetAsync(_BaseRepository._connectionString);
+        if (!writeSettings.ErrorClientLog)
+            return Ok(new { success = true, skipped = true, reason = "ErrorClientLog is disabled." });
+
         if (model == null)
             return BadRequest(new { success = false, message = "Error payload is required." });
 

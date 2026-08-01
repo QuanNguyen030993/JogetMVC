@@ -150,6 +150,34 @@ namespace ERPCore.Controllers.Config
         }
 
         [HttpPost]
+        public async Task<IActionResult> OptimizeBackup()
+        {
+            try
+            {
+                using (var connection = new SqlConnection(GetConnectionString()))
+                {
+                    await connection.OpenAsync();
+                    
+                    string sql = "EXEC usp_Optimize_Backup";
+                    using (var command = new SqlCommand(sql, connection))
+                    {
+                        command.CommandTimeout = 600; // 10 minutes timeout
+                        await command.ExecuteNonQueryAsync();
+                    }
+
+                    return Ok(new { 
+                        success = true, 
+                        message = "Thực thi tối ưu hóa sao lưu (usp_Optimize_Backup) thành công!" 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
         public async Task<IActionResult> GenerateScript([FromBody] ScriptRequest request)
         {
             try

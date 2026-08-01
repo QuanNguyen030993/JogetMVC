@@ -1,4 +1,5 @@
 using DocumentFormat.OpenXml.InkML;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +18,11 @@ namespace ERPCore.Pages
         private bool NotifyEnv { get; set; }
         private readonly IConfiguration _configuration;
 
-        public ManagementModel(ILogger<ManagementModel> logger, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
+        public ManagementModel(
+            ILogger<ManagementModel> logger,
+            IConfiguration configuration,
+            IHttpContextAccessor httpContextAccessor,
+            IWebHostEnvironment hostEnvironment)
         {
             _logger = logger;
             _configuration = configuration;
@@ -53,12 +58,14 @@ namespace ERPCore.Pages
                 IsSuperUser = ControllerUtil.ControllerUtil.IsSuperUser(
                     configuration,
                     ControllerUtil.ControllerUtil.GetCurrentContextUser(httpContextAccessor, configuration));
-                var DebugEnv = bool.Parse(_configuration?.GetSection("SuperUser:IsDebug").Value ?? "");
-                if (DebugEnv)
-                {
-                    //IsSuperUser = true;
-                    NotifyEnv = DebugEnv;
-                }
+#if DEBUG
+                var debugEnv = bool.TryParse(
+                    _configuration.GetSection("SuperUser:IsDebug").Value,
+                    out var configuredDebug) && configuredDebug;
+                NotifyEnv = hostEnvironment.IsDevelopment() && debugEnv;
+#else
+                NotifyEnv = false;
+#endif
                 IsDebugMode = isDebugMode
                     || string.Equals(
                         httpContextAccessor.HttpContext?.User?.Identity?.AuthenticationType,

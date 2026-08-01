@@ -27,7 +27,7 @@ BEGIN
         Selector NVARCHAR(1000) NOT NULL CONSTRAINT DF_GuideStep_Selector DEFAULT N'',
         Placement NVARCHAR(20) NOT NULL CONSTRAINT DF_GuideStep_Placement DEFAULT N'auto',
         Content NVARCHAR(MAX) NOT NULL CONSTRAINT DF_GuideStep_Content DEFAULT N'',
-        ContentFormat NVARCHAR(20) NOT NULL CONSTRAINT DF_GuideStep_ContentFormat DEFAULT N'markdown',
+        ContentFormat NVARCHAR(20) NOT NULL CONSTRAINT DF_GuideStep_ContentFormat DEFAULT N'html',
         WaitTimeoutMs INT NOT NULL CONSTRAINT DF_GuideStep_WaitTimeoutMs DEFAULT 5000,
         IsEnabled BIT NOT NULL CONSTRAINT DF_GuideStep_IsEnabled DEFAULT 1,
         CreatedBy NVARCHAR(255) NOT NULL CONSTRAINT DF_GuideStep_CreatedBy DEFAULT N'',

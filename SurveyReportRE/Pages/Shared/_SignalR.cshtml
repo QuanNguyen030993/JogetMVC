@@ -112,6 +112,7 @@
 <script>
 
     let signalRMessageCount = 0;
+    const signalRFunctionCounts = new Map();
     const serverLogAlertIds = new Set();
     let serverLogDetailPopup = null;
 
@@ -279,26 +280,53 @@ function setSignalRStatus(status) {
     }
 }
 
-function signalRBlink() {
-    //signalRMessageCount++;
+function signalRBlink(functionName) {
+    if (window.SystemWriteControls?.signalR === false) return;
 
-    //$("#signalRCounter")
-    //    .text(`Session count from SignalR: (${signalRMessageCount})`);
+    signalRMessageCount++;
+    const normalizedName = String(functionName || "UnknownSignalRHandler");
+    signalRFunctionCounts.set(normalizedName, (signalRFunctionCounts.get(normalizedName) || 0) + 1);
 
-    //const panel = $("#signalRMonitor");
+    $("#signalRCounter")
+        .text(`Session count from SignalR: (${signalRMessageCount})`);
 
-    //panel.addClass("signalr-blink");
+    const details = $("#signalRFunctionDetails");
+    if (details.length) {
+        details.empty();
+        [...signalRFunctionCounts.entries()]
+            .sort((left, right) => right[1] - left[1])
+            .slice(0, 20)
+            .forEach(function ([name, count]) {
+                $("<div>").addClass("management-signalr-detail-row")
+                    .append($("<code>").attr("title", name).text(name))
+                    .append($("<b>").text(count))
+                    .appendTo(details);
+            });
+    }
 
-    //setTimeout(() => {
-    //    panel.removeClass("signalr-blink");
-    //}, 1000);
+    const panel = $("#signalRMonitor");
+    panel.addClass("signalr-blink");
+
+    setTimeout(() => {
+        panel.removeClass("signalr-blink");
+    }, 1000);
 }
+
+window.addEventListener("system-write-controls:changed", function (event) {
+    if (event.detail?.signalR === false) {
+        $("#signalRCounter").text("SignalR diagnostics disabled");
+        $("#signalRFunctionDetails").html("<span>Handler counting is paused.</span>");
+        return;
+    }
+
+    $("#signalRCounter").text(`Session count from SignalR: (${signalRMessageCount})`);
+});
 
 function registerSignalREvent(eventName, callback) {
 
     connectionSignR.on(eventName, function (...args) {
 
-        signalRBlink();
+        signalRBlink(eventName);
 
         callback(...args);
     });
@@ -330,6 +358,7 @@ function bindConnectionScopedEvents(connectionId) {
     signalRScopedConnectionId = connectionId;
 
     connectionSignR.on(`LCReportFeature_${connectionId}`, function (responseData) {
+        signalRBlink("LCReportFeature_{connectionId}");
         if (responseData.connectionId !== _connectionId) return;
         if (responseData.isCreate) {
             appNotifySuccess("LossControl created !", false);
@@ -343,7 +372,7 @@ function bindConnectionScopedEvents(connectionId) {
     });
 
     connectionSignR.on(`sectionRender_${connectionId}`, function (responseData) {
-        signalRBlink();
+        signalRBlink("sectionRender_{connectionId}");
         const quotations = window.QuotationPage?.state?.quotes;
         if (Array.isArray(quotations)) {
             const index = quotations.findIndex(item => item.id === responseData.data?.id);
@@ -380,6 +409,7 @@ async function synchronizeSignalRContext(reconnectedId) {
     return _connectionId;
 }
 connectionSignR.onreconnecting(function (err) {
+    signalRBlink("onreconnecting");
 
     console.warn("SignalR reconnecting", err);
 
@@ -387,6 +417,7 @@ connectionSignR.onreconnecting(function (err) {
 });
 
 connectionSignR.onreconnected(async function (connectionId) {
+    signalRBlink("onreconnected");
     try {
         signalRRetryAttempt = 0;
         await synchronizeSignalRContext(connectionId);
@@ -397,6 +428,7 @@ connectionSignR.onreconnected(async function (connectionId) {
 });
 
 connectionSignR.onclose(function (error) {
+    signalRBlink("onclose");
     setSignalRStatus("disconnected");
     if (error) console.warn("SignalR disconnected.", error);
     scheduleSignalRRestart();
@@ -438,6 +470,7 @@ function startSignalRConnection() {
         return waitForSignalRConnection();
 
     signalRStartPromise = connectionSignR.start().then(async function () {
+        signalRBlink("connection.start");
         signalRRetryAttempt = 0;
         await synchronizeSignalRContext(connectionSignR.connectionId);
         setSignalRStatus("connected");
@@ -446,21 +479,21 @@ function startSignalRConnection() {
         signalRHandlersRegistered = true;
 
     connectionSignR.on("onlineUsersChanged", (users) => {
-        signalRBlink();
+        signalRBlink("onlineUsersChanged");
         //userRender(users);
     });
 
     connectionSignR.on("NotificationCountUpdated", function (count) {
-        signalRBlink();
+        signalRBlink("NotificationCountUpdated");
 
         updateNotification(count);
     });
     connectionSignR.on("NotificationUpdated", function (items) {
-        signalRBlink();
+        signalRBlink("NotificationUpdated");
         updateNotification(items.length);
     });
     connectionSignR.on("R_NotificationReceive", function (items) {
-        signalRBlink();
+        signalRBlink("R_NotificationReceive");
         debugger
         // Use the same debounced path as the initial Home load. A short retry
         // covers legacy senders that still publish before their DB insert commits.
@@ -471,11 +504,11 @@ function startSignalRConnection() {
             items.message);
     });
     connectionSignR.on("R_ServerLogAlert", function (alert) {
-        signalRBlink();
+        signalRBlink("R_ServerLogAlert");
         showServerLogAlert(alert);
     });
     connectionSignR.on("R_ItemSubmitted", function (items) {
-            signalRBlink();
+            signalRBlink("R_ItemSubmitted");
             if (items.type === "Quotation" || items.type === "PolicyIssuance") {
                 if (typeof window.reloadOverviewViewComponents !== "function") {
                     console.warn("Shared overview reload handler is not available.", items);
@@ -509,14 +542,14 @@ function startSignalRConnection() {
     );
 
     connectionSignR.on("R_InitializeLoading", function (responseData) {
-        signalRBlink();
+        signalRBlink("R_InitializeLoading");
         if (responseData.connectionId == _connectionId) {
             makeMiniLoadingPanel(responseData.payload.tabName, responseData.payload.subTabName);
             renderBrowserLoading(responseData);
         }
     });
     connectionSignR.on("R_OverviewLoading", function (responseData) {
-        signalRBlink();
+        signalRBlink("R_OverviewLoading");
         // if (responseData.connectionId == _connectionId) {
             renderBrowserLoading(responseData);
             if (responseData.payload && responseData.payload.progressvalue >= 100) {

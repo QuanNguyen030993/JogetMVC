@@ -742,6 +742,11 @@ $.fn.tmivhandsomgrid = function(arg1, arg2, arg3) {
 };
 
 $.fn.tmivtourguide = function(arg1, arg2, arg3) {
+    if (Array.isArray(arg1)) {
+        startTour(arg1, arg2 || {});
+        return this;
+    }
+
     if (typeof arg1 === "string") {
         if (arg1 === "option") {
             if (arguments.length === 2 && this.length === 1) {

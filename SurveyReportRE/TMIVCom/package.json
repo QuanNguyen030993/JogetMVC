@@ -14,6 +14,7 @@
     "cropjs": "^1.1.0",
     "cropperjs": "^2.1.1",
     "docx-preview": "^0.4.0",
+    "driver.js": "^1.8.0",
     "jquery": "^4.0.0",
     "leaflet": "^1.9.4",
     "react": "^18.3.1",

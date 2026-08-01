@@ -52,6 +52,19 @@ namespace ERPCore.Controllers.Config
             _internalAuth = configuration.GetSection("InternalAuth").Get<InternalAuth>();
         }
 
+        private string DeployRootPath
+        {
+            get
+            {
+                var configuredPath = _blobStorageSettings?.CurrentValue?.DeployPath;
+                if (!string.IsNullOrEmpty(configuredPath) && System.IO.Directory.Exists(configuredPath))
+                {
+                    return configuredPath;
+                }
+                return System.IO.Directory.GetCurrentDirectory();
+            }
+        }
+
         #region GET API 
 
 
@@ -60,7 +73,7 @@ namespace ERPCore.Controllers.Config
         [HttpGet("{module}/{view}")]
         public IActionResult GetViewContent(string module, string view)
         {
-            var root = _blobStorageSettings.CurrentValue.DeployPath;
+            var root = DeployRootPath;
 
             var path = Path.Combine(
                 root,
@@ -119,7 +132,7 @@ namespace ERPCore.Controllers.Config
             var fieldJson = body.GetProperty("fieldJson")
                                 .GetString();
 
-            var root = _blobStorageSettings.CurrentValue.DeployPath;
+            var root = DeployRootPath;
 
 
 
@@ -188,7 +201,7 @@ namespace ERPCore.Controllers.Config
             var fieldJson = body.GetProperty("groupJson")
                                 .GetString();
 
-            var root = _blobStorageSettings.CurrentValue.DeployPath;
+            var root = DeployRootPath;
 
 
 
@@ -285,7 +298,7 @@ namespace ERPCore.Controllers.Config
             //var fieldJson = body.GetProperty("groupJson")
             //                    .GetString();
 
-            var root = _blobStorageSettings.CurrentValue.DeployPath;
+            var root = DeployRootPath;
 
 
 
@@ -398,7 +411,7 @@ namespace ERPCore.Controllers.Config
             var groupCaption = body.GetProperty("groupCaption").GetString();
             var fieldJson = body.GetProperty("fieldJson").GetString();
 
-            var root = _blobStorageSettings.CurrentValue.DeployPath;
+            var root = DeployRootPath;
 
             var path = Path.Combine(
                 root,
@@ -599,7 +612,7 @@ namespace ERPCore.Controllers.Config
             var sourceCaption = body.GetProperty("sourceGroup").GetString();
             var targetCaption = body.GetProperty("targetGroup").GetString();
 
-            var root = _blobStorageSettings.CurrentValue.DeployPath;
+            var root = DeployRootPath;
 
             var path = Path.Combine(
               root,
@@ -678,7 +691,7 @@ namespace ERPCore.Controllers.Config
             var view = body.GetProperty("view").GetString();
             var groupJson = body.GetProperty("groupJson").GetString();
 
-            var root = _blobStorageSettings.CurrentValue.DeployPath;
+            var root = DeployRootPath;
 
             var path = Path.Combine(
                root,

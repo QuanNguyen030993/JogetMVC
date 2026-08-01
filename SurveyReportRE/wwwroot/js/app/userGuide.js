@@ -4,6 +4,7 @@
     const STORAGE_KEY = "tmiv.user-guides.v1";
     const VALID_PLACEMENTS = ["auto", "top", "right", "bottom", "left", "center"];
     let activeTour = null;
+    let activeDriver = null;
     let studioState = null;
     let capturedElement = null;
     let repositionFrame = null;
@@ -124,11 +125,8 @@
                 const result = await response.json();
                 return Array.isArray(result?.data) ? result.data : [];
             } catch (error) {
-                console.warn("Guide API is unavailable; using browser storage.", error);
-                return (await localStorageAdapter.list()).map(guide => ({
-                    ...guide,
-                    isEligible: Number(guide.maxLoginHours || 0) <= 0
-                }));
+                console.warn("Guide API is unavailable; no database guides were loaded.", error);
+                return [];
             }
         },
         async save(guide) {
@@ -145,6 +143,10 @@
                     throw error;
                 }
                 const result = await response.json();
+                const submittedStepCount = Array.isArray(guide.steps) ? guide.steps.length : 0;
+                if (Number(result?.savedStepCount) !== submittedStepCount) {
+                    throw new Error("The guide could not be verified after saving.");
+                }
                 return result?.data || guide;
             } catch (error) {
                 console.warn("Guide API save failed.", error);
@@ -290,7 +292,7 @@
         const popover = root.querySelector(".ug-popover");
         root.querySelector(".ug-step-count").textContent = `Step ${index + 1} of ${steps.length}`;
         root.querySelector(".ug-step-title").textContent = step.title || `Step ${index + 1}`;
-        root.querySelector(".ug-step-content").innerHTML = renderContent(step.content, step.format || "markdown");
+        root.querySelector(".ug-step-content").innerHTML = renderContent(step.content, step.format || "html");
         root.querySelector(".ug-prev").disabled = index === 0;
         root.querySelector(".ug-next").textContent = index === steps.length - 1 ? "Finish" : "Next";
         root.classList.add("is-visible");
@@ -346,6 +348,34 @@
             : guideOrId;
         if (!guide || !Array.isArray(guide.steps) || !guide.steps.length) return false;
         stop();
+
+        const tourSteps = convertGuideStepsForControl(guide.steps);
+        const staticTourStarter = window.jQuery?.tmivtourguide || window.TMIVCom?.startTour;
+        if (typeof staticTourStarter === "function") {
+            activeTour = { guide: clone(guide), index: 0 };
+            document.body.classList.add("ug-tour-active");
+            activeDriver = staticTourStarter(tourSteps, {
+                onExit: function () {
+                    activeDriver = null;
+                    activeTour = null;
+                    document.body.classList.remove("ug-tour-active");
+                }
+            });
+            return true;
+        }
+
+        if (typeof window.jQuery?.fn?.tmivtourguide === "function") {
+            activeTour = { guide: clone(guide), index: 0 };
+            document.body.classList.add("ug-tour-active");
+            window.jQuery(document).tmivtourguide(tourSteps, {
+                onExit: function () {
+                    activeTour = null;
+                    document.body.classList.remove("ug-tour-active");
+                }
+            });
+            return true;
+        }
+
         activeTour = { guide: clone(guide), index: 0 };
         document.body.classList.add("ug-tour-active");
         window.addEventListener("resize", repositionTour);
@@ -354,7 +384,28 @@
         return true;
     }
 
+    function convertGuideStepsForControl(steps) {
+        const driverPlacements = ["top", "right", "bottom", "left"];
+        return (Array.isArray(steps) ? steps : []).map((step, index) => {
+            const element = String(step.element || step.selector || "").trim();
+            const placement = String(step.position || step.placement || "bottom").toLowerCase();
+            const controlStep = {
+                title: step.title || step.stepTitle || `Step ${index + 1}`,
+                content: renderContent(step.content, step.contentFormat || step.format || "html"),
+                position: driverPlacements.includes(placement) ? placement : "bottom"
+            };
+
+            if (element) controlStep.element = element;
+            return controlStep;
+        });
+    }
+
     function stop() {
+        if (activeDriver) {
+            const driver = activeDriver;
+            activeDriver = null;
+            driver.destroy?.();
+        }
         activeTour = null;
         document.body.classList.remove("ug-tour-active");
         window.removeEventListener("resize", repositionTour);
@@ -531,9 +582,9 @@
                             <label>Selector<input class="ug-input ug-mono" data-step-field="selector" placeholder="#element-id" /></label>
                             <div class="ug-field-row">
                                 <label>Placement<select class="ug-input" data-step-field="placement"><option>auto</option><option>top</option><option>right</option><option>bottom</option><option>left</option><option>center</option></select></label>
-                                <label>Content format<select class="ug-input" data-step-field="format"><option value="markdown">Markdown</option><option value="html">HTML</option></select></label>
+                                <label>Content format<select class="ug-input" data-step-field="format"><option value="html">HTML</option><option value="markdown">Markdown</option></select></label>
                             </div>
-                            <label>Formatted content<textarea class="ug-input ug-content-input" data-step-field="content" placeholder="Use **bold**, lists and links..."></textarea></label>
+                            <label>Formatted content<textarea class="ug-input ug-content-input" data-step-field="content" placeholder="Use HTML tags such as <p>, <strong>, <ul>..."></textarea></label>
                         </div>
                     </section>
                     <section class="ug-tab-panel" data-panel="wiki" hidden>
@@ -597,7 +648,10 @@
         editor.hidden = !selected;
         if (selected) {
             root.querySelectorAll("[data-step-field]").forEach(input => {
-                input.value = selected[input.dataset.stepField] || (input.dataset.stepField === "placement" ? "auto" : "");
+                const fallbackValue = input.dataset.stepField === "placement"
+                    ? "auto"
+                    : (input.dataset.stepField === "format" ? "html" : "");
+                input.value = selected[input.dataset.stepField] || fallbackValue;
             });
         }
     }
@@ -629,7 +683,7 @@
             || element.textContent.trim().replace(/\s+/g, " ").slice(0, 60) || "New step";
         endCapture();
         studioState.guide.steps.push({
-            id: uid("step"), title, selector, placement: "auto", format: "markdown", content: "Describe what the user should do here."
+            id: uid("step"), title, selector, placement: "auto", format: "html", content: "<p>Describe what the user should do here.</p>"
         });
         studioState.selectedStep = studioState.guide.steps.length - 1;
         const root = studioRoot();
@@ -671,7 +725,7 @@
         root.querySelector(".ug-capture").addEventListener("click", () => beginCapture(root));
         root.querySelector(".ug-add-center").addEventListener("click", () => {
             updateDraftFromFields(root);
-            studioState.guide.steps.push({ id: uid("step"), title: "Information", selector: "", placement: "center", format: "markdown", content: "Add guidance here." });
+            studioState.guide.steps.push({ id: uid("step"), title: "Information", selector: "", placement: "center", format: "html", content: "<p>Add guidance here.</p>" });
             studioState.selectedStep = studioState.guide.steps.length - 1;
             renderStudio(root);
         });
@@ -723,10 +777,17 @@
                 window.DevExpress?.ui?.notify?.("A guide needs a title and at least one step.", "warning", 3000);
                 return;
             }
+            const saveButton = root.querySelector(".ug-save");
+            saveButton.disabled = true;
+            saveButton.textContent = "Saving...";
             try {
                 studioState.guide.key = studioState.guide.key.trim() || studioState.guide.id;
                 studioState.guide = await storage.save(studioState.guide);
-                window.DevExpress?.ui?.notify?.("User guide saved.", "success", 2200);
+                const savedStepCount = studioState.guide.steps.length;
+                window.DevExpress?.ui?.notify?.(
+                    `${savedStepCount} guide step${savedStepCount === 1 ? "" : "s"} saved to database.`,
+                    "success",
+                    2600);
                 root.classList.remove("is-visible");
             } catch (error) {
                 window.DevExpress?.ui?.notify?.(
@@ -735,6 +796,9 @@
                         : "Unable to save the user guide.",
                     "error",
                     3500);
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = "Save guide";
             }
         });
         root.querySelector(".ug-preview").addEventListener("click", () => {
@@ -778,7 +842,8 @@
         root.classList.add("is-visible");
     }
 
-    async function openLauncher() {
+    async function openLauncher(options) {
+        const launcherOptions = options || {};
         let panel = document.getElementById("tmivGuideLauncherPanel");
         if (!panel) {
             panel = document.createElement("div");
@@ -787,14 +852,16 @@
             document.body.appendChild(panel);
         }
         const guides = await storage.list();
-        const matching = guides.filter(item => item.enabled !== false && item.isEligible !== false && routeMatches(item));
-        const canManage = canManageGuides();
+        const canManage = launcherOptions.allowManage !== false && canManageGuides();
+        const matching = canManage
+            ? guides
+            : guides.filter(item => item.enabled !== false && item.isEligible !== false && routeMatches(item));
         panel.innerHTML = `
             <div class="ug-launcher-head"><strong>User guides</strong><button type="button" class="ug-icon-button">&times;</button></div>
             <div class="ug-launcher-list">${matching.length ? matching.map(guide => `
                 <div class="ug-launcher-row">
                     <button type="button" class="ug-launcher-guide" data-guide-id="${escapeHtml(guide.id)}">
-                        <span class="fa fa-compass"></span><span><strong>${escapeHtml(guide.title)}</strong><small>${guide.steps.length} steps</small></span>
+                        <span class="fa fa-compass"></span><span><strong>${escapeHtml(guide.title)}</strong><small>${guide.steps.length} steps${canManage ? ` · ${escapeHtml(guide.route || "All screens")}` : ""}</small></span>
                     </button>
                     ${canManage ? `<button type="button" class="ug-launcher-edit" data-edit-guide-id="${escapeHtml(guide.id)}" aria-label="Edit ${escapeHtml(guide.title)}"><span class="fa fa-pencil"></span></button>` : ""}
                 </div>`).join("") : '<p class="ug-empty">No guide is configured for this screen.</p>'}</div>
@@ -815,12 +882,24 @@
         panel.classList.toggle("is-visible");
     }
 
-    function bindLauncher(selector) {
+    function bindLauncher(selector, options) {
+        const launcherOptions = options || {};
         const element = typeof selector === "string" ? document.querySelector(selector) : selector;
         if (element && !element.dataset.userGuideBound) {
             element.dataset.userGuideBound = "true";
-            element.addEventListener("click", openLauncher);
-            window.setTimeout(startEligible, 900);
+            element.addEventListener("click", () => {
+                if (launcherOptions.adminOnly === true && !canManageGuides()) {
+                    window.DevExpress?.ui?.notify?.(
+                        "Only IT administrators can set up user guides.",
+                        "warning",
+                        3000);
+                    return;
+                }
+                openLauncher(launcherOptions);
+            });
+            if (launcherOptions.autoStart !== false) {
+                window.setTimeout(startEligible, 900);
+            }
         }
     }
 
@@ -852,6 +931,7 @@
         bindLauncher,
         parseWiki,
         renderContent,
+        convertGuideStepsForControl,
         async list() { return storage.list(); },
         setStorageAdapter(adapter) {
             if (!adapter || typeof adapter.list !== "function" || typeof adapter.save !== "function") {

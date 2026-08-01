@@ -2511,6 +2511,30 @@ function markupStatusCSS(container, options, control = null) {
 
 }
 
+window.SystemWriteControls = Object.assign({
+    httpAuditRequest: false,
+    errorClientLog: true,
+    signalR: true
+}, window.SystemWriteControls || {});
+
+window.refreshSystemWriteControls = function () {
+    return fetch('/api/Constant/GetSystemWriteControls', { credentials: 'same-origin' })
+        .then(function (response) { return response.ok ? response.json() : null; })
+        .then(function (settings) {
+            if (settings) {
+                Object.assign(window.SystemWriteControls, settings);
+                window.dispatchEvent(new CustomEvent('system-write-controls:changed', {
+                    detail: Object.assign({}, window.SystemWriteControls)
+                }));
+            }
+            return window.SystemWriteControls;
+        })
+        .catch(function () { return window.SystemWriteControls; });
+};
+
+window.refreshSystemWriteControls();
+window.setInterval(window.refreshSystemWriteControls, 10000);
+
 const clientErrorReporter = (function () {
     const endpoint = '/api/ClientBrowserError/LogClientError';
     const sentAt = [];
@@ -2621,6 +2645,7 @@ const clientErrorReporter = (function () {
 
     function send(message, err, details) {
         if (err?.status === 200) return Promise.resolve(false);
+        if (window.SystemWriteControls?.errorClientLog === false) return Promise.resolve(false);
 
         const payload = normalizeError(message, err, details);
         if (!canSend(payload)) return Promise.resolve(false);
