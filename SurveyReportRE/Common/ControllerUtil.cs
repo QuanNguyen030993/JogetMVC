@@ -25,11 +25,15 @@ using ERPCore.Models.Business.Migration.Config;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
 using System.Runtime.CompilerServices;
 using ERPCore.Models.Migration.Business.MasterData;
+using ERPCore.Models.Migration.Business.Config;
+using ERPCore.Models.Migration.Business.HumanResource;
+using System.Reflection;
 
 namespace ERPCore.ControllerUtil
 {
     public static class ControllerUtil
     {
+        public const string InitialNotificationITAllRegionsConstant = "InitialNotificationITAllRegions";
         public static string tmivEnvironment = "Default";
         public static string jogetEnvironment = "Joget";
         public static string GetWebFile(IWebHostEnvironment env, string folder, string filename)
@@ -160,6 +164,131 @@ namespace ERPCore.ControllerUtil
 
             return (PICMain, PICLeader, PICHOD);
 
+        }
+
+        public static async Task<string[]> ResolveInitialNotificationRecipientsAsync(
+            IBaseRepository<Users> usersRepository,
+            PICAttributes pic,
+            IEnumerable<PICSysHandleAttributes> leaderPics,
+            IEnumerable<PICAttributes> hodPics,
+            string? department,
+            string? foRoutingCode = null)
+        {
+            string normalizedDepartment = (department ?? string.Empty).Trim().ToUpperInvariant();
+            string[] assignedPicAccounts = SplitNotificationAccounts(
+                Util.PICPicker(pic ?? new PICAttributes(), normalizedDepartment));
+            if (assignedPicAccounts.Length > 0)
+            {
+                return assignedPicAccounts;
+            }
+
+            List<PICSysHandleAttributes> regionalLeaders = (leaderPics
+                ?? Enumerable.Empty<PICSysHandleAttributes>()).ToList();
+            List<PICAttributes> regionalHods = (hodPics
+                ?? Enumerable.Empty<PICAttributes>()).ToList();
+            List<string> regionalRecipients = new();
+            int regionCount = Math.Max(regionalLeaders.Count, regionalHods.Count);
+
+            for (int regionIndex = 0; regionIndex < regionCount; regionIndex++)
+            {
+                PICSysHandleAttributes? leaderPic = regionIndex < regionalLeaders.Count
+                    ? regionalLeaders[regionIndex]
+                    : null;
+                string leaderValue = normalizedDepartment switch
+                {
+                    "FO" => ResolveFoLeaderValue(leaderPic?.FO, foRoutingCode),
+                    "TS" => leaderPic?.TS ?? string.Empty,
+                    "UW" => leaderPic?.UW ?? string.Empty,
+                    "LMKT" => leaderPic?.LMKT ?? string.Empty,
+                    "PM" => leaderPic?.PM ?? string.Empty,
+                    _ => string.Empty
+                };
+                string[] existingLeaders = await FilterExistingNotificationAccountsAsync(
+                    usersRepository,
+                    SplitNotificationAccounts(leaderValue));
+                if (existingLeaders.Length > 0)
+                {
+                    regionalRecipients.AddRange(existingLeaders);
+                    continue;
+                }
+
+                PICAttributes? hodPic = regionIndex < regionalHods.Count
+                    ? regionalHods[regionIndex]
+                    : null;
+                string hodValue = Util.PICPicker(hodPic ?? new PICAttributes(), normalizedDepartment);
+                regionalRecipients.AddRange(await FilterExistingNotificationAccountsAsync(
+                    usersRepository,
+                    SplitNotificationAccounts(hodValue)));
+            }
+
+            return regionalRecipients
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+
+        public static async Task<bool> ShouldUseAllRegionsForInitialNotificationAsync(
+            IBaseRepository<Employee> employeeRepository,
+            IBaseRepository<Constant> constantRepository,
+            IHttpContextAccessor httpContextAccessor,
+            IConfiguration configuration)
+        {
+            Constant? setting = await constantRepository.GetSingleObject(item =>
+                item.ParameterName == InitialNotificationITAllRegionsConstant && !item.Deleted);
+            string settingValue = setting?.Value?.Trim() ?? string.Empty;
+            bool featureEnabled = setting == null
+                || !new[] { "false", "0", "off", "no" }.Contains(
+                    settingValue,
+                    StringComparer.OrdinalIgnoreCase);
+            if (!featureEnabled) return false;
+
+            string currentAccount = GetCurrentContextUser(httpContextAccessor, configuration);
+            Employee? employee = await employeeRepository.GetSingleObjectFullInclude(
+                item => item.AccountName == currentAccount && !item.Deleted,
+                null,
+                item => item.SystemRolesFK);
+
+            return string.Equals(employee?.Department?.Trim(), "IT", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(employee?.SystemRolesFK?.RoleName?.Trim(), "IT", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string ResolveFoLeaderValue(FO? foLeaders, string? routingCode)
+        {
+            if (foLeaders == null) return string.Empty;
+
+            PropertyInfo[] properties = typeof(FO).GetProperties();
+            PropertyInfo? matchedProperty = properties.FirstOrDefault(property =>
+                string.Equals(property.Name, routingCode?.Trim(), StringComparison.OrdinalIgnoreCase));
+            string matchedValue = matchedProperty?.GetValue(foLeaders)?.ToString() ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(matchedValue)) return matchedValue;
+
+            return string.Join(",", properties
+                .Select(property => property.GetValue(foLeaders)?.ToString())
+                .Where(value => !string.IsNullOrWhiteSpace(value)));
+        }
+
+        private static string[] SplitNotificationAccounts(string? value)
+            => (value ?? string.Empty)
+                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(account => account.Split('\\').Last().Trim())
+                .Where(account => !string.IsNullOrWhiteSpace(account))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+        private static async Task<string[]> FilterExistingNotificationAccountsAsync(
+            IBaseRepository<Users> usersRepository,
+            IEnumerable<string> accounts)
+        {
+            List<string> existingAccounts = new();
+            foreach (string account in accounts)
+            {
+                Users? user = await usersRepository.GetSingleObject(item =>
+                    item.username == account && !item.Deleted);
+                if (user != null) existingAccounts.Add(account);
+            }
+
+            return existingAccounts
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
         }
         //public static async Task<Notification> Notify(
         //    dynamic transferObject,

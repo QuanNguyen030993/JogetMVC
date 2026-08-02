@@ -33228,6 +33228,20 @@ textarea {
     --fan-y: 32px;
 }
 
+/* When Route is hidden, spread the remaining three shortcuts across the
+   complete fan instead of leaving them crowded in its upper half. */
+.dept-node:not(.status) .dept-subnode:nth-child(2) {
+    --fan-y: -32px;
+}
+
+.dept-node:not(.status) .dept-subnode:nth-child(3) {
+    --fan-y: 0px;
+}
+
+.dept-node:not(.status) .dept-subnode:nth-child(4) {
+    --fan-y: 32px;
+}
+
 .dept-node .dept-subnode::after {
     content: attr(data-tooltip);
     position: absolute;
@@ -33311,6 +33325,12 @@ textarea {
     border-color: #60a5fa;
     color: #1d4ed8;
     box-shadow: 0 6px 16px rgba(37, 99, 235, .22);
+}
+
+.dept-node .dept-subnode.part-active::after {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
 }
 
 .dept-node .dept-subnode:hover,

@@ -380,19 +380,19 @@ function bindConnectionScopedEvents(connectionId) {
     }
     signalRScopedConnectionId = connectionId;
 
-    connectionSignR.on(`LCReportFeature_${connectionId}`, function (responseData) {
-        signalRBlink("LCReportFeature_{connectionId}");
-        if (responseData.connectionId !== _connectionId) return;
-        if (responseData.isCreate) {
-            appNotifySuccess("LossControl created !", false);
-            callElementView(`/Business/LCForm/LossControl_Form/${responseData.responseData.id}`, `form_LossControl_Form_${responseData.responseData.id}`, `LossControl ${responseData.responseData.lossControlNo}`);
-        }
+    // connectionSignR.on(`LCReportFeature_${connectionId}`, function (responseData) {
+    //     signalRBlink("LCReportFeature_{connectionId}");
+    //     if (responseData.connectionId !== _connectionId) return;
+    //     if (responseData.isCreate) {
+    //         appNotifySuccess("LossControl created !", false);
+    //         callElementView(`/Business/LCForm/LossControl_Form/${responseData.responseData.id}`, `form_LossControl_Form_${responseData.responseData.id}`, `LossControl ${responseData.responseData.lossControlNo}`);
+    //     }
 
-        $(`#copyLossControlForm_${responseData.responseData.id}`).dxButton("instance")
-            ?.option("visible", responseData.copyVisibleStatus);
-        $(`#previewLossControlForm_${responseData.responseData.id}`).dxButton("instance")
-            ?.option("text", responseData.pdfButtonText);
-    });
+    //     $(`#copyLossControlForm_${responseData.responseData.id}`).dxButton("instance")
+    //         ?.option("visible", responseData.copyVisibleStatus);
+    //     $(`#previewLossControlForm_${responseData.responseData.id}`).dxButton("instance")
+    //         ?.option("text", responseData.pdfButtonText);
+    // });
 
     connectionSignR.on(`sectionRender_${connectionId}`, function (responseData) {
         signalRBlink("sectionRender_{connectionId}");

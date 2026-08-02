@@ -40,6 +40,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IBaseRepository<ERPCore.Models.Migration.Business.Data.Attachment> _attachmentRepository;
     private readonly IBaseRepository<FormatCodeNo> _formatCodeNoRepository;
     private readonly IBaseRepository<Users> _usersRepository;
+    private readonly IBaseRepository<Constant> _constantRepository;
     private readonly IBaseRepository<Employee> _employeeRepository;
     private readonly IBaseRepository<UserRoles> _userRolesRepository;
     private readonly IBaseRepository<Roles> _rolesRepository;
@@ -94,6 +95,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _attachmentRepository = new BaseRepository<ERPCore.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
         _formatCodeNoRepository = new BaseRepository<FormatCodeNo>(configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
+        _constantRepository = new BaseRepository<Constant>(configuration, _httpContextAccessor);
         _employeeRepository = new BaseRepository<Employee>(configuration, _httpContextAccessor);
         _userRolesRepository = new BaseRepository<UserRoles>(configuration, _httpContextAccessor);
         _rolesRepository = new BaseRepository<Roles>(configuration, _httpContextAccessor);
@@ -343,6 +345,11 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     [HttpPost]
     public async Task<IActionResult> CreatePolicyIssuance([FromForm] List<PolicyIssuance> PolicyIssuanceData)
     {
+        bool useAllRegionsForInitialNotification = await ControllerUtil.ShouldUseAllRegionsForInitialNotificationAsync(
+            _employeeRepository,
+            _constantRepository,
+            _httpContextAccessor,
+            configuration);
         IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
         OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration));
         PolicyIssuanceData = JsonConvert.DeserializeObject<List<PolicyIssuance>>(Request.Form["PolicyIssuanceData"]);
@@ -491,7 +498,9 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                 JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(PolicyIssuance)),
                 JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(PolicyIssuanceData)),
                 siteEnums,
-                 null
+                 null,
+                 true,
+                 useAllRegionsForInitialNotification
                 );
 
                 result = new SignalRResult
@@ -819,6 +828,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
         return Ok(new { success = true, id = policyIssuance.Id, dept, acceptedAt });
     }
+
     [HttpGet("{listIds}/{jsessionId}")]
     public async Task<ActionResult<PolicyIssuance>> PullDataBySession(string listIds,string jsessionId)
     {
@@ -1011,9 +1021,11 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     public async Task NotificationHandle(
          WorkflowDefinition workflowDefinition,
          dynamic quotation,
-            dynamic quotationData,
-         List<EnumData> siteEnums,
-        IFormFile file = null
+         dynamic quotationData,
+        List<EnumData> siteEnums,
+        IFormFile file = null,
+        bool enableLeadershipFallback = false,
+        bool useAllRegions = false
         )
     {
         StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.IsStart == true);
@@ -1094,7 +1106,42 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                 workflowDefinition,
                 stepsWorkflow,
                 JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(quotation)));
-            string picsStr = picS.PICMain.GetType().GetProperty(stepsWorkflow?.ToNodeId ?? "")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
+            string[] notificationRecipients;
+            if (enableLeadershipFallback)
+            {
+                IEnumerable<SiteConfig> notificationSites = useAllRegions
+                    ? _businessConfig.CurrentValue.Sites.Values
+                    : Enumerable.Empty<SiteConfig>();
+                IEnumerable<PICSysHandleAttributes> leaderPics = useAllRegions
+                    ? notificationSites.Select(site => site.LeaderFollowRequest)
+                    : new[] { picS.PICLeader };
+                IEnumerable<PICAttributes> hodPics = useAllRegions
+                    ? notificationSites.Select(site => site.HODFollowRequest)
+                    : new[] { picS.PICHOD };
+                notificationRecipients = await ControllerUtil.ResolveInitialNotificationRecipientsAsync(
+                    _usersRepository,
+                    picS.PICMain,
+                    leaderPics,
+                    hodPics,
+                    stepsWorkflow.ToNodeId);
+                if (notificationRecipients.Length == 0)
+                {
+                    //_logger.LogWarning(
+                    //    "No PIC, valid Leader PIC, or valid HOD PIC was found for new PolicyIssuance {PolicyIssuanceId}, department {Department}.",
+                    //    quotation.Id,
+                    //    stepsWorkflow.ToNodeId);
+                }
+            }
+            else
+            {
+                string picsStr = picS.PICMain.GetType()
+                    .GetProperty(stepsWorkflow?.ToNodeId ?? "")
+                    ?.GetValue(picS.PICMain)
+                    ?.ToString() ?? "";
+                notificationRecipients = picsStr
+                    .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToArray();
+            }
             //foreach (var memberName in picsStr.Split(","))
             //{
             //    NotificationRequest notification = new NotificationRequest();
@@ -1118,7 +1165,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             //}
             if (!string.IsNullOrEmpty(notificationTitle.Title))
             {
-                foreach (string memberName in picsStr.Split(","))
+                foreach (string memberName in notificationRecipients)
                 {
 
                     NotificationRequest notification = new NotificationRequest();

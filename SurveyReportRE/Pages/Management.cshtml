@@ -13,7 +13,7 @@
 @await Html.PartialAsync("_EnumConstant")
 @await Html.PartialAsync("_EntityConstant")
 <script>
-
+    const managementUserGuideEnabled = false;
 
     // $.tmivnotify({
     //         title: "Notification",
@@ -47,9 +47,11 @@
                         .attr("data-source-url", url)
                         .attr("data-source-caption", caption || "")
                         .data("source-data", sourceData);
-                    window.setTimeout(function () {
-                        window.UserGuide?.startEligible?.();
-                    }, 350);
+                    if (managementUserGuideEnabled) {
+                        window.setTimeout(function () {
+                            window.UserGuide?.startEligible?.();
+                        }, 350);
+                    }
                 }
                 catch (e) {
                     appNotify({ message: e.message, type: 'error' });
@@ -745,15 +747,19 @@
    
             @await Html.PartialAsync("_SPAReference")
             <script>
-                window.UserGuide?.bindLauncher("#userGuideLauncher", {
-                    adminOnly: true,
-                    allowManage: true,
-                    autoStart: false
-                });
-                window.UserGuide?.bindLauncher("#tmivTourGuideLauncher", {
-                    allowManage: false,
-                    autoStart: true
-                });
+                if (managementUserGuideEnabled) {
+                    window.UserGuide?.bindLauncher("#userGuideLauncher", {
+                        adminOnly: true,
+                        allowManage: true,
+                        autoStart: false
+                    });
+                    window.UserGuide?.bindLauncher("#tmivTourGuideLauncher", {
+                        allowManage: false,
+                        autoStart: true
+                    });
+                } else {
+                    $("#userGuideLauncher, #tmivTourGuideLauncher").hide();
+                }
             </script>
             <div id="mainPopup"></div>
             <div id="outlinePopup"></div>

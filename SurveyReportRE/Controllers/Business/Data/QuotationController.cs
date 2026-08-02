@@ -44,6 +44,7 @@ public class QuotationController : BaseControllerApi<Quotation>
     private readonly IBaseRepository<ERPCore.Models.Migration.Business.Data.Attachment> _attachmentRepository;
     private readonly IBaseRepository<FormatCodeNo> _formatCodeNoRepository;
     private readonly IBaseRepository<Users> _usersRepository;
+    private readonly IBaseRepository<Constant> _constantRepository;
     private readonly IBaseRepository<Employee> _employeeRepository;
     private readonly IBaseRepository<UserRoles> _userRolesRepository;
     private readonly IBaseRepository<Roles> _rolesRepository;
@@ -98,6 +99,7 @@ public class QuotationController : BaseControllerApi<Quotation>
         _attachmentRepository = new BaseRepository<ERPCore.Models.Migration.Business.Data.Attachment>(configuration, _httpContextAccessor);
         _formatCodeNoRepository = new BaseRepository<FormatCodeNo>(configuration, _httpContextAccessor);
         _usersRepository = new BaseRepository<Users>(configuration, _httpContextAccessor);
+        _constantRepository = new BaseRepository<Constant>(configuration, _httpContextAccessor);
         _employeeRepository = new BaseRepository<Employee>(configuration, _httpContextAccessor);
         _userRolesRepository = new BaseRepository<UserRoles>(configuration, _httpContextAccessor);
         _rolesRepository = new BaseRepository<Roles>(configuration, _httpContextAccessor);
@@ -477,6 +479,11 @@ public class QuotationController : BaseControllerApi<Quotation>
     {
         try
         {
+            bool useAllRegionsForInitialNotification = await ControllerUtil.ShouldUseAllRegionsForInitialNotificationAsync(
+                _employeeRepository,
+                _constantRepository,
+                _httpContextAccessor,
+                configuration);
 
             SignalRResult result = new SignalRResult
             {
@@ -538,7 +545,8 @@ public class QuotationController : BaseControllerApi<Quotation>
                          JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotation)),
                          JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotationData)),
                         siteEnums,
-                         file
+                         file,
+                         useAllRegionsForInitialNotification
                         );
 
                         i++;
@@ -595,7 +603,8 @@ public class QuotationController : BaseControllerApi<Quotation>
                         JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotation)),
                         JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotationData)), 
                         siteEnums,
-                         null
+                         null,
+                         useAllRegionsForInitialNotification
                         );
                         quotationComplete = quotationCount ?? 0 / i; //Pending at ajax
                         result = new SignalRResult
@@ -1015,9 +1024,10 @@ public class QuotationController : BaseControllerApi<Quotation>
     public async Task NotificationHandle(
          WorkflowDefinition workflowDefinition,
          dynamic quotation,
-            dynamic quotationData,
+         dynamic quotationData,
          List<EnumData> siteEnums,
-        IFormFile file = null
+        IFormFile file = null,
+        bool useAllRegions = false
         )
     {
         StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.IsStart == true);
@@ -1149,10 +1159,34 @@ public class QuotationController : BaseControllerApi<Quotation>
                 workflowDefinition,
                 stepsWorkflow,
                 JsonConvert.DeserializeObject<Quotation>(JsonConvert.SerializeObject(quotation)));
-            string picsStr = picS.PICMain.GetType().GetProperty(stepsWorkflow?.ToNodeId ?? "")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
-           
+            string foRoutingCode = Convert.ToString(quotation.LineCode)
+                ?? Convert.ToString(quotation.ProductCode)
+                ?? string.Empty;
+            IEnumerable<SiteConfig> notificationSites = useAllRegions
+                ? _businessConfig.CurrentValue.Sites.Values
+                : Enumerable.Empty<SiteConfig>();
+            IEnumerable<PICSysHandleAttributes> leaderPics = useAllRegions
+                ? notificationSites.Select(site => site.LeaderFollowRequest)
+                : new[] { picS.PICLeader };
+            IEnumerable<PICAttributes> hodPics = useAllRegions
+                ? notificationSites.Select(site => site.HODFollowRequest)
+                : new[] { picS.PICHOD };
+            string[] notificationRecipients = await ControllerUtil.ResolveInitialNotificationRecipientsAsync(
+                _usersRepository,
+                picS.PICMain,
+                leaderPics,
+                hodPics,
+                stepsWorkflow.ToNodeId,
+                foRoutingCode);
+            if (notificationRecipients.Length == 0)
+            {
+                //_logger.LogWarning(
+                //    "No PIC, valid Leader PIC, or valid HOD PIC was found for new Quotation {QuotationId}, department {Department}.",
+                //    quotation.Id,
+                //    stepsWorkflow.ToNodeId);
+            }
 
-            foreach (string memberName in picsStr.Split(","))
+            foreach (string memberName in notificationRecipients)
             {
 
                 //dynamic transferObject = new

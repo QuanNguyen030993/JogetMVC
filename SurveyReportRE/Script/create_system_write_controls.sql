@@ -11,7 +11,8 @@ INSERT INTO @Controls (ParameterName, [Value])
 VALUES
     (N'HttpAuditRequest', N'true'),
     (N'ErrorClientLog', N'true'),
-    (N'SignalR', N'true');
+    (N'SignalR', N'true'),
+    (N'InitialNotificationITAllRegions', N'true');
 
 INSERT INTO dbo.Constant
 (
