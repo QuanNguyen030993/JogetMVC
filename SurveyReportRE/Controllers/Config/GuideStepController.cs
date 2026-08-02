@@ -58,7 +58,7 @@ public class GuideStepController : BaseControllerApi<GuideStep>
         var steps = (await connection.QueryAsync<GuideStep>(@"
             SELECT *
             FROM dbo.GuideStep WITH (NOLOCK)
-            WHERE Deleted = 0 AND IsEnabled = 1
+            WHERE Deleted = 0
             ORDER BY GuideKey, StepNumber, Id")).ToList();
         
         var accountName = ControllerUtil.ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration)?.Trim() ?? "";

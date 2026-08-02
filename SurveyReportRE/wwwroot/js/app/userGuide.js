@@ -117,16 +117,28 @@
         }
     };
 
+    let apiGuideCache = null;
+    let apiGuideRequest = null;
+
     const apiStorageAdapter = {
         async list() {
+            if (apiGuideCache) return clone(apiGuideCache);
+            if (apiGuideRequest) return clone(await apiGuideRequest);
+
             try {
-                const response = await fetch("/api/GuideStep/GetGuides", { credentials: "include" });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const result = await response.json();
-                return Array.isArray(result?.data) ? result.data : [];
+                apiGuideRequest = (async () => {
+                    const response = await fetch("/api/GuideStep/GetGuides", { credentials: "include" });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const result = await response.json();
+                    return Array.isArray(result?.data) ? result.data : [];
+                })();
+                apiGuideCache = await apiGuideRequest;
+                return clone(apiGuideCache);
             } catch (error) {
                 console.warn("Guide API is unavailable; no database guides were loaded.", error);
                 return [];
+            } finally {
+                apiGuideRequest = null;
             }
         },
         async save(guide) {
@@ -147,7 +159,14 @@
                 if (Number(result?.savedStepCount) !== submittedStepCount) {
                     throw new Error("The guide could not be verified after saving.");
                 }
-                return result?.data || guide;
+                const savedGuide = result?.data || guide;
+                if (apiGuideCache) {
+                    const identity = savedGuide.id || savedGuide.key;
+                    const index = apiGuideCache.findIndex(item => (item.id || item.key) === identity);
+                    if (index >= 0) apiGuideCache[index] = clone(savedGuide);
+                    else apiGuideCache.push(clone(savedGuide));
+                }
+                return savedGuide;
             } catch (error) {
                 console.warn("Guide API save failed.", error);
                 throw error;
@@ -164,6 +183,9 @@
                     error.status = response.status;
                     throw error;
                 }
+                if (apiGuideCache) {
+                    apiGuideCache = apiGuideCache.filter(item => (item.id || item.key) !== id);
+                }
             } catch (error) {
                 console.warn("Guide API delete failed.", error);
                 throw error;
@@ -179,17 +201,6 @@
         );
         return activePanel?.getAttribute("data-source-url")
             || `${location.pathname}${location.hash}`;
-    }
-
-    function routeMatches(guide) {
-        const route = String(guide.route || "").trim();
-        if (!route || route === "*") return true;
-        const contexts = [currentContextRoute(), `${location.pathname}${location.hash}`];
-        if (route.endsWith("*")) {
-            const prefix = route.slice(0, -1).toLowerCase();
-            return contexts.some(current => current.toLowerCase().startsWith(prefix));
-        }
-        return contexts.some(current => current.toLowerCase().includes(route.toLowerCase()));
     }
 
     function canManageGuides() {
@@ -558,6 +569,10 @@
                 </header>
                 <div class="ug-studio-body">
                     <div class="ug-field-row">
+                        <label>Saved guide<select class="ug-input ug-guide-picker"></select></label>
+                        <label>&nbsp;<button type="button" class="ug-button ug-secondary ug-new-guide">New guide</button></label>
+                    </div>
+                    <div class="ug-field-row">
                         <label>Guide title<input class="ug-input" data-guide-field="title" /></label>
                         <label>Key<input class="ug-input" data-guide-field="key" placeholder="quotation-create" /></label>
                     </div>
@@ -626,6 +641,16 @@
     }
 
     function renderStudio(root) {
+        const guidePicker = root.querySelector(".ug-guide-picker");
+        const guides = Array.isArray(studioState.guides) ? studioState.guides : [];
+        guidePicker.innerHTML = [
+            '<option value="">-- New guide --</option>',
+            ...guides.map(guide => `<option value="${escapeHtml(guide.id || guide.key)}">${escapeHtml(guide.title || guide.key)}</option>`)
+        ].join("");
+        guidePicker.value = guides.some(guide => (guide.id || guide.key) === (studioState.guide.id || studioState.guide.key))
+            ? (studioState.guide.id || studioState.guide.key)
+            : "";
+
         root.querySelectorAll("[data-guide-field]").forEach(input => {
             const value = studioState.guide[input.dataset.guideField];
             if (input.type === "checkbox") input.checked = value === true;
@@ -655,6 +680,56 @@
                     : (input.dataset.stepField === "format" ? "html" : "");
                 input.value = selected[input.dataset.stepField] || fallbackValue;
             });
+        }
+    }
+
+    function mapDatabaseGuide(guide) {
+        const mappedGuide = {
+            ...newGuide(),
+            ...clone(guide || {}),
+            steps: []
+        };
+        const databaseSteps = Array.isArray(guide?.steps)
+            ? guide.steps.map((step, index) => {
+                const waitTimeout = Number(step.waitTimeout);
+                return {
+                    id: step.id || uid("step"),
+                    title: step.title || `Step ${index + 1}`,
+                    selector: step.selector || "",
+                    placement: normalizePlacement(step.placement),
+                    format: String(step.format || "html").toLowerCase() === "markdown" ? "markdown" : "html",
+                    content: step.content || "",
+                    waitTimeout: Number.isFinite(waitTimeout) ? Math.max(0, waitTimeout) : 5000
+                };
+            })
+            : [];
+
+        // Push the GuideStep rows returned by GetGuides into the Studio control model.
+        mappedGuide.steps.push(...databaseSteps);
+        return mappedGuide;
+    }
+
+    async function loadStudioGuides(root, guideOrId) {
+        const guidePicker = root.querySelector(".ug-guide-picker");
+        guidePicker.disabled = true;
+        guidePicker.innerHTML = '<option value="">Loading guides...</option>';
+
+        try {
+            // apiStorageAdapter.list() performs GET /api/GuideStep/GetGuides.
+            const guides = await storage.list();
+            const requestedGuide = typeof guideOrId === "string"
+                ? guides.find(item => item.id === guideOrId || item.key === guideOrId)
+                : guideOrId;
+            const guide = requestedGuide
+                || guides[0]
+                || newGuide();
+
+            studioState.guides = guides.map(mapDatabaseGuide);
+            studioState.guide = mapDatabaseGuide(guide);
+            studioState.selectedStep = studioState.guide.steps.length ? 0 : -1;
+            renderStudio(root);
+        } finally {
+            guidePicker.disabled = false;
         }
     }
 
@@ -736,6 +811,19 @@
 
     function bindStudio(root) {
         root.querySelector(".ug-studio-close").addEventListener("click", () => root.classList.remove("is-visible"));
+        root.querySelector(".ug-guide-picker").addEventListener("change", event => {
+            updateDraftFromFields(root);
+            const guide = studioState.guides.find(item => (item.id || item.key) === event.target.value);
+            studioState.guide = clone(guide || newGuide());
+            studioState.selectedStep = studioState.guide.steps.length ? 0 : -1;
+            renderStudio(root);
+        });
+        root.querySelector(".ug-new-guide").addEventListener("click", () => {
+            updateDraftFromFields(root);
+            studioState.guide = newGuide();
+            studioState.selectedStep = -1;
+            renderStudio(root);
+        });
         root.querySelectorAll(".ug-tab").forEach(tab => tab.addEventListener("click", () => {
             root.querySelectorAll(".ug-tab").forEach(item => item.classList.toggle("is-active", item === tab));
             root.querySelectorAll(".ug-tab-panel").forEach(panel => panel.hidden = panel.dataset.panel !== tab.dataset.tab);
@@ -743,7 +831,15 @@
         root.querySelector(".ug-capture").addEventListener("click", () => beginCapture(root));
         root.querySelector(".ug-add-center").addEventListener("click", () => {
             updateDraftFromFields(root);
-            studioState.guide.steps.push({ id: uid("step"), title: "Information", selector: "", placement: "center", format: "html", content: "<p>Add guidance here.</p>" });
+            studioState.guide.steps.push({
+                id: uid("step"),
+                title: `Step ${studioState.guide.steps.length + 1}`,
+                selector: "",
+                placement: "center",
+                format: "html",
+                content: "",
+                waitTimeout: 5000
+            });
             studioState.selectedStep = studioState.guide.steps.length - 1;
             renderStudio(root);
         });
@@ -801,6 +897,10 @@
             try {
                 studioState.guide.key = studioState.guide.key.trim() || studioState.guide.id;
                 studioState.guide = await storage.save(studioState.guide);
+                const savedIdentity = studioState.guide.id || studioState.guide.key;
+                const savedIndex = studioState.guides.findIndex(item => (item.id || item.key) === savedIdentity);
+                if (savedIndex >= 0) studioState.guides[savedIndex] = clone(studioState.guide);
+                else studioState.guides.push(clone(studioState.guide));
                 const savedStepCount = studioState.guide.steps.length;
                 window.DevExpress?.ui?.notify?.(
                     `${savedStepCount} guide step${savedStepCount === 1 ? "" : "s"} saved to database.`,
@@ -860,12 +960,14 @@
 
     async function openStudio(guideOrId) {
         stop();
-        const guides = await storage.list();
-        const guide = typeof guideOrId === "string" ? guides.find(item => item.id === guideOrId) : guideOrId;
-        studioState = { guide: clone(guide || newGuide()), selectedStep: guide?.steps?.length ? 0 : -1 };
+        studioState = {
+            guides: [],
+            guide: newGuide(),
+            selectedStep: -1
+        };
         const root = studioRoot();
-        renderStudio(root);
         root.classList.add("is-visible");
+        await loadStudioGuides(root, guideOrId);
     }
 
     async function openLauncher(options) {
@@ -881,7 +983,7 @@
         const canManage = launcherOptions.allowManage !== false && canManageGuides();
         const matching = canManage
             ? guides
-            : guides.filter(item => item.enabled !== false && item.isEligible !== false && routeMatches(item));
+            : guides.filter(item => item.enabled !== false && item.isEligible !== false);
         panel.innerHTML = `
             <div class="ug-launcher-head"><strong>User guides</strong><button type="button" class="ug-icon-button">&times;</button></div>
             <div class="ug-launcher-list">${matching.length ? matching.map(guide => `
@@ -890,7 +992,7 @@
                         <span class="fa fa-compass"></span><span><strong>${escapeHtml(guide.title)}</strong><small>${guide.steps.length} steps${canManage ? ` · ${escapeHtml(guide.route || "All screens")}` : ""}</small></span>
                     </button>
                     ${canManage ? `<button type="button" class="ug-launcher-edit" data-edit-guide-id="${escapeHtml(guide.id)}" aria-label="Edit ${escapeHtml(guide.title)}"><span class="fa fa-pencil"></span></button>` : ""}
-                </div>`).join("") : '<p class="ug-empty">No guide is configured for this screen.</p>'}</div>
+                </div>`).join("") : '<p class="ug-empty">No user guide is configured.</p>'}</div>
             ${canManage ? '<button type="button" class="ug-button ug-secondary ug-open-studio">Set up guides</button>' : ""}`;
         panel.querySelector(".ug-icon-button").addEventListener("click", () => panel.classList.remove("is-visible"));
         panel.querySelector(".ug-open-studio")?.addEventListener("click", () => {
@@ -936,7 +1038,6 @@
             item.enabled !== false
             && item.autoStart === true
             && item.isEligible !== false
-            && routeMatches(item)
             && sessionStorage.getItem(`tmiv.guide-shown.${item.key || item.id}.v${item.version || 1}`) !== "true"
         );
         if (!guide) return false;

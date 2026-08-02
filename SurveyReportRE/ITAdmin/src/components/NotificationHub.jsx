@@ -6,6 +6,7 @@ export default function NotificationHub() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchTerm, setSearchTerm] = useState('');
   const [showOverflow, setShowOverflow] = useState(false);
 
   const tabsRef = useRef(null);
@@ -102,19 +103,37 @@ export default function NotificationHub() {
 
   // Filtered list
   const filteredNotifications = notifications.filter(item => {
-    if (selectedCategory === 'All') return true;
-    if (selectedCategory === 'Unread') return !item.isRead && !item.IsRead;
-    
-    const typeStr = String(item.type || item.Type || '').toLowerCase();
-    const titleMsg = String((item.title || '') + ' ' + (item.message || '')).toLowerCase();
-    
-    if (selectedCategory === 'System') return typeStr.includes('system') || titleMsg.includes('system') || titleMsg.includes('hệ thống');
-    if (selectedCategory === 'Workflow') return typeStr.includes('workflow') || titleMsg.includes('flow') || titleMsg.includes('quy trình');
-    if (selectedCategory === 'Alert') return typeStr.includes('alert') || titleMsg.includes('cảnh báo') || titleMsg.includes('bất thường');
-    if (selectedCategory === 'Email') return typeStr.includes('mail') || titleMsg.includes('email') || titleMsg.includes('thư');
-    if (selectedCategory === 'Sla') return typeStr.includes('sla') || titleMsg.includes('trễ') || titleMsg.includes('hạn');
-    if (selectedCategory === 'User') return typeStr.includes('user') || titleMsg.includes('người dùng') || titleMsg.includes('tài khoản');
-    
+    // 1) Category Filter
+    if (selectedCategory !== 'All') {
+      if (selectedCategory === 'Unread') {
+        if (item.isRead || item.IsRead) return false;
+      } else {
+        const typeStr = String(item.type || item.Type || '').toLowerCase();
+        const titleMsg = String((item.title || '') + ' ' + (item.message || '')).toLowerCase();
+        
+        let matchesCategory = false;
+        if (selectedCategory === 'System') matchesCategory = typeStr.includes('system') || titleMsg.includes('system') || titleMsg.includes('hệ thống');
+        else if (selectedCategory === 'Workflow') matchesCategory = typeStr.includes('workflow') || titleMsg.includes('flow') || titleMsg.includes('quy trình');
+        else if (selectedCategory === 'Alert') matchesCategory = typeStr.includes('alert') || titleMsg.includes('cảnh báo') || titleMsg.includes('bất thường');
+        else if (selectedCategory === 'Email') matchesCategory = typeStr.includes('mail') || titleMsg.includes('email') || titleMsg.includes('thư');
+        else if (selectedCategory === 'Sla') matchesCategory = typeStr.includes('sla') || titleMsg.includes('trễ') || titleMsg.includes('hạn');
+        else if (selectedCategory === 'User') matchesCategory = typeStr.includes('user') || titleMsg.includes('người dùng') || titleMsg.includes('tài khoản');
+        
+        if (!matchesCategory) return false;
+      }
+    }
+
+    // 2) Search Term Filter
+    if (searchTerm.trim() !== '') {
+      const query = searchTerm.toLowerCase();
+      const titleMatch = (item.title || item.Title || '').toLowerCase().includes(query);
+      const msgMatch = (item.message || item.Message || '').toLowerCase().includes(query);
+      const typeMatch = (item.type || item.Type || '').toLowerCase().includes(query);
+      if (!titleMatch && !msgMatch && !typeMatch) {
+        return false;
+      }
+    }
+
     return true;
   });
 
@@ -165,6 +184,32 @@ export default function NotificationHub() {
           <button className="nh-refresh-btn" onClick={loadNotifications}>
             <i className="fa-solid fa-arrows-rotate"></i> Làm mới
           </button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="nh-search-bar">
+          <div className="nh-search-wrap">
+            <i className="fa-solid fa-magnifying-glass search-icon" />
+            <input
+              type="text"
+              className="nh-search-input"
+              placeholder="Tìm kiếm thông báo theo tiêu đề, nội dung..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button 
+                type="button" 
+                className="nh-clear-search"
+                onClick={() => setSearchTerm("")}
+              >
+                <i className="fa-solid fa-xmark" />
+              </button>
+            )}
+          </div>
+          <div className="nh-results-counter">
+            Tìm thấy <strong>{filteredNotifications.length}</strong> / <strong>{notifications.length}</strong> thông báo
+          </div>
         </div>
 
         {/* Categories Bar with Horizontal Scroll + Drag */}
