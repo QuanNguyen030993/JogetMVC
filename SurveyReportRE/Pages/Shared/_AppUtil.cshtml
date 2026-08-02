@@ -636,9 +636,11 @@
                                     quotationData.Quotation.PIC[submitData?.deptTarget] = submitData?.to || "";
                                     quotationData.Quotation.PIC = JSON.stringify(quotationData.Quotation.PIC);
                                     quotationData.Quotation.StageAccount = submitData?.to || "";
-                                    quotationData.Quotation.StageDept = submitSummaryData.assignedTeamOrRole;
-                                    quotationData.Quotation.QuotationStatus = "TS Pending";
-                                    quotationData.Quotation.WorkflowStatus = "TS Pending";
+                                    var quotationTargetDept = submitSummaryData.assignedTeamOrRole || "TS";
+                                    quotationData.Quotation.SkipTS = quotationTargetDept !== "TS";
+                                    quotationData.Quotation.StageDept = quotationTargetDept;
+                                    quotationData.Quotation.QuotationStatus = `${quotationTargetDept} Pending`;
+                                    quotationData.Quotation.WorkflowStatus = `${quotationTargetDept} Pending`;
                                     quotationData.Quotation.BranchId = submitData?.branchId;
                                     quotationData.Quotation.ProductId = quotationData.Quotation.ProductId.id;
                                     quotationData.Quotation.LineId = quotationData.Quotation.LineId.id;
@@ -1066,9 +1068,11 @@
                                     policyIssuanceData.PolicyIssuance.PIC[submitData?.deptTarget] = submitData?.to || "";
                                     policyIssuanceData.PolicyIssuance.PIC = JSON.stringify(policyIssuanceData.PolicyIssuance.PIC);
                                     policyIssuanceData.PolicyIssuance.StageAccount = submitData?.to || "";
-                                    policyIssuanceData.PolicyIssuance.StageDept = submitSummaryData.assignedTeamOrRole;
-                                    policyIssuanceData.PolicyIssuance.PolicyIssuanceStatus = "TS Pending";
-                                    policyIssuanceData.PolicyIssuance.WorkflowStatus = "TS Pending";
+                                    var policyIssuanceTargetDept = submitSummaryData.assignedTeamOrRole || "TS";
+                                    policyIssuanceData.PolicyIssuance.SkipTS = policyIssuanceTargetDept !== "TS";
+                                    policyIssuanceData.PolicyIssuance.StageDept = policyIssuanceTargetDept;
+                                    policyIssuanceData.PolicyIssuance.PolicyIssuanceStatus = `${policyIssuanceTargetDept} Pending`;
+                                    policyIssuanceData.PolicyIssuance.WorkflowStatus = `${policyIssuanceTargetDept} Pending`;
                                     policyIssuanceData.PolicyIssuance.BranchId = submitData?.branchId;
                                     policyIssuanceData.PolicyIssuance.ProductId = policyIssuanceData.PolicyIssuance.ProductId.id;
                                     policyIssuanceData.PolicyIssuance.LineId = policyIssuanceData.PolicyIssuance.LineId.id;
@@ -3704,11 +3708,13 @@
                 currentUserId: null,
                 currentSection: null,
                 value: null, // string: acc1,acc2
+                allowEdit: false,
+                forceRecreate: false,
                 onChanged: null,
                 onClosed: null,
                 onValueChanged: null
             }, options || {});
-            const canEdit = canEditDepartmentAssignee(settings);
+            const canEdit = settings.allowEdit === true || canEditDepartmentAssignee(settings);
 
             const store = new DevExpress.data.CustomStore({
                 key: "accountName", // align with valueExpr: "accountName"
@@ -3797,7 +3803,12 @@
             });
 
             // Reuse existing dxTagBox instance to avoid recreating it
-            const existingInstance = DevExpress.ui.dxTagBox.getInstance($el[0]);
+            let existingInstance = DevExpress.ui.dxTagBox.getInstance($el[0]);
+            if (existingInstance && settings.forceRecreate === true) {
+                existingInstance.dispose();
+                $el.empty();
+                existingInstance = null;
+            }
             if (existingInstance) {
                 existingInstance.option({
                     dataSource: resolvedStore,
@@ -3863,7 +3874,7 @@
                                 class: "workflow-primary-button assign-to-me-button"
                             },
                             onClick: function () {
-                                if (!canEditDepartmentAssignee(settings)) return;
+                                if (!canEdit) return;
                                 $.ajax({
                                     url: "api/Employee/GetMyAssigneeProfile",
                                     type: "GET",
@@ -3932,7 +3943,7 @@
                     }
                 ],
                 onClosed: function (e) {
-                    if (!canEditDepartmentAssignee(settings)) return;
+                    if (!canEdit) return;
                     const items = e.component.option("selectedItems") || [];
                     syncAssignmentStatus(e.component.option("value"));
                     if (typeof settings.onClosed === "function") {

@@ -250,6 +250,51 @@
             assignees: []               // only for manual mode
             };
 
+            var assignmentAssigneeSelector = null;
+
+            function renderRequestAssignmentPic(groupName) {
+                var targetGroup = String(groupName || "TS").trim().toUpperCase();
+                vm.assignedTeamOrRole = targetGroup;
+                vm.skipTS = targetGroup !== "TS";
+
+                var hiddenAssignmentElement = document.getElementById("assignBox");
+                var hiddenAssignmentForm = hiddenAssignmentElement
+                    ? DevExpress.ui.dxForm.getInstance(hiddenAssignmentElement)
+                    : null;
+                hiddenAssignmentForm?.option("formData", {
+                    to: "",
+                    branchId: (_enums.BranchOffice || []).find(f => f.code === _branch)?.id || null,
+                    notes: "",
+                    deptTarget: targetGroup
+                });
+
+                if (!assignmentAssigneeSelector || !$(assignmentAssigneeSelector).length) return;
+                var assignmentData = {
+                    pIC: JSON.stringify({ [targetGroup]: "" }),
+                    pic: JSON.stringify({ [targetGroup]: "" })
+                };
+
+                Promise.resolve(renderDepartmentAssigneeBox(assignmentAssigneeSelector, {
+                    groupName: targetGroup,
+                    dataForm: assignmentData,
+                    allowEdit: true,
+                    forceRecreate: true,
+                    onClosed: function (itemChild) {
+                        var result = itemChild.map(x => x.emailName).join(",");
+                        var form = $("#assignBox").dxForm({ visible: false }).dxForm("instance");
+                        form.option("formData", {
+                            to: result,
+                            branchId: (_enums.BranchOffice || []).find(f => f.code === _branch)?.id || null,
+                            notes: "",
+                            deptTarget: targetGroup
+                        });
+                    }
+                }, false)).catch(function (error) {
+                    console.error(`Unable to load ${targetGroup} assignees.`, error);
+                    DevExpress.ui.notify(`Unable to load ${targetGroup} assignees.`, "error", 2500);
+                });
+            }
+
             function isManual() {
                 return vm.assignmentMode === "manual";
             }
@@ -604,7 +649,9 @@
                             valueExpr: "id",
                             onValueChanged(e) {
                                 vm.assignedTeamOrRole = e.value;
-                               
+                                window.setTimeout(function () {
+                                    renderRequestAssignmentPic(e.value);
+                                }, 0);
                             }
                         }
                     },
@@ -613,42 +660,16 @@
                                 dataField: "assigneeList",
                                 colSpan: 2,
                                 
-                                visible: true,
-                                label: { text: "Assign PIC" },
-                                template: function (data, itemElement) {
-                              var deptData = {TS :  { pIC: JSON.stringify({TS: ""}), pic:JSON.stringify({TS: ""})},pic: JSON.stringify({TS:""} ) ,pIC: JSON.stringify({TS: ""}), id: 0, sectionName: "TS", code: "..." } ;
-                                 
-                              var assigneeBoxId = `${window.QuotationIdManager.assigneeBox('TS', deptData.id)}`;
-                             var assigneeBox = $(`<div id="${assigneeBoxId}">`)
-                                assigneeBox.appendTo(itemElement);
-                                $("<div id='assignBox' class='dExForm'>").appendTo(itemElement);
-                                renderDepartmentAssigneeBox(`#${assigneeBoxId}`, {
-                                           groupName: 'TS',
-                                          dataForm: deptData['TS'],
-                                       //value: formItems.lmktAssigneeId || null,
-                                       onClosed: function (itemChild, editor) {
-
-                                         const items = editor.option("selectedItems") || [];
-
-                                        var result = itemChild
-                                          .map(x => x.emailName )
-                                          .join(',');
-
-                                
-
-                                       var form = $("#assignBox").dxForm({visible:false}).dxForm("instance");
-
-                                       form.option("formData", {
-                                         to: result,
-                                                 branchId: _enums.BranchOffice.find(f => f.code === _branch).id,
-                                                  notes: "",
-                                                  deptTarget: vm.assignedTeamOrRole
-                                       });
-                                     
-
-                                   }
-                               }, false);
-                                }
+                                 visible: true,
+                                 label: { text: "Assign PIC" },
+                                 template: function (data, itemElement) {
+                              var assigneeBoxId = `${window.QuotationIdManager.assigneeBox('TS', 0)}`;
+                              var assigneeBox = $(`<div id="${assigneeBoxId}">`)
+                                 assigneeBox.appendTo(itemElement);
+                                 $("<div id='assignBox' class='dExForm'>").appendTo(itemElement);
+                                 assignmentAssigneeSelector = `#${assigneeBoxId}`;
+                                 renderRequestAssignmentPic(vm.assignedTeamOrRole);
+                                 }
                             }
                         ]
                     }

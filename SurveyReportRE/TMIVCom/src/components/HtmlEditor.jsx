@@ -841,27 +841,35 @@ useEffect(() => {
 
     <div className="tmiv-toolbar-separator" />
 
-    <input
-        type="color"
-        title="Text Color"
-        onChange={e =>
-            command(
-                "foreColor",
-                e.target.value
-            )
-        }
-    />
+    <label className="tmiv-tool-item" style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', gap: '6px', padding: '0 8px' }} title="Màu chữ (Text Color)">
+        <span style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '3px solid #3b82f6', lineHeight: 1 }}>A</span>
+        <input
+            type="color"
+            defaultValue="#000000"
+            onChange={e =>
+                command(
+                    "foreColor",
+                    e.target.value
+                )
+            }
+            style={{ width: '16px', height: '16px', border: '1px solid #cbd5e1', borderRadius: '4px', padding: 0, cursor: 'pointer', background: 'none' }}
+        />
+    </label>
 
-    <input
-        type="color"
-        title="Background Color"
-        onChange={e =>
-            command(
-                "hiliteColor",
-                e.target.value
-            )
-        }
-    />
+    <label className="tmiv-tool-item" style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', gap: '6px', padding: '0 8px' }} title="Màu nền chữ (Highlight Color)">
+        <span style={{ background: '#fef08a', padding: '1px 4px', borderRadius: '3px', fontSize: '10px', fontWeight: 'bold', color: '#000000', lineHeight: 1 }}>ab</span>
+        <input
+            type="color"
+            defaultValue="#ffffff"
+            onChange={e =>
+                command(
+                    "hiliteColor",
+                    e.target.value
+                )
+            }
+            style={{ width: '16px', height: '16px', border: '1px solid #cbd5e1', borderRadius: '4px', padding: 0, cursor: 'pointer', background: 'none' }}
+        />
+    </label>
 
     <div className="tmiv-toolbar-separator" />
 

@@ -34517,14 +34517,10 @@ body.skin-re .dx-popup-wrapper > .dx-overlay-content {
 body.skin-re .dx-popup-wrapper > .dx-overlay-content > .dx-popup-title.dx-toolbar {
   min-height: 42px;
   padding: 5px 8px 5px 16px !important;
-  border-bottom: 1px solid var(--theme-border, #dbe3ec);
-  background: linear-gradient(
-    90deg,
-    var(--theme-primary-soft, #eff6ff) 0,
-    var(--theme-surface, #fff) 72%
-  );
-  box-shadow: inset 3px 0 0 var(--theme-primary, #2563eb);
-  color: var(--theme-text-strong, #0f172a);
+  border-bottom: 1px solid var(--theme-tab-active, #5d95f5);
+  background: var(--theme-tab-active, #5d95f5);
+  box-shadow: var(--theme-tab-active-shadow, 0 4px 12px rgba(93, 149, 245, .28));
+  color: var(--theme-on-primary, #fff);
   box-sizing: border-box;
 }
 
@@ -34536,7 +34532,7 @@ body.skin-re .dx-popup-wrapper > .dx-overlay-content > .dx-popup-title
 
 body.skin-re .dx-popup-wrapper > .dx-overlay-content > .dx-popup-title
   :is(.dx-toolbar-label, .dx-toolbar-label > div) {
-  color: var(--theme-text-strong, #0f172a);
+  color: var(--theme-on-primary, #fff);
   font-size: 13px !important;
   font-weight: 650;
   line-height: 1.35;
@@ -34551,7 +34547,7 @@ body.skin-re .dx-popup-wrapper > .dx-overlay-content > .dx-popup-title
   border: 1px solid transparent;
   border-radius: 7px;
   background: transparent !important;
-  color: var(--theme-muted, #64748b);
+  color: var(--theme-on-primary, #fff);
 }
 
 body.skin-re .dx-popup-wrapper > .dx-overlay-content > .dx-popup-title
@@ -34566,9 +34562,9 @@ body.skin-re .dx-popup-wrapper > .dx-overlay-content > .dx-popup-title
 
 body.skin-re .dx-popup-wrapper > .dx-overlay-content > .dx-popup-title
   .dx-closebutton:hover {
-  border-color: var(--theme-border-strong, #cbd5e1);
-  background: var(--theme-primary-soft, #eff6ff) !important;
-  color: var(--theme-primary, #2563eb);
+  border-color: rgba(255, 255, 255, .42);
+  background: rgba(255, 255, 255, .18) !important;
+  color: var(--theme-on-primary, #fff);
 }
 
 body.skin-re .dx-popup-wrapper > .dx-overlay-content > .dx-popup-title
@@ -34581,12 +34577,8 @@ body.skin-re .dx-rtl.dx-popup-wrapper > .dx-overlay-content > .dx-popup-title.dx
 body.skin-re .dx-popup-wrapper.dx-rtl > .dx-overlay-content > .dx-popup-title.dx-toolbar {
   padding-right: 16px !important;
   padding-left: 8px !important;
-  background: linear-gradient(
-    270deg,
-    var(--theme-primary-soft, #eff6ff) 0,
-    var(--theme-surface, #fff) 72%
-  );
-  box-shadow: inset -3px 0 0 var(--theme-primary, #2563eb);
+  background: var(--theme-tab-active, #5d95f5);
+  box-shadow: var(--theme-tab-active-shadow, 0 4px 12px rgba(93, 149, 245, .28));
 }
 
 /* SweetAlert2 isolation: global typography rules above must not resize its
