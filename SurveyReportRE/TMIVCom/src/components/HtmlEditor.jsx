@@ -841,8 +841,8 @@ useEffect(() => {
 
     <div className="tmiv-toolbar-separator" />
 
-    <label className="tmiv-tool-item" style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', gap: '6px', padding: '0 8px' }} title="Màu chữ (Text Color)">
-        <span style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '3px solid #3b82f6', lineHeight: 1 }}>A</span>
+    <label className="tmiv-tool-item" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', width: '32px', height: '32px', padding: 0 }} title="Màu chữ (Text Color)">
+        <span style={{ fontWeight: 'bold', fontSize: '14px', borderBottom: '3px solid #3b82f6', lineHeight: 1 }}>A</span>
         <input
             type="color"
             defaultValue="#000000"
@@ -852,12 +852,12 @@ useEffect(() => {
                     e.target.value
                 )
             }
-            style={{ width: '16px', height: '16px', border: '1px solid #cbd5e1', borderRadius: '4px', padding: 0, cursor: 'pointer', background: 'none' }}
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', padding: 0, margin: 0, border: 'none' }}
         />
     </label>
 
-    <label className="tmiv-tool-item" style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', gap: '6px', padding: '0 8px' }} title="Màu nền chữ (Highlight Color)">
-        <span style={{ background: '#fef08a', padding: '1px 4px', borderRadius: '3px', fontSize: '10px', fontWeight: 'bold', color: '#000000', lineHeight: 1 }}>ab</span>
+    <label className="tmiv-tool-item" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', width: '32px', height: '32px', padding: 0 }} title="Màu nền chữ (Highlight Color)">
+        <span style={{ background: '#fef08a', padding: '2px 4px', borderRadius: '3px', fontSize: '11px', fontWeight: 'bold', color: '#000000', lineHeight: 1 }}>ab</span>
         <input
             type="color"
             defaultValue="#ffffff"
@@ -867,7 +867,7 @@ useEffect(() => {
                     e.target.value
                 )
             }
-            style={{ width: '16px', height: '16px', border: '1px solid #cbd5e1', borderRadius: '4px', padding: 0, cursor: 'pointer', background: 'none' }}
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', padding: 0, margin: 0, border: 'none' }}
         />
     </label>
 

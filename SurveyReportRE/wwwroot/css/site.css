@@ -28913,11 +28913,18 @@ aside {
 }
 
 .dept-tree .dept-idle-clock-label {
+    position: absolute;
+    top: -78px;
+    right: 0;
+    width: 54px;
     color: #64748b;
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: .12em;
-    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    pointer-events: none;
 }
 
 .dept-tree .dept-idle-clock-value {
@@ -33863,8 +33870,10 @@ textarea {
 }
 
 :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-idle-clock-label {
-    font-size: 7px;
-    letter-spacing: .08em;
+    top: -62px;
+    right: 2px;
+    width: var(--overview-idle-clock-size);
+    font-size: 9px;
 }
 
 :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-idle-clock-value {
