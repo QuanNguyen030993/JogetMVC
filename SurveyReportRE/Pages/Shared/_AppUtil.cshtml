@@ -5988,6 +5988,177 @@
                 });
            }
 
+           window.WorkflowDecisionRegistry = window.WorkflowDecisionRegistry || {};
+
+           function disposeDecisionDockGroup(group) {
+                var $group = $(group);
+                $group.find(".dx-button").each(function () {
+                    try { $(this).dxButton("instance")?.dispose(); } catch (_) { }
+                });
+                $group.remove();
+           }
+
+           function mountOverviewDecisionDocks(rootOrSelector) {
+                var root = typeof rootOrSelector === "string"
+                    ? document.querySelector(rootOrSelector)
+                    : rootOrSelector;
+                if (!root) return false;
+
+                var dockGroups = function () {
+                    root.querySelectorAll("section.dept-section").forEach(function (section) {
+                        var dock = section.querySelector("[data-decision-dock]");
+                        if (!dock) return;
+
+                        var groups = Array.from(section.querySelectorAll(".workflow-decision-group"))
+                            .filter(function (group) { return !dock.contains(group); });
+                        groups.forEach(function (group) {
+                            var current = dock.querySelector(".workflow-decision-group");
+                            if (current && current !== group) disposeDecisionDockGroup(current);
+                            group.classList.add("workflow-decision-group--docked");
+                            dock.appendChild(group);
+                        });
+                        dock.classList.toggle(
+                            "has-decision",
+                            !!dock.querySelector(".workflow-decision-group")
+                        );
+                    });
+                };
+
+                dockGroups();
+                if (!root.overviewDecisionDockObserver) {
+                    var pendingFrame = 0;
+                    root.overviewDecisionDockObserver = new MutationObserver(function () {
+                        if (pendingFrame) return;
+                        pendingFrame = window.requestAnimationFrame(function () {
+                            pendingFrame = 0;
+                            dockGroups();
+                        });
+                    });
+                    root.overviewDecisionDockObserver.observe(root, {
+                        childList: true,
+                        subtree: true
+                    });
+                }
+                return true;
+           }
+           window.mountOverviewDecisionDocks = mountOverviewDecisionDocks;
+
+           function resolveDepartmentSection(schemeName, recordId, dept) {
+                var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
+                var moduleCode = normalizedScheme === "policyissuance" || normalizedScheme === "pi"
+                    ? "pi"
+                    : "qt";
+                return document.getElementById(
+                    `${moduleCode}-sec_${String(dept || "").trim().toUpperCase()}_${recordId}`
+                );
+           }
+
+           function beginDepartmentSectionLoading(schemeName, recordId, dept, message) {
+                var section = resolveDepartmentSection(schemeName, recordId, dept);
+                if (!section) return null;
+
+                setDeptSectionCollapsed($(section), false);
+                var overlay = section.querySelector(".dept-section-action-overlay");
+                if (!overlay) {
+                    overlay = document.createElement("div");
+                    overlay.className = "dept-section-action-overlay";
+                    overlay.innerHTML = `
+                        <div class="dept-section-action-loader" aria-hidden="true">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <span class="dept-section-action-message"></span>`;
+                    section.appendChild(overlay);
+                }
+
+                overlay.classList.remove("is-success", "is-error");
+                overlay.querySelector(".dept-section-action-message").textContent =
+                    message || `Updating ${dept} decision...`;
+                section.classList.add("dept-section-action-loading");
+                section.setAttribute("aria-busy", "true");
+                return { section: section, overlay: overlay };
+           }
+
+           function finishDepartmentSectionLoading(context, message, isError) {
+                if (!context?.section || !context?.overlay) return;
+                var section = context.section;
+                var overlay = context.overlay;
+                var messageElement = overlay.querySelector(".dept-section-action-message");
+                if (messageElement && message) messageElement.textContent = message;
+                overlay.classList.toggle("is-error", !!isError);
+                overlay.classList.toggle("is-success", !isError);
+
+                window.setTimeout(function () {
+                    section.classList.remove("dept-section-action-loading");
+                    section.removeAttribute("aria-busy");
+                    if (!isError) {
+                        section.classList.add("dept-section-decision-unlocked");
+                        window.setTimeout(function () {
+                            section.classList.remove("dept-section-decision-unlocked");
+                        }, 900);
+                    }
+                }, isError ? 900 : 260);
+           }
+
+           function applyAcceptedDepartmentDecision(schemeName, recordId, dept, responseData) {
+                var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
+                var isPolicyIssuance = normalizedScheme === "policyissuance" || normalizedScheme === "pi";
+                var manager = isPolicyIssuance
+                    ? window.PolicyIssuanceIdManager
+                    : window.QuotationIdManager;
+                var formId = manager?.form?.(dept, recordId);
+                var form = formId ? $(`#${formId}`).dxForm("instance") : null;
+                var acceptedAt = responseData?.acceptedAt || new Date().toISOString();
+                var section = resolveDepartmentSection(schemeName, recordId, dept);
+
+                if (section) {
+                    $(section)
+                        .find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer")
+                        .show();
+                    setDeptSectionCollapsed($(section), false);
+                }
+
+                if (!form) return Promise.resolve(false);
+
+                var formItems = form.option("formData") || {};
+                var tatObject = tryParseJSON(
+                    formItems.turnAroundTimeAttributes,
+                    "Accepted decision TAT update"
+                ) || {};
+                tatObject[dept] = tatObject[dept] || {};
+                tatObject[dept].AcceptDate = acceptedAt;
+                tatObject[dept].CompleteDate = acceptedAt;
+                form.updateData("turnAroundTimeAttributes", JSON.stringify(tatObject));
+                if (responseData?.workflowStatus) {
+                    form.updateData("workflowStatus", responseData.workflowStatus);
+                }
+
+                var registryKey = `${formId}:${String(dept || "").trim().toUpperCase()}`;
+                var decisionEntry = window.WorkflowDecisionRegistry[registryKey];
+                if (decisionEntry) {
+                    renderDecisionDeferredV2(
+                        decisionEntry.formProps,
+                        decisionEntry.groupName,
+                        decisionEntry.mainFields,
+                        ...decisionEntry.params
+                    );
+                } else if (section) {
+                    $(section).find("[id^='AC_']").each(function () {
+                        $(this).addClass("btn-success");
+                        $(this).dxButton("instance")?.option("disabled", true);
+                    });
+                }
+
+                return new Promise(function (resolve) {
+                    window.setTimeout(function () {
+                        var overviewRoot = section?.closest("[id^='qt-overviewRoot_'], [id^='pi-overviewRoot_']");
+                        if (overviewRoot) mountOverviewDecisionDocks(overviewRoot);
+                        form.repaint();
+                        resolve(true);
+                    }, Math.max(0, Number(FormStageDelay?.unlockForm) || 0) + 120);
+                });
+           }
+           window.applyAcceptedDepartmentDecision = applyAcceptedDepartmentDecision;
+
            window.WorkflowViewReloadState = window.WorkflowViewReloadState || {};
            function beginWorkflowViewLoading(schemeName, recordId, message) {
                 var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
@@ -6094,9 +6265,10 @@
                 var formItems = object.formItems
                     || $(`#${object.formId}`).dxForm("instance")?.option("formData")
                     || {};
-                var loadingContext = beginWorkflowViewLoading(
+                var loadingContext = beginDepartmentSectionLoading(
                     scheme,
                     formItems.id,
+                    dept,
                     `Accepting ${dept} decision...`
                 );
 
@@ -6113,24 +6285,36 @@
                     })
                 });
 
-                acceptRequest.done(function () {
-                    var refreshSource = object.formId
-                        ? document.getElementById(object.formId)
-                        : null;
-                    reloadWorkflowViewComponents(scheme, formItems.id, refreshSource, true)
-                        .then(function (reloaded) {
-                            if (!reloaded) {
-                                failWorkflowViewLoading(loadingContext, "Workflow refresh unavailable");
-                            }
+                acceptRequest.done(function (responseData) {
+                    applyAcceptedDepartmentDecision(
+                        scheme,
+                        formItems.id,
+                        dept,
+                        responseData
+                    )
+                        .then(function () {
+                            finishDepartmentSectionLoading(
+                                loadingContext,
+                                `${dept} form unlocked`,
+                                false
+                            );
                         })
                         .catch(function (err) {
-                            failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
-                            console.error("Accept decision reload failed", err);
+                            finishDepartmentSectionLoading(
+                                loadingContext,
+                                `${dept} refresh failed`,
+                                true
+                            );
+                            console.error("Accept decision section update failed", err);
                         });
                 });
 
                 acceptRequest.fail(function (xhr) {
-                    failWorkflowViewLoading(loadingContext, "Accept decision failed");
+                    finishDepartmentSectionLoading(
+                        loadingContext,
+                        "Accept decision failed",
+                        true
+                    );
                     appErrorHandling("Accept decision failed", xhr);
                 });
 
@@ -8172,6 +8356,16 @@
                 function delayAcceptStatusV2(mainFields,formProps, ...params ){
                     var delayObject = structuredClone(formProps);
                     var decisionItems = normalizeDecisionFieldButtons(params);
+                    var decisionFieldName = getDecisionFieldName(formProps, decisionItems);
+                    var decisionGroupName = `decision${delayObject.dept}Group.${decisionFieldName}`;
+                    var decisionRegistryKey = `${formProps.formId}:${String(delayObject.dept || "").trim().toUpperCase()}`;
+                    window.WorkflowDecisionRegistry = window.WorkflowDecisionRegistry || {};
+                    window.WorkflowDecisionRegistry[decisionRegistryKey] = {
+                        formProps: formProps,
+                        groupName: decisionGroupName,
+                        mainFields: mainFields,
+                        params: params
+                    };
                     var initialButtonId = getDelayAcceptButtonId(decisionItems[0]);
                     var initialStatusId = getDecisionFieldStatusId(
                         formProps,
@@ -8183,10 +8377,9 @@
                     }, 0);
                     waitForDecisionRouteStage(formProps.formId).then(function () {
                         setTimeout(() => {
-                            var decisionFieldName = getDecisionFieldName(formProps, decisionItems);
                             renderDecisionDeferredV2(
                                 formProps,
-                                `decision${delayObject.dept}Group.${decisionFieldName}`,
+                                decisionGroupName,
                                 mainFields,
                                 ...params
                             )

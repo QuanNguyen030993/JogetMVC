@@ -28979,6 +28979,127 @@ aside {
     user-select: none;
 }
 
+/* Decision controls are rendered by their original dxForm, then docked into
+   the department upper body so their existing handlers and form state remain
+   intact. */
+.dept-decision-dock {
+    display: none;
+    min-width: 0;
+    margin-bottom: var(--overview-form-group-gap, 6px);
+}
+
+.dept-decision-dock.has-decision {
+    display: block;
+}
+
+.dept-decision-dock .workflow-decision-group--docked {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 8px 10px !important;
+    border: 1px solid color-mix(in srgb, var(--theme-primary) 22%, var(--theme-border)) !important;
+    border-radius: 9px !important;
+    background: color-mix(in srgb, var(--theme-primary) 5%, var(--theme-surface)) !important;
+    box-shadow: 0 5px 16px rgba(37, 99, 235, .06) !important;
+}
+
+.dept-decision-dock .workflow-decision-group--docked > .dx-form-group-caption {
+    color: var(--theme-primary) !important;
+    font-size: var(--management-font-body, 10px) !important;
+    letter-spacing: .03em !important;
+}
+
+.dept-section-action-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 75;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 9px;
+    border-radius: inherit;
+    color: var(--theme-primary);
+    background: color-mix(in srgb, var(--theme-surface) 76%, transparent);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .18s ease, visibility .18s ease;
+}
+
+.dept-section.dept-section-action-loading > .dept-section-action-overlay {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.dept-section.dept-section-action-loading > :not(.dept-section-action-overlay) {
+    pointer-events: none;
+    user-select: none;
+}
+
+.dept-section-action-loader {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 15px;
+}
+
+.dept-section-action-loader span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--theme-primary);
+    animation: dept-section-loading-dot .9s ease-in-out infinite;
+}
+
+.dept-section-action-loader span:nth-child(2) {
+    animation-delay: .12s;
+}
+
+.dept-section-action-loader span:nth-child(3) {
+    animation-delay: .24s;
+}
+
+.dept-section-action-message {
+    padding: 5px 10px;
+    border: 1px solid color-mix(in srgb, var(--theme-primary) 22%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--theme-surface) 86%, transparent);
+    font-size: var(--management-font-body, 10px);
+    font-weight: 650;
+    box-shadow: 0 7px 20px rgba(15, 23, 42, .08);
+}
+
+.dept-section-action-overlay.is-success .dept-section-action-loader span {
+    animation: none;
+    background: #16a34a;
+}
+
+.dept-section-action-overlay.is-error {
+    color: #b91c1c;
+}
+
+.dept-section-action-overlay.is-error .dept-section-action-loader span {
+    animation: none;
+    background: #dc2626;
+}
+
+.dept-section.dept-section-decision-unlocked .dept-body {
+    animation: dept-section-unlocked .8s ease-out;
+}
+
+@keyframes dept-section-loading-dot {
+    0%, 60%, 100% { transform: translateY(0); opacity: .45; }
+    30% { transform: translateY(-5px); opacity: 1; }
+}
+
+@keyframes dept-section-unlocked {
+    0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, .22); }
+    55% { box-shadow: 0 0 0 5px rgba(37, 99, 235, .1); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+
 /* Form stage order: header -> upper body -> body -> lower body -> footer. */
 .form-stage-part {
     opacity: 0;
@@ -30922,6 +31043,7 @@ text-overflow: ellipsis;
 }
 
 .dept-section {
+    position: relative;
     background: var(--theme-surface);
     border: 1px solid var(--theme-border);
     border-radius: 10px;

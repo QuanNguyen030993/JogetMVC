@@ -1017,7 +1017,14 @@ public class QuotationController : BaseControllerApi<Quotation>
                 DOMAIN_NAME);
         }
 
-        return Ok(new { success = true, id = quotation.Id, dept, acceptedAt });
+        return Ok(new
+        {
+            success = true,
+            id = quotation.Id,
+            dept,
+            acceptedAt,
+            workflowStatus = quotation.WorkflowStatus
+        });
     }
 
     [NonAction]

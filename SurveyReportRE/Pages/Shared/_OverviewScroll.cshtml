@@ -40,6 +40,11 @@
                     };
                     }
                     <partial name="@($"Business/Form/QuotationDetail/_Quotation_{item}_Form_UpperBody")" view-data="viewDataUpperBody" />
+                    <div class="dept-decision-dock"
+                         data-decision-dock="true"
+                         data-module="qt"
+                         data-dept="@item"
+                         aria-label="@item decisions"></div>
                 </div>
 
                 <!-- 3. Body -->
@@ -116,6 +121,11 @@
                     };
                     }
                     <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_UpperBody")" view-data="viewDataUpperBody" />
+                    <div class="dept-decision-dock"
+                         data-decision-dock="true"
+                         data-module="pi"
+                         data-dept="@item"
+                         aria-label="@item decisions"></div>
                 </div>
 
                 <!-- 3. Body -->
@@ -165,3 +175,7 @@
     }
 
 </div>
+
+<script>
+    window.mountOverviewDecisionDocks?.("#@ViewIdHelper.OverViewScroll(Model.Prefix, Model.Id)");
+</script>

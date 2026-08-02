@@ -826,7 +826,14 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                 DOMAIN_NAME);
         }
 
-        return Ok(new { success = true, id = policyIssuance.Id, dept, acceptedAt });
+        return Ok(new
+        {
+            success = true,
+            id = policyIssuance.Id,
+            dept,
+            acceptedAt,
+            workflowStatus = policyIssuance.WorkflowStatus
+        });
     }
 
     [HttpGet("{listIds}/{jsessionId}")]
