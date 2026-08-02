@@ -3973,7 +3973,13 @@ function RenderElementV2(_viewConfig, searchFormControls, objectIds, callback) {
                 editorType: item.Type,
                 editorOptions: {
                     width: _filterWidth,
-                    showClearButton: true
+                    showClearButton: true,
+                    type: String(item.DataType || item.dataType || "date").toLowerCase() === "datetime"
+                        ? "datetime"
+                        : "date",
+                    displayFormat: String(item.DataType || item.dataType || "date").toLowerCase() === "datetime"
+                        ? datetimeFormatter
+                        : dateFormatter
                 },
                 label: { location: "left", text: item.Caption },
                 validationRules: [{

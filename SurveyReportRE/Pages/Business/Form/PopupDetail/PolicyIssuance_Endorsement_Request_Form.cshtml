@@ -448,7 +448,7 @@
                     caption: "Header Information",
                     items: [
                         { dataField: "PIC", editorType: "dxTextBox", editorOptions: { readOnly: true, value: _loginUser } },
-                        { dataField: "createDate", editorType: "dxDateBox", editorOptions: { readOnly: true, displayFormat: "dd-MM-yyyy", value: new Date() } },
+                        { dataField: "createDate", editorType: "dxDateBox", editorOptions: { readOnly: true, displayFormat: "dd/MM/yyyy", value: new Date() } },
                         {
                             dataField: "subject",
                             colSpan: 2,
@@ -464,7 +464,7 @@
                         //             editorOptions: {
                         //             }
                         //         },
-                        { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd-MM-yyyy" } },
+                        { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd/MM/yyyy" } },
                         { dataField: "policyNo",name: "policyNo", visible: true ,label: { text: "Policy No" }, editorType: "dxTextBox"
                         , editorOptions: {
                             onValueChanged: function (e){

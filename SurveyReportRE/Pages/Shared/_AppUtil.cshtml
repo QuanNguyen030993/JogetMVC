@@ -6740,9 +6740,14 @@
                     devExtremeItem.control = createHtmlEditor($container, $element, devExtremeItem, editorOptions);
                     break;
                 case "dxDateBox":
+                    var dateBoxDataType = String(
+                        devExtremeItem.dataType || editorOptions.dataType || editorOptions.type || "date"
+                    ).trim().toLowerCase();
+                    var dateBoxType = dateBoxDataType === "datetime" ? "datetime" : "date";
                     $element.dxDateBox({
                         ...editorOptions,
-                        type: "date"
+                        type: dateBoxType,
+                        displayFormat: dateBoxType === "datetime" ? datetimeFormatter : dateFormatter
                     }).appendTo($container);
                     break;
                 case "dxCheckBox":
@@ -7255,7 +7260,11 @@
            else if (item.editorType == "dxDataGrid") {
            }
            else if (item.editorType == "dxDateBox") {
-               itemOptions = {
+                var itemDateDataType = String(
+                    item.dataType || additionalEditorOptions.type || "date"
+                ).trim().toLowerCase();
+                var itemDateBoxType = itemDateDataType === "datetime" ? "datetime" : "date";
+                itemOptions = {
                    formGroupName: item.formGroupName,
                    dataField: item.dataField,
                    editorType: item.editorType,
@@ -7265,7 +7274,7 @@
                        width: item.width,
                        heigth: item.height,
                        showClearButton: true,
-                       value: item.defaultValue ?? "",
+                        value: item.defaultValue ?? "",
                        //onValueChanged: function (e) {
                        //    let localDate = e.value; // This is in the user's local time
                        //    if (localDate instanceof Date) {
@@ -7273,13 +7282,16 @@
                        //    }
                        //    //stringToUtcDate(e.value);
                        //},
-                       displayFormat: dateFormatter,
-                       dateSerializationFormat: "yyyy-MM-dd",
-                       acceptCustomValue: false, // according to typing date
+                        acceptCustomValue: false, // according to typing date
                        //onFocusIn: function (e) {
                        //    e.component.option("opened", true);
                        //},
-                       ...additionalEditorOptions
+                        ...additionalEditorOptions,
+                        type: itemDateBoxType,
+                        displayFormat: itemDateBoxType === "datetime" ? datetimeFormatter : dateFormatter,
+                        dateSerializationFormat: itemDateBoxType === "datetime"
+                            ? "yyyy-MM-ddTHH:mm:ss"
+                            : "yyyy-MM-dd"
                    },
                    label: { location: formInstanceProps.labelLocation, text: item.caption, visible: true, template: function (text) { } },
                    formItem: item.formItem,
