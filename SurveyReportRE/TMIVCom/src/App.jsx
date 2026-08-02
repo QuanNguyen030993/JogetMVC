@@ -209,6 +209,7 @@ function App() {
 
   const runTourGuide = () => {
     startTour(tourSteps, {
+      isAdmin: true,
       onComplete: () => notify("Chúc mừng! Bạn đã hoàn thành Tour hướng dẫn. 🎉", "success"),
       onExit: () => notify("Đã thoát Tour hướng dẫn.", "info")
     });
@@ -218,6 +219,7 @@ function App() {
     if (typeof $ !== "undefined" || window.jQuery) {
       const jQueryInstance = typeof $ !== "undefined" ? $ : window.jQuery;
       jQueryInstance(document).tmivtourguide(tourSteps, {
+        isAdmin: true,
         onExit: () => notify("Thoát JQuery Tour.", "info")
       });
     } else {
@@ -432,6 +434,54 @@ function App() {
         </span>
         <button
           type="button"
+          onClick={() => handleExport('pdf')}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '6px',
+            border: '1px solid #ef4444',
+            background: '#fef2f2',
+            color: '#dc2626',
+            fontWeight: '600',
+            fontSize: '12px',
+            cursor: 'pointer'
+          }}
+        >
+          📕 In/Tải PDF
+        </button>
+        <button
+          type="button"
+          onClick={() => handleExport('html-slides')}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '6px',
+            border: '1px solid #f59e0b',
+            background: '#fffbeb',
+            color: '#d97706',
+            fontWeight: '600',
+            fontSize: '12px',
+            cursor: 'pointer'
+          }}
+        >
+          🖥️ Tải Slide Trình chiếu (PPTX/HTML)
+        </button>
+        <button
+          type="button"
+          onClick={() => handleExport('docx')}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '6px',
+            border: '1px solid #0284c7',
+            background: '#f0f9ff',
+            color: '#0369a1',
+            fontWeight: '600',
+            fontSize: '12px',
+            cursor: 'pointer'
+          }}
+        >
+          📘 Tải DOCX (Word)
+        </button>
+        <button
+          type="button"
           onClick={() => handleExport('markdown')}
           style={{
             padding: '6px 12px',
@@ -460,23 +510,7 @@ function App() {
             cursor: 'pointer'
           }}
         >
-          🌐 Tải HTML Manual (.html)
-        </button>
-        <button
-          type="button"
-          onClick={() => handleExport('html-slides')}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: '1px solid #f59e0b',
-            background: '#fffbeb',
-            color: '#d97706',
-            fontWeight: '600',
-            fontSize: '12px',
-            cursor: 'pointer'
-          }}
-        >
-          🖥️ Tải Slide Trình chiếu (HTML)
+          🌐 Tải HTML Manual
         </button>
       </div>
 

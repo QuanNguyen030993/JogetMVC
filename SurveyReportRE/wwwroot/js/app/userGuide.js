@@ -366,6 +366,7 @@
             activeTour = { guide: clone(guide), index: 0 };
             document.body.classList.add("ug-tour-active");
             activeDriver = staticTourStarter(tourSteps, {
+                isAdmin: canManageGuides(),
                 onExit: function () {
                     activeDriver = null;
                     activeTour = null;
@@ -379,6 +380,7 @@
             activeTour = { guide: clone(guide), index: 0 };
             document.body.classList.add("ug-tour-active");
             window.jQuery(document).tmivtourguide(tourSteps, {
+                isAdmin: canManageGuides(),
                 onExit: function () {
                     activeTour = null;
                     document.body.classList.remove("ug-tour-active");

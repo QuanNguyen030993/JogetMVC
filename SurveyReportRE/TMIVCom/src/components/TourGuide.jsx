@@ -78,11 +78,54 @@ const TourGuide = forwardRef(({
             disableActiveInteraction: false, // Allow clicks and inputs on highlighted element
             overlayColor: 'rgba(15, 23, 42, 0.65)',
             steps: driverSteps,
+            ...options,
             onDestroyStarted: () => {
                 onExit?.();
                 driverObj.destroy();
             },
-            ...options
+            onPopoverRender: (popover, { config, state }) => {
+                if (options.isAdmin || options.admin) {
+                    if (popover.footerButtons && !popover.footerButtons.querySelector('.admin-export-select')) {
+                        const exportSelect = document.createElement("select");
+                        exportSelect.className = "admin-export-select";
+                        exportSelect.style.cssText = "background: #10b981; color: white; border: none; border-radius: 6px; padding: 5px 12px; font-size: 11px; font-weight: 600; cursor: pointer; margin-right: 8px; outline: none; appearance: none; -webkit-appearance: none; text-align: center;";
+                        
+                        const placeholderOpt = document.createElement("option");
+                        placeholderOpt.text = "📥 Xuất";
+                        placeholderOpt.value = "";
+                        placeholderOpt.disabled = true;
+                        placeholderOpt.selected = true;
+                        exportSelect.appendChild(placeholderOpt);
+
+                        const formats = [
+                            { value: "pdf", text: "PDF (.pdf)" },
+                            { value: "pptx", text: "PPTX / Slides" },
+                            { value: "docx", text: "DOCX / Word" },
+                            { value: "md", text: "Markdown" },
+                            { value: "html", text: "HTML Manual" }
+                        ];
+
+                        formats.forEach(f => {
+                            const opt = document.createElement("option");
+                            opt.value = f.value;
+                            opt.text = f.text;
+                            opt.style.cssText = "color: #1e293b; background: white;";
+                            exportSelect.appendChild(opt);
+                        });
+
+                        exportSelect.addEventListener("change", (e) => {
+                            const selectedFormat = e.target.value;
+                            if (selectedFormat) {
+                                exportTour(steps, selectedFormat);
+                                exportSelect.value = ""; // Reset selector
+                            }
+                        });
+
+                        popover.footerButtons.insertBefore(exportSelect, popover.footerButtons.firstChild);
+                    }
+                }
+                options.onPopoverRender?.(popover, { config, state });
+            },
         });
 
         driverInstanceRef.current = driverObj;
@@ -159,11 +202,54 @@ export const startTour = (stepsArray = [], options = {}) => {
         disableActiveInteraction: false, // Allow inputs, edits, clicks on the highlighted element
         overlayColor: 'rgba(15, 23, 42, 0.65)',
         steps: driverSteps,
+        ...options,
         onDestroyStarted: () => {
             options.onExit?.();
             driverObj.destroy();
         },
-        ...options
+        onPopoverRender: (popover, { config, state }) => {
+            if (options.isAdmin || options.admin) {
+                if (popover.footerButtons && !popover.footerButtons.querySelector('.admin-export-select')) {
+                    const exportSelect = document.createElement("select");
+                    exportSelect.className = "admin-export-select";
+                    exportSelect.style.cssText = "background: #10b981; color: white; border: none; border-radius: 6px; padding: 5px 12px; font-size: 11px; font-weight: 600; cursor: pointer; margin-right: 8px; outline: none; appearance: none; -webkit-appearance: none; text-align: center;";
+                    
+                    const placeholderOpt = document.createElement("option");
+                    placeholderOpt.text = "📥 Xuất";
+                    placeholderOpt.value = "";
+                    placeholderOpt.disabled = true;
+                    placeholderOpt.selected = true;
+                    exportSelect.appendChild(placeholderOpt);
+
+                    const formats = [
+                        { value: "pdf", text: "PDF (.pdf)" },
+                        { value: "pptx", text: "PPTX / Slides" },
+                        { value: "docx", text: "DOCX / Word" },
+                        { value: "md", text: "Markdown" },
+                        { value: "html", text: "HTML Manual" }
+                    ];
+
+                    formats.forEach(f => {
+                        const opt = document.createElement("option");
+                        opt.value = f.value;
+                        opt.text = f.text;
+                        opt.style.cssText = "color: #1e293b; background: white;";
+                        exportSelect.appendChild(opt);
+                    });
+
+                    exportSelect.addEventListener("change", (e) => {
+                        const selectedFormat = e.target.value;
+                        if (selectedFormat) {
+                            exportTour(stepsArray, selectedFormat);
+                            exportSelect.value = ""; // Reset selector
+                        }
+                    });
+
+                    popover.footerButtons.insertBefore(exportSelect, popover.footerButtons.firstChild);
+                }
+            }
+            options.onPopoverRender?.(popover, { config, state });
+        },
     });
 
     driverObj.drive();
@@ -171,7 +257,7 @@ export const startTour = (stepsArray = [], options = {}) => {
 };
 
 /**
- * Exports tour steps into Markdown, HTML Manual, or HTML Slide Deck
+ * Exports tour steps into Markdown, HTML Manual, HTML Slide Deck, DOCX, or PDF
  */
 export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huong-dan-he-thong') => {
     if (!stepsArray || stepsArray.length === 0) return;
@@ -180,24 +266,8 @@ export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huo
     let mimeType = 'text/plain';
     let extension = 'txt';
 
-    if (format === 'markdown' || format === 'md') {
-        extension = 'md';
-        mimeType = 'text/markdown;charset=utf-8;';
-        content = `# HƯỚNG DẪN SỬ DỤNG HỆ THỐNG\n\n`;
-        stepsArray.forEach((step, idx) => {
-            const desc = step.content || step.intro || step.description || '';
-            const plainDesc = desc.replace(/<[^>]*>/g, ''); // Strip simple HTML tags for markdown
-            content += `## Bước ${idx + 1}: ${step.title || 'Chi tiết hướng dẫn'}\n`;
-            if (step.element) {
-                content += `*Vùng tiêu điểm: \`${step.element}\`*\n\n`;
-            }
-            content += `${plainDesc}\n\n`;
-            content += `---\n\n`;
-        });
-    } else if (format === 'html' || format === 'html-doc') {
-        extension = 'html';
-        mimeType = 'text/html;charset=utf-8;';
-        content = `<!DOCTYPE html>
+    const generateHtmlDocContent = () => {
+        let html = `<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -228,7 +298,7 @@ export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huo
         stepsArray.forEach((step, idx) => {
             const desc = step.content || step.intro || step.description || '';
             const htmlDesc = parseDescription(desc);
-            content += `
+            html += `
         <div class="step-card">
             <div class="step-header">
                 <span class="step-num">Bước ${idx + 1} / ${stepsArray.length}</span>
@@ -239,10 +309,82 @@ export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huo
         </div>
 `;
         });
-        content += `
+        html += `
     </div>
 </body>
 </html>`;
+        return html;
+    };
+
+    if (format === 'markdown' || format === 'md') {
+        extension = 'md';
+        mimeType = 'text/markdown;charset=utf-8;';
+        content = `# HƯỚNG DẪN SỬ DỤNG HỆ THỐNG\n\n`;
+        stepsArray.forEach((step, idx) => {
+            const desc = step.content || step.intro || step.description || '';
+            const plainDesc = desc.replace(/<[^>]*>/g, ''); // Strip simple HTML tags for markdown
+            content += `## Bước ${idx + 1}: ${step.title || 'Chi tiết hướng dẫn'}\n`;
+            if (step.element) {
+                content += `*Vùng tiêu điểm: \`${step.element}\`*\n\n`;
+            }
+            content += `${plainDesc}\n\n`;
+            content += `---\n\n`;
+        });
+    } else if (format === 'html' || format === 'html-doc') {
+        extension = 'html';
+        mimeType = 'text/html;charset=utf-8;';
+        content = generateHtmlDocContent();
+    } else if (format === 'pdf') {
+        // PDF triggers printing page of HtmlDoc
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(generateHtmlDocContent());
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 500);
+        return; // Execution ends, browser takes care of printing
+    } else if (format === 'docx' || format === 'doc') {
+        extension = 'doc';
+        mimeType = 'application/msword;charset=utf-8;';
+        content = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+            <title>Tài liệu Hướng dẫn</title>
+            <!--[if gte mso 9]>
+            <xml>
+                <w:WordDocument>
+                    <w:View>Print</w:View>
+                    <w:Zoom>100</w:Zoom>
+                </w:WordDocument>
+            </xml>
+            <![endif]-->
+            <style>
+                body { font-family: 'Calibri', 'Arial', sans-serif; line-height: 1.6; }
+                h1 { text-align: center; color: #1e3a8a; font-size: 24px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+                .step-card { margin-bottom: 24px; padding: 15px; border-left: 3px solid #3b82f6; background-color: #f8fafc; }
+                .step-num { font-size: 11px; font-weight: bold; color: #2563eb; }
+                .step-title { font-size: 16px; font-weight: bold; color: #0f172a; margin-top: 5px; }
+                .step-desc { font-size: 13px; color: #334155; }
+            </style>
+        </head>
+        <body>
+            <h1>TÀI LIỆU HƯỚNG DẪN SỬ DỤNG HỆ THỐNG</h1>
+        `;
+        stepsArray.forEach((step, idx) => {
+            const desc = step.content || step.intro || step.description || '';
+            const htmlDesc = parseDescription(desc);
+            content += `
+            <div class="step-card">
+                <div class="step-num">Bước ${idx + 1} / ${stepsArray.length}</div>
+                <div class="step-title">${step.title || 'Chi tiết hướng dẫn'}</div>
+                <div class="step-desc">${htmlDesc}</div>
+                ${step.element ? `<p style="font-size:10px;color:#94a3b8;">Selector: ${step.element}</p>` : ''}
+            </div>
+            `;
+        });
+        content += `</body></html>`;
     } else if (format === 'slides' || format === 'html-slides' || format === 'pptx') {
         extension = 'html';
         mimeType = 'text/html;charset=utf-8;';
@@ -335,4 +477,4 @@ export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huo
     URL.revokeObjectURL(url);
 };
 
-export default { TourGuide, startTour, exportTour };
+export default TourGuide;

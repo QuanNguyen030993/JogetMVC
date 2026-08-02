@@ -3285,6 +3285,35 @@
                         PIC_JSON = values.pIC;
                         renderDeptCallouts(PIC_JSON);
                     }
+
+                    // The assignment picker updates the section immediately, but the
+                    // decision/status controls are rendered by a separate deferred
+                    // registry. Keep the form data in sync and rerun that renderer so
+                    // the button no longer stays in its pre-assignment/loading state.
+                    var assignedForm = formId ? $(`#${formId}`).dxForm("instance") : null;
+                    var assignedPic = values?.pIC ?? values?.pic ?? values?.PIC;
+                    if (assignedForm && assignedPic !== undefined) {
+                        var assignedFormItems = assignedForm.option("formData") || {};
+                        var picFields = ["pic", "pIC", "PIC"];
+                        var updatedPicField = false;
+                        picFields.forEach(function (fieldName) {
+                            if (!Object.prototype.hasOwnProperty.call(assignedFormItems, fieldName)) return;
+                            assignedForm.updateData(fieldName, assignedPic);
+                            updatedPicField = true;
+                        });
+                        if (!updatedPicField) assignedForm.updateData("pIC", assignedPic);
+                    }
+
+                    var decisionRegistryKey = `${formId}:${String(dept || "").trim().toUpperCase()}`;
+                    var decisionEntry = window.WorkflowDecisionRegistry?.[decisionRegistryKey];
+                    if (decisionEntry) {
+                        renderDecisionDeferredV2(
+                            decisionEntry.formProps,
+                            decisionEntry.groupName,
+                            decisionEntry.mainFields,
+                            ...decisionEntry.params
+                        );
+                    }
                     var treeStack = document.getElementById(
                         (moduleCode === "pi" ? window.PolicyIssuanceIdManager : window.QuotationIdManager)
                             ?.treeStack?.(recordId)
@@ -6146,7 +6175,9 @@
                     window.setTimeout(function () {
                         var overviewRoot = section?.closest("[id^='qt-overviewRoot_'], [id^='pi-overviewRoot_']");
                         if (overviewRoot) mountOverviewDecisionDocks(overviewRoot);
-                        form.repaint();
+                        // renderDecisionDeferredV2 has already rebuilt the decision
+                        // field from the updated TAT. Repainting here recreates the
+                        // template and resets the freshly rendered Accepted status.
                         resolve(true);
                     }, Math.max(0, Number(FormStageDelay?.unlockForm) || 0) + 120);
                 });
@@ -8753,10 +8784,18 @@
 
             function updateDelayAcceptStatus(statusId, buttonId, acceptDate, defaultStatus = "Accepted") {
                 if (!statusId || !acceptDate) return;
+                var statusLabel = defaultStatus;
+                if (statusLabel && typeof statusLabel === "object") {
+                    statusLabel = statusLabel.text
+                        || statusLabel.displayStatus
+                        || statusLabel.actionName
+                        || statusLabel.actionCode
+                        || statusLabel.statusName;
+                }
                 setDecisionCommonStatus(
                     statusId,
                     buttonId,
-                     `${defaultStatus} at: ${fmtTimeLocal(acceptDate)}`
+                    `${statusLabel || "Accepted"} at: ${fmtTimeLocal(acceptDate)}`
                 );
             }
 
@@ -8919,7 +8958,7 @@
                 setDecisionCommonStatus(
                     statusElementId,
                     buttonId,
-                    item.statusTitle
+                    item.statusTitle || statusText
                 );
 
                 return true;
@@ -9084,7 +9123,10 @@
                         if (!form) return;
 
                         var formItems = form.option("formData") || {};
-                        var picObject = tryParseJSON(formItems.pic, "PIC Load Problem") || {};
+                        var picObject = tryParseJSON(
+                            formItems.pic ?? formItems.pIC ?? formItems.PIC,
+                            "PIC Load Problem"
+                        ) || {};
                         //var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
                         var pic = picObject[formDataClone.dept];
                         if (!pic) {
@@ -9215,7 +9257,7 @@
                         setDecisionCommonStatus(
                             commonStatusId,
                             acceptButtonId,
-                            finalDecisionStatus.title
+                            finalDecisionStatus.title || finalDecisionStatus.text
                         );
                         // if (acceptButtonId
                         //     && formItems.stageDept == formDataClone.dept
