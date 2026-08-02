@@ -537,7 +537,10 @@
                         label: { text: "Assigned Team/Role" },
                         editorType: "dxSelectBox",
                         editorOptions: {
-                            dataSource: _enums.teamOrRole,
+                            dataSource: [
+                                { id: "TS", text: "Marketing TS" },
+                                { id: "PM", text: "Process Management" }
+                            ],
                             displayExpr: "text",
                             valueExpr: "id",
                             onValueChanged(e) {
