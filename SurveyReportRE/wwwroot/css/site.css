@@ -29089,6 +29089,87 @@ aside {
     animation: dept-section-unlocked .8s ease-out;
 }
 
+.dept-form-header__assign {
+    position: relative;
+}
+
+.workflow-element-loading-overlay {
+    position: absolute;
+    inset: -3px;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 3px 7px;
+    border: 1px solid color-mix(in srgb, var(--theme-primary) 20%, var(--theme-border));
+    border-radius: 8px;
+    color: var(--theme-primary);
+    background: color-mix(in srgb, var(--theme-surface) 82%, transparent);
+    backdrop-filter: blur(3px);
+    box-shadow: 0 5px 16px rgba(15, 23, 42, .08);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .16s ease, visibility .16s ease;
+}
+
+.workflow-element-loading > .workflow-element-loading-overlay {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.workflow-element-loading-message {
+    font-size: var(--management-font-body, 10px);
+    font-weight: 650;
+    line-height: 1.15;
+    white-space: nowrap;
+}
+
+.workflow-element-loading-overlay[data-loading-scope="header"] .dept-section-action-loader span {
+    width: 5px;
+    height: 5px;
+}
+
+.workflow-element-loading-overlay[data-loading-scope="tree"] {
+    inset: -5px -4px;
+    flex-direction: column;
+    gap: 5px;
+    padding: 5px 2px;
+    border-radius: 10px;
+}
+
+.workflow-element-loading-overlay[data-loading-scope="tree"] .dept-section-action-loader {
+    gap: 3px;
+}
+
+.workflow-element-loading-overlay[data-loading-scope="tree"] .dept-section-action-loader span {
+    width: 5px;
+    height: 5px;
+}
+
+.workflow-element-loading-overlay[data-loading-scope="tree"] .workflow-element-loading-message {
+    max-width: 48px;
+    font-size: 8px;
+    text-align: center;
+    white-space: normal;
+}
+
+.workflow-element-loading-overlay.is-success .dept-section-action-loader span {
+    animation: none;
+    background: #16a34a;
+}
+
+.workflow-element-loading-overlay.is-error {
+    color: #b91c1c;
+}
+
+.workflow-element-loading-overlay.is-error .dept-section-action-loader span {
+    animation: none;
+    background: #dc2626;
+}
+
 @keyframes dept-section-loading-dot {
     0%, 60%, 100% { transform: translateY(0); opacity: .45; }
     30% { transform: translateY(-5px); opacity: 1; }
@@ -34272,6 +34353,18 @@ textarea {
     border-color: var(--form-node-stage-border) !important;
     box-shadow: 0 8px 18px rgba(31, 42, 55, .1) !important;
     transform: scale(1.08);
+}
+
+/* A focused node that is also the current stage keeps the red stage fill;
+   focus is represented by the blue border/ring instead of a white fill. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dept-node.status.focus .dept-circle:not(.status-success):not(.status-fail),
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])
+    .dept-node.status.focus.scroll-active .dept-circle:not(.status-success):not(.status-fail) {
+    color: var(--form-node-stage-text) !important;
+    background: var(--form-node-stage-bg) !important;
+    border-color: var(--form-node-focus-border) !important;
+    box-shadow: 0 0 0 3px var(--form-node-focus-ring), 0 8px 18px rgba(31, 42, 55, .1) !important;
 }
 
 :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"])

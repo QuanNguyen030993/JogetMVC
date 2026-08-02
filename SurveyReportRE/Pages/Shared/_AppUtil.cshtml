@@ -3256,17 +3256,15 @@
                 var moduleCode = normalizedScheme === "policyissuance" ? "pi" : "qt";
                 var controllerName = moduleCode === "pi" ? "PolicyIssuance" : "Quotation";
                 var reloadKey = `${moduleCode}:${recordId}`;
-                var updateCompleted = false;
-                // Suppress the R_ItemSubmitted event raised by UpdateData. The final
-                // refresh must happen only after AssignTask has read the saved PIC.
+                var loadingContexts = beginDepartmentAssignmentLoading(
+                    moduleCode,
+                    recordId,
+                    dept
+                );
+                // UpdateData emits R_ItemSubmitted. Assignment updates its own header
+                // and department tree, so suppress the matching overview refresh.
                 window.WorkflowViewReloadState = window.WorkflowViewReloadState || {};
                 window.WorkflowViewReloadState[reloadKey] = Number.POSITIVE_INFINITY;
-                var loadingContext = beginWorkflowViewLoading(
-                    controllerName,
-                    recordId,
-                    `Assigning ${dept} member…`
-                );
-
                 try {
                     if (store && typeof store.update === "function") {
                         await Promise.resolve(store.update(recordId, values));
@@ -3276,38 +3274,34 @@
                             values: JSON.stringify(values)
                         }));
                     }
-                    updateCompleted = true;
-                    await $.ajax({
+                    var assignmentResult = await $.ajax({
                         url: `/api/${controllerName}/AssignTask`,
                         type: "POST",
                         contentType: "application/json; charset=utf-8",
                         data: JSON.stringify({ id: recordId, dept: dept })
                     });
+
+                    if (values?.pIC) {
+                        PIC_JSON = values.pIC;
+                        renderDeptCallouts(PIC_JSON);
+                    }
+                    var treeStack = document.getElementById(
+                        (moduleCode === "pi" ? window.PolicyIssuanceIdManager : window.QuotationIdManager)
+                            ?.treeStack?.(recordId)
+                    );
+                    treeStack?.deptTreeScrollSpy?.refresh?.();
+                    finishDepartmentAssignmentLoading(loadingContexts, dept, false);
+                    return assignmentResult;
                 } catch (err) {
                     console.error(`${controllerName} assignment failed`, err);
-                    failWorkflowViewLoading(loadingContext, "Assignment failed");
+                    finishDepartmentAssignmentLoading(loadingContexts, dept, true);
                     if (typeof appNotifyWarning === "function") {
                         appNotifyWarning("Assignment could not be completed. Please try again.", false);
                     }
                 } finally {
-                    if (updateCompleted) {
-                        try {
-                            var reloaded = await reloadWorkflowViewComponents(
-                                controllerName,
-                                recordId,
-                                document.getElementById(formId),
-                                true
-                            );
-                            if (!reloaded) {
-                                failWorkflowViewLoading(loadingContext, "Assignment refresh unavailable");
-                            }
-                        } catch (reloadError) {
-                            failWorkflowViewLoading(loadingContext, "Assignment refresh failed");
-                            console.error(`${controllerName} assignment reload failed`, reloadError);
-                        }
-                    } else {
+                    window.setTimeout(function () {
                         delete window.WorkflowViewReloadState[reloadKey];
-                    }
+                    }, 1500);
                 }
             }
 
@@ -6159,6 +6153,72 @@
            }
            window.applyAcceptedDepartmentDecision = applyAcceptedDepartmentDecision;
 
+           function beginWorkflowElementLoading(element, message, scope) {
+                if (!element) return null;
+                var overlay = element.querySelector(":scope > .workflow-element-loading-overlay");
+                if (!overlay) {
+                    overlay = document.createElement("div");
+                    overlay.className = "workflow-element-loading-overlay";
+                    overlay.innerHTML = `
+                        <div class="dept-section-action-loader" aria-hidden="true">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <span class="workflow-element-loading-message"></span>`;
+                    element.appendChild(overlay);
+                }
+                overlay.dataset.loadingScope = scope || "element";
+                overlay.classList.remove("is-success", "is-error");
+                overlay.querySelector(".workflow-element-loading-message").textContent = message || "Saving...";
+                element.classList.add("workflow-element-loading");
+                element.setAttribute("aria-busy", "true");
+                return { element: element, overlay: overlay };
+           }
+
+           function finishWorkflowElementLoading(context, message, isError) {
+                if (!context?.element || !context?.overlay) return;
+                var messageElement = context.overlay.querySelector(".workflow-element-loading-message");
+                if (messageElement && message) messageElement.textContent = message;
+                context.overlay.classList.toggle("is-error", !!isError);
+                context.overlay.classList.toggle("is-success", !isError);
+                window.setTimeout(function () {
+                    context.element.classList.remove("workflow-element-loading");
+                    context.element.removeAttribute("aria-busy");
+                }, isError ? 800 : 220);
+           }
+
+           function beginDepartmentAssignmentLoading(moduleCode, recordId, dept) {
+                var section = document.getElementById(`${moduleCode}-sec_${dept}_${recordId}`);
+                var assigneeHost = section?.querySelector(".dept-form-header__assign");
+                var manager = moduleCode === "pi"
+                    ? window.PolicyIssuanceIdManager
+                    : window.QuotationIdManager;
+                var treeStack = manager?.treeStack
+                    ? document.getElementById(manager.treeStack(recordId))
+                    : null;
+                var tree = treeStack?.closest(".dept-tree");
+                return {
+                    header: beginWorkflowElementLoading(
+                        assigneeHost,
+                        `Saving ${dept} assignment...`,
+                        "header"
+                    ),
+                    tree: beginWorkflowElementLoading(tree, "Sync PIC", "tree")
+                };
+           }
+
+           function finishDepartmentAssignmentLoading(contexts, dept, isError) {
+                finishWorkflowElementLoading(
+                    contexts?.header,
+                    isError ? "Assignment failed" : `${dept} assigned`,
+                    isError
+                );
+                finishWorkflowElementLoading(
+                    contexts?.tree,
+                    isError ? "Sync failed" : "Synced",
+                    isError
+                );
+           }
+
            window.WorkflowViewReloadState = window.WorkflowViewReloadState || {};
            function beginWorkflowViewLoading(schemeName, recordId, message) {
                 var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
@@ -8306,14 +8366,19 @@
                         const $co = $(this).find(".dept-callout");
                         if (!$co.length) return;
                         const pic = picMap[dept] || "";
-                        if (pic)
+                        $co.attr("data-pic-account", pic);
+                        if (!pic) {
+                            $co.find(".co-text").text("-");
+                            $co.css({ color: "" });
+                            return;
+                        }
                         getPersonInCharge(pic).then(function (stageName) {
-                        // if (stageDept)
+                            if ($co.attr("data-pic-account") !== pic) return;
                             $co.find(".co-text").text(stageName);
                             $co.css({ color: window.AppColors.c_rgba_17_24_39_85 });
-                            }).catch(function (error) {
-                                console.warn(`PIC lookup for ${dept} failed.`, error);
-                            });
+                        }).catch(function (error) {
+                            console.warn(`PIC lookup for ${dept} failed.`, error);
+                        });
                     });
                 }
 

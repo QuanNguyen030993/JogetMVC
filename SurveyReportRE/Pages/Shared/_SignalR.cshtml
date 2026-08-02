@@ -546,6 +546,9 @@ function startSignalRConnection() {
                     .toLowerCase();
                 const moduleCode = normalizedType === "policyissuance" ? "pi" : "qt";
                 const viewKey = `${moduleCode}:${items.id}`;
+                if (window.WorkflowViewReloadState?.[viewKey] === Number.POSITIVE_INFINITY) {
+                    return;
+                }
                 const viewInstance = window.OverviewViewRegistry?.[viewKey];
                 const triggerElement = viewInstance?.rootId
                     ? document.getElementById(viewInstance.rootId)
