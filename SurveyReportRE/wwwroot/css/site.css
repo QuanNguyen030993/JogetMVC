@@ -28592,7 +28592,7 @@ aside {
    ================================ */
 
 .statusTag {
-    font-size: var(--management-font-body, 10px);
+    /* font-size: var(--management-font-body, 10px);
     padding: 3px 9px;
     border-radius: 999px;
     font-weight: 500;
@@ -28602,57 +28602,126 @@ aside {
     line-height: 1;
     animation: slideInFromLeft 0.5s ease-out;
     width: 100%;
+    justify-content: center;*/ 
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: 22px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
     justify-content: center;
 }
 
     /* Pending / New */
-    .statusTag.pending,
+    /*.statusTag.pending,
     .statusTag.new {
         background: var(--pending);
         color: #FFFFFF;
-    }
+    }*/
 
     /* In Progress */
 
-    .statusTag.in-progress {
-        background: var(--theme-warning); /* màu cam */
-        color: #ffffff; /* chữ trắng */
-    }
+    /*.statusTag.in-progress {
+        background: var(--theme-warning);*/ /* màu cam */
+        /*color: #ffffff;*/ /* chữ trắng */
+    /*}*/
 
     /* Accept / Approved / Client Accept */
-    .statusTag.accepted,
+    /*.statusTag.accepted,
     .statusTag.approved,
     .statusTag.approve,
     .statusTag.client-accept {
         background: var(--theme-success);
         color: #ffffff;
-    }
+    }*/
 
     /* Reject / Decline / Client Refuse */
-    .statusTag.rejected,
+    /*.statusTag.rejected,
     .statusTag.declined,
     .statusTag.client-refuse {
         background: var(--theme-danger);
         color: #ffffff;
-    }
+    }*/
 
     /* Done / Complete / Dispose / Archive */
-    .statusTag.done,
+    /*.statusTag.done,
     .statusTag.complete,
     .statusTag.dispose,
     .statusTag.archive {
         background: var(--both);
         color: #ffffff;
-    }
+    }*/
 
     /* Unknown / ? */
-    .statusTag.unknown {
+    /*.statusTag.unknown {
         background: rgba(245,158,11,.18);
         color: #92400e;
-    }
+    }*/
 
 
+.statusTag {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: 22px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+    justify-content: center;
+}
 
+.grid-cell:not(.editing-cell) .grid-cell-content > .statusTag {
+    display: inline-flex;
+}
+
+.statusTag.new,
+.statusTag.pending {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.statusTag.in-progress {
+    background: #dbeafe;
+    color: #1d4ed8; /*Blue*/
+}
+
+.statusTag.accepted,
+.statusTag.approved,
+.statusTag.done,
+.statusTag.complete {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.statusTag.rejected,
+.statusTag.declined {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.statusTag.dispose,
+.statusTag.archive {
+    background: #fef3c7;
+    color: #92400e;
+}
+.statusTag.unknown,
+.statusTag.process {
+    background: rgba(245,158,11,.18);
+    color: #92400e;
+}
 .statusTagInForm {
     font-size: var(--management-font-body, 10px);
     padding: 3px 9px;
@@ -28666,48 +28735,40 @@ aside {
     max-width: 100%;
     justify-content: center;
 }
-    /* Pending / New */
-    .statusTagInForm.pending,
-    .statusTagInForm.new {
-        background: var(--pending);
-        color: #FFFFFF;
-    }
 
-    /* In Progress */
+    .statusTagInForm.new,
+    .statusTagInForm.pending {
+        background: #f1f5f9;
+        color: #475569;
+    }
 
     .statusTagInForm.in-progress {
-        background: var(--theme-warning); /* màu cam */
-        color: #ffffff; /* chữ trắng */
+        background: #dbeafe;
+        color: #1d4ed8; /*Blue*/
     }
 
-    /* Accept / Approved / Client Accept */
     .statusTagInForm.accepted,
     .statusTagInForm.approved,
-    .statusTagInForm.approve,
-    .statusTagInForm.client-accept {
-        background: var(--theme-success);
-        color: #ffffff;
-    }
-
-    /* Reject / Decline / Client Refuse */
-    .statusTagInForm.rejected,
-    .statusTagInForm.declined,
-    .statusTagInForm.client-refuse {
-        background: var(--theme-danger);
-        color: #ffffff;
-    }
-
-    /* Done / Complete / Dispose / Archive */
     .statusTagInForm.done,
-    .statusTagInForm.complete,
+    .statusTagInForm.complete {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .statusTagInForm.rejected,
+    .statusTagInForm.declined {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
     .statusTagInForm.dispose,
     .statusTagInForm.archive {
-        background: var(--both);
-        color: #ffffff;
+        background: #fef3c7;
+        color: #92400e;
     }
 
-    /* Unknown / ? */
-    .statusTagInForm.unknown {
+    .statusTagInForm.unknown,
+    .statusTagInForm.process {
         background: rgba(245,158,11,.18);
         color: #92400e;
     }

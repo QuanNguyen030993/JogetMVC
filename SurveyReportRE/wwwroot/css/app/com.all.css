@@ -715,57 +715,8 @@
     text-align: left;
 }
 
-.statusTag {
-    display: inline-flex;
-    align-items: center;
-    max-width: 100%;
-    min-height: 22px;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1.2;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    width: 100%;
-    justify-content: center;
-}
-
 .grid-cell:not(.editing-cell) .grid-cell-content > .statusTag {
     display: inline-flex;
-}
-
-.statusTag.new,
-.statusTag.pending,
-.statusTag.unknown {
-    background: #f1f5f9;
-    color: #475569;
-}
-
-.statusTag.in-progress {
-    background: #dbeafe;
-    color: #1d4ed8;
-}
-
-.statusTag.accepted,
-.statusTag.approved,
-.statusTag.done,
-.statusTag.complete {
-    background: #dcfce7;
-    color: #15803d;
-}
-
-.statusTag.rejected,
-.statusTag.declined {
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-.statusTag.dispose,
-.statusTag.archive {
-    background: #fef3c7;
-    color: #92400e;
 }
 
 .col-pic-rows .grid-cell-content {
