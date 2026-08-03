@@ -721,6 +721,25 @@
                 popupInstance.show();
             }
                  function newPolicyIssuanceForm() {
+                  function combinePolicyIssuanceSubject(source) {
+                    source = source || {};
+
+                    var subjectParts = [
+                        source.clientName ?? source.ClientName,
+                        source.lineCode ?? source.LineCode,
+                        source.productCode ?? source.ProductCode,
+                        source.policyNo ?? source.PolicyNo
+                    ].map(function (value) {
+                        return String(value ?? "").trim();
+                    });
+
+                    if (subjectParts.some(Boolean)) {
+                        return subjectParts.join(" - ");
+                    }
+
+                    return String(source.subject ?? source.Subject ?? "").trim();
+                  }
+
                   var popup = makePopup("large", "Res");
                     popup.option({
                         title: "Policy Issuance Request",
@@ -805,6 +824,7 @@
                                  $.each(selectedItems, function (itemIndex, item){
                                     var policyIssuance = new Object();
                                      policyIssuance = ObjectPopulateKey(item, true, false);
+                                     policyIssuance.Subject = combinePolicyIssuanceSubject(item);
                                      policyIssuance.RequestDate = new Date();
                                      var pics = JSON.parse(item.pic || "{}");
                                      policyIssuance.PIC = {

@@ -893,6 +893,21 @@ public class QuotationController : BaseControllerApi<Quotation>
             _logger.LogWarning(exception, "Assign email could not be queued for Quotation {QuotationId}.", quotation.Id);
         }
 
+        var assignLogRequest = new SubmitRequest
+        {
+            Comment = $"{title} [{dept}] to {string.Join(", ", recipients)} by {actor}.",
+            StepsWorkflow = new StepsWorkflow { FromNodeId = dept, StepName = "Internal Workflow" },
+            isFullDetail = false
+        };
+        await ControllerUtil.LogAction(
+            _quotationCommentLogRepository,
+            _httpContextAccessor,
+            configuration,
+            DOMAIN_NAME,
+            quotation,
+            assignLogRequest,
+            _blobStorageSettings);
+
         return Ok(new { success = true, id = quotation.Id, dept, recipients });
     }
 

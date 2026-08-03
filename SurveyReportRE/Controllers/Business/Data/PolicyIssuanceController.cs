@@ -640,6 +640,21 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                 policyIssuance.Id);
         }
 
+        var assignLogRequest = new SubmitRequest
+        {
+            Comment = $"{title} [{dept}] to {string.Join(", ", recipients)} by {actor}.",
+            StepsWorkflow = new StepsWorkflow { FromNodeId = dept, StepName = "Internal Workflow" },
+            isFullDetail = false
+        };
+        await ControllerUtil.LogAction(
+            _quotationCommentLogRepository,
+            _httpContextAccessor,
+            configuration,
+            DOMAIN_NAME,
+            policyIssuance,
+            assignLogRequest,
+            _blobStorageSettings);
+
         return Ok(new { success = true, id = policyIssuance.Id, dept, recipients });
     }
 

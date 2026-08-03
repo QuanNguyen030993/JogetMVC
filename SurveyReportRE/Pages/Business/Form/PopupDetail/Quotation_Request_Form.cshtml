@@ -98,7 +98,17 @@
         var productText = "";
         var clientNameText = "";
         var policyNoText = "";
-        var subjectText = `${clientNameText} - ${lineText} - ${productText} - ${policyNoText}`;
+        var subjectText = "";
+
+        function updateSubjectText(form) {
+            subjectText = `${clientNameText || ""} - ${lineText || ""} - ${productText || ""} - ${policyNoText || ""}`;
+
+            if (form) {
+                form.updateData("subject", subjectText);
+            }
+
+            return subjectText;
+        }
            var guid= crypto.randomUUID();
                 var sectionId =  "qt-body_@(dept)_";
                          var that = new Object();
@@ -372,6 +382,7 @@
                                     e.component.option("value", selectedItems.selectedRowKeys[0]);
                                     that.formInstance.updateData("clientName", selectedRow.englishName);
                                     that.formInstance.updateData("businessOccupation", selectedRow.businessOccupation);
+                                    updateSubjectText(that.formInstance);
                                     e.component.close();
                                 });
 
@@ -423,8 +434,8 @@
                             that.formInstance = that.dxForm("instance");
                             that.formInstance.updateData("lineCode",  selectedItem?.code || selectedItem);
                             that.formInstance.updateData("lineName",  selectedItem?.value || selectedItem);
-                                lineText  = `${selectedItem?.code || ""}`;
-                                // that.formInstance.updateData("subject", lineText);
+                            lineText = `${selectedItem?.code || ""}`;
+                            updateSubjectText(that.formInstance);
 
                         }
                         }
@@ -465,11 +476,7 @@
                             );
 
                             productText = selectedItem?.code || "";
-
-                            that.formInstance.updateData(
-                                "subject",
-                                `${clientNameText} - ${lineText} - ${productText} - ${policyNoText}`
-                            );
+                            updateSubjectText(that.formInstance);
                         }
                     }
                     },
@@ -508,10 +515,9 @@
                         { dataField: "policyNo",name: "policyNo", visible: shouldShow ,label: { text: "Policy No" }, editorType: "dxTextBox"
                         , editorOptions: {
                             onValueChanged: function (e){
-                            that.formInstance = that.dxForm("instance"); 
-                            
-                            policyNoText = e.value;
-                            that.formInstance.updateData("subject", subjectText);
+                                that.formInstance = that.dxForm("instance");
+                                policyNoText = e.value || "";
+                                updateSubjectText(that.formInstance);
                             }
                         }
                         

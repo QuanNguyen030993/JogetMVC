@@ -3479,8 +3479,9 @@ string? mainTableAlias = null
                 if (!safeColumns.Contains(actualColumn)) continue;
 
                 var pName = "@p" + (++pIndex);
+                var normalizedOperator = operators?.Trim().ToLowerInvariant() ?? "=";
                 sql.Append(" AND ");
-                switch (operators)
+                switch (normalizedOperator)
                 {
                     case "=":
                     case "<>":
@@ -3488,8 +3489,8 @@ string? mainTableAlias = null
                     case "<":
                     case ">=":
                     case "<=":
-                        sql.Append($"{BuildColumnSql(actualColumn)} = '%' + {pName} + '%'");
-                        parameters[pName] = value;
+                        sql.Append($"{BuildColumnSql(actualColumn)} {normalizedOperator} {pName}");
+                        parameters[pName] = NormalizeToDbValue(value);
                         break;
                     case "in":
                         {
@@ -3499,6 +3500,7 @@ string? mainTableAlias = null
                                     StringSplitOptions.RemoveEmptyEntries |
                                     StringSplitOptions.TrimEntries)
                                 .Select(x => NormalizeToDbValue(x))
+                                .Where(x => x != null && x != DBNull.Value)
                                 .ToList()
                                 ?? [];
 
@@ -3535,19 +3537,19 @@ string? mainTableAlias = null
                         break;
 
                     case "startswith":
-                        sql.Append($"{BuildColumnSql(actualColumn)} = '{pName}'");
+                        sql.Append($"{BuildColumnSql(actualColumn)} LIKE {pName} + '%'");
                         parameters[pName] = value;
                         break;
 
                     case "endswith":
-                        sql.Append($"{BuildColumnSql(actualColumn)} = '{pName}'");
+                        sql.Append($"{BuildColumnSql(actualColumn)} LIKE '%' + {pName}");
                         parameters[pName] = value;
                         break;
 
                     default:
                         // fallback
                         sql.Append($"{BuildColumnSql(actualColumn)} = {pName}");
-                        parameters[pName] = value;
+                        parameters[pName] = NormalizeToDbValue(value);
                         break;
                 }
                 sql.AppendLine();

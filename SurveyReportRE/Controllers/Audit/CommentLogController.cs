@@ -155,9 +155,52 @@ OPTION (MAXRECURSION 24);";
         {
             if (dynamicObj.ContainsKey("refKey") || dynamicObj.ContainsKey("key"))
             {
+                var normalizedParams = Util.NormalizeRefParams(rawRequestParams);
+
+                // RecordGuid is a uniqueidentifier in the log database. Do not let
+                // JavaScript values such as "null"/"undefined", or malformed GUIDs,
+                // reach SQL Server as strings because SQL would try (and fail) to
+                // convert them to uniqueidentifier.
+                if (normalizedParams.TryGetValue("RecordGuid", out var recordGuidFilter))
+                {
+                    var recordGuidOperator = recordGuidFilter.operators?.Trim().ToLowerInvariant() ?? "=";
+
+                    if (recordGuidOperator == "in")
+                    {
+                        var validRecordGuids = recordGuidFilter.value
+                            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                            .Select(value => Guid.TryParse(value, out var guid) ? guid : (Guid?)null)
+                            .Where(guid => guid.HasValue)
+                            .Select(guid => guid!.Value.ToString())
+                            .Distinct(StringComparer.OrdinalIgnoreCase)
+                            .ToArray();
+
+                        if (validRecordGuids.Length == 0)
+                            return new List<Dictionary<string, object>>();
+
+                        normalizedParams["RecordGuid"] = (
+                            string.Join(',', validRecordGuids),
+                            recordGuidOperator
+                        );
+                    }
+                    else
+                    {
+                        if (recordGuidOperator is not ("=" or "<>"))
+                            return new List<Dictionary<string, object>>();
+
+                        if (!Guid.TryParse(recordGuidFilter.value, out var recordGuid))
+                            return new List<Dictionary<string, object>>();
+
+                        normalizedParams["RecordGuid"] = (
+                            recordGuid.ToString(),
+                            recordGuidOperator
+                        );
+                    }
+                }
+
                 var built = Util.LoadParamsBuildCustomQuery<object>(
                     baseQuery: query == "OnSystem" ? sysTable?.CustomQuery : Query,
-                    loadParams: Util.NormalizeRefParams(rawRequestParams),
+                    loadParams: normalizedParams,
                     defaultOrderBy: "CommentId",
                     defaultOrderDir: "DESC",
                     pkTieBreaker: "CommentId",
