@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using ERPCore.ControllerUtil;
 using Dapper;
+using System.Diagnostics;
 
 [Route("api/[controller]/[action]")]
 [ApiController]
@@ -54,6 +55,9 @@ public class EmployeeController : BaseControllerApi<Employee>
         [FromQuery] string branchCode,
         [FromQuery] bool excludeCurrent = true)
     {
+
+        //debug 
+        excludeCurrent = false;
         var normalizedBranch = (branchCode ?? "").Trim();
         if (string.IsNullOrWhiteSpace(normalizedBranch))
         {

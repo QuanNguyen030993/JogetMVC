@@ -96,7 +96,9 @@
         var shouldShow = false;
         var lineText = "";
         var productText = "";
+        var clientNameText = "";
         var policyNoText = "";
+        var subjectText = `${clientNameText} - ${lineText} - ${productText} - ${policyNoText}`;
            var guid= crypto.randomUUID();
                 var sectionId =  "qt-body_@(dept)_";
                          var that = new Object();
@@ -366,6 +368,7 @@
                                     var hasSelection = selectedItems.selectedRowKeys.length > 0;
                                     if (!hasSelection) return;
                                     var selectedRow = selectedItems.selectedRowsData[0];
+                                    clientNameText = selectedRow.englishName;
                                     e.component.option("value", selectedItems.selectedRowKeys[0]);
                                     that.formInstance.updateData("clientName", selectedRow.englishName);
                                     that.formInstance.updateData("businessOccupation", selectedRow.businessOccupation);
@@ -399,21 +402,32 @@
                     itemType: "group",
                     colCount: 2,
                     
-                    caption: "Product",
+                    caption: "Line",
                     items: [
                     { dataField: "lineId", isRequired: true, editorType: "dxSelectBox", editorOptions: {
                         items: _entities.line,
                         keyExpr: "id",
                         displayExpr: "value",
                         searchEnabled: true,
-                        onValueChanged(e) {
-                            that.formInstance = that.dxForm("instance");
-                            that.formInstance.updateData("lineCode", e.value.code);
-                            that.formInstance.updateData("lineName", e.value.value);
-                                // lineText  = `${e.value.value} (${e.value.code})`;
-                                // that.formInstance.updateData("subject", lineText);
+                        // onClosed(e) {
+                        //     debugger
+                        //     that.formInstance = that.dxForm("instance");
+                        //     that.formInstance.updateData("lineCode", e.value.code);
+                        //     that.formInstance.updateData("lineName", e.value.value);
+                        //         lineText  = `${e.value?.code || ""}`;
+                        //         // that.formInstance.updateData("subject", lineText);
                             
-                        } }
+                        // } 
+                        onClosed: function(e) {
+                            const selectedItem = e.component.option("selectedItem");
+                            that.formInstance = that.dxForm("instance");
+                            that.formInstance.updateData("lineCode",  selectedItem?.code || selectedItem);
+                            that.formInstance.updateData("lineName",  selectedItem?.value || selectedItem);
+                                lineText  = `${selectedItem?.code || ""}`;
+                                // that.formInstance.updateData("subject", lineText);
+
+                        }
+                        }
                     },
                     { dataField: "lineName", editorType: "dxTextBox", visible: false},
                     { dataField: "lineCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
@@ -428,13 +442,35 @@
                                             searchEnabled: true,
                             keyExpr: "id",
                             displayExpr: "value",
-                            onValueChanged(e) {
-                                that.formInstance = that.dxForm("instance");
-                                that.formInstance.updateData("productName", e.value?.value || e.value );
-                                that.formInstance.updateData("productCode", e.value?.code  || e.value);
-                                productText = `${e.value.value} (${e.value.code})`;
-                                that.formInstance.updateData("subject", `${productText} - ${policyNoText}`);
-                            }
+                            // onClosed(e) {
+                            //     that.formInstance = that.dxForm("instance");
+                            //     that.formInstance.updateData("productName", e.value?.value || e.value );
+                            //     that.formInstance.updateData("productCode", e.value?.code  || e.value);
+                            //     productText = `${e.value?.code || ""}`;
+                            //     that.formInstance.updateData("subject", `${clientName} - ${lineText} - ${productText} - ${policyNoText}`);
+                            // }
+                            onClosed: function(e) {
+                            const selectedItem = e.component.option("selectedItem");
+
+                            console.log(selectedItem);
+
+                            that.formInstance.updateData(
+                                "productName",
+                                selectedItem?.value || selectedItem
+                            );
+
+                            that.formInstance.updateData(
+                                "productCode",
+                                selectedItem?.code || selectedItem
+                            );
+
+                            productText = selectedItem?.code || "";
+
+                            that.formInstance.updateData(
+                                "subject",
+                                `${clientNameText} - ${lineText} - ${productText} - ${policyNoText}`
+                            );
+                        }
                     }
                     },
                     { dataField: "productCode", editorType: "dxTextBox", visible: true, editorOptions: { readOnly: true } },
@@ -475,7 +511,7 @@
                             that.formInstance = that.dxForm("instance"); 
                             
                             policyNoText = e.value;
-                            that.formInstance.updateData("subject", `${productText} - ${policyNoText}`);
+                            that.formInstance.updateData("subject", subjectText);
                             }
                         }
                         

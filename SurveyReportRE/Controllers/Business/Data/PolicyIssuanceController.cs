@@ -429,68 +429,6 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.WorkflowCode == _businessConfig.CurrentValue.Workflow.PolicyIssuance);
 
 
-            //if (workflowDefinition != null) { 
-            //    StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.IsStart == true);
-            //    InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
-            //    instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
-            //    //instanceWorkflow.CurrentStep = "2";
-            //    if (stepsWorkflow != null)
-
-            //    {
-            //        (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(PolicyIssuance, stepsWorkflow, _businessConfig, siteEnums);
-            //        //quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
-            //        //quotation.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
-  
-            //        instanceWorkflow.RecordGuid = PolicyIssuance.Guid;
-            //        instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
-            //        instanceWorkflow.CurrentStepId = new Guid();
-            //        instanceWorkflow.IsCancelled = false;
-            //        instanceWorkflow.IsCompleted = false;
-            //        instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
-
-
-
-
-            //        SubmitRequest submitRequest = new SubmitRequest();
-            //        submitRequest.StepsWorkflow = stepsWorkflow;
-            //        submitRequest.Comment = $"{PolicyIssuance.PolicyIssuanceCode} created!";
-            //        submitRequest.InstanceWorkflow = instanceWorkflow;
-
-
-
-
-            //        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, PolicyIssuance, submitRequest, _blobStorageSettings);
-
-            //        //loop multiple account tai day
-            //        var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
-            //        long? initialNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
-            //            _enumDataRepository,
-            //            NotificationTypeKeys.Initial);
-            //        string picsStr = picS.PICMain.GetType().GetProperty(stepsWorkflow?.ToNodeId ?? "")?.GetValue(picS.PICMain ?? new PICAttributes()).ToString() ?? "";
-            //        foreach (var memberName in picsStr.Split(","))
-            //        {
-            //            NotificationRequest notification = new NotificationRequest();
-            //            Notification Notification = new Notification();
-            //            Notification.Title = string.Format(_messageSettings.InitializeMessage.Title, PolicyIssuance.PolicyIssuanceCode);
-            //            Notification.Message = PolicyIssuance?.Subject ?? string.Format(_messageSettings.InitializeMessage.Content, "");
-            //            Notification.IsRead = false;
-            //            Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
-            //            Notification.System = "WM";
-            //            Notification.RecordGuid = PolicyIssuance.Guid;
-            //            Notification.Type = initialNotificationTypeId;
-
-            //            Notification.ReceivedBy = memberName;
-            //            notification.Notification = Notification;
-            //            notification.connectionId = memberName;
-            //            notification.tabPublicUrl = Util.URLObjectMaking(PolicyIssuance);
-            //            PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
-            //            string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
-            //            Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(PolicyIssuance));
-            //            await NotificationController.Notify(notification);
-            //        }
-            //    }
-
-            //}
             if (workflowDefinition != null)
             {
                 await NotificationHandle(
@@ -1149,27 +1087,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                     .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                     .ToArray();
             }
-            //foreach (var memberName in picsStr.Split(","))
-            //{
-            //    NotificationRequest notification = new NotificationRequest();
-            //    Notification Notification = new Notification();
-            //    Notification.Title = notificationTitle.Title;
-            //    Notification.Message = notificationTitle.Content;
-            //    Notification.IsRead = false;
-            //    Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
-            //    Notification.System = "WM";
-            //    Notification.RecordGuid = quotation.Guid;
-            //    Notification.Type = notificationTitle.TypeId;
-
-            //    Notification.ReceivedBy = memberName;
-            //    notification.Notification = Notification;
-            //    notification.connectionId = memberName;
-            //    notification.tabPublicUrl = Util.URLObjectMaking(quotation);
-            //    PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
-            //    string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
-            //    Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(quotation));
-            //    await NotificationController.Notify(notification);
-            //}
+           
             if (!string.IsNullOrEmpty(notificationTitle.Title))
             {
                 foreach (string memberName in notificationRecipients)

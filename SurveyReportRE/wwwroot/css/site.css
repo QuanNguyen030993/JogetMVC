@@ -35036,3 +35036,10 @@ body.skin-re .dx-popup-wrapper.dx-rtl > .dx-overlay-content > .dx-popup-title.dx
     flex: 1 1 120px;
   }
 }
+.launcher-title {
+    text-align: center;
+    background: var(--theme-tab-active, #5d95f5);
+    color: #fff;
+    margin-bottom: 100px;
+}
+

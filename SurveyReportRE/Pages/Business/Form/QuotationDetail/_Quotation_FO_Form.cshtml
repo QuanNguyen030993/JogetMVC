@@ -18,18 +18,18 @@
 </div>
 <script type="text/javascript">
     $( function (){
-                var thisObject = new Object();
+        var thisObject = new Object();
         thisObject.ModelName =  "Quotation";
         thisObject.formId = `@QTViewIdHelper.Form(dept, quotationId)`;
-            thisObject.dept = `@dept`;
+        thisObject.dept = `@dept`;
         thisObject.prefix = `@prefix`;
 
 
         var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
         var acceptStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
         var clientStatusId = `Client_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
-        var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
-        var declinedStatusId = `DC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+        // var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
+        // var declinedStatusId = `DC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
         
 
     var that = new Object();
@@ -69,10 +69,7 @@
       thatRes.titleName = "Upload RES Form";
       thatRes.uploaderAllow = _role == "@dept";
       thatRes.data = { SectionName: `${sectionId}_${thatRes.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: thatRes.moduleName, FormId: "@(QTViewIdHelper.Form(dept, quotationId))" }; //{"SectionName":"default_FO_410"}
-      // $(`<div class="dExForm">`).dxForm({
-      //   items:  [{ itemType: "group", name:"resAttachment", caption: "RES Attachment", colCount: 1, items:  attachmentByCase(thatRes) }],
-      //    // items: [{ itemType: "group", items: searchFormControls }],
-      // }).appendTo($(`#@QTViewIdHelper.BtnToggleResForm(dept, quotationId)`));
+
 
      var acceptDecisionV2 = {
         buttonId: acceptButtonId,
@@ -147,19 +144,19 @@
 
            
                 {itemType: "group",caption: "Request Date",colCount:2,items: [
-            {
-                                  dataField: "requestedDate",
-                                  editorType: "dxDateBox",
-                                  editorOptions: { displayFormat: "dd/MM/yyyy" },
-                                  label: {  template: labelTpl("RequestedDate - Ngày yêu cầu") }
-                                },
-            {
-                                  dataField: "dueDate",
-                                  editorType: "dxDateBox",
-                                  editorOptions: { displayFormat: "dd/MM/yyyy" },
-                                  label: { template: labelTpl("DueDate - Due date") }
-                                }
-            ]},
+                {
+                    dataField: "requestedDate",
+                    editorType: "dxDateBox",
+                    editorOptions: { displayFormat: "dd/MM/yyyy" },
+                    label: {  template: labelTpl("RequestedDate - Ngày yêu cầu") }
+                },
+                {
+                    dataField: "dueDate",
+                    editorType: "dxDateBox",
+                    editorOptions: { displayFormat: "dd/MM/yyyy" },
+                    label: { template: labelTpl("DueDate - Due date") }
+                }
+                ]},
 
                  {itemType: "group",caption: "Client",colCount:2,items: [
                      { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
@@ -172,27 +169,6 @@
 
                      ]},
                       
-                 // {
-                 //    itemType: "group",
-                 //    caption: "Client Confirm",
-                 //    colCount: 1,
-                 //    items: [
-                 //        {
-                 //            dataField: "clientDecision",
-                 //            editorType: "dxRadioGroup",
-                 //             name: "clientConfirmGroup",
-                 //            label: { text: "Decision" },
-                 //            editorOptions: {
-                 //                layout: "horizontal",
-                 //                items: ["Accept", "Refuse", "End Quotation"],
-                 //                onValueChanged: function (e) {
-                 //                    if (!e.event) return;
-                 //                    setClientDecisionStatus(e.value);
-                 //                }
-                 //            }
-                 //        }
-                 //    ]
-                 // },
                  {
                         itemType: "group",
                         caption: "Products",
@@ -210,13 +186,13 @@
                 colCount: 3,
                 items: [
                 { dataField: "requestNo", label: { template: labelTpl("RequestNo - Mã Quotation Request") } },
-                {dataField: "policyNo",editorType: "dxTextBox",visible:true},
+                { dataField: "policyNo",editorType: "dxTextBox",visible:true},
                     { dataField: "requestRefNo",visible: false, label: { template: labelTpl("RequestRefNo - Refversion của request") } },
                     { dataField: "quotationCode", label: { template: labelTpl("QuotationCode - Mã quotation khi request vào xử lý (Joget)") } },
                      { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.requestType),displayExpr: "value",
                       valueExpr: "id"
                  },
-                    { dataField: "quotationType",visible: false, label: { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
+                    { dataField: "quotationType",visible: false, label:  { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
                     { dataField: "businessChannelName", label: { template: labelTpl("BusinessChannelName - Kênh kinh doanh (name)") } },
                     { dataField: "businessChannelDisplayName",visible: false, label: { template: labelTpl("BusinessChannelDisplayName - Tên hiển thị kênh (name of biz)") } },
                      { dataField:"reinsuranceId", editorType:"dxSelectBox", label:{text:"Reinsurance"},
@@ -230,8 +206,9 @@
                  { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3},
                 
                             ]}
-                            ,  { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2)},
-                        {
+                ,{ itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2)},
+                { itemType: "group", name:"resAttachment", caption: "RES Attachment", colCount: 1, items:  attachmentByCase(thatRes) },
+                {
                         itemType: "group",
                         name: "decision@(dept)Group",
                         cssClass: "workflow-decision-group qt-decision-group-@(dept)",
@@ -243,28 +220,26 @@
                         caption: "Client Confirm",
                         colCount: 2,
                         items: [
-                {
-                     dataField: "decision",
+                        {
+                                dataField: "decision",
 
-                     label: {
-                         text: "Decision"
-                     },
-                     itemType: "simple",
-                     template: function (data, itemElement) {
-                         // $(`<div id="${submitBranchId}" class="lmkt-submitbranch-decision-host"></div>`)
-                         //     .appendTo(itemElement);
+                                label: {
+                                    text: "Decision"
+                                },
+                                itemType: "simple",
+                                template: function (data, itemElement) {
+                                    // $(`<div id="${submitBranchId}" class="lmkt-submitbranch-decision-host"></div>`)
+                                    //     .appendTo(itemElement);
 
-                         $(`#${clientStatusId}`).appendTo(itemElement);
-                         $.each(items, function (itemIndex, item) {
-                             $(`<div id="${item.id}">`).dxButton({ text: item.text, visible: false}).appendTo(itemElement);
-                         });
-                     }
-                }
+                                    $(`#${clientStatusId}`).appendTo(itemElement);
+                                    $.each(items, function (itemIndex, item) {
+                                        $(`<div id="${item.id}">`).dxButton({ text: item.text, visible: false}).appendTo(itemElement);
+                                    });
+                                }
+                        }
                     ]
-                }, { itemType: "group", caption: "Attachment", colCount:1, items: attachmentByCase(that, that2) },
-                { itemType: "group", name:"resAttachment", caption: "RES Attachment", colCount: 1, items:  attachmentByCase(thatRes) }
+                }   
                ]
-    
     });
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
     delayAcceptStatusV2(null, thisObject, ...itemsDelay);

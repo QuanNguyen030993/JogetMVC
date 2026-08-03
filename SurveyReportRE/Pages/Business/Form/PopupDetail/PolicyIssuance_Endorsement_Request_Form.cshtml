@@ -432,7 +432,7 @@
                                 that.formInstance = that.dxForm("instance");
                                 that.formInstance.updateData("productName", e.value?.value || e.value );
                                 that.formInstance.updateData("productCode", e.value?.code  || e.value);
-                                productText = `${e.value.value} (${e.value.code})`;
+                                productText = `${e.value?.value || ""} (${e.value?.code || ""})`;
                                 that.formInstance.updateData("subject", `${productText} - ${policyNoText}`);
                             }
                     }

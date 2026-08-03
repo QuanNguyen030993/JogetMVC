@@ -407,7 +407,7 @@ namespace ERPCore.ControllerUtil
             dynamic transferObjectIn = new
             {
                 Title = Util.ReplaceDynamicProperties(notificationTemplate.Title, transferObject),
-                Subject = Util.ReplaceDynamicProperties(notificationTemplate.Content, transferObject),
+                Message = Util.ReplaceDynamicProperties(notificationTemplate.Content, transferObject),
                 Guid = transferObject.Guid,
                 ReceivedBy = member,
                 ModuleName = transferObject.GetType().Name,
@@ -418,7 +418,7 @@ namespace ERPCore.ControllerUtil
 
             notification = new Notification();
             notification.Title = Util.ReplaceDynamicProperties(transferObjectIn.Title, transferObject);
-            notification.Message = Util.ReplaceDynamicProperties(transferObjectIn.Subject, transferObject);
+            notification.Message = Util.ReplaceDynamicProperties(transferObjectIn.Message, transferObject);
             notification.IsRead = false;
             notification.Resource = $"{member}_{transferObject.GetType().Name}_{callerName}";
             notification.System = "WorkflowManagement";

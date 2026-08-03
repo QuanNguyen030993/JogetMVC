@@ -2104,6 +2104,7 @@
                 if (k === "pending") return { css: "pending", text: raw };
                 if (k.includes("pending")) return { css: "pending", text: raw };
                 if (k === "in progress") return { css: "in-progress", text: raw };
+                if (k.includes("process")) return { css: "process", text: raw };
                 if (k === "accept") return { css: "accepted", text: raw };
                 if (k.includes("accept")) return { css: "accepted", text: raw };
                 if (k === "approved") return { css: "approved", text: raw };

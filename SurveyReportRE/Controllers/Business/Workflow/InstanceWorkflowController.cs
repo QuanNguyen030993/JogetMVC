@@ -1273,21 +1273,21 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         }
 
         string contentTemplate = notificationTemplate.Content ?? "";
-        string subject = comment;
+        string message = comment;
         if (contentTemplate.Contains("<comment>", StringComparison.OrdinalIgnoreCase))
         {
             contentTemplate = contentTemplate.Replace(
                 "<comment>",
                 comment,
                 StringComparison.OrdinalIgnoreCase);
-            subject = MailUtil.BodyContentHandle(contentTemplate, templateData).Trim();
+            message = MailUtil.BodyContentHandle(contentTemplate, templateData).Trim();
         }
 
         dynamic transferObject = new
         {
             DOMAIN_NAME,
             Title = title,
-            Subject = subject,
+            Message = message,
             Resource = fallbackTransferObject.Resource,
             Guid = fallbackTransferObject.Guid,
             ReceivedBy = fallbackTransferObject.ReceivedBy,
@@ -1327,15 +1327,6 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 callerName: nameof(SendWorkflowNotificationAsync)
                 );
 
-            //Notification.Title = Util.ReplaceDynamicProperties(transferObject.Title, transferObject) ;
-            //Notification.Message = Util.ReplaceDynamicProperties(transferObject.Subject, transferObject);
-            //Notification.IsRead = false;
-            //Notification.Resource = $"{item}_{transferObject.GetType().Name}";
-            //Notification.System = "WM";
-            //Notification.RecordGuid = transferObject.Guid;
-            //Notification.Type = notificationTypeId;
-            //Notification.Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(transferObject));
-            //Notification.ReceivedBy = item;
 
             notification.Notification = Notification;
             notification.connectionId = item;

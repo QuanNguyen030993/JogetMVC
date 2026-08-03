@@ -530,10 +530,6 @@ public class QuotationController : BaseControllerApi<Quotation>
                     quotation.ResId = res.Id;
 
 
-
-
-
-
                     //After insert quotation
                     WorkflowDefinition workflowDefinition = new WorkflowDefinition();
                     workflowDefinition = await _workflowDefinitionRepository.GetSingleObject(s => s.WorkflowCode == _businessConfig.CurrentValue.Workflow.Quotation);
@@ -1222,15 +1218,6 @@ public class QuotationController : BaseControllerApi<Quotation>
                     );
 
 
-                //Notification.Title = Util.ReplaceDynamicProperties(notificationTitle.Title,quotation);
-                //Notification.Message = Util.ReplaceDynamicProperties(notificationTitle.Content, quotation);
-                //Notification.IsRead = false;
-                //Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
-                //Notification.System = "WM";
-                //Notification.RecordGuid = quotation.Guid;
-                //Notification.Type = notificationTitle.TypeId;
-
-                //Notification.ReceivedBy = memberName;
                 notification.Notification = Notification;
                 notification.connectionId = memberName;
                 notification.tabPublicUrl = Util.URLObjectMaking(quotation);
