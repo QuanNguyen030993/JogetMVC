@@ -6,12 +6,56 @@
 <script>
     $(function () {
         new MGrid(null, $(`#dataGrid_@ConstantModel.ModelName`), new MGridOption('@ConstantModel.ModelName', "System"), null);
+
+        var attachmentStorageSelect = $("#attachmentStorageSelect").dxSelectBox({
+            items: ["Local", "SharePoint"],
+            value: "Local",
+            width: 220
+        }).dxSelectBox("instance");
+
+        window.refreshSystemWriteControls().then(function (settings) {
+            attachmentStorageSelect.option("value", settings.attachmentStorage || "Local");
+        });
+
+        $("#saveAttachmentStorage").dxButton({
+            text: "Save attachment storage",
+            type: "default",
+            icon: "save",
+            onClick: function () {
+                $.ajax({
+                    url: "/api/Constant/SetAttachmentStorage",
+                    method: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify({ value: attachmentStorageSelect.option("value") })
+                }).done(function (result) {
+                    window.SystemWriteControls.attachmentStorage = result.attachmentStorage;
+                    DevExpress.ui.notify(
+                        `Attachment storage changed to ${result.attachmentStorage}`,
+                        "success",
+                        2000);
+                }).fail(function (xhr) {
+                    DevExpress.ui.notify(
+                        xhr.responseJSON?.message || "Unable to update attachment storage",
+                        "error",
+                        2500);
+                });
+            }
+        });
     });
 </script>
 <div class="alert alert-info" style="margin-bottom:12px">
-    System write controls: <code>HttpAuditRequest</code>, <code>ErrorClientLog</code>,
-    and <code>SignalR</code>. Set <code>true</code>/<code>false</code>; changes are
-    applied within approximately 10 seconds. The SignalR flag controls diagnostics
-    only and does not stop realtime business events.
+    System controls: <code>HttpAuditRequest</code>, <code>ErrorClientLog</code>,
+    and <code>SignalR</code> accept <code>true</code>/<code>false</code>.
+    Set <code>AttachmentStorage</code> to <code>Local</code> or <code>SharePoint</code>
+    to choose where attachments are uploaded. Changes apply within approximately
+    10 seconds. The SignalR flag controls diagnostics only and does not stop realtime
+    business events.
+</div>
+<div style="display:flex;align-items:end;gap:10px;margin:0 0 14px;padding:12px;border:1px solid var(--c-cbd5e1);border-radius:8px;">
+    <div>
+        <label style="display:block;margin-bottom:6px;font-weight:600;">Attachment storage</label>
+        <div id="attachmentStorageSelect"></div>
+    </div>
+    <div id="saveAttachmentStorage"></div>
 </div>
 <div id="dataGrid_@ConstantModel.ModelName"></div>

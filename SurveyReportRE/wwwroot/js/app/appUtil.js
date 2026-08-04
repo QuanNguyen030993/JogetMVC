@@ -2598,7 +2598,8 @@ function markupStatusCSS(container, options, control = null) {
 window.SystemWriteControls = Object.assign({
     httpAuditRequest: true,
     errorClientLog: true,
-    signalR: true
+    signalR: true,
+    attachmentStorage: 'Local'
 }, window.SystemWriteControls || {});
 
 window.refreshSystemWriteControls = function () {

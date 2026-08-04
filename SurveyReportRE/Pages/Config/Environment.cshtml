@@ -245,7 +245,7 @@
         guid: uploadDemoGuid,
         controllerName: "Document",
         titleName: "Select or drag files to upload locally",
-        uploadUrl: "/api/Document/AsyncUploadFile",
+        uploadUrl: "/api/Document/AsyncUploadFileLocal",
         data: {
             ModuleName: "PolicyIssuance",
             code: "UPLOAD-DEMO",
@@ -354,7 +354,7 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
         <div style="padding: 16px; border: 1px solid var(--c-cbd5e1); border-radius: 8px; background: white;">
             <h4 style="margin: 0 0 4px; color: var(--c-0f172a);">Local storage</h4>
-            <code style="display: block; margin-bottom: 12px; color: var(--c-475569);">/api/Document/AsyncUploadFile</code>
+            <code style="display: block; margin-bottom: 12px; color: var(--c-475569);">/api/Document/AsyncUploadFileLocal</code>
             <div id="localFileUploader"></div>
         </div>
         <div style="padding: 16px; border: 1px solid var(--c-cbd5e1); border-radius: 8px; background: white;">

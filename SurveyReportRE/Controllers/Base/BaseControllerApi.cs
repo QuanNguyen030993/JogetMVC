@@ -952,9 +952,26 @@ namespace ERPCore.Controllers.Base
                 return Ok(new { success = false, message = "No file uploaded" });
         }
 
-        /// <summary>Uploads a Document to the default local BlobStorage path.</summary>
+        /// <summary>Uploads a Document to the admin-configured Local or SharePoint storage.</summary>
         [HttpPost]
-        public virtual Task<IActionResult> AsyncUploadFile()
+        public virtual async Task<IActionResult> AsyncUploadFile()
+        {
+            var settings = await SystemWriteControl.GetAsync(_BaseRepository._connectionString);
+            var storageTarget = string.Equals(
+                settings.AttachmentStorage,
+                "SharePoint",
+                StringComparison.OrdinalIgnoreCase)
+                    ? DocumentStorageTarget.SharePoint
+                    : DocumentStorageTarget.Local;
+
+            // LEGACY ROLLBACK: uploads always used local BlobStorage.
+            // return await UploadRequestFileAsync(DocumentStorageTarget.Local);
+            return await UploadRequestFileAsync(storageTarget);
+        }
+
+        /// <summary>Uploads a Document explicitly to local BlobStorage.</summary>
+        [HttpPost]
+        public virtual Task<IActionResult> AsyncUploadFileLocal()
         {
             return UploadRequestFileAsync(DocumentStorageTarget.Local);
         }
@@ -1031,9 +1048,26 @@ namespace ERPCore.Controllers.Base
                 return Ok(new { success = false, message = "No file uploaded" });
         }
 
-        /// <summary>Uploads one explicitly bound Document file to local storage.</summary>
+        /// <summary>Uploads one explicitly bound Document file to the configured storage.</summary>
         [HttpPost]
-        public virtual Task<IActionResult> AsyncUploadSingleFile(IFormFile file)
+        public virtual async Task<IActionResult> AsyncUploadSingleFile(IFormFile file)
+        {
+            var settings = await SystemWriteControl.GetAsync(_BaseRepository._connectionString);
+            var storageTarget = string.Equals(
+                settings.AttachmentStorage,
+                "SharePoint",
+                StringComparison.OrdinalIgnoreCase)
+                    ? DocumentStorageTarget.SharePoint
+                    : DocumentStorageTarget.Local;
+
+            // LEGACY ROLLBACK: single-file uploads always used local BlobStorage.
+            // return await UploadSingleFileAsync(file, DocumentStorageTarget.Local);
+            return await UploadSingleFileAsync(file, storageTarget);
+        }
+
+        /// <summary>Uploads one explicitly bound Document file to local BlobStorage.</summary>
+        [HttpPost]
+        public virtual Task<IActionResult> AsyncUploadSingleFileLocal(IFormFile file)
         {
             return UploadSingleFileAsync(file, DocumentStorageTarget.Local);
         }

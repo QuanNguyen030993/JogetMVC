@@ -3,17 +3,22 @@ using Microsoft.Data.SqlClient;
 
 namespace ERPCore.Common;
 
-public sealed record SystemWriteSettings(bool HttpAuditRequest, bool ErrorClientLog, bool SignalR);
+public sealed record SystemWriteSettings(
+    bool HttpAuditRequest,
+    bool ErrorClientLog,
+    bool SignalR,
+    string AttachmentStorage);
 
 public static class SystemWriteControl
 {
     public const string HttpAuditRequestKey = "HttpAuditRequest";
     public const string ErrorClientLogKey = "ErrorClientLog";
     public const string SignalRKey = "SignalR";
+    public const string AttachmentStorageKey = "AttachmentStorage";
 
     private static readonly SemaphoreSlim RefreshLock = new(1, 1);
     private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(10);
-    private static SystemWriteSettings _cached = new(true, true, true);
+    private static SystemWriteSettings _cached = new(true, true, true, "Local");
     private static DateTimeOffset _expiresAt = DateTimeOffset.MinValue;
 
     public static async Task<SystemWriteSettings> GetAsync(string connectionString)
@@ -33,7 +38,7 @@ public static class SystemWriteControl
                   AND ParameterName IN
                   (
                       N'HttpAuditRequest', N'HttpRequestAuditLog',
-                      N'ErrorClientLog', N'SignalR'
+                      N'ErrorClientLog', N'SignalR', N'AttachmentStorage'
                   )
                 ORDER BY Id DESC");
 
@@ -45,7 +50,8 @@ public static class SystemWriteControl
             _cached = new SystemWriteSettings(
                 ReadBoolean(values, HttpAuditRequestKey, legacyAuditDefault),
                 ReadBoolean(values, ErrorClientLogKey, true),
-                ReadBoolean(values, SignalRKey, true));
+                ReadBoolean(values, SignalRKey, true),
+                ReadAttachmentStorage(values));
             _expiresAt = DateTimeOffset.UtcNow.Add(CacheDuration);
             return _cached;
         }
@@ -72,6 +78,14 @@ public static class SystemWriteControl
             "0" or "no" or "off" or "disabled" => false,
             _ => defaultValue
         };
+    }
+
+    private static string ReadAttachmentStorage(IReadOnlyDictionary<string, string> values)
+    {
+        if (!values.TryGetValue(AttachmentStorageKey, out var rawValue)) return "Local";
+        return string.Equals(rawValue?.Trim(), "SharePoint", StringComparison.OrdinalIgnoreCase)
+            ? "SharePoint"
+            : "Local";
     }
 
     private sealed class ControlRow

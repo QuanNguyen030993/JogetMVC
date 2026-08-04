@@ -1917,26 +1917,115 @@
                                         // });
 
                                         waitForCommentStage(idForm)
-                                            .then(function () { return loadSectionCommentsCached(guid); })
-                                            .then(res => {
-                                                     d.resolve(
-                                                            (res || [])
-                                                                .filter(x => String(x.currentDepartment || "").toLowerCase() === String(dept || "").toLowerCase())
-                                                                .map(x => ({
-                                                                id: x.id,
-                                                                author: x.author,
-                                                                role: x.fromDepartment,
-                                                                text: x.content
-                                                                ,time:
-                                                                    fmtTimeLocal(x.createdDate)
+                                             .then(function () { return loadSectionCommentsCached(guid); })
+                                             .then(res => {
+                                                     d.resolve(mapRouteComments(res));
 
-                                                            }))
-                                                        );
-
-                                            }).catch(function (error) {
+                                             }).catch(function (error) {
                                                 console.warn(`Comments for ${dept} could not be rendered.`, error);
                                                 d.resolve([]);
                                             });
+                                        function mapRouteComments(result) {
+                                            return (result || [])
+                                                .filter(x => String(x.currentDepartment || "").toLowerCase() === String(dept || "").toLowerCase())
+                                                .map(x => ({
+                                                    Id: x.id,
+                                                    id: x.id,
+                                                    Author: x.author,
+                                                    FromDepartment: x.fromDepartment,
+                                                    ToDepartment: x.toDepartment,
+                                                    CurrentDepartment: x.currentDepartment,
+                                                    Content: x.content,
+                                                    author: x.author,
+                                                    role: x.fromDepartment,
+                                                    text: x.content,
+                                                    time: fmtTimeLocal(x.createdDate)
+                                                }));
+                                        }
+
+                                        var routeEditorOptions = null;
+
+                                        function renderRouteEditorItems(comments) {
+                                            routeEditorOptions.items = comments || [];
+                                            $(itemElement).tmivcommenteditorroute(routeEditorOptions);
+                                        }
+
+                                        function reloadRouteComments() {
+                                            return loadSectionCommentsCached(guid).then(function (result) {
+                                                var updatedComments = mapRouteComments(result);
+                                                renderRouteEditorItems(updatedComments);
+                                                return updatedComments;
+                                            });
+                                        }
+
+                                        var departmentCodes = moduleKey === "pi"
+                                            ? (window.piDeptModuleCode || [])
+                                            : (window.qtDeptModuleCode || []);
+                                        var routeDepartments = departmentCodes.map(function (code) {
+                                            return { id: code, name: code };
+                                        });
+
+                                        if (typeof $.fn.tmivcommenteditorroute !== "function") {
+                                            throw new Error("TMIVCom CommentEditorRoute is not loaded.");
+                                        }
+
+                                        routeEditorOptions = {
+                                            items: initialComments,
+                                            departments: routeDepartments,
+                                            valueExpr: "id",
+                                            displayExpr: "name",
+                                            selectedDepartment: "",
+                                            recordGuid: guid,
+                                            fromDepartment: _role,
+                                            currentDepartment: dept,
+                                            type: "Discussion",
+                                            author: _displayName,
+                                            createdBy: _loginUser,
+                                            showComposer: true,
+                                            emptyText: "No comments.",
+                                            headerTitle: "",
+                                            routeLabel: "Route to:",
+                                            routePlaceholder: "Select department",
+                                            onChange: function (value) {
+                                                parentForm.updateData(updateField, value);
+                                            },
+                                            onSubmit: function (newComment) {
+                                                var commentText = newComment.Content || newComment.text || "";
+                                                var commentData = {
+                                                    RecordGuid: guid,
+                                                    FromDepartment: _role,
+                                                    ToDepartment: newComment.ToDepartment || newComment.toDepartment,
+                                                    CurrentDepartment: dept,
+                                                    Type: newComment.Type || "Discussion",
+                                                    Content: commentText,
+                                                    IsPrimaryNote: false,
+                                                    IsPinned: false,
+                                                    IsUrgent: false,
+                                                    IsRead: false,
+                                                    IsResolved: false,
+                                                    Author: _displayName
+                                                };
+
+                                                store.insert(commentData)
+                                                    .done(function () {
+                                                        DevExpress.ui.notify("Send message successfully", "success", 2000);
+                                                        invalidateSectionCommentCache(guid);
+                                                        reloadRouteComments();
+                                                    })
+                                                    .fail(function (error) {
+                                                        console.error(error);
+                                                        DevExpress.ui.notify("Send message failed", "error", 2000);
+                                                        reloadRouteComments();
+                                                    });
+                                            }
+                                        };
+                                        item.control = $(itemElement).tmivcommenteditorroute(routeEditorOptions);
+
+                                        d.done(function (comments) {
+                                            renderRouteEditorItems(comments);
+                                        });
+
+                                        /* LEGACY ROLLBACK: previous CommentEditor implementation.
                                                   item.control = $(itemElement).commenteditor({
                                                             items: initialComments,
                                                         showComposer: true,
@@ -2009,8 +2098,9 @@
                                                     name: "items",
                                                     value: comments
                                                 }
-                                            );
-                                    });
+                                             );
+                                     });
+                                        */
 
 
                                }
@@ -4900,7 +4990,9 @@
                 guid: editorOptionsIn.guid,
                 controllerName: "Document",
                 titleName: "Select or drag files to upload",
-                uploadUrl: "/api/Document/AsyncUploadFileSharePoint",
+                // LEGACY ROLLBACK: this uploader was forced to SharePoint.
+                // uploadUrl: "/api/Document/AsyncUploadFileSharePoint",
+                uploadUrl: "/api/Document/AsyncUploadFile",
                 data: {
                     ModuleName: editorOptionsIn.ModelName,
                     code: editorOptionsIn.ModelName, // subfolder Sharepoint

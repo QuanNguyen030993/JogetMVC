@@ -1,0 +1,11 @@
+TODO: Thêm Constant cấu hình nơi lưu attachment
+
+ParameterName: AttachmentStorage
+
+Giá trị hợp lệ:
+- Local: lưu attachment vào BlobStorage local.
+- SharePoint: upload attachment lên SharePoint.
+
+Có thể cấu hình tại trang Config > Constant bằng selector "Attachment storage".
+Nếu tạo hoặc sửa trực tiếp trong grid Constant, thay đổi sẽ được đọc lại tối đa sau khoảng 10 giây.
+Nếu Constant chưa tồn tại hoặc có giá trị không hợp lệ, hệ thống mặc định dùng Local.
