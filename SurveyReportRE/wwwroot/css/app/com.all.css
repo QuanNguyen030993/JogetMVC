@@ -715,10 +715,6 @@
     text-align: left;
 }
 
-.grid-cell:not(.editing-cell) .grid-cell-content > .statusTag {
-    display: inline-flex;
-}
-
 .col-pic-rows .grid-cell-content {
     align-items: center;
 }

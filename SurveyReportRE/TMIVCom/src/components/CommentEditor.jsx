@@ -1,22 +1,42 @@
 import { useEffect, useMemo, useState, useRef, useImperativeHandle, forwardRef } from 'react';
 
-const initialComments = [
-  // {
-  //   id: 1,
-  //   author: 'Alice',
-  //   role: 'Reviewer',
-  //   text: 'Please confirm phase 2 before moving forward.',
-  //   time: '10:15',
-  // },
-  // {
-  //   id: 2,
-  //   author: 'Bob',
-  //   role: 'Owner',
-  //   text: 'Looks good. I will update the summary soon.',
-  //   time: '10:28',
-  // },
-];
+const generateGuid = () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16).toUpperCase();
+    });
+};
 
+const formatDate = (date) => {
+    const pad = (num, size = 2) => {
+        let s = num + "";
+        while (s.length < size) s = "0" + s;
+        return s;
+    };
+    const yyyy = date.getFullYear();
+    const MM = pad(date.getMonth() + 1);
+    const dd = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const mm = pad(date.getMinutes());
+    const ss = pad(date.getSeconds());
+    const ms = pad(date.getMilliseconds(), 3);
+    return `${yyyy}-${MM}-${dd} ${hh}:${mm}:${ss}.${ms}0000`;
+};
+
+const getCommentAuthor = (item) => item.Author || item.author || '';
+const getCommentRole = (item) => item.CurrentDepartment || item.role || item.FromDepartment || '';
+const getCommentText = (item) => item.Content || item.text || '';
+const getCommentTime = (item) => {
+    const rawDate = item.CreatedDate || item.time || '';
+    if (!rawDate) return '';
+    if (rawDate.includes(' ') && rawDate.includes(':')) {
+        const parts = rawDate.split(' ');
+        const timePart = parts[1];
+        const timeSubparts = timePart.split(':');
+        return `${timeSubparts[0]}:${timeSubparts[1]}`;
+    }
+    return rawDate;
+};
 
 const CommentEditor = forwardRef(({
     value = '',
@@ -36,7 +56,28 @@ const CommentEditor = forwardRef(({
     roleName = 'Contributor',
     className = '',
     onClick,
-    onValueChanged
+    onValueChanged,
+
+    // Database record parameters
+    id = 0,
+    recordGuid = '',
+    fromDepartment = '',
+    currentDepartment = '',
+    type = null,
+    isPrimaryNote = 0,
+    isPinned = 0,
+    isUrgent = 0,
+    isRead = 0,
+    isResolved = 0,
+    parentCommentId = null,
+    linkedPrimaryNoteId = null,
+    createdBy = '',
+    author = '',
+    rowOrder = null,
+    copyFromGuid = null,
+    draftGuid = null,
+    modifiedBy = null,
+    deletedBy = null
 }, ref) => {
 const [comments, setComments] = useState(items || []);
 
@@ -115,29 +156,65 @@ const handleBlur = () => {
 
 
   const initials = useMemo(() => {
-    return comments.map((item) => item.author?.charAt(0).toUpperCase() || 'U');
+    return comments.map((item) => {
+        const auth = getCommentAuthor(item);
+        return auth.charAt(0).toUpperCase() || 'U';
+    });
   }, [comments]);
 
-  
-
   const addComment = () => {
-    const trimmed = draft.trim();
-    if (!trimmed) return;
+    const htmlText = editorRef.current ? editorRef.current.innerHTML : draft;
+    const trimmed = htmlText.replace(/<[^>]*>/g, '').trim(); // text-only check for empty input
+    if (!trimmed && !htmlText.includes('<img') && !htmlText.includes('<iframe')) return;
+
+    const generatedGuid = generateGuid();
+    const formattedDate = formatDate(new Date());
 
     const nextComment = {
+      Id: Date.now(),
+      RecordGuid: recordGuid,
+      FromDepartment: fromDepartment,
+      ToDepartment: null,
+      CurrentDepartment: currentDepartment,
+      Type: type || null,
+      Content: htmlText,
+      IsPrimaryNote: isPrimaryNote || 0,
+      IsPinned: isPinned || 0,
+      IsUrgent: isUrgent || 0,
+      IsRead: isRead || 0,
+      IsResolved: isResolved || 0,
+      ParentCommentId: parentCommentId || null,
+      LinkedPrimaryNoteId: linkedPrimaryNoteId || null,
+      Guid: generatedGuid,
+      CreatedBy: createdBy,
+      CreatedDate: formattedDate,
+      ModifiedBy: modifiedBy || null,
+      ModifiedDate: formattedDate,
+      Deleted: 0,
+      DeletedBy: deletedBy || null,
+      DeletedDate: formattedDate,
+      RowOrder: rowOrder || null,
+      CopyFromGuid: copyFromGuid || null,
+      DraftGuid: draftGuid || null,
+      Author: author || authorName,
+      
+      // Keep legacy properties for UI matching
       id: Date.now(),
-      author: authorName,
-      role: roleName,
-      text: trimmed,
+      author: author || authorName,
+      role: currentDepartment || roleName,
+      text: htmlText,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-      const nextComments = [nextComment, ...comments];
+    const nextComments = [nextComment, ...comments];
     setComments(nextComments);
+    if (editorRef.current) {
+        editorRef.current.innerHTML = '';
+    }
     setDraft('');
     onItemsChange?.(nextComments);
     onSubmit?.(nextComment, nextComments);
-    onChange?.(trimmed);
+    onChange?.('');
   };
 
     const command=(cmd,param=null)=>{
@@ -188,25 +265,24 @@ const handleBlur = () => {
             }
 
             return (
-              <div key={item.id} className="comment-item">
+              <div key={item.id || index} className="comment-item">
                 <div className="comment-avatar">{initials[index] || 'U'}</div>
                 <div className="comment-body">
                   <div className="comment-meta">
-                    <strong>{item.author}</strong>
-                    <span>{item.role || 'Comment'}</span>
-                    <em>{item.time || ''}</em>
+                    <strong>{getCommentAuthor(item)}</strong>
+                    <span>{getCommentRole(item) || 'Comment'}</span>
+                    {getCommentToDept(item) && (
+                      <span className="route-badge" style={{ color: '#2563eb', background: '#eff6ff', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: '500', marginLeft: '6px' }}>
+                        Route ➔ {getCommentToDept(item)}
+                      </span>
+                    )}
+                    <em>{getCommentTime(item)}</em>
                   </div>
                   <div 
-
-                    suppressContentEditableWarning
-
-
                     dangerouslySetInnerHTML={{
-                        __html:item.text
+                        __html: getCommentText(item)
                     }}
-
                   ></div>
-                  
                 </div>
               </div>
             );
@@ -357,14 +433,6 @@ const handleBlur = () => {
     >
         🔗
     </div>
-<button
-    type="button"
-    className="comment-send-btn"
-    onClick={onClick}
-    title={submitLabel}
->
-    <i className="fa fa-paper-plane"></i>
-</button>
       </div>
         <div class="tmiv-mini-editor"
                 ref={editorRef}
@@ -381,6 +449,31 @@ const handleBlur = () => {
                 onChange={onChange}
             >
               
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px', paddingRight: '4px' }}>
+          <button
+              type="button"
+              className="comment-send-btn"
+              onClick={onClick || addComment}
+              title={submitLabel || "Send"}
+              style={{
+                  background: '#2563eb',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)',
+                  transition: 'all 0.2s ease'
+              }}
+          >
+              <i className="fa fa-paper-plane" style={{ fontSize: '12px' }}></i>
+          </button>
         </div>
           {/* <textarea
             value={draft}

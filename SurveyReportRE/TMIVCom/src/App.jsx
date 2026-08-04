@@ -143,12 +143,12 @@ function App() {
         setIsTriggered(true);
         notify({
           title: "TMIVCom Countdown Event Triggered! 🚀",
-          content: "Đồng hồ đếm ngược vừa về <b>0 giây</b>!<br/>Thông báo Toast loại <b>Success</b> đã được phát thành công.",
+          content: "Countdown timer reached <b>0 seconds</b>!<br/>A <b>Success</b> toast notification has been dispatched.",
           type: "success",
           position: "bottom-right",
           duration: 6000,
           onClick: () => {
-            notify("Bạn vừa click vào Toast từ sự kiện đếm ngược! 🌟", "info");
+            notify("You clicked the countdown toast! 🌟", "info");
           }
         });
       }
@@ -165,44 +165,44 @@ function App() {
   const restartTimer = () => {
     setIsTriggered(false);
     setCountdown(5);
-    notify("Đã khởi động lại đồng hồ đếm ngược 5 giây! ⏱️", "info", 2000);
+    notify("Event countdown timer reset to 5 seconds! ⏱️", "info", 2000);
   };
 
   const tourSteps = [
     {
       element: '.header h1',
-      title: 'Chào mừng bạn đến với TMIVCom! 👋',
-      content: 'Đây là bộ thư viện <b>Reusable Controls</b> tùy chỉnh dành cho dự án <u>SurveyReportRE</u> (định dạng <i>HTML</i>).',
+      title: 'Welcome to TMIVCom! 👋',
+      content: 'This is the reusable controls library customized for the SurveyReportRE project (HTML Format).',
       position: 'bottom'
     },
     {
       element: '#tour-timer-widget',
-      title: 'Đồng hồ đếm ngược sự kiện ⏱️',
-      content: 'Bộ kiểm tra đếm ngược tự động kích hoạt thông báo Toast nổi sau 5 giây.',
+      title: 'Event Countdown Widget ⏱️',
+      content: 'A live timer that automatically triggers a status notification toast after 5 seconds.',
       position: 'bottom'
     },
     {
       element: '#tour-customgrid-section',
-      title: 'CustomGrid hiện đại 📊',
-      content: 'Lưới dữ liệu thông minh hỗ trợ kéo thả cột, nhóm cột, phân trang và chỉnh sửa trực tiếp.',
+      title: 'Modern CustomGrid 📊',
+      content: 'An advanced data grid supporting row reordering, column selection, paging, and inline editing.',
       position: 'top'
     },
     {
       element: '#tour-handsomgrid-section',
-      title: 'HandsomGrid Spreadsheet Excel Style 📝',
-      content: 'Bảng tính Excel siêu nhẹ hỗ trợ:\n- Di chuyển bằng **phím mũi tên**\n- Chỉnh sửa trực tiếp bằng phím `Enter` hoặc `F2`\n- Copy & Paste trực tiếp dữ liệu qua phím nóng `Ctrl+C` / `Ctrl+V`',
+      title: 'HandsomGrid (Spreadsheet Excel Style) 📝',
+      content: 'A lightweight spreadsheet grid supporting:\n- Arrow keys navigation\n- Direct cell editing using `Enter` or `F2`\n- Copy & Paste from/to Excel using `Ctrl+C` and `Ctrl+V` keyboard shortcuts',
       position: 'top'
     },
     {
       element: '#tour-uploader-section',
-      title: 'Trình tải tệp đính kèm 📎',
-      content: 'Hỗ trợ kéo thả tệp, hiển thị icon theo loại file và các hành động xem thử, tải xuống, xóa tệp.',
+      title: 'File Uploader Dropzone 📎',
+      content: 'Supports drag-and-drop, custom file type icons, previews, downloading, and file deletion.',
       position: 'top'
     },
     {
       element: '#tour-comments-section',
-      title: 'Ý kiến định hướng phòng ban 💬',
-      content: 'Cho phép người dùng nhập ý kiến và chọn chuyển phòng ban xử lý tiếp theo.',
+      title: 'Comment Editor & Route 💬',
+      content: 'Enables typing feedback and routing task workflow to next designated departments.',
       position: 'top'
     }
   ];
@@ -210,8 +210,8 @@ function App() {
   const runTourGuide = () => {
     startTour(tourSteps, {
       isAdmin: true,
-      onComplete: () => notify("Chúc mừng! Bạn đã hoàn thành Tour hướng dẫn. 🎉", "success"),
-      onExit: () => notify("Đã thoát Tour hướng dẫn.", "info")
+      onComplete: () => notify("Congratulations! You have completed the walkthrough. 🎉", "success"),
+      onExit: () => notify("Exited the walkthrough.", "info")
     });
   };
 
@@ -220,44 +220,44 @@ function App() {
       const jQueryInstance = typeof $ !== "undefined" ? $ : window.jQuery;
       jQueryInstance(document).tmivtourguide(tourSteps, {
         isAdmin: true,
-        onExit: () => notify("Thoát JQuery Tour.", "info")
+        onExit: () => notify("Exited JQuery Tour.", "info")
       });
     } else {
-      notify("JQuery chưa được tải trên trang này!", "error");
+      notify("JQuery has not been loaded on this page!", "error");
     }
   };
 
   const handleExport = (format) => {
-    exportTour(tourSteps, format, 'huong-dan-su-dung-he-thong');
-    notify(`Đã trích xuất tài liệu hướng dẫn định dạng <b>${format.toUpperCase()}</b> thành công! 💾`, "success");
+    exportTour(tourSteps, format, 'system-onboarding-guide');
+    notify(`Exported user guide in <b>${format.toUpperCase()}</b> format successfully! 💾`, "success");
   };
 
 
     const uploaderRef = useRef(null);
 
     const demoDepartments = [
-        { id: 'UW', name: 'Phòng Bảo hiểm (Underwriting)' },
-        { id: 'CLAIM', name: 'Phòng Bồi thường (Claims)' },
-        { id: 'IT', name: 'Phòng Công nghệ thông tin (IT)' },
-        { id: 'FIN', name: 'Phòng Kế toán tài chính (Finance)' }
+        { id: 'UW', name: 'Underwriting Department (UW)' },
+        { id: 'CLAIM', name: 'Claims Department (CLAIM)' },
+        { id: 'IT', name: 'IT Department (IT)' },
+        { id: 'FIN', name: 'Finance Department (FIN)' }
     ];
 
     const [routeComments, setRouteComments] = useState([
         {
             id: 1,
-            author: 'Nguyễn Văn A',
-            role: 'Chuyên viên UW',
-            text: 'Đã hoàn thành thẩm định sơ bộ, đề xuất chuyển phòng bồi thường xem xét lịch sử tổn thất.',
+            author: 'Nguyen Van A',
+            role: 'Underwriting Specialist',
+            text: 'Preliminary underwriting completed. Recommend routing to Claims to review loss history.',
             time: '14:20',
-            toDepartment: 'Phòng Bồi thường (Claims)'
+            toDepartment: 'Claims Department'
         },
         {
             id: 2,
-            author: 'Trần Thị B',
-            role: 'Trưởng nhóm Claims',
-            text: 'Đã kiểm tra lịch sử tổn thất của khách hàng, đề xuất chuyển phòng IT hỗ trợ cấu hình hệ thống tính phí đặc thù.',
+            author: 'Tran Thi B',
+            role: 'Claims Lead',
+            text: 'Checked loss history. Routing to IT to configure custom premium calculations.',
             time: '15:45',
-            toDepartment: 'Phòng Công nghệ thông tin (IT)'
+            toDepartment: 'IT Department'
         }
     ]);
 
@@ -348,7 +348,7 @@ function App() {
               gap: '6px'
             }}
           >
-            🚀 Hướng dẫn hệ thống (Tour)
+            🚀 Start Tour
           </button>
           <button
             type="button"
@@ -367,7 +367,7 @@ function App() {
               gap: '6px'
             }}
           >
-            🔌 Chạy Tour (JQuery)
+            🔌 Run Tour (JQuery)
           </button>
         </div>
 
@@ -386,13 +386,13 @@ function App() {
           <div style={{ fontSize: '20px' }}>⏱️</div>
           <div>
             <div style={{ fontSize: '12px', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Đồng hồ sự kiện Toast
+              Toast Event Timer
             </div>
             <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
               {countdown > 0 ? (
-                <span>Đang đếm ngược: <span style={{ color: '#fbbf24', fontSize: '18px' }}>{countdown} giây</span></span>
+                <span>Counting down: <span style={{ color: '#fbbf24', fontSize: '18px' }}>{countdown}s</span></span>
               ) : (
-                <span>🎉 Đã phát Toast thành công!</span>
+                <span>🎉 Toast triggered successfully!</span>
               )}
             </div>
           </div>
@@ -411,7 +411,7 @@ function App() {
               marginLeft: '8px'
             }}
           >
-            {countdown > 0 ? "Reset 5s" : "Kích hoạt lại (5s)"}
+            {countdown > 0 ? "Reset 5s" : "Reactivate (5s)"}
           </button>
         </div>
       </header>
@@ -430,7 +430,7 @@ function App() {
         boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
       }}>
         <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>
-          📦 Trích xuất tài liệu hướng dẫn:
+          📦 Export User Manual:
         </span>
         <button
           type="button"
@@ -588,11 +588,17 @@ function App() {
             departments={demoDepartments}
             valueExpr="id"
             displayExpr="name"
-            routePlaceholder="Chọn phòng ban cần định hướng giải quyết..."
-            routeLabel="Định hướng xử lý:"
+            routePlaceholder="Select department for routing..."
+            routeLabel="Route to:"
+            recordGuid="99ED8E1D-635F-4FD8-AFA9-864150E363FB"
+            fromDepartment="IT"
+            currentDepartment="FO"
+            createdBy="quan.nh"
+            author="Nguyen Hong Quan IT"
             onSubmit={(newComment, nextComments) => {
               setRouteComments(nextComments);
-              notify(`Đã lưu ý kiến định hướng đến <b>${newComment.toDepartment}</b>!`, "success");
+              console.log("Created Routing Comment Data Payload:", newComment);
+              notify(`Saved comment routed to <b>${newComment.toDepartment}</b>! Check console for data payload.`, "success");
             }}
           />
         </div>

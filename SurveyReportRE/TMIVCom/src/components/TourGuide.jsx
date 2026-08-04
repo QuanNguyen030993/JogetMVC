@@ -78,7 +78,9 @@ const TourGuide = forwardRef(({
             disableActiveInteraction: false, // Allow clicks and inputs on highlighted element
             overlayColor: 'rgba(15, 23, 42, 0.65)',
             steps: driverSteps,
-            ...options,
+            nextBtnText: 'Next',
+            prevBtnText: 'Previous',
+            doneBtnText: 'Done',
             onDestroyStarted: () => {
                 onExit?.();
                 driverObj.destroy();
@@ -91,7 +93,7 @@ const TourGuide = forwardRef(({
                         exportSelect.style.cssText = "background: #10b981; color: white; border: none; border-radius: 6px; padding: 5px 12px; font-size: 11px; font-weight: 600; cursor: pointer; margin-right: 8px; outline: none; appearance: none; -webkit-appearance: none; text-align: center;";
                         
                         const placeholderOpt = document.createElement("option");
-                        placeholderOpt.text = "📥 Xuất";
+                        placeholderOpt.text = "📥 Export";
                         placeholderOpt.value = "";
                         placeholderOpt.disabled = true;
                         placeholderOpt.selected = true;
@@ -124,8 +126,8 @@ const TourGuide = forwardRef(({
                         popover.footerButtons.insertBefore(exportSelect, popover.footerButtons.firstChild);
                     }
                 }
-                options.onPopoverRender?.(popover, { config, state });
             },
+            ...options
         });
 
         driverInstanceRef.current = driverObj;
@@ -202,7 +204,9 @@ export const startTour = (stepsArray = [], options = {}) => {
         disableActiveInteraction: false, // Allow inputs, edits, clicks on the highlighted element
         overlayColor: 'rgba(15, 23, 42, 0.65)',
         steps: driverSteps,
-        ...options,
+        nextBtnText: 'Next',
+        prevBtnText: 'Previous',
+        doneBtnText: 'Done',
         onDestroyStarted: () => {
             options.onExit?.();
             driverObj.destroy();
@@ -215,7 +219,7 @@ export const startTour = (stepsArray = [], options = {}) => {
                     exportSelect.style.cssText = "background: #10b981; color: white; border: none; border-radius: 6px; padding: 5px 12px; font-size: 11px; font-weight: 600; cursor: pointer; margin-right: 8px; outline: none; appearance: none; -webkit-appearance: none; text-align: center;";
                     
                     const placeholderOpt = document.createElement("option");
-                    placeholderOpt.text = "📥 Xuất";
+                    placeholderOpt.text = "📥 Export";
                     placeholderOpt.value = "";
                     placeholderOpt.disabled = true;
                     placeholderOpt.selected = true;
@@ -248,8 +252,8 @@ export const startTour = (stepsArray = [], options = {}) => {
                     popover.footerButtons.insertBefore(exportSelect, popover.footerButtons.firstChild);
                 }
             }
-            options.onPopoverRender?.(popover, { config, state });
         },
+        ...options
     });
 
     driverObj.drive();
@@ -268,10 +272,10 @@ export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huo
 
     const generateHtmlDocContent = () => {
         let html = `<!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Tài liệu Hướng dẫn sử dụng</title>
+    <title>System Onboarding User Manual</title>
     <style>
         body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; line-height: 1.7; color: #334155; max-width: 900px; margin: 40px auto; padding: 20px; background: #f8fafc; }
         .doc-container { background: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
@@ -293,7 +297,7 @@ export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huo
 </head>
 <body>
     <div class="doc-container">
-        <h1>TÀI LIỆU HƯỚNG DẪN SỬ DỤNG HỆ THỐNG</h1>
+        <h1>SYSTEM USER GUIDE & ONBOARDING MANUAL</h1>
 `;
         stepsArray.forEach((step, idx) => {
             const desc = step.content || step.intro || step.description || '';
@@ -301,11 +305,11 @@ export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huo
             html += `
         <div class="step-card">
             <div class="step-header">
-                <span class="step-num">Bước ${idx + 1} / ${stepsArray.length}</span>
+                <span class="step-num">Step ${idx + 1} / ${stepsArray.length}</span>
             </div>
-            <div class="step-title">${step.title || 'Chi tiết hướng dẫn'}</div>
+            <div class="step-title">${step.title || 'Guide details'}</div>
             <div class="step-desc">${htmlDesc}</div>
-            ${step.element ? `<div class="step-element">Phần tử giao diện: <code>${step.element}</code></div>` : ''}
+            ${step.element ? `<div class="step-element">Focus Selector Element: <code>${step.element}</code></div>` : ''}
         </div>
 `;
         });
@@ -319,13 +323,13 @@ export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huo
     if (format === 'markdown' || format === 'md') {
         extension = 'md';
         mimeType = 'text/markdown;charset=utf-8;';
-        content = `# HƯỚNG DẪN SỬ DỤNG HỆ THỐNG\n\n`;
+        content = `# SYSTEM USER GUIDE & ONBOARDING MANUAL\n\n`;
         stepsArray.forEach((step, idx) => {
             const desc = step.content || step.intro || step.description || '';
             const plainDesc = desc.replace(/<[^>]*>/g, ''); // Strip simple HTML tags for markdown
-            content += `## Bước ${idx + 1}: ${step.title || 'Chi tiết hướng dẫn'}\n`;
+            content += `## Step ${idx + 1}: ${step.title || 'Guide details'}\n`;
             if (step.element) {
-                content += `*Vùng tiêu điểm: \`${step.element}\`*\n\n`;
+                content += `*Focus Selector: \`${step.element}\`*\n\n`;
             }
             content += `${plainDesc}\n\n`;
             content += `---\n\n`;
@@ -351,7 +355,7 @@ export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huo
         content = `
         <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
         <head>
-            <title>Tài liệu Hướng dẫn</title>
+            <title>System Onboarding Manual</title>
             <!--[if gte mso 9]>
             <xml>
                 <w:WordDocument>
@@ -370,15 +374,15 @@ export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huo
             </style>
         </head>
         <body>
-            <h1>TÀI LIỆU HƯỚNG DẪN SỬ DỤNG HỆ THỐNG</h1>
+            <h1>SYSTEM USER GUIDE & ONBOARDING MANUAL</h1>
         `;
         stepsArray.forEach((step, idx) => {
             const desc = step.content || step.intro || step.description || '';
             const htmlDesc = parseDescription(desc);
             content += `
             <div class="step-card">
-                <div class="step-num">Bước ${idx + 1} / ${stepsArray.length}</div>
-                <div class="step-title">${step.title || 'Chi tiết hướng dẫn'}</div>
+                <div class="step-num">Step ${idx + 1} / ${stepsArray.length}</div>
+                <div class="step-title">${step.title || 'Guide details'}</div>
                 <div class="step-desc">${htmlDesc}</div>
                 ${step.element ? `<p style="font-size:10px;color:#94a3b8;">Selector: ${step.element}</p>` : ''}
             </div>
@@ -389,10 +393,10 @@ export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huo
         extension = 'html';
         mimeType = 'text/html;charset=utf-8;';
         content = `<!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Trình chiếu Hướng dẫn sử dụng</title>
+    <title>System Onboarding Slideshow</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0f172a; color: #f8fafc; height: 100vh; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; }
@@ -425,15 +429,15 @@ export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huo
             <div class="slide-header">
                 <span class="slide-progress">Slide ${idx + 1} / ${stepsArray.length}</span>
             </div>
-            <div class="slide-title">${step.title || 'Chi tiết hướng dẫn'}</div>
+            <div class="slide-title">${step.title || 'Guide details'}</div>
             <div class="slide-body">
                 ${htmlDesc}
                 ${step.element ? `<div class="slide-element">Target Element: <code>${step.element}</code></div>` : ''}
             </div>
         </div>
         <div class="slide-footer">
-            <button class="btn btn-prev" onclick="changeSlide(${idx - 1})" ${idx === 0 ? 'disabled' : ''}>◀ Trước</button>
-            <button class="btn btn-next" onclick="changeSlide(${idx + 1})">${idx === stepsArray.length - 1 ? 'Hoàn tất 🎉' : 'Tiếp theo ▶'}</button>
+            <button class="btn btn-prev" onclick="changeSlide(${idx - 1})" ${idx === 0 ? 'disabled' : ''}>◀ Previous</button>
+            <button class="btn btn-next" onclick="changeSlide(${idx + 1})">${idx === stepsArray.length - 1 ? 'Finish 🎉' : 'Next ▶'}</button>
         </div>
     </div>
 `;
@@ -443,7 +447,7 @@ export const exportTour = (stepsArray = [], format = 'markdown', filename = 'huo
     <script>
         function changeSlide(index) {
             if (index === ${stepsArray.length}) {
-                alert('Hoàn thành trình chiếu hướng dẫn! 🎉');
+                alert('Onboarding slideshow completed! 🎉');
                 return;
             }
             const activeSlide = document.querySelector('.slide.active');

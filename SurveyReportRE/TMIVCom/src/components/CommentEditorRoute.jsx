@@ -1,21 +1,60 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
 import SelectBox from './SelectBox';
 
+const generateGuid = () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16).toUpperCase();
+    });
+};
+
+const formatDate = (date) => {
+    const pad = (num, size = 2) => {
+        let s = num + "";
+        while (s.length < size) s = "0" + s;
+        return s;
+    };
+    const yyyy = date.getFullYear();
+    const MM = pad(date.getMonth() + 1);
+    const dd = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const mm = pad(date.getMinutes());
+    const ss = pad(date.getSeconds());
+    const ms = pad(date.getMilliseconds(), 3);
+    return `${yyyy}-${MM}-${dd} ${hh}:${mm}:${ss}.${ms}0000`;
+};
+
+const getCommentAuthor = (item) => item.Author || item.author || '';
+const getCommentRole = (item) => item.CurrentDepartment || item.role || item.FromDepartment || '';
+const getCommentText = (item) => item.Content || item.text || '';
+const getCommentTime = (item) => {
+    const rawDate = item.CreatedDate || item.time || '';
+    if (!rawDate) return '';
+    if (rawDate.includes(' ') && rawDate.includes(':')) {
+        const parts = rawDate.split(' ');
+        const timePart = parts[1];
+        const timeSubparts = timePart.split(':');
+        return `${timeSubparts[0]}:${timeSubparts[1]}`;
+    }
+    return rawDate;
+};
+const getCommentToDept = (item) => item.ToDepartment || item.toDepartment || '';
+
 const CommentEditorRoute = forwardRef(({
     value = '',
     onChange,
-    placeholder = 'Nhập nội dung ý kiến...',
+    placeholder = 'Type a comment...',
     items = [],
     onSubmit,
     onItemsChange,
-    emptyText = 'Chưa có ý kiến phản hồi.',
+    emptyText = 'No comments yet.',
     renderItem,
     showComposer = true,
-    submitLabel = 'Gửi ý kiến',
-    headerTitle = 'Ý kiến & Định hướng',
+    submitLabel = 'Send',
+    headerTitle = 'Comments & Routing',
     headerSubtitle = '',
-    authorName = 'Bạn',
-    roleName = 'Thành viên',
+    authorName = 'You',
+    roleName = 'Member',
     className = '',
     onClick,
     
@@ -24,8 +63,29 @@ const CommentEditorRoute = forwardRef(({
     valueExpr = 'id',
     displayExpr = 'name',
     selectedDepartment = '',
-    routePlaceholder = 'Chọn phòng ban định hướng...',
-    routeLabel = 'Định hướng đến:'
+    routePlaceholder = 'Select routing department...',
+    routeLabel = 'Route to:',
+
+    // Database record parameters
+    id = 0,
+    recordGuid = '',
+    fromDepartment = '',
+    currentDepartment = '',
+    type = null,
+    isPrimaryNote = 0,
+    isPinned = 0,
+    isUrgent = 0,
+    isRead = 0,
+    isResolved = 0,
+    parentCommentId = null,
+    linkedPrimaryNoteId = null,
+    createdBy = '',
+    author = '',
+    rowOrder = null,
+    copyFromGuid = null,
+    draftGuid = null,
+    modifiedBy = null,
+    deletedBy = null
 }, ref) => {
     const [comments, setComments] = useState(items || []);
     const [draft, setDraft] = useState(value || '');
@@ -86,25 +146,55 @@ const CommentEditorRoute = forwardRef(({
         const trimmed = htmlText.replace(/<[^>]*>/g, '').trim(); // text-only check for empty input
         
         if (!trimmed && !htmlText.includes('<img') && !htmlText.includes('<iframe')) {
-            alert("Vui lòng nhập nội dung ý kiến!");
+            alert("Please enter a comment!");
             return;
         }
 
         if (!selectedDeptId) {
-            alert("Vui lòng chọn phòng ban định hướng!");
+            alert("Please select a routing department!");
             return;
         }
 
         const deptName = getSelectedDeptName();
+        const generatedGuid = generateGuid();
+        const formattedDate = formatDate(new Date());
 
         const nextComment = {
+            Id: Date.now(),
+            RecordGuid: recordGuid,
+            FromDepartment: fromDepartment,
+            ToDepartment: deptName || null,
+            CurrentDepartment: currentDepartment,
+            Type: type || null,
+            Content: htmlText,
+            IsPrimaryNote: isPrimaryNote || 0,
+            IsPinned: isPinned || 0,
+            IsUrgent: isUrgent || 0,
+            IsRead: isRead || 0,
+            IsResolved: isResolved || 0,
+            ParentCommentId: parentCommentId || null,
+            LinkedPrimaryNoteId: linkedPrimaryNoteId || null,
+            Guid: generatedGuid,
+            CreatedBy: createdBy,
+            CreatedDate: formattedDate,
+            ModifiedBy: modifiedBy || null,
+            ModifiedDate: formattedDate,
+            Deleted: 0,
+            DeletedBy: deletedBy || null,
+            DeletedDate: formattedDate,
+            RowOrder: rowOrder || null,
+            CopyFromGuid: copyFromGuid || null,
+            DraftGuid: draftGuid || null,
+            Author: author || authorName,
+            
+            // Keep legacy properties for UI matching
             id: Date.now(),
-            author: authorName,
-            role: roleName,
+            author: author || authorName,
+            role: currentDepartment || roleName,
             text: htmlText,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             toDepartmentId: selectedDeptId,
-            toDepartment: deptName
+            toDepartment: deptName || null
         };
 
         const nextComments = [nextComment, ...comments];
@@ -129,7 +219,10 @@ const CommentEditorRoute = forwardRef(({
     };
 
     const initials = useMemo(() => {
-        return comments.map((item) => item.author?.charAt(0).toUpperCase() || 'U');
+        return comments.map((item) => {
+            const auth = getCommentAuthor(item);
+            return auth.charAt(0).toUpperCase() || 'U';
+        });
     }, [comments]);
 
     useImperativeHandle(ref, () => ({
@@ -176,7 +269,7 @@ const CommentEditorRoute = forwardRef(({
                     {headerSubtitle?.trim() && <p>{headerSubtitle}</p>}
                 </div>
                 <span className="comment-editor-badge" style={{ background: '#3b82f6', color: '#fff', padding: '4px 8px', borderRadius: '12px', fontSize: '12px' }}>
-                    {comments.length} ý kiến
+                    {comments.length} comments
                 </span>
             </div>
 
@@ -190,37 +283,21 @@ const CommentEditorRoute = forwardRef(({
                     </div>
                 ) : (
                     comments.map((item, index) => (
-                        <div key={item.id || index} className="comment-item" style={{ display: 'flex', gap: '12px', padding: '12px 0', borderBottom: '1px solid #f1f5f9' }}>
-                            <div className="comment-avatar" style={{
-                                width: '36px',
-                                height: '36px',
-                                borderRadius: '50%',
-                                background: '#e2e8f0',
-                                color: '#475569',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 'bold',
-                                flexShrink: 0
-                            }}>
-                                {initials[index] || 'U'}
-                            </div>
-                            <div className="comment-body" style={{ flex: 1 }}>
-                                <div className="comment-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '4px', fontSize: '13px' }}>
-                                    <strong style={{ color: '#0f172a' }}>{item.author}</strong>
-                                    <span style={{ color: '#64748b', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>
-                                        {item.role || 'Thành viên'}
-                                    </span>
-                                    {item.toDepartment && (
-                                        <span style={{ color: '#2563eb', background: '#eff6ff', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: '500' }}>
-                                            định hướng ➔ {item.toDepartment}
+                        <div key={item.id || index} className="comment-item">
+                            <div className="comment-avatar">{initials[index] || 'U'}</div>
+                            <div className="comment-body">
+                                <div className="comment-meta">
+                                    <strong>{getCommentAuthor(item)}</strong>
+                                    <span>{getCommentRole(item) || 'Member'}</span>
+                                    {getCommentToDept(item) && (
+                                        <span className="route-badge" style={{ color: '#2563eb', background: '#eff6ff', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: '500', marginLeft: '6px' }}>
+                                            Route ➔ {getCommentToDept(item)}
                                         </span>
                                     )}
-                                    <em style={{ marginLeft: 'auto', color: '#94a3b8', fontSize: '11px', fontStyle: 'normal' }}>{item.time || ''}</em>
+                                    <em>{getCommentTime(item)}</em>
                                 </div>
                                 <div 
-                                    style={{ fontSize: '13px', color: '#334155', lineHeight: '1.5' }}
-                                    dangerouslySetInnerHTML={{ __html: item.text }}
+                                    dangerouslySetInnerHTML={{ __html: getCommentText(item) }}
                                 />
                             </div>
                         </div>
@@ -289,7 +366,7 @@ const CommentEditorRoute = forwardRef(({
                             type="button"
                             className="comment-send-btn"
                             onClick={addComment}
-                            title={submitLabel}
+                            title={submitLabel || "Send"}
                             style={{
                                 marginLeft: 'auto',
                                 background: '#2563eb',
@@ -305,7 +382,7 @@ const CommentEditorRoute = forwardRef(({
                                 gap: '6px'
                             }}
                         >
-                            <i className="fa fa-paper-plane"></i> {submitLabel}
+                            <i className="fa fa-paper-plane"></i>
                         </button>
                     </div>
 

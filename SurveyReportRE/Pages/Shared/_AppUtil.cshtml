@@ -6039,7 +6039,54 @@
                 $group.find(".dx-button").each(function () {
                     try { $(this).dxButton("instance")?.dispose(); } catch (_) { }
                 });
+                group.workflowDecisionPositionAnchor?.remove();
                 $group.remove();
+           }
+
+           function getDecisionGroupInstanceKey(root, section, dock, group) {
+                var overviewKey = root?.id || "workflow-overview";
+                var sectionKey = section?.id || "department-section";
+                var deptKey = group?.dataset?.routeDept
+                    || dock?.dataset?.dept
+                    || "department";
+                var groupKey = group?.dataset?.decisionGroupKey
+                    || group?.dataset?.formGroupName
+                    || group?.id
+                    || "decision-group";
+
+                return [overviewKey, sectionKey, deptKey, groupKey]
+                    .map(function (value) { return String(value).trim().toLowerCase(); })
+                    .join("::");
+           }
+
+           function rememberDecisionGroupPosition(root, section, dock, group) {
+                if (!group || !group.parentNode || dock?.contains(group)) return;
+
+                var instanceKey = getDecisionGroupInstanceKey(root, section, dock, group);
+                root.workflowDecisionGroupPositions = root.workflowDecisionGroupPositions || new Map();
+
+                var currentPosition = root.workflowDecisionGroupPositions.get(instanceKey);
+                if (currentPosition?.anchor?.isConnected && currentPosition.group === group) {
+                    group.workflowDecisionPositionAnchor = currentPosition.anchor;
+                    group.dataset.decisionInstanceKey = instanceKey;
+                    return;
+                }
+                currentPosition?.anchor?.remove();
+
+                var anchor = document.createComment("workflow-decision-group-position");
+                group.parentNode.insertBefore(anchor, group);
+                group.workflowDecisionPositionAnchor = anchor;
+                group.dataset.decisionInstanceKey = instanceKey;
+                root.workflowDecisionGroupPositions.set(instanceKey, { anchor: anchor, group: group });
+           }
+
+           function restoreDecisionGroupPosition(group) {
+                var anchor = group?.workflowDecisionPositionAnchor;
+                if (!anchor?.parentNode) return false;
+
+                anchor.parentNode.insertBefore(group, anchor.nextSibling);
+                group.classList.remove("workflow-decision-group--docked");
+                return true;
            }
 
            function mountOverviewDecisionDocks(rootOrSelector) {
@@ -6053,10 +6100,26 @@
                         var dock = section.querySelector("[data-decision-dock]");
                         if (!dock) return;
 
-                        var groups = Array.from(section.querySelectorAll(".workflow-decision-group"))
-                            .filter(function (group) { return !dock.contains(group); });
+                        var allGroups = Array.from(section.querySelectorAll(".workflow-decision-group"));
+                        allGroups.forEach(function (group) {
+                            if (group.dataset.decisionPlacement === "form") {
+                                rememberDecisionGroupPosition(root, section, dock, group);
+                                restoreDecisionGroupPosition(group);
+                            }
+                        });
+
+                        var groups = allGroups.filter(function (group) {
+                            return group.dataset.decisionPlacement !== "form"
+                                && !dock.contains(group);
+                        });
                         groups.forEach(function (group) {
-                            var current = dock.querySelector(".workflow-decision-group");
+                            var instanceKey = getDecisionGroupInstanceKey(root, section, dock, group);
+                            group.dataset.decisionInstanceKey = instanceKey;
+
+                            var current = Array.from(dock.querySelectorAll(".workflow-decision-group"))
+                                .find(function (dockedGroup) {
+                                    return dockedGroup.dataset.decisionInstanceKey === instanceKey;
+                                });
                             if (current && current !== group) disposeDecisionDockGroup(current);
                             group.classList.add("workflow-decision-group--docked");
                             dock.appendChild(group);
