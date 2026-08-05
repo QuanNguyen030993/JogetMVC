@@ -876,7 +876,14 @@
             return true;
         });
 
-
+        window.addEventListener("unload", () => {
+            navigator.sendBeacon(
+                "/api/log-hours",
+                    JSON.stringify({
+                totalHours: calculateTotalHours()
+                })
+            );
+        });
 
         _isSuperUser = @Html.Raw(ViewData["IsSuperUser"]);
         _isDebugMode = `@Html.Raw(ViewData["IsDebugMode"])`;

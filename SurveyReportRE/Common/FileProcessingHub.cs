@@ -145,7 +145,7 @@ public class FileProcessingHub : Hub
         try
         {
             var session = await _userSessionRepository.GetSingleObject(item =>
-                item.SignalRConnectionId == Context.ConnectionId && item.IsActive);
+                item.SignalRConnectionId == Context.ConnectionId );
             if (session == null) return;
 
             var logoutTime = DateTime.Now;
@@ -163,60 +163,62 @@ public class FileProcessingHub : Hub
 
                 if (affected > 0)
                 {
-                    await connection.ExecuteAsync(@"
-                        IF COL_LENGTH(N'dbo.Employee', N'TotalLoginHours') IS NOT NULL
-                        BEGIN
-                            ;WITH ValidSessions AS
-                            (
-                                SELECT
-                                    Id,
-                                    LoginTime AS SessionStart,
-                                    CASE
-                                        WHEN COALESCE(LogoutTime, @Now) < LoginTime THEN LoginTime
-                                        ELSE COALESCE(LogoutTime, @Now)
-                                    END AS SessionEnd
-                                FROM dbo.UsersSession
-                                WHERE UserName = @UserName
-                                  AND LoginTime IS NOT NULL
-                                  AND Deleted = 0
-                            ),
-                            RunningSessions AS
-                            (
-                                SELECT *,
-                                    MAX(SessionEnd) OVER
-                                    (
-                                        ORDER BY SessionStart, Id
-                                        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
-                                    ) AS PreviousMaxEnd
-                                FROM ValidSessions
-                            ),
-                            SessionGroups AS
-                            (
-                                SELECT *,
-                                    SUM(CASE WHEN PreviousMaxEnd IS NULL OR SessionStart > PreviousMaxEnd THEN 1 ELSE 0 END)
-                                    OVER (ORDER BY SessionStart, Id) AS SessionGroup
-                                FROM RunningSessions
-                            ),
-                            MergedSessions AS
-                            (
-                                SELECT MIN(SessionStart) AS SessionStart, MAX(SessionEnd) AS SessionEnd
-                                FROM SessionGroups
-                                GROUP BY SessionGroup
-                            ),
-                            LoginUsage AS
-                            (
-                                SELECT CAST(COALESCE(SUM(DATEDIFF_BIG(MILLISECOND, SessionStart, SessionEnd)), 0)
-                                    / 3600000.0 AS DECIMAL(18,4)) AS TotalHours
-                                FROM MergedSessions
-                            )
-                            UPDATE employee
-                            SET TotalLoginHours = usage.TotalHours,
-                                ModifiedDate = GETDATE()
-                            FROM dbo.Employee employee
-                            CROSS JOIN LoginUsage usage
-                            WHERE employee.AccountName = @UserName AND employee.Deleted = 0
-                        END",
-                        new { Now = logoutTime, session.UserName }, transaction);
+                    //await connection.ExecuteAsync(@"
+                    //    IF COL_LENGTH(N'dbo.Employee', N'TotalLoginHours') IS NOT NULL
+                    //    BEGIN
+                    //        ;WITH ValidSessions AS
+                    //        (
+                    //            SELECT
+                    //                Id,
+                    //                LoginTime AS SessionStart,
+                    //                CASE
+                    //                    WHEN COALESCE(LogoutTime, @Now) < LoginTime THEN LoginTime
+                    //                    ELSE COALESCE(LogoutTime, @Now)
+                    //                END AS SessionEnd
+                    //            FROM dbo.UsersSession
+                    //            WHERE UserName = @UserName
+                    //              AND LoginTime IS NOT NULL
+                    //              AND Deleted = 0
+                    //        ),
+                    //        RunningSessions AS
+                    //        (
+                    //            SELECT *,
+                    //                MAX(SessionEnd) OVER
+                    //                (
+                    //                    ORDER BY SessionStart, Id
+                    //                    ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+                    //                ) AS PreviousMaxEnd
+                    //            FROM ValidSessions
+                    //        ),
+                    //        SessionGroups AS
+                    //        (
+                    //            SELECT *,
+                    //                SUM(CASE WHEN PreviousMaxEnd IS NULL OR SessionStart > PreviousMaxEnd THEN 1 ELSE 0 END)
+                    //                OVER (ORDER BY SessionStart, Id) AS SessionGroup
+                    //            FROM RunningSessions
+                    //        ),
+                    //        MergedSessions AS
+                    //        (
+                    //            SELECT MIN(SessionStart) AS SessionStart, MAX(SessionEnd) AS SessionEnd
+                    //            FROM SessionGroups
+                    //            GROUP BY SessionGroup
+                    //        ),
+                    //        LoginUsage AS
+                    //        (
+                    //            SELECT CAST(COALESCE(SUM(DATEDIFF_BIG(MILLISECOND, SessionStart, SessionEnd)), 0)
+                    //                / 3600000.0 AS DECIMAL(18,4)) AS TotalHours
+                    //            FROM MergedSessions
+                    //        )
+                    //        UPDATE employee
+                    //        SET TotalLoginHours = usage.TotalHours,
+                    //            ModifiedDate = GETDATE()
+                    //        FROM dbo.Employee employee
+                    //        CROSS JOIN LoginUsage usage
+                    //        WHERE employee.AccountName = @UserName AND employee.Deleted = 0
+                    //    END",
+                    //    new { Now = logoutTime, session.UserName }, transaction);
+                    double totalLoginHours = ((TimeSpan)(logoutTime - session.LoginTime)).TotalHours;
+                    await connection.ExecuteAsync(@"UPDATE UsersCache SET TotalLoginHours = @TotalLoginHours WHERE AccountName = @AccountName", new { TotalLoginHours = totalLoginHours, AccountName = session.UserName }, transaction);
                 }
 
                 await transaction.CommitAsync();
