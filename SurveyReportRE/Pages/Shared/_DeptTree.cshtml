@@ -27,7 +27,7 @@
      class="dept-tree overview-control-pane"
      role="navigation"
      aria-label="Request workflow controls">
-    <span class="dept-idle-clock-label">Auto-saved</span>
+    <span class="dept-idle-clock-label" aria-hidden="true">Auto-saved</span>
     <div id="@(deptTreeId)_idleClock"
          class="dept-idle-clock"
          aria-hidden="true"
@@ -116,8 +116,11 @@
                         }
 
                         const value = clock.querySelector(".dept-idle-clock-value");
+                        
                         if (value) value.textContent = formatDuration(idleDurationMs);
+                        //show clock
                         clock.classList.toggle("is-visible", shouldShow);
+
                         clock.setAttribute("aria-hidden", shouldShow ? "false" : "true");
                     });
                 }

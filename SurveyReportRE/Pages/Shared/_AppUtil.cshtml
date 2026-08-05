@@ -1929,13 +1929,12 @@
                                             return (result || [])
                                                 .filter(x => String(x.currentDepartment || "").toLowerCase() === String(dept || "").toLowerCase())
                                                 .map(x => ({
-                                                    Id: x.id,
                                                     id: x.id,
                                                     Author: x.author,
-                                                    FromDepartment: x.fromDepartment,
-                                                    ToDepartment: x.toDepartment,
-                                                    CurrentDepartment: x.currentDepartment,
-                                                    Content: x.content,
+                                                    fromDepartment: x.fromDepartment,
+                                                    toDepartment: x.toDepartment,
+                                                    currentDepartment: x.currentDepartment,
+                                                    content: x.content,
                                                     author: x.author,
                                                     role: x.fromDepartment,
                                                     text: x.content,
@@ -1961,7 +1960,7 @@
                                         var departmentCodes = moduleKey === "pi"
                                             ? (window.piDeptModuleCode || [])
                                             : (window.qtDeptModuleCode || []);
-                                        var routeDepartments = departmentCodes.map(function (code) {
+                                        var routeDepartments = departmentCodes.filter(f => f != dept).map(function (code) {
                                             return { id: code, name: code };
                                         });
 
@@ -1977,14 +1976,14 @@
                                             selectedDepartment: "",
                                             recordGuid: guid,
                                             fromDepartment: _role,
-                                            currentDepartment: dept,
+                                            // currentDepartment: dept,
                                             type: "Discussion",
                                             author: _displayName,
                                             createdBy: _loginUser,
                                             showComposer: true,
                                             emptyText: "No comments.",
                                             headerTitle: "",
-                                            routeLabel: "Route to:",
+                                            // routeLabel: "Route to:",
                                             routePlaceholder: "Select department",
                                             onChange: function (value) {
                                                 parentForm.updateData(updateField, value);
@@ -1995,7 +1994,7 @@
                                                     RecordGuid: guid,
                                                     FromDepartment: _role,
                                                     ToDepartment: newComment.ToDepartment || newComment.toDepartment,
-                                                    CurrentDepartment: dept,
+                                                    CurrentDepartment: newComment.ToDepartment,
                                                     Type: newComment.Type || "Discussion",
                                                     Content: commentText,
                                                     IsPrimaryNote: false,
@@ -4985,7 +4984,6 @@
             //         .appendTo($container);
             const $uploader = $(`<div id="fileUpload_${controlId}_${renderTime}"></div>`)
                  .appendTo($container)
-                 console.log(editorOptionsIn);
              $uploader.fileuploader({
                 guid: editorOptionsIn.guid,
                 controllerName: "Document",
@@ -9563,7 +9561,7 @@
              $.each(items, function(itemIndex, item){
                  setTimeout(() => {
                      try
-                     {   console.log(item);
+                     {  
                          if (item.includes("make-option"))
                          {
                              $(`#${item}`).dxButton("instance").option("disabled", false);

@@ -51,20 +51,19 @@ const CommentEditorRoute = forwardRef(({
     renderItem,
     showComposer = true,
     submitLabel = 'Send',
-    headerTitle = 'Comments & Routing',
+    headerTitle = 'Comments',
     headerSubtitle = '',
     authorName = 'You',
     roleName = 'Member',
     className = '',
     onClick,
-    
     // Routing target selection configuration
     departments = [], // List of departments to select from
     valueExpr = 'id',
     displayExpr = 'name',
     selectedDepartment = '',
     routePlaceholder = 'Select routing department...',
-    routeLabel = 'Route to:',
+    routeLabel = 'Send message to:',
 
     // Database record parameters
     id = 0,
@@ -265,12 +264,13 @@ const CommentEditorRoute = forwardRef(({
         <div className={`comment-editor-card ${className}`.trim()}>
             <div className="comment-editor-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                    <h4>{headerTitle}</h4>
+                    {/* <h4>{headerTitle}</h4> */}
+                    <span className="comment-editor-badge" style={{ background: '#3b82f6', color: '#fff', padding: '4px 8px', borderRadius: '12px', fontSize: '12px' }}>
+                    {comments.length} comments
+                    </span>
                     {headerSubtitle?.trim() && <p>{headerSubtitle}</p>}
                 </div>
-                <span className="comment-editor-badge" style={{ background: '#3b82f6', color: '#fff', padding: '4px 8px', borderRadius: '12px', fontSize: '12px' }}>
-                    {comments.length} comments
-                </span>
+                
             </div>
 
             {/* Existing Comments List */}
@@ -291,7 +291,7 @@ const CommentEditorRoute = forwardRef(({
                                     <span>{getCommentRole(item) || 'Member'}</span>
                                     {getCommentToDept(item) && (
                                         <span className="route-badge" style={{ color: '#2563eb', background: '#eff6ff', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: '500', marginLeft: '6px' }}>
-                                            Route ➔ {getCommentToDept(item)}
+                                             ➔ {getCommentToDept(item)}
                                         </span>
                                     )}
                                     <em>{getCommentTime(item)}</em>

@@ -581,7 +581,7 @@ function App() {
 
 
       <section className="section" id="tour-comments-section">
-        <div className="section-title">Comment Editor & Route (Ý kiến và Định hướng chuyển phòng ban)</div>
+        <div className="section-title">Comment Editor & Route </div>
         <div style={{ padding: '16px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
           <CommentEditorRoute
             items={routeComments}

@@ -1173,7 +1173,7 @@
 
 
          // ====== Notification state ======
-    let _notif = {
+    const _notif = {
         items: [],
         unreadCount: 0,
         currentFilter: "all",
@@ -1362,12 +1362,14 @@
 
 
     function setNotifCount(n) {
+        // debugger
         n = Math.max(0, Number(n) || 0);
         const $count = $("#notificationBtn .notif-count");
         if (!n || n <= 0) {
             $count.text("").hide();
             hideNotificationDot();
         } else {
+            console.log(n);
             $count.text(n > 99 ? "99+" : n).show();
             showNotificationDot();
         }
@@ -1459,7 +1461,7 @@
                     placeholder: "Notification category",
                     onValueChanged: function (e) {
                         _notif.currentFilter = e.value || "all";
-                        refreshNotifUI();
+                        // refreshNotifUI();
                     }
                 }).dxSelectBox("instance");
 
@@ -1611,7 +1613,8 @@
         callElementView(target.url, target.caption, target.name, target.data);
     }
     function refreshNotifUI() {
-        _notif.unreadCount = (_notif.items || []).filter(x => !x.isRead).length;
+        _notif.unreadCount = (_notif.items || []).filter(x => x.receivedBy == _loginUser && !x.isRead).length;
+        console.log(_notif);
         setNotifCount(_notif.unreadCount);
 
         if (_notif.list) {
@@ -1657,7 +1660,7 @@
     }
 
     ensureNotificationPopup();
-    updateNotification();
+     updateNotification();
      $("#notificationBtn").off("click.notification").on("click.notification", function () {
          $(this).toggleClass("is-open");
      // _notif.popup.show();
