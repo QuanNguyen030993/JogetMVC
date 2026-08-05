@@ -16,6 +16,7 @@ public static class NotificationTypeKeys
     public const string Initial = "Initial";
     public const string Reminder = "Reminder";
     public const string Alert = "Alert";
+    public const string Comment = "Comment";
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
@@ -29,7 +30,8 @@ public static class NotificationTypeKeys
         Fail,
         Initial,
         Reminder,
-        Alert
+        Alert,
+        Comment
     };
 }
 

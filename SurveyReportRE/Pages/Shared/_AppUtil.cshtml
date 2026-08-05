@@ -1967,6 +1967,7 @@
                                         if (typeof $.fn.tmivcommenteditorroute !== "function") {
                                             throw new Error("TMIVCom CommentEditorRoute is not loaded.");
                                         }
+                                        var typeRequest = moduleKey == "qt" ? "Quotation" : "PolicyIssuance"; 
 
                                         routeEditorOptions = {
                                             items: initialComments,
@@ -1976,6 +1977,7 @@
                                             selectedDepartment: "",
                                             recordGuid: guid,
                                             fromDepartment: _role,
+                                            submitUrl: `api/Notification/CommentNotify?sendTo=quan.nh&typeRequest=${typeRequest}&id=${id}`,
                                             // currentDepartment: dept,
                                             type: "Discussion",
                                             author: _displayName,

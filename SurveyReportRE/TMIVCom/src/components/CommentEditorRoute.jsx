@@ -56,6 +56,7 @@ const CommentEditorRoute = forwardRef(({
     authorName = 'You',
     roleName = 'Member',
     className = '',
+    submitUrl = '',
     onClick,
     // Routing target selection configuration
     departments = [], // List of departments to select from
@@ -140,7 +141,7 @@ const CommentEditorRoute = forwardRef(({
         return typeof found === 'object' ? (found[displayExpr] ?? found.value ?? found.name ?? '') : found;
     };
 
-    const addComment = () => {
+    const addComment = async () => {
         const htmlText = editorRef.current ? editorRef.current.innerHTML : draft;
         const trimmed = htmlText.replace(/<[^>]*>/g, '').trim(); // text-only check for empty input
         
@@ -207,6 +208,18 @@ const CommentEditorRoute = forwardRef(({
         onItemsChange?.(nextComments);
         onSubmit?.(nextComment, nextComments);
         onChange?.('');
+        try {
+            const apiResult = await callApi(nextComment);
+            console.log('API Result:', apiResult);
+            // Nếu muốn lấy Id từ DB trả về
+            // if (apiResult?.id) {
+            // nextComment.Id = apiResult.id;
+            // }
+            } catch (error) {
+            alert('Có lỗi xảy ra khi lưu dữ liệu!');
+            console.log(error);
+            return;
+            }
     };
 
     const command = (cmd, param = null) => {
@@ -223,6 +236,60 @@ const CommentEditorRoute = forwardRef(({
             return auth.charAt(0).toUpperCase() || 'U';
         });
     }, [comments]);
+    const postCommentToApi = async (commentData) => {
+        if (!submitUrl) return null;
+
+        try {
+            const response = await fetch(submitUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(commentData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP Error: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error posting comment:', error);
+            throw error;
+        }
+    };
+
+    const callApi = async (commentData) => {
+        if (!submitUrl) return null;
+
+        try {
+            const params = new URLSearchParams({
+                Guid: commentData.Guid,
+                RecordGuid: commentData.RecordGuid,
+                Content: commentData.Content,
+                FromDepartment: commentData.FromDepartment,
+                ToDepartment: commentData.ToDepartment,
+                Author: commentData.Author
+            });
+
+            const response = await fetch(
+                // `${submitUrl}?${params.toString()}`,
+                 `${submitUrl}`,
+                {
+                    method: 'GET'
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP Error: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
+    };
 
     useImperativeHandle(ref, () => ({
         option(name, nextValue) {

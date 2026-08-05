@@ -1198,12 +1198,13 @@
         fail: { label: "Fail", shortLabel: "FAIL", icon: "close", background: window.AppColors.c_fee2e2, color: window.AppColors.c_b91c1c },
         initial: { label: "Initial", shortLabel: "INI", icon: "add", background: window.AppColors.c_dbeafe, color: window.AppColors.c_1d4ed8 },
         reminder: { label: "Reminder", shortLabel: "REM", icon: "clock", background: window.AppColors.c_fef3c7, color: window.AppColors.c_b45309 },
-        alert: { label: "Alert", shortLabel: "ALT", icon: "warning", background: window.AppColors.c_ffedd5, color: window.AppColors.c_c2410c }
+        alert: { label: "Alert", shortLabel: "ALT", icon: "warning", background: window.AppColors.c_ffedd5, color: window.AppColors.c_c2410c },
+        comment: { label: "Comment", shortLabel: "CMT", icon: "warning", background: window.AppColors.c_ffedd5, color: window.AppColors.c_c2410c }
     };
 
     const notificationTypeKeys = [
         "default", "assign", "system", "policyissuance", "quotation", "accept",
-        "success", "fail", "initial", "reminder", "alert"
+        "success", "fail", "initial", "reminder", "alert", "comment"
     ];
 
     function normalizeNotificationType(value) {
@@ -1222,7 +1223,8 @@
             fail: ["fail", "failed", "failure"],
             initial: ["initial", "initialize", "initialized", "initiate", "initiated", "initiation", "inititial"],
             reminder: ["reminder", "remind"],
-            alert: ["alert"]
+            alert: ["alert"],
+            comment: ["comment"]
         };
         const acceptedValues = aliases[typeKey] || [typeKey];
 
@@ -1341,6 +1343,7 @@
             if (type.includes("initial")) return "initial";
             if (type.includes("remind")) return "reminder";
             if (type.includes("alert")) return "alert";
+            if (type.includes("comment")) return "comment";
         }
 
         // Backward compatibility for notifications created before Type was populated.
@@ -1460,8 +1463,9 @@
                     searchExpr: ["text"],
                     placeholder: "Notification category",
                     onValueChanged: function (e) {
+                        debugger
                         _notif.currentFilter = e.value || "all";
-                        // refreshNotifUI();
+                         refreshNotifUI();
                     }
                 }).dxSelectBox("instance");
 
@@ -1614,7 +1618,6 @@
     }
     function refreshNotifUI() {
         _notif.unreadCount = (_notif.items || []).filter(x => x.receivedBy == _loginUser && !x.isRead).length;
-        console.log(_notif);
         setNotifCount(_notif.unreadCount);
 
         if (_notif.list) {

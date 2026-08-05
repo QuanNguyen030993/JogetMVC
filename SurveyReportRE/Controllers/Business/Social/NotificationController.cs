@@ -18,6 +18,8 @@ using ERPCore.Models.Migration.Business.Social;
 using ERPCore.Models.Business.Migration.Config;
 using ERPCore.Models.Request;
 using HtmlAgilityPack;
+using ERPCore.Models.Migration.Business.MasterData;
+
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -27,6 +29,11 @@ public class NotificationController : BaseControllerApi<Notification>
     private readonly IConfiguration configuration;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly IBaseRepository<EnumData> _enumDataRepository;
+    private readonly IBaseRepository<NotificationTemplate> _notificationTemplateRepository;
+    private readonly IBaseRepository<UsersSession> _usersSessionRepository;
+    private readonly IBaseRepository<Quotation> _quotationRepository;
+    private readonly IBaseRepository<PolicyIssuance> _policyIssuanceRepository;
+
     private string DOMAIN_NAME = "";
     public NotificationController(IBaseRepository<Notification> BaseRepository
         , IConfiguration config
@@ -37,6 +44,10 @@ public class NotificationController : BaseControllerApi<Notification>
         _BaseRepository = BaseRepository;
         _hubContext = hubContext;
         _enumDataRepository = new BaseRepository<EnumData>(configuration, _httpContextAccessor);
+        _usersSessionRepository = new BaseRepository<UsersSession>(configuration, _httpContextAccessor);
+        _notificationTemplateRepository = new BaseRepository<NotificationTemplate>(configuration, _httpContextAccessor);
+        _quotationRepository = new BaseRepository<Quotation>(configuration, _httpContextAccessor);
+        _policyIssuanceRepository = new BaseRepository<PolicyIssuance>(configuration, _httpContextAccessor);
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
     }
     [HttpPost]
@@ -83,7 +94,68 @@ public class NotificationController : BaseControllerApi<Notification>
         return Ok();
     }
 
+    public async Task<IActionResult> CommentNotify(string sendTo, string typeRequest, long id)
+    {
 
+        //foreach (string item in transferObject.ReceivedBy.Split(','))
+        //{
+            NotificationRequest notification = new NotificationRequest();
+            Notification Notification = new Notification();
+            long? notificationTypeId = 0;
+
+            string eventText = NotificationTypeKeys.Comment;
+            notificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
+               _enumDataRepository,
+               eventText);
+
+
+
+            NotificationTemplate notificationTemplate = new NotificationTemplate();
+        notificationTemplate = await _notificationTemplateRepository.GetSingleObject(s => s.TemplateName == "Comment" + nameof(Notification));
+
+        //Notification = ControllerUtil.BuildNotification(
+        //    transferObject,
+        //notificationTypeId,
+        //    item,
+        //    notificationTemplate,
+        //    callerName: nameof(CommentNotify)
+        //    );
+        dynamic objects = null;
+
+        if (typeRequest == nameof(Quotation))
+            {
+                Quotation quotation = new Quotation();
+                quotation = await _quotationRepository.GetSingleObject(s => s.Id == id);
+            objects = new {  Code = quotation.QuotationCode, Guid = quotation.Guid, ModuleName = quotation.GetType().Name, QuotationId = quotation.Id, CopyFromGuid = quotation.Guid };
+            }
+        if (typeRequest == nameof(PolicyIssuance))
+        {
+            PolicyIssuance policyIssuance = new PolicyIssuance();
+            policyIssuance = await _policyIssuanceRepository.GetSingleObject(s => s.Id == id);
+            objects = new { Code = policyIssuance.PolicyIssuanceCode, Guid = policyIssuance.Guid, ModuleName = policyIssuance.GetType().Name, QuotationId = policyIssuance.QuotationId, CopyFromGuid = policyIssuance.CopyFromGuid };
+        }
+        Notification.Title = notificationTemplate.Title;
+            Notification.Message = string.Format(notificationTemplate.Content, ControllerUtil.GetCurrentContextUser(_httpContextAccessor,configuration), typeRequest, objects != null ? objects.Code : "");
+            Notification.Resource = $"{ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration)}_{typeRequest}_{nameof(CommentNotify)}";
+            Notification.System = "WorkflowManagement";
+            Notification.ReceivedBy = sendTo;
+            Notification.Type = notificationTypeId;
+            Notification.Url = Newtonsoft.Json.JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(objects));
+
+        //notification.connectionId = item;
+        //notification.tabPublicUrl = ControllerUtil.NotificationURLObjectMaking(transferObject);
+
+        await _BaseRepository.InsertData(Notification);
+            await ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
+            new
+            {
+                title = Notification.Title,
+                message = Notification.Message
+            }
+            , sendTo, DOMAIN_NAME);
+        //}
+        return Ok(Notification);
+    }
 
     [AllowAnonymous]
     [InternalTokenAuthorize]
