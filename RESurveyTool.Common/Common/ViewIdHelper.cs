@@ -117,7 +117,12 @@ namespace JogetMVC.Model
 
         // Section-specific elements
         public static string AssigneeBox(string dept, long quotationId) => GenerateId("AssigneeBox", dept, quotationId);
-   }
+        //attList_qt-body_TS__default_564_1786001889416
+        public static string Id(string name, string prefix, long quotationId) => $"{prefix}-{name}_{quotationId}";
+        public static string Cd(string name, string prefix) => $"{prefix}-{name}_";
+        public static string AttachmentPreviewList(string name, string prefix, string dept, string type, long quotationId) => $"attList_{Cd(name, prefix)}_{dept}_{type}_{quotationId}";
+        public static string AttachmentControl(string name, string prefix, string dept, string type, long quotationId) => $"fileUpload_{Cd(name, prefix)}_{dept}_{type}_{quotationId}";
+    }
 
     public static class QTViewIdHelper
     {

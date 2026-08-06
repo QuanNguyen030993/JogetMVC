@@ -1,9 +1,15 @@
 using Dapper;
+using DocumentFormat.OpenXml.Office2016.Presentation.Command;
 using ERPCore.Controllers.Base;
 using ERPCore.Models.Migration.Config;
+using ERPCore.Models.Request;
+
 //using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Newtonsoft.Json;
+using Org.BouncyCastle.Bcpg.OpenPgp;
+using System.Net;
 
 namespace ERPCore.Controllers.Config;
 
@@ -23,6 +29,8 @@ public class GuideStepController : BaseControllerApi<GuideStep>
         public decimal MaxLoginHours { get; set; }
         public bool AutoStart { get; set; }
         public bool Enabled { get; set; } = true;
+        public long? ExperienceLevelId { get; set; }
+
         public List<GuideStepDefinition> Steps { get; set; } = [];
     }
 
@@ -117,6 +125,7 @@ public class GuideStepController : BaseControllerApi<GuideStep>
         guide.Route = (guide.Route ?? "").Trim();
         guide.Source = (guide.Source ?? "manual").Trim();
         guide.WikiUrl = (guide.WikiUrl ?? "").Trim();
+        //guide.ExperienceLevelId = (guide.ExperienceLevelId ?? 0);
         guide.Steps ??= [];
         if (string.IsNullOrWhiteSpace(guide.Key) || string.IsNullOrWhiteSpace(guide.Title) || guide.Steps.Count == 0)
             return BadRequest(new { success = false, message = "Guide key, title and at least one step are required." });
@@ -131,49 +140,87 @@ public class GuideStepController : BaseControllerApi<GuideStep>
         await using var transaction = await connection.BeginTransactionAsync();
         try
         {
-            await connection.ExecuteAsync(@"
-                UPDATE dbo.GuideStep
-                SET Deleted = 1, DeletedBy = @UserName, DeletedDate = GETDATE(), ModifiedDate = GETDATE()
-                WHERE GuideKey = @GuideKey AND Deleted = 0",
-                new { UserName = accountName, GuideKey = guide.Key }, transaction);
 
-            const string insertSql = @"
-                INSERT INTO dbo.GuideStep
-                ([Guid], GuideKey, GuideTitle, GuideVersion, Route, SourceType, WikiUrl,
-                 MaxLoginHours, AutoStart, StepNumber, StepTitle, Selector, Placement,
-                 Content, ContentFormat, WaitTimeoutMs, IsEnabled,
-                 CreatedBy, CreatedDate, ModifiedBy, ModifiedDate, Deleted)
-                VALUES
-                (NEWID(), @GuideKey, @GuideTitle, @GuideVersion, @Route, @SourceType, @WikiUrl,
-                 @MaxLoginHours, @AutoStart, @StepNumber, @StepTitle, @Selector, @Placement,
-                 @Content, @ContentFormat, @WaitTimeoutMs, @IsEnabled,
-                 @UserName, GETDATE(), @UserName, GETDATE(), 0);";
 
-            for (var index = 0; index < guide.Steps.Count; index++)
+
+            List<GuideStep> guideSteps = new List<GuideStep>();
+            guideSteps = await _BaseRepository.GetListObject(l => l.GuideKey == guide.Key);
+
+            List<long> ids = guideSteps.Select(s => s.Id).ToList();
+
+            await _BaseRepository.BulkDelete(ids, "Id", true);
+
+            int index = 1;
+            List<GuideStep> steps = new List<GuideStep>();
+            foreach (GuideStepDefinition item in guide.Steps)
             {
-                var step = guide.Steps[index];
-                step.Format = NormalizeContentFormat(step.Format);
-                await connection.ExecuteAsync(insertSql, new
-                {
-                    GuideKey = guide.Key,
-                    GuideTitle = guide.Title,
-                    GuideVersion = Math.Max(1, guide.Version),
-                    guide.Route,
-                    SourceType = guide.Source,
-                    guide.WikiUrl,
-                    MaxLoginHours = Math.Max(0, guide.MaxLoginHours),
-                    guide.AutoStart,
-                    StepNumber = index + 1,
-                    StepTitle = step.Title ?? $"Step {index + 1}",
-                    Selector = step.Selector ?? "",
-                    Placement = step.Placement ?? "auto",
-                    Content = step.Content ?? "",
-                    ContentFormat = step.Format,
-                    WaitTimeoutMs = Math.Clamp(step.WaitTimeout, 0, 30000),
-                    IsEnabled = guide.Enabled,
-                    UserName = accountName
-                }, transaction);
+                item.Id = "0";
+                GuideStep guideStep = new GuideStep();
+                JsonConvert.PopulateObject(JsonConvert.SerializeObject(item), guideStep);
+                guideStep.ExperienceLevelId = guide.ExperienceLevelId ?? 0;
+                guideStep.GuideKey = guide.Key;
+                guideStep.GuideTitle = guide.Title;
+                guideStep.GuideVersion = Math.Max(1, guide.Version);
+                guideStep.Route = guide.Route;
+                guideStep.SourceType = guide.Source;
+                guideStep.WikiUrl = guide.WikiUrl;
+                guideStep.MaxLoginHours = Math.Max(0, guide.MaxLoginHours);
+                guideStep.AutoStart = guide.AutoStart;
+                guideStep.StepNumber = index + 1;
+                guideStep.StepTitle = item.Title ?? $"Step {index + 1}";
+                guideStep.Selector = item.Selector ?? "";
+                guideStep.Placement = item.Placement ?? "auto";
+                guideStep.Content = item.Content ?? "";
+                guideStep.ContentFormat = item.Format;
+                guideStep.WaitTimeoutMs = Math.Clamp(item.WaitTimeout, 0, 30000);
+                guideStep.IsEnabled = guide.Enabled;
+                steps.Add(guideStep);   
+                index++;
             }
+                await _BaseRepository.BulkInsertAsync(steps);
+            //await connection.ExecuteAsync(@"
+            //    UPDATE dbo.GuideStep
+            //    SET Deleted = 1, DeletedBy = @UserName, DeletedDate = GETDATE(), ModifiedDate = GETDATE()
+            //    WHERE GuideKey = @GuideKey AND Deleted = 0",
+            //    new { UserName = accountName, GuideKey = guide.Key }, transaction);
+
+            //const string insertSql = @"
+            //    INSERT INTO dbo.GuideStep
+            //    ([Guid], GuideKey, GuideTitle, GuideVersion, Route, SourceType, WikiUrl,
+            //     MaxLoginHours, AutoStart, StepNumber, StepTitle, Selector, Placement,
+            //     Content, ContentFormat, WaitTimeoutMs, IsEnabled,
+            //     CreatedBy, CreatedDate, ModifiedBy, ModifiedDate, Deleted)
+            //    VALUES
+            //    (NEWID(), @GuideKey, @GuideTitle, @GuideVersion, @Route, @SourceType, @WikiUrl,
+            //     @MaxLoginHours, @AutoStart, @StepNumber, @StepTitle, @Selector, @Placement,
+            //     @Content, @ContentFormat, @WaitTimeoutMs, @IsEnabled,
+            //     @UserName, GETDATE(), @UserName, GETDATE(), 0);";
+
+            //for (var index = 0; index < guide.Steps.Count; index++)
+            //{
+            //    var step = guide.Steps[index];
+            //    step.Format = NormalizeContentFormat(step.Format);
+            //    await connection.ExecuteAsync(insertSql, new
+            //    {
+            //        GuideKey = guide.Key,
+            //        GuideTitle = guide.Title,
+            //        GuideVersion = Math.Max(1, guide.Version),
+            //        guide.Route,
+            //        SourceType = guide.Source,
+            //        guide.WikiUrl,
+            //        MaxLoginHours = Math.Max(0, guide.MaxLoginHours),
+            //        guide.AutoStart,
+            //        StepNumber = index + 1,
+            //        StepTitle = step.Title ?? $"Step {index + 1}",
+            //        Selector = step.Selector ?? "",
+            //        Placement = step.Placement ?? "auto",
+            //        Content = step.Content ?? "",
+            //        ContentFormat = step.Format,
+            //        WaitTimeoutMs = Math.Clamp(step.WaitTimeout, 0, 30000),
+            //        IsEnabled = guide.Enabled,
+            //        UserName = accountName
+            //    }, transaction);
+            //}
 
             var savedStepCount = await connection.ExecuteScalarAsync<int>(@"
                 SELECT COUNT(*)
@@ -185,7 +232,7 @@ public class GuideStepController : BaseControllerApi<GuideStep>
                 throw new InvalidOperationException("The saved guide step count does not match the submitted data.");
 
             await transaction.CommitAsync();
-            guide.Id = guide.Key;
+            //guide.Id = guide.Key;
             return Ok(new { success = true, data = guide, savedStepCount });
         }
         catch
@@ -194,7 +241,14 @@ public class GuideStepController : BaseControllerApi<GuideStep>
             throw;
         }
     }
-
+    [HttpPut]
+    public override HttpResponseMessage UpdateData([FromForm] UpdateFormCollection form)
+    {
+        var entity = new GuideStep();
+        JsonConvert.PopulateObject(form.values, entity);
+        _BaseRepository.UpdateData(entity, form.values, form.key, "Id");
+        return new HttpResponseMessage(HttpStatusCode.OK);
+    }
     private static string NormalizeContentFormat(string? format)
     {
         return string.Equals(format?.Trim(), "markdown", StringComparison.OrdinalIgnoreCase)

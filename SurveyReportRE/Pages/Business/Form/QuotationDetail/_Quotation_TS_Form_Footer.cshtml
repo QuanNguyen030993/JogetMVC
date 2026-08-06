@@ -23,31 +23,34 @@
         var data = [];
         var quotationId = @quotationId;
         function prepareData(element) {
+            debugger
             // var uploaderId = "fileUpload_@(prefix)_default_@(dept)_@(quotationId)";
-             var uploaderId = "fileUpload_@(prefix)-body_@(dept)__default_@(quotationId)";
-              const uploaderId2 = $(`[id^='attList_@(prefix)-body_@(dept)__default_@(quotationId)_'] .att-item`);
+            // const attachmentPreviewId =  window.IdManager.attachmentPreviewList("body", "@(prefix)", "@(dept)", "default", @(quotationId));
+             var uploaderId = findAttachemtControlItem("body", "@(prefix)", "@(dept)", "default", @(quotationId));
+             const uploaderId2 = findPreviewItem("body", "@(prefix)", "@(dept)", "default", @(quotationId));
+             //attList_qt-body_TS__default_564_1786001889416
+                    // const uploaderId2 = $(`[id^='${attachmentPreviewId}_'] .att-item`);
                     // const uploader2 = $(`[id^='attList_@(prefix)-body_@(dept)__supportingDoc_@(quotationId)_'] .att-item`);
                 const fileCount = uploaderId2.length || 0; // number of quote docs
                 // const fileCount2 = uploader2.length || 0; // number of sup docs
                 var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-
-
-
-            var uploader = $(`[id^='${uploaderId}']`).dxFileUploader("instance");
+                
+            // var uploader = $(`[id^='${uploaderId}']`).dxFileUploader("instance"); change due to new uploader control
             if (!fileCount) {
                 appNotifyWarning("Quotation attachments are still loading. Please try again.", false);
                 return false;
             }
-            var fileData = uploader.option("storageData") || [];
+            // var fileData = uploader.option("storageData") || [];
             data = [];
-                    $.each(fileData,function (index, el) {
+            $.each(uploaderId2,function (index, el) {
+                debugger
              const $el = $(el);
 
              data.push({
                     Index: index,
                      QuotationId: @quotationId,
-                     DocumentId: el.id,//Number($(el).find("input").val()),
-                     AttachmentElement: el,
+                     DocumentId: Number($(el).find("input").val()), // el.id,//
+                     AttachmentElement: $el,
                      LineId: null,
                      ProductId: null
                  });
@@ -130,14 +133,14 @@
                      caption: "Quotation",
                      allowEditing: false,
                      cellTemplate: function (container, options) {
-                        var x = options.data.AttachmentElement;
-                        const fileName = x.fileName || x.FileName || x.name || "Unnamed";
-                        const ext = (x.extension || x.Extension || getExt(fileName)).toLowerCase();
-                        const size = x.size || x.fileSize || x.FileSize || 0;
-                        const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
-                        const id = x.id || x.Id || x.attachmentId;
-                        const author = x.author || x.author || x.author;
-                        const date = x.date || x.date || x.date;
+                        var x = options.data.AttachmentElement[0];
+                           const fileName = x.attr("aria-fileName");
+                        const ext = x.attr("aria-ext");
+                        const size = x.attr("aria-size");
+                        const downloadUrl = x.attr("aria-downloadUrl");
+                        const id = x.attr("aria-id");
+                        const author = x.attr("aria-author");
+                        const date = x.attr("aria-date");
                         const $item = $("<div>")
                             .addClass("att-item")
                             .css({
@@ -323,8 +326,9 @@
     }
 
     function openMakeOptionPopup_@(quotationId)() {
-        if (!prepareData()) return;
-
+         if (!prepareData()) return;
+        // const quotationFiles = $(`[id^='attList_@(prefix)-body_@(dept)__default_@(quotationId)_'] .att-item`);
+        // const fileCount = quotationFiles.length || 0;
 
         var popupInstance = makePopupWithScroll(
             renderOptionQuotationGrid(),
@@ -368,6 +372,7 @@
     }
 
     function requestMakeOption_@(quotationId)() {
+        debugger
         const quotationFiles = $(`[id^='attList_@(prefix)-body_@(dept)__default_@(quotationId)_'] .att-item`);
         const fileCount = quotationFiles.length || 0;
 
@@ -383,6 +388,7 @@
             "Cancel"
         ).then(function (result) {
             if (result.isConfirmed) {
+                debugger
                 openMakeOptionPopup_@(quotationId)();
                 return true;
             }

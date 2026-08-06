@@ -35,12 +35,7 @@ namespace ERPCore.Controllers.Base
     [AllowAnonymous]
     public class BaseControllerApi<T> : ControllerBase where T : class, new()
     {
-        private enum DocumentStorageTarget
-        {
-            Local,
-            Nas,
-            SharePoint
-        }
+        
 
         private readonly IBaseRepository<T> _BaseRepository;
         internal IHttpContextAccessor _httpContextAccessor { get; set; }
@@ -891,7 +886,7 @@ namespace ERPCore.Controllers.Base
             }
         }
 
-        private async Task<IActionResult> UploadRequestFileAsync(
+        public async Task<IActionResult> UploadRequestFileAsync(
             DocumentStorageTarget storageTarget)
         {
             IBaseRepository<Document> _documentRepository = new BaseRepository<Document>(_BaseRepository._baseConfiguration, _httpContextAccessor);
@@ -956,14 +951,17 @@ namespace ERPCore.Controllers.Base
         [HttpPost]
         public virtual async Task<IActionResult> AsyncUploadFile()
         {
+            
             var settings = await SystemWriteControl.GetAsync(_BaseRepository._connectionString);
-            var storageTarget = string.Equals(
-                settings.AttachmentStorage,
-                "SharePoint",
-                StringComparison.OrdinalIgnoreCase)
-                    ? DocumentStorageTarget.SharePoint
-                    : DocumentStorageTarget.Local;
-
+            //var storageTarget = string.Equals(
+            //    settings.AttachmentStorage,
+            //    "SharePoint",
+            //    StringComparison.OrdinalIgnoreCase)
+            //        ? DocumentStorageTarget.SharePoint
+            //        : DocumentStorageTarget.Local;
+            var storageTarget = settings.AttachmentStorage == "SharePoint"
+                ? DocumentStorageTarget.SharePoint
+                : DocumentStorageTarget.Local;
             // LEGACY ROLLBACK: uploads always used local BlobStorage.
             // return await UploadRequestFileAsync(DocumentStorageTarget.Local);
             return await UploadRequestFileAsync(storageTarget);
@@ -1339,7 +1337,7 @@ namespace ERPCore.Controllers.Base
         // POST: api/YourModel/BulkDelete
         // Legacy body: [1, 2]
         [HttpPost]
-        public virtual async Task<IActionResult> BulkDelete([FromBody] List<int> ids)
+        public virtual async Task<IActionResult> BulkDelete([FromBody] List<long> ids)
         {
             if (ids == null || ids.Count == 0)
                 return BadRequest("At least one Id is required.");

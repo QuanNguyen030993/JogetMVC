@@ -1,4 +1,5 @@
 using ERPCore.Models.Migration.Base;
+using Microsoft.SharePoint.Publishing.Internal.WebControls;
 
 namespace ERPCore.Models.Migration.Config;
 
@@ -11,6 +12,8 @@ public class GuideStep : BaseModel
     public string SourceType { get; set; } = "manual";
     public string WikiUrl { get; set; } = "";
     public decimal MaxLoginHours { get; set; } = 0;
+    public long? ExperienceLevelId { get; set; } = 0;
+    public EnumData? ExperienceLevelEnum { get; set; }    
     public bool AutoStart { get; set; }
     public int StepNumber { get; set; }
     public string StepTitle { get; set; } = "";
@@ -20,4 +23,5 @@ public class GuideStep : BaseModel
     public string ContentFormat { get; set; } = "html";
     public int WaitTimeoutMs { get; set; } = 5000;
     public bool IsEnabled { get; set; } = true;
+   
 }

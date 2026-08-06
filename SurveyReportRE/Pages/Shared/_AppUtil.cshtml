@@ -1,3 +1,4 @@
+@using JogetMVC.Model
 <script>
         // var ListFormat = Quill.import('formats/list');
 
@@ -4595,6 +4596,24 @@
 
                     for (let i = 0; i < batchSize && index < list.length; i++, index++) {
                         const $item = createAttachmentItem(list[index], onDeleted, itemOptions);
+                        // const fileName = list[index].fileName || list[index].FileName || list[index].name || "Unnamed";
+                        // attList_Host.setAttribute('aria-fileName', fileName);
+                        // const ext = (list[index].extension || list[index].Extension || getExt(fileName)).toLowerCase();
+                        // attList_Host.setAttribute('aria-ext',ext);
+                        // const size = list[index].size || list[index].fileSize || list[index].FileSize || 0;
+                        // attList_Host.setAttribute('aria-size',size);
+                        // const downloadUrl = list[index].downloadUrl || list[index].DownloadUrl || list[index].url;
+                        // attList_Host.setAttribute('aria-downloadUrl',downloadUrl);
+                        // const id = list[index].id || list[index].Id || list[index].attachmentId;
+                        // attList_Host.setAttribute('aria-id',id);
+                        // const author = list[index].author || list[index].author || list[index].author;
+                        // attList_Host.setAttribute('aria-author',author);
+                        // const date = list[index].date || list[index].date || list[index].date;
+                        // attList_Host.setAttribute('aria-date',date);
+                        // const subDirectory = list[index].subDirectory || list[index].subDirectory || list[index].subDirectory;
+                        // attList_Host.setAttribute('aria-subDirectory',subDirectory);
+
+
                         frag.appendChild($item[0]);
                         itemsToAnimate.push($item);
                     }
@@ -4964,7 +4983,6 @@
             $(`#${controlId}`).remove();
             // const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
             const dropZoneId = `attachmentDropZone_${controlId}_${renderTime}`;
-
             const $preview = $(`<div id="attList_${controlId}_${renderTime}" class="att-preview"></div>`)
                 .appendTo($container);
             // const $dropZone = $(`
@@ -4991,14 +5009,15 @@
                 controllerName: "Document",
                 titleName: "Select or drag files to upload",
                 // LEGACY ROLLBACK: this uploader was forced to SharePoint.
-                uploadUrl: "/api/Document/AsyncUploadFileSharePoint",
-                // uploadUrl: "/api/Document/AsyncUploadFile",
+                // uploadUrl: "/api/Document/AsyncUploadFileSharePoint",
+                uploadUrl: "/api/Document/AsyncUploadFile",
                 data: {
                     ModuleName: editorOptionsIn.ModelName,
                     code: editorOptionsIn.ModelName, // subfolder Sharepoint
                     SectionName: editorOptionsIn.controlId
                 },
                 specificFolder: "Workflow",
+                disabled: true,
                 onUploaded: function () {
                     loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn, renderTime, true)
                 },
@@ -5134,10 +5153,12 @@
             function setAttachmentPermissionForSection(sectionSelector, canEdit) {
                 const $section = $(sectionSelector);
                 if (!$section.length) return;
-
                 $section.data("attachmentCanEdit", !!canEdit);
                 $section.find(".dx-fileuploader").each(function () {
                     $(this).dxFileUploader("instance")?.option("disabled", !canEdit);
+                });//attList_qt-body_TS__default_564_1786001889416
+                $section.find(`[id^='fileUpload_']`).each(function () {
+                    $(this).fileuploader({disabled: !canEdit});
                 });
                 $section.find(".attachment-drop-zone")
                     .toggleClass("is-disabled", !canEdit)
@@ -5190,7 +5211,6 @@
             }
 
             function previewAttachment(id, extension, fileName,subDirectory, fileInstance) {
-                debugger
                 const ext = String(extension || "").toLowerCase().replace(/^\./, "");
                 const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"];
                 const officeExtensions = ["doc", "docx", "xls", "xlsx","xlsm", "ppt", "pptx", "odt", "ods", "odp"];
@@ -5240,6 +5260,16 @@
                 const $item = $("<div>")
                     .addClass("att-item");
                     $item.appendTo($wrapper);
+
+                        $item.attr('aria-fileName', fileName);
+                        $item.attr('aria-ext',ext);
+                        $item.attr('aria-size',size);
+                        $item.attr('aria-downloadUrl',downloadUrl);
+                        $item.attr('aria-id',id);
+                        $item.attr('aria-author',author);
+                        $item.attr('aria-date',date);
+                        $item.attr('aria-subDirectory',subDirectory);
+
 
                 if (!(options && options.showFillListSelect)) {
                     $item.css({
@@ -9578,5 +9608,16 @@
                      }
                  },1);
              });
+         }
+         function findPreviewItem(name, prefix, dept, type, quotationId){
+             //attList_qt-body_TS__default_564_1786001889416
+             const attachmentPreviewId =  window.IdManager.attachmentPreviewList(name, prefix, dept, type, quotationId);
+             const uploaderId = $(`[id^='${attachmentPreviewId}_'] .att-item`);
+             return uploaderId;
+         }
+          function findAttachemtControlItem(name, prefix, dept, type, quotationId){
+             const attachmentPreviewId =  window.IdManager.attachmentControl(name, prefix, dept, type, quotationId);
+             const uploaderId = $(`[id^='${attachmentPreviewId}_']`);
+             return uploaderId;
          }
 </script>

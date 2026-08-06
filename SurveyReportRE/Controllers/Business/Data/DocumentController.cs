@@ -20,6 +20,7 @@ using ERPCore.Models.Request;
 public class DocumentController : BaseControllerApi<Document>
 {
     private readonly IBaseRepository<Document> _BaseRepository;
+    private readonly IBaseRepository<Constant> _constantRepository;
     private readonly IConfiguration configuration;
     private readonly IConfigurationSection path;
     private static string Query;
@@ -30,6 +31,7 @@ public class DocumentController : BaseControllerApi<Document>
         configuration = config;
         _BaseRepository = BaseRepository;
         path = _BaseRepository._baseConfiguration.GetSection("BlobStorage:Path");
+        _constantRepository = new BaseRepository<Constant>(configuration, _httpContextAccessor);
         //_httpClientFactory = httpClientFactory;
     }
 
@@ -276,6 +278,21 @@ public class DocumentController : BaseControllerApi<Document>
             });
         }
     }
+
+
+    [HttpPost]
+    public override async Task<IActionResult> AsyncUploadFile()
+    {
+        var settings = await SystemWriteControl.GetAsync(_BaseRepository._connectionString);
+        var storageTarget = settings.AttachmentStorage == "SharePoint"
+                ? DocumentStorageTarget.SharePoint
+                : DocumentStorageTarget.Local;
+
+        // LEGACY ROLLBACK: uploads always used local BlobStorage.
+        // return await UploadRequestFileAsync(DocumentStorageTarget.Local);
+        return await base.UploadRequestFileAsync(storageTarget);
+    }
+
     [HttpGet]
     [AllowAnonymous]
     public async Task<IActionResult> CallBackGetFile(string fileName)
@@ -616,3 +633,9 @@ public class DocumentController : BaseControllerApi<Document>
     }
 }
 
+public enum DocumentStorageTarget
+{
+    Local,
+    Nas,
+    SharePoint
+}

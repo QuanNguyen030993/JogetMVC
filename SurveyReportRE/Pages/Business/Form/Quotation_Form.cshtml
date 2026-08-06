@@ -1018,7 +1018,6 @@ Note:
                 roleApply[item]= !(state.currentUserRole === item);
 
             });
-
             
 
             setTimeout(() => {
@@ -1026,9 +1025,14 @@ Note:
                     var saveButtonId = window.QuotationIdManager.btnSave(item,@ViewData["Id"]);
                     $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
                     if (item === "TS") {
+                          var formId = window.QuotationIdManager.form(stageDept,@ViewData["Id"]);
+                                        var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                         var tatObject = new Object();
+                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem") || {};
                         $(`#qt-make-option-TS-@ViewData["Id"]`).dxButton("instance")?.option({
-                            visible: _isSuperUser ? true : !roleApply[item],
-                            disabled: _isSuperUser ? false : roleApply[item]
+                            // visible: _isSuperUser === "true" ? true : !roleApply[item],
+                            // disabled: _isSuperUser === "true" ? false : roleApply[item]
+                            disabled: (stageDept == "TS" && tatObject["TS"].AcceptDate) ? false : true
                         });
                     }
                     var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);

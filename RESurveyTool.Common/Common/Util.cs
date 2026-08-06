@@ -1492,7 +1492,7 @@ namespace ERPCore.Common
                 return $"DELETE FROM [{typeof(T).Name}] WHERE [{keyColumn}] = '{keyId}'";
         }
 
-        public static string BuildBulkDeleteQuery<T>(List<int> ids, string keyColumn, string userName, bool isRemove = true) where T : class
+        public static string BuildBulkDeleteQuery<T>(List<long> ids, string keyColumn, string userName, bool isRemove = true) where T : class
         {
             if (!isRemove)
             {

@@ -17,5 +17,6 @@ namespace ERPCore.Models.Migration.Config
         public bool? ForceReloadPage { get; set; } = false;
         public DateTime? ReloadCacheTime { get; set; }
         public DateTime? ReloadPageTime { get; set; }
+        public bool IsGuideLater { get; set; } = false;
     }
 }

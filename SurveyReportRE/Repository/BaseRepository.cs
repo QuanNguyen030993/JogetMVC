@@ -87,7 +87,7 @@ public interface IBaseRepository<T> where T : class
     Task<T> UpdateData(T entity, string changeFields, long? keyId, string keyField);
     Task<T> UpdateData(T sourceEntity, T targetEntity, string[] changeFields, string keyField);
     Task<T> DeleteData(T entity, object keyId, string keyField, bool isRemove);
-    Task<T> BulkDelete(List<int> ids, string keyField, bool isRemove);
+    Task<T> BulkDelete(List<long> ids, string keyField, bool isRemove);
     Task BulkInsertAsync(IEnumerable<T> entities);
     Task BulkUpdateAsync(IEnumerable<T> entities, string[] updateFields, string keyField);
     Task BulkDeleteAsync(IEnumerable<object> ids, string keyField, bool isRemove);
@@ -576,7 +576,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
         }
     }
 
-    public async Task<T> BulkDelete(List<int> ids, string keyField, bool isRemove)
+    public async Task<T> BulkDelete(List<long> ids, string keyField, bool isRemove)
     {
         using (var connection = new SqlConnection(_connectionString))
         {

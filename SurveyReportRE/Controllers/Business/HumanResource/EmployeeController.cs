@@ -250,7 +250,7 @@ public class EmployeeController : BaseControllerApi<Employee>
         await using var connection = new SqlConnection(_BaseRepository._connectionString);
         var totalLoginHours = await connection.QuerySingleOrDefaultAsync<decimal?>(@"
             SELECT TotalLoginHours
-            FROM dbo.Employee WITH (NOLOCK)
+            FROM dbo.UsersCache WITH (NOLOCK)
             WHERE AccountName = @AccountName AND Deleted = 0",
             new { AccountName = accountName }) ?? 0;
 

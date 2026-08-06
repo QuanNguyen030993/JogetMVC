@@ -167,6 +167,21 @@
                     else apiGuideCache.push(clone(savedGuide));
                 }
                 return savedGuide;
+                //debugger
+                //ajaxPut('/api/GuideStep/UpdateData',
+                //    {
+                //        key: guide.key,
+                //        values: JSON.stringify(guide)
+                //    },
+                //    {
+                //        onSuccess: function (response) {
+                //            globalLoadPanel.dxLoadPanel("instance").hide();
+                //        },
+                //        onError: function (err) {
+                //            globalLoadPanel.dxLoadPanel("instance").hide();
+                //        }
+                //    }
+                //);
             } catch (error) {
                 console.warn("Guide API save failed.", error);
                 throw error;
@@ -564,7 +579,7 @@
         root.className = "ug-studio";
         root.innerHTML = `
             <div class="ug-studio-backdrop"></div>
-            <aside class="ug-studio-panel" role="dialog" aria-modal="true" aria-labelledby="ugStudioTitle">
+            <div class="ug-studio-panel" role="dialog" aria-modal="true" aria-labelledby="ugStudioTitle">
                 <header class="ug-studio-head">
                     <div><span class="ug-kicker">USER GUIDANCE</span><h2 id="ugStudioTitle">Guide Studio</h2></div>
                     <button type="button" class="ug-icon-button ug-studio-close" aria-label="Close">&times;</button>
@@ -583,6 +598,8 @@
                         <label>Show below login hours<input type="number" min="0" step="0.25" class="ug-input" data-guide-field="maxLoginHours" /></label>
                         <label class="ug-check-field"><input type="checkbox" data-guide-field="autoStart" /> Auto-start when eligible</label>
                     </div>
+              
+                    <div id="experienceLevelId" data-guide-field="experienceLevelId" style="z-index: 100000"></div>
                     <div class="ug-tabs" role="tablist">
                         <button type="button" class="ug-tab is-active" data-tab="manual">Manual capture</button>
                         <button type="button" class="ug-tab" data-tab="wiki">From wiki</button>
@@ -621,7 +638,7 @@
                     <button type="button" class="ug-button ug-secondary ug-preview">Preview</button>
                     <button type="button" class="ug-button ug-primary ug-save">Save guide</button>
                 </footer>
-            </aside>`;
+            </div>`;
         document.body.appendChild(root);
         bindStudio(root);
         return root;
@@ -630,9 +647,16 @@
     function updateDraftFromFields(root) {
         root.querySelectorAll("[data-guide-field]").forEach(input => {
             const field = input.dataset.guideField;
+            if (field === "experienceLevelId") {
+                //alert($(`#${field}`).dxSelectBox("instance").option("value"));
+                studioState.guide[field] = $(`#${field}`).dxSelectBox("instance").option("value");
+            }
+            else {
+
             studioState.guide[field] = input.type === "checkbox"
                 ? input.checked
                 : (field === "maxLoginHours" ? Math.max(0, Number(input.value) || 0) : input.value);
+            }
         });
         const selected = studioState.guide.steps[studioState.selectedStep];
         if (selected) {
@@ -693,6 +717,7 @@
         };
         const databaseSteps = Array.isArray(guide?.steps)
             ? guide.steps.map((step, index) => {
+                
                 const waitTimeout = Number(step.waitTimeout);
                 return {
                     id: step.id || uid("step"),
@@ -730,6 +755,15 @@
             studioState.guide = mapDatabaseGuide(guide);
             studioState.selectedStep = studioState.guide.steps.length ? 0 : -1;
             renderStudio(root);
+            $(`#experienceLevelId`).dxSelectBox({
+                items: _enums.ExperienceLevel,
+                valueExpr: 'id',
+                displayExpr: 'value',
+                searchEnabled: true,
+                width: "100%",
+                height: 40
+        }
+            );
         } finally {
             guidePicker.disabled = false;
         }
@@ -897,6 +931,7 @@
             saveButton.disabled = true;
             saveButton.textContent = "Saving...";
             try {
+                debugger
                 studioState.guide.key = studioState.guide.key.trim() || studioState.guide.id;
                 studioState.guide = await storage.save(studioState.guide);
                 const savedIdentity = studioState.guide.id || studioState.guide.key;
@@ -1034,17 +1069,17 @@
     }
 
     async function startEligible() {
-        if (activeTour || document.querySelector("#tmivGuideStudio.is-visible") || document.body.classList.contains("ug-capture-active")) return false;
-        const guides = await storage.list();
-        const guide = guides.find(item =>
-            item.enabled !== false
-            && item.autoStart === true
-            && item.isEligible !== false
-            && sessionStorage.getItem(`tmiv.guide-shown.${item.key || item.id}.v${item.version || 1}`) !== "true"
-        );
-        if (!guide) return false;
-        sessionStorage.setItem(`tmiv.guide-shown.${guide.key || guide.id}.v${guide.version || 1}`, "true");
-        return start(guide);
+        //if (activeTour || document.querySelector("#tmivGuideStudio.is-visible") || document.body.classList.contains("ug-capture-active")) return false;
+        //const guides = await storage.list();
+        //const guide = guides.find(item =>
+        //    item.enabled !== false
+        //    && item.autoStart === true
+        //    && item.isEligible !== false
+        //    && sessionStorage.getItem(`tmiv.guide-shown.${item.key || item.id}.v${item.version || 1}`) !== "true"
+        //);
+        //if (!guide) return false;
+        //sessionStorage.setItem(`tmiv.guide-shown.${guide.key || guide.id}.v${guide.version || 1}`, "true");
+        //return start(guide);
     }
 
     document.addEventListener("keydown", event => {

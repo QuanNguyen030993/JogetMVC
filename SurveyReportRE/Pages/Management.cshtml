@@ -9,7 +9,6 @@
 <script src="~/js/app/appUtil.js"></script>
 <link rel="stylesheet" href="~/css/app/user-guide.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/lib/tmivcom/style.css" asp-append-version="true" />
-<script src="~/js/app/userGuide.js" asp-append-version="true"></script>
 @await Html.PartialAsync("_EnumConstant")
 @await Html.PartialAsync("_EntityConstant")
 <script>
@@ -1379,7 +1378,6 @@
             $count.text("").hide();
             hideNotificationDot();
         } else {
-            console.log(n);
             $count.text(n > 99 ? "99+" : n).show();
             showNotificationDot();
         }
@@ -1470,7 +1468,6 @@
                     searchExpr: ["text"],
                     placeholder: "Notification category",
                     onValueChanged: function (e) {
-                        debugger
                         _notif.currentFilter = e.value || "all";
                          refreshNotifUI();
                     }
