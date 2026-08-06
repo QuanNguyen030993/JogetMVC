@@ -134,13 +134,14 @@
                      allowEditing: false,
                      cellTemplate: function (container, options) {
                         var x = options.data.AttachmentElement[0];
-                           const fileName = x.attr("aria-fileName");
-                        const ext = x.attr("aria-ext");
-                        const size = x.attr("aria-size");
-                        const downloadUrl = x.attr("aria-downloadUrl");
-                        const id = x.attr("aria-id");
-                        const author = x.attr("aria-author");
-                        const date = x.attr("aria-date");
+                        debugger
+                              const fileName = $(x).attr("aria-fileName");
+    const ext = $(x).attr("aria-ext");
+    const size = $(x).attr("aria-size");
+    const downloadUrl = $(x).attr("aria-downloadUrl");
+    const id = $(x).attr("aria-id");
+    const author = $(x).attr("aria-author");
+    const date = $(x).attr("aria-date");
                         const $item = $("<div>")
                             .addClass("att-item")
                             .css({
