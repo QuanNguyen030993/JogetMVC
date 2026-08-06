@@ -655,7 +655,7 @@
 
                                     var attributesData = new Object();
                                     attributesData.Attributes = new Object();
-                                    var uploader = $(`#fileUpload_${sectionName}_${id}`).dxFileUploader("instance");
+                                    var uploader = $(`#${window.IdManager.attachmentControlHost(sectionName, id)}`).dxFileUploader("instance");
 
 
                                     var formData = new FormData();
@@ -4262,9 +4262,8 @@
                 //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
                     var condition = safeJsonParse(findRoute.data) || {};
                 if (condition.source == "form") {
-                        // const uploader1 = $(`[id^='attList_qt-body_FO_RES_default_${formItems.id}_'] .att-item.animate-step.visible`);
-                        // const fileCount1 = uploader1.length || 0; // number of quote docs
-                            var result = extractAttachmentQuantity(`attList_qt-body_FO_RES_default_${formItems.id}_`);
+                            const resAttachmentControlId = window.IdManager.attachmentSectionKey("qt-body_FO_RES", "default", formItems.id);
+                            const result = extractAttachmentQuantity(getAttachmentPreviewItemsByControlId(resAttachmentControlId));
                          formItems.hasResAttachment =  result.fileCount > 0 ? true : false;
                     // formItems = window.QuotationPage.state.formFO.dxForm("instance").option("formData");
                     // formItems.hasResAttachment = window.QuotationPage.state.hasResAttachment;
@@ -4356,10 +4355,9 @@
 
             }
 
-            function extractAttachmentQuantity(attachmentControlId){
-                          const uploader = $(`[id^='${attachmentControlId}'] .att-item`);
-                            const fileCount = uploader.length || 0; // number of quote docs
-                            return {uploader: uploader,fileCount: fileCount}
+            function extractAttachmentQuantity(attachmentItems){
+                const fileCount = attachmentItems.length || 0;
+                return { uploader: attachmentItems, fileCount: fileCount };
             }
 
             function parseWorkflowNodeScreenConditions(node) {
@@ -4789,7 +4787,8 @@
                             const data = useRecordSnapshot
                                 ? recordData.filter(item => attachmentBelongsToFolder(item, combine))
                                 : recordData;
-                            const $preview = $(`#attList_${sectionName}_${renderTime}`);
+                            const attachmentHostIds = window.IdManager.attachmentHostIds(sectionName, renderTime);
+                            const $preview = $(`#${attachmentHostIds.preview}`);
                             renderAttachmentListLazy(data, $preview, {
                                 batchSize: 6,
                                 delay: 16,
@@ -4806,8 +4805,6 @@
                                     loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime, true);
                                 }
                             });
-                                var uploader = $(`#fileUpload_${sectionName}_${renderTime}`).dxFileUploader("instance")
-                                uploader?.option("storageData",data || {});
                                 hideUploaderLoader(editorOptions.uploaderId);
                         })
                         .catch(function (error) {
@@ -4816,11 +4813,9 @@
                         });
               }
               else {
-                           const $preview = $(`#attList_${editorOptions.controlId}_${renderTime}`);
-                      var data = [];
-                          var uploader = $(`#fileUpload_${editorOptions.controlId}_${renderTime}`).dxFileUploader("instance");
-                          if (!uploader) return;
-                      data = uploader.option("value") || [];
+                          const attachmentHostIds = window.IdManager.attachmentHostIds(editorOptions.controlId, renderTime);
+                          const $preview = $(`#${attachmentHostIds.preview}`);
+                          const data = $(`#${attachmentHostIds.uploader}`).fileuploader("option", "value") || [];
                                 renderAttachmentListLazy(data, $preview, {
                                     batchSize: 6,
                                     delay: 16,
@@ -4979,11 +4974,13 @@
             // var uploaderAllow = editorOptionsIn.uploaderAllow == null ? true : editorOptionsIn.uploaderAllow;
             // editorOptionsIn.uploaderAllow = uploaderAllow;
 
-            $(`#${editorOptionsIn.previewId}`).remove();
-            $(`#${controlId}`).remove();
+            const attachmentHostIds = window.IdManager.attachmentHostIds(controlId, renderTime);
+            const previewBaseId = window.IdManager.attachmentPreviewBase(controlId);
+            const uploaderBaseId = window.IdManager.attachmentControlBase(controlId);
+            $container.find(`[id^='${previewBaseId}_'], [id^='${uploaderBaseId}_']`).remove();
             // const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
             const dropZoneId = `attachmentDropZone_${controlId}_${renderTime}`;
-            const $preview = $(`<div id="attList_${controlId}_${renderTime}" class="att-preview"></div>`)
+            const $preview = $(`<div id="${attachmentHostIds.preview}" class="att-preview"></div>`)
                 .appendTo($container);
             // const $dropZone = $(`
             //         <div id="${dropZoneId}"
@@ -5002,7 +4999,7 @@
             //         </div>`)
             //         .toggle(!!isRenderUploader)
             //         .appendTo($container);
-            const $uploader = $(`<div id="fileUpload_${controlId}_${renderTime}"></div>`)
+            const $uploader = $(`<div id="${attachmentHostIds.uploader}"></div>`)
                  .appendTo($container)
              $uploader.fileuploader({
                 guid: editorOptionsIn.guid,
@@ -5156,8 +5153,8 @@
                 $section.data("attachmentCanEdit", !!canEdit);
                 $section.find(".dx-fileuploader").each(function () {
                     $(this).dxFileUploader("instance")?.option("disabled", !canEdit);
-                });//attList_qt-body_TS__default_564_1786001889416
-                $section.find(`[id^='fileUpload_']`).each(function () {
+                }
+                $section.find(window.IdManager.attachmentControlHostsSelector()).each(function () {
                     $(this).fileuploader({disabled: !canEdit});
                 });
                 $section.find(".attachment-drop-zone")
@@ -7087,7 +7084,7 @@
                     editorOptions.uploadTitle = "Images";
                     var $imagePreview = $(`<div id='imagePreview_${editorOptions.refKey}_${editorOptions.outline.id}' class='imagePreview' style='display: flex; flex-wrap: wrap; gap: 25px;top: 10px'>`).appendTo($container);
 
-                    $(`<div id="fileUpload_${editorOptions.ModelName}_${editorOptions.id}">`).dxFileUploader({
+                    $(`<div id="${window.IdManager.fileUploaderId(editorOptions.ModelName, editorOptions.id)}">`).dxFileUploader({
                         readOnly: editorOptions.isReadOnly ? editorOptions.isReadOnly : false,
                         multiple: true,
                         accept: "image/*",
@@ -9609,15 +9606,10 @@
                  },1);
              });
          }
-         function findPreviewItem(name, prefix, dept, type, quotationId){
-             //attList_qt-body_TS__default_564_1786001889416
-             const attachmentPreviewId =  window.IdManager.attachmentPreviewList(name, prefix, dept, type, quotationId);
-             const uploaderId = $(`[id^='${attachmentPreviewId}_'] .att-item`);
-             return uploaderId;
+         function getAttachmentPreviewItems(name, prefix, dept, type, quotationId){
+             return $(window.IdManager.attachmentPreviewItemsSelector(name, prefix, dept, type, quotationId));
          }
-          function findAttachemtControlItem(name, prefix, dept, type, quotationId){
-             const attachmentPreviewId =  window.IdManager.attachmentControl(name, prefix, dept, type, quotationId);
-             const uploaderId = $(`[id^='${attachmentPreviewId}_']`);
-             return uploaderId;
+         function getAttachmentPreviewItemsByControlId(controlId) {
+             return $(window.IdManager.attachmentPreviewItemsByControlIdSelector(controlId));
          }
 </script>

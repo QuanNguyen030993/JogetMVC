@@ -83,7 +83,7 @@
     that2.sectionName = "@(dept)";
     that2.titleName = "Upload Supporting Document";
     that2.uploaderAllow = _role == "@dept";
-    that2.data = { SectionName: `${sectionIdQt}_${that2.moduleName}_@(cloneId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
+    that2.data = { SectionName: window.IdManager.attachmentSectionKey(sectionIdQt, that2.moduleName, @(cloneId)), Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
 
     var that3 = new Object();
     that3.ModelName = "PolicyIssuance";
@@ -96,7 +96,7 @@
     that3.sectionName = "@(dept)";
     that3.titleName = "Upload Document";
     that3.uploaderAllow = _role == "@dept";
-    that3.data = { SectionName: `${sectionId}_${that3.moduleName}_@(policyIssuanceId)`, Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
+    that3.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that3.moduleName, @(policyIssuanceId)), Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
 
 
     var  mainFields = [{itemType: "group",caption: "Fill List",colCount:1,items: [
@@ -176,7 +176,7 @@
                          that.titleName = "Upload Document";
                          that.baseOnAttributes = "FieldName";
                         var sectionId = "@(ViewData["Cd"])";
-                         that.data = { SectionName: `${sectionId}_${data.field}_@(policyIssuanceId)`, Department: "@(dept)", FieldName: `${data.field}_@(policyIssuanceId)` }; //{"SectionName":"default_FO_410"}
+                         that.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, data.field, @(policyIssuanceId)), Department: "@(dept)", FieldName: `${data.field}_@(policyIssuanceId)` }; //{"SectionName":"default_FO_410"}
                          editor = $("<div>");
                          createEditor(that, editor, $(`<div>`), that);
                          break;

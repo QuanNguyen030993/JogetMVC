@@ -24,15 +24,8 @@
         var quotationId = @quotationId;
         function prepareData(element) {
             debugger
-            // var uploaderId = "fileUpload_@(prefix)_default_@(dept)_@(quotationId)";
-            // const attachmentPreviewId =  window.IdManager.attachmentPreviewList("body", "@(prefix)", "@(dept)", "default", @(quotationId));
-             var uploaderId = findAttachemtControlItem("body", "@(prefix)", "@(dept)", "default", @(quotationId));
-             const uploaderId2 = findPreviewItem("body", "@(prefix)", "@(dept)", "default", @(quotationId));
-             //attList_qt-body_TS__default_564_1786001889416
-                    // const uploaderId2 = $(`[id^='${attachmentPreviewId}_'] .att-item`);
-                    // const uploader2 = $(`[id^='attList_@(prefix)-body_@(dept)__supportingDoc_@(quotationId)_'] .att-item`);
-                const fileCount = uploaderId2.length || 0; // number of quote docs
-                // const fileCount2 = uploader2.length || 0; // number of sup docs
+            const quotationAttachmentItems = getAttachmentPreviewItems("body", "@(prefix)", "@(dept)", "default", @(quotationId));
+            const fileCount = quotationAttachmentItems.length || 0;
                 var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
                 
             // var uploader = $(`[id^='${uploaderId}']`).dxFileUploader("instance"); change due to new uploader control
@@ -42,7 +35,7 @@
             }
             // var fileData = uploader.option("storageData") || [];
             data = [];
-            $.each(uploaderId2,function (index, el) {
+            $.each(quotationAttachmentItems,function (index, el) {
                 debugger
              const $el = $(el);
 
@@ -328,9 +321,6 @@
 
     function openMakeOptionPopup_@(quotationId)() {
          if (!prepareData()) return;
-        // const quotationFiles = $(`[id^='attList_@(prefix)-body_@(dept)__default_@(quotationId)_'] .att-item`);
-        // const fileCount = quotationFiles.length || 0;
-
         var popupInstance = makePopupWithScroll(
             renderOptionQuotationGrid(),
             "medium",
@@ -373,8 +363,7 @@
     }
 
     function requestMakeOption_@(quotationId)() {
-        debugger
-        const quotationFiles = $(`[id^='attList_@(prefix)-body_@(dept)__default_@(quotationId)_'] .att-item`);
+        const quotationFiles = getAttachmentPreviewItems("body", "@(prefix)", "@(dept)", "default", @(quotationId));
         const fileCount = quotationFiles.length || 0;
 
         if (fileCount <= 1) {

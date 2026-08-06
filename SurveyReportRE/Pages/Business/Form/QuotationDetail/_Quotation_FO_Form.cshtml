@@ -42,7 +42,7 @@
     that.sectionName = "@(dept)";
     that.titleName = "Upload Quotation";
     that.uploaderAllow = _role == "@dept";
-    that.data = { SectionName: `${sectionId}_${that.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" };; //{"SectionName":"default_FO_410"}
+    that.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that.moduleName, @(quotationId)), Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" };; //{"SectionName":"default_FO_410"}
 
 
     var that2 = new Object();
@@ -55,7 +55,7 @@
     that2.titleName = "Upload Supporting Document";
     // that2.uploaderAllow = _role == "@dept";
     that2.uploaderAllow = _role == "@dept";
-    that2.data = { SectionName: `${sectionId}_${that2.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
+    that2.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that2.moduleName, @(quotationId)), Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
 
          var sectionId =  "qt-body_@(dept)_RES";
 
@@ -68,7 +68,7 @@
       thatRes.sectionName = "@(dept)";
       thatRes.titleName = "Upload RES Form";
       thatRes.uploaderAllow = _role == "@dept";
-      thatRes.data = { SectionName: `${sectionId}_${thatRes.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: thatRes.moduleName, FormId: "@(QTViewIdHelper.Form(dept, quotationId))" }; //{"SectionName":"default_FO_410"}
+      thatRes.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, thatRes.moduleName, @(quotationId)), Department: "@(dept)", FieldName: thatRes.moduleName, FormId: "@(QTViewIdHelper.Form(dept, quotationId))" }; //{"SectionName":"default_FO_410"}
 
 
      var acceptDecisionV2 = {
