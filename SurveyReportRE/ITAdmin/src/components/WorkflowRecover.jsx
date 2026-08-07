@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { API_BASE_URL } from "../config";
+import appsettings from '../../../host.json';
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
 import Flow from "../../../BusinessForm/src/components/Flow";
 
@@ -71,7 +71,7 @@ export default function WorkflowRecover() {
   // WorkflowDefinition query state
   const [workflowDefDbId, setWorkflowDefDbId] = useState(null);
   const [loadingWorkflowDef, setLoadingWorkflowDef] = useState(false);
-
+   
   // Extract unique nodes dynamically from transition steps
   const uniqueNodes = useMemo(() => {
     const nodeMap = new Map();
@@ -156,7 +156,7 @@ export default function WorkflowRecover() {
 
     try {
       setLoadingWorkflowDef(true);
-      const res = await fetch(`${API_BASE_URL}/api/WorkflowDefinition/GetAll?refKey=${workflow.workflowDefinitionId}&refField1=guid&take=999`);
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/WorkflowDefinition/GetAll?refKey=${workflow.workflowDefinitionId}&refField1=guid&take=999`);
       if (res.ok) {
         const data = await res.json();
         const list = Array.isArray(data) ? data : [];
@@ -189,7 +189,7 @@ export default function WorkflowRecover() {
       setSelectedNodeId("");
 
       const response = await fetch(
-        `${API_BASE_URL}/api/StepsWorkflow/GetAll?refField=WorkflowDefinitionId&refKey=${workflow.workflowDefinitionId}&take=9999`,
+        `${appsettings.UrlConfig.Host}/api/StepsWorkflow/GetAll?refField=WorkflowDefinitionId&refKey=${workflow.workflowDefinitionId}&take=9999`,
       );
       if (!response.ok) throw new Error("Load StepsWorkflow failed");
 
@@ -270,7 +270,7 @@ export default function WorkflowRecover() {
       setSaving(true);
       setMessage("");
 
-      const response = await fetch(`${API_BASE_URL}/api/InstanceWorkflow/RecoverWorkflow`, {
+      const response = await fetch(`${appsettings.UrlConfig.Host}/api/InstanceWorkflow/RecoverWorkflow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -325,7 +325,7 @@ export default function WorkflowRecover() {
             key={refreshKey}
             ref={gridRef}
             modelName="InstanceWorkflow"
-            apiBaseUrl={API_BASE_URL}
+            apiBaseUrl={appsettings.UrlConfig.Host}
             columns={workflowColumns}
             gridOption={workflowGridOption}
             toolbarItems={[

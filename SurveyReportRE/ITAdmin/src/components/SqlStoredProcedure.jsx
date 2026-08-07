@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
 import CustomForm from "../../../TMIVCom/src/components/CustomForm";
 import { notify } from "../../../TMIVCom/src/components/Notification";
-import { API_BASE_URL } from "../config";
+import appsettings from '../../../host.json';
 import "../styles/sqlstoredprocedure.css";
 
 export default function SqlStoredProcedure() {
@@ -27,7 +27,7 @@ export default function SqlStoredProcedure() {
     const [showFormModal, setShowFormModal] = useState(false);
     const [editingProcId, setEditingProcId] = useState(0); // 0 = insert, >0 = update
     const [modalTitle, setModalTitle] = useState("Thêm Stored Procedure");
-
+   
     // Static definition of schema columns for CustomForm
     const formColumns = [
         { 
@@ -55,7 +55,7 @@ export default function SqlStoredProcedure() {
         setExecError(null);
         setParamValues({});
         try {
-            const res = await fetch(`${API_BASE_URL}/api/SqlStoredProcedure/GetSingle/${procId}`);
+            const res = await fetch(`${appsettings.UrlConfig.Host}/api/SqlStoredProcedure/GetSingle/${procId}`);
             if (res.ok) {
                 const data = await res.json();
                 setProcDetails(data);
@@ -116,7 +116,7 @@ export default function SqlStoredProcedure() {
         });
 
         try {
-            const res = await fetch(`${API_BASE_URL}/api/SqlStoredProcedure/Execute`, {
+            const res = await fetch(`${appsettings.UrlConfig.Host}/api/SqlStoredProcedure/Execute`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -159,7 +159,7 @@ export default function SqlStoredProcedure() {
 
         try {
             const formBody = `key=${encodeURIComponent(procDetails.id)}`;
-            const res = await fetch(`${API_BASE_URL}/api/SqlStoredProcedure/DeleteData`, {
+            const res = await fetch(`${appsettings.UrlConfig.Host}/api/SqlStoredProcedure/DeleteData`, {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
@@ -250,7 +250,7 @@ export default function SqlStoredProcedure() {
                     <CustomGrid
                         ref={gridRef}
                         columns={gridColumns}
-                        apiBaseUrl={API_BASE_URL}
+                        apiBaseUrl={appsettings.UrlConfig.Host}
                         showSelectionCheckbox={false}
                         showCommandsColumn={false}
                         onRowClick={handleGridRowClick}

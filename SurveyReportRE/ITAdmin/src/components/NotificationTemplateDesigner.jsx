@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { API_BASE_URL } from "../config";
+import appsettings from '../../../host.json';
 import grapesjs from "grapesjs";
 import { notify } from "../../../TMIVCom/src/components/Notification";
 import "../styles/notificationTemplateDesigner.css";
@@ -19,17 +19,17 @@ function NotificationTemplateDesigner() {
     const [typeId, setTypeId] = useState("");
     const [isActive, setIsActive] = useState(true);
     const [sqlQuery, setSqlQuery] = useState("");
-
+   
     // Load templates & EnumData on mount
     useEffect(() => {
         // Load Notification Templates
-        fetch(`${API_BASE_URL}/api/NotificationTemplate/GetAll`)
+        fetch(`${appsettings.UrlConfig.Host}/api/NotificationTemplate/GetAll`)
             .then(res => res.json())
             .then(data => setTemplates(data || []))
             .catch(err => console.error("Fetch NotificationTemplates error", err));
 
         // Load EnumData list for NotificationType select
-        fetch(`${API_BASE_URL}/api/EnumData/GetAll?take=9999`)
+        fetch(`${appsettings.UrlConfig.Host}/api/EnumData/GetAll?take=9999`)
             .then(res => res.json())
             .then(data => setEnumList(data || []))
             .catch(err => console.error("Fetch EnumData error", err));
@@ -151,7 +151,7 @@ function NotificationTemplateDesigner() {
             const formData = new FormData();
             formData.append("values", JSON.stringify(newTemplate));
 
-            const res = await fetch(`${API_BASE_URL}/api/NotificationTemplate/InsertData`, {
+            const res = await fetch(`${appsettings.UrlConfig.Host}/api/NotificationTemplate/InsertData`, {
                 method: "POST",
                 body: formData
             });
@@ -198,7 +198,7 @@ function NotificationTemplateDesigner() {
             formData.append("key", updatedTemplate.id);
             formData.append("values", JSON.stringify(updatedTemplate));
 
-            const res = await fetch(`${API_BASE_URL}/api/NotificationTemplate/UpdateData`, {
+            const res = await fetch(`${appsettings.UrlConfig.Host}/api/NotificationTemplate/UpdateData`, {
                 method: "PUT",
                 body: formData
             });
@@ -221,7 +221,7 @@ function NotificationTemplateDesigner() {
 
         try {
             const formBody = `key=${encodeURIComponent(id)}`;
-            const res = await fetch(`${API_BASE_URL}/api/NotificationTemplate/DeleteData`, {
+            const res = await fetch(`${appsettings.UrlConfig.Host}/api/NotificationTemplate/DeleteData`, {
                 method: "DELETE",
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { API_BASE_URL } from '../config';
+import appsettings from '../../../host.json';
 import {
     useEdgesState,
     useNodesState,
@@ -9,6 +9,8 @@ import Diagram, { createNodeStyle } from './Diagram';
 import '@xyflow/react/dist/style.css';
 import CustomGrid from '../../../TMIVCom/src/components/CustomGrid';
 import { notify } from '../../../TMIVCom/src/components/Notification';
+
+
 
 const nodeTemplates = [
     {
@@ -534,7 +536,7 @@ function Flow({ id: propId }) {
     }, [edges]);
 
     useEffect(() => {
-        fetch(`${API_BASE_URL}/api/EnumData/FetchEnum/OverallStatus`)
+        fetch(`${appsettings.UrlConfig.Host}/api/EnumData/FetchEnum/OverallStatus`)
             .then(r => r.json())
             .then(data => setStatusList(data || []))
             .catch(err => console.error("Failed to load OverallStatus enums:", err));
@@ -625,7 +627,7 @@ function Flow({ id: propId }) {
             setError(null);
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/WorkflowDefinition/GetSingle/${workflowDefinitionId}`);
+                const response = await fetch(`${appsettings.UrlConfig.Host}/api/WorkflowDefinition/GetSingle/${workflowDefinitionId}`);
                 if (!response.ok) {
                     throw new Error(`API error ${response.status}`);
                 }
@@ -781,7 +783,7 @@ function Flow({ id: propId }) {
                 workflowNodes: JSON.stringify(payload)
             }));
 
-            const response = await fetch(`${API_BASE_URL}/api/WorkflowDefinition/UpdateData`, {
+            const response = await fetch(`${appsettings.UrlConfig.Host}/api/WorkflowDefinition/UpdateData`, {
                 method: "PUT",
                 body: formData
             });
@@ -977,7 +979,7 @@ function Flow({ id: propId }) {
                 Steps: stepsPayload
             };
 
-            const response = await fetch(`${API_BASE_URL}/api/StepsWorkflow/BuildSteps`, {
+            const response = await fetch(`${appsettings.UrlConfig.Host}/api/StepsWorkflow/BuildSteps`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1011,7 +1013,7 @@ function Flow({ id: propId }) {
 
         try {
             // Query InstanceWorkflow matching the RecordGuid
-            const response = await fetch(`${API_BASE_URL}/api/InstanceWorkflow/GetAll?refField=RecordGuid&refKey=${searchRecordGuid}`);
+            const response = await fetch(`${appsettings.UrlConfig.Host}/api/InstanceWorkflow/GetAll?refField=RecordGuid&refKey=${searchRecordGuid}`);
             if (!response.ok) {
                 throw new Error(`Instance API returned status ${response.status}`);
             }
@@ -1078,7 +1080,7 @@ function Flow({ id: propId }) {
 
     useEffect(() => {
         // Load Mail Templates
-        fetch(`${API_BASE_URL}/api/MailTemplate/GetAll`)
+        fetch(`${appsettings.UrlConfig.Host}/api/MailTemplate/GetAll`)
             .then((res) => {
                 if (!res.ok) throw new Error('API status ' + res.status);
                 return res.json();
@@ -1091,7 +1093,7 @@ function Flow({ id: propId }) {
             .catch((err) => console.error("Failed to load Mail Templates:", err));
 
         // Load Notification Templates
-        fetch(`${API_BASE_URL}/api/NotificationTemplate/GetAll`)
+        fetch(`${appsettings.UrlConfig.Host}/api/NotificationTemplate/GetAll`)
             .then((res) => {
                 if (!res.ok) throw new Error('API status ' + res.status);
                 return res.json();

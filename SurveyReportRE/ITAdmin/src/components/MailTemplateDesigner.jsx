@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { API_BASE_URL } from "../config";
+import appsettings from '../../../host.json';
 import grapesjs from "grapesjs";
 import { notify } from "../../../TMIVCom/src/components/Notification";
 import "../styles/mailTemplateDesigner.css";
@@ -64,7 +64,7 @@ const FIELDS = [
    
 ];
 useEffect(() => {
-    fetch(`${API_BASE_URL}/api/MailTemplate/GetAll`)
+    fetch(`${appsettings.UrlConfig.Host}/api/MailTemplate/GetAll`)
         .then(res => res.json())
         .then(data => {
             setTemplates(data);
@@ -141,7 +141,7 @@ const createTemplate = async () => {
         formData.append("values", JSON.stringify(newTemplate));
 
         const res = await fetch(
-            `${API_BASE_URL}/api/MailTemplate/InsertData`,
+            `${appsettings.UrlConfig.Host}/api/MailTemplate/InsertData`,
             {
                 method: "POST",
                 body: formData
@@ -622,7 +622,7 @@ const saveTemplate = async () => {
         formData.append("key", formItems.id);
         formData.append("values", JSON.stringify(formItems));
 
-        const res = await fetch(`${API_BASE_URL}/api/MailTemplate/UpdateData`, {
+        const res = await fetch(`${appsettings.UrlConfig.Host}/api/MailTemplate/UpdateData`, {
             method: "PUT",
             body: formData // ✅ KHÔNG set header
         });

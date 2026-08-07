@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { API_BASE_URL } from '../config';
+import appsettings from '../../../host.json';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-
+  
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/Users/GetAll`)
+    fetch(`${appsettings.UrlConfig.Host}/api/Users/GetAll`)
       .then((res) => {
         if (!res.ok) throw new Error('Failed to load users');
         return res.json();

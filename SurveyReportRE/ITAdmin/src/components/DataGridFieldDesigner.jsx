@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { API_BASE_URL } from "../config";
+import appsettings from '../../../host.json';
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
 import { notify } from "../../../TMIVCom/src/components/Notification";
 
@@ -50,11 +50,11 @@ export default function DataGridFieldDesigner() {
   const [deletedIds, setDeletedIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
+   
   const loadTables = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/SysTable/GetAll`);
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/SysTable/GetAll`);
       console.log(res);
       if (!res.ok) throw new Error("Load tables failed");
       const data = await res.json();
@@ -78,7 +78,7 @@ export default function DataGridFieldDesigner() {
     }
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/DataGridConfig/GetAll?take=9999`);
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/DataGridConfig/GetAll?take=9999`);
       if (!res.ok) throw new Error("Load grid configs failed");
       const data = await res.json();
       console.log(res);
@@ -156,7 +156,7 @@ export default function DataGridFieldDesigner() {
       for (const id of deletedIds) {
         const formData = new FormData();
         formData.append("key", id);
-        await fetch(`${API_BASE_URL}/api/DataGridConfig/DeleteData`, {
+        await fetch(`${appsettings.UrlConfig.Host}/api/DataGridConfig/DeleteData`, {
           method: "DELETE",
           body: formData
         });
@@ -184,7 +184,7 @@ export default function DataGridFieldDesigner() {
         if (f.id > 100000000000) {
           // Insertion
           formData.append("values", JSON.stringify(payload));
-          await fetch(`${API_BASE_URL}/api/DataGridConfig/InsertData`, {
+          await fetch(`${appsettings.UrlConfig.Host}/api/DataGridConfig/InsertData`, {
             method: "POST",
             body: formData
           });
@@ -193,7 +193,7 @@ export default function DataGridFieldDesigner() {
           payload.id = f.id;
           formData.append("key", f.id);
           formData.append("values", JSON.stringify(payload));
-          await fetch(`${API_BASE_URL}/api/DataGridConfig/UpdateData`, {
+          await fetch(`${appsettings.UrlConfig.Host}/api/DataGridConfig/UpdateData`, {
             method: "PUT",
             body: formData
           });

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
 import CustomForm from "../../../TMIVCom/src/components/CustomForm";
 import { notify } from "../../../TMIVCom/src/components/Notification";
-import { API_BASE_URL } from "../config";
+import appsettings from '../../../host.json';
 import "../styles/notificationtemplate.css";
 
 const getRowVal = (row, field) => {
@@ -20,12 +20,12 @@ export default function NotificationTemplate() {
     const [enumList, setEnumList] = useState([]);
     const [refreshKey, setRefreshKey] = useState(0);
     const [activeTab, setActiveTab] = useState("preview"); // "preview" | "edit"
-
+   
     // Fetch all EnumData once for lookup mappings
     useEffect(() => {
         const fetchEnums = async () => {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/EnumData/GetAll?take=9999`);
+                const res = await fetch(`${appsettings.UrlConfig.Host}/api/EnumData/GetAll?take=9999`);
                 if (res.ok) {
                     const data = await res.json();
                     setEnumList(data || []);
@@ -129,7 +129,7 @@ export default function NotificationTemplate() {
 
         try {
             const formBody = `key=${encodeURIComponent(id)}`;
-            const res = await fetch(`${API_BASE_URL}/api/NotificationTemplate/DeleteData`, {
+            const res = await fetch(`${appsettings.UrlConfig.Host}/api/NotificationTemplate/DeleteData`, {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
@@ -181,7 +181,7 @@ export default function NotificationTemplate() {
                             key={refreshKey}
                             ref={gridRef}
                             columns={gridColumns}
-                            apiBaseUrl={API_BASE_URL}
+                            apiBaseUrl={appsettings.UrlConfig.Host}
                             showSelectionCheckbox={false}
                             showCommandsColumn={false}
                             onRowClick={handleGridRowClick}

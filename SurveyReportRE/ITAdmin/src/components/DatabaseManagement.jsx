@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
 import { notify } from "../../../TMIVCom/src/components/Notification";
-import { API_BASE_URL } from "../config";
+import appsettings from '../../../host.json';
 import "../styles/databasemanagement.css";
 
 export default function DatabaseManagement() {
@@ -26,12 +26,12 @@ export default function DatabaseManagement() {
     const [generatingScript, setGeneratingScript] = useState(false);
     const [generatedScript, setGeneratedScript] = useState("");
     const [scriptAlert, setScriptAlert] = useState(null);
-
+     
     // Fetch the list of tables for selection
     const loadTables = async () => {
         setLoadingTables(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/DatabaseManagement/GetTablesSpaceUsage`);
+            const res = await fetch(`${appsettings.UrlConfig.Host}/api/DatabaseManagement/GetTablesSpaceUsage`);
             if (res.ok) {
                 const data = await res.json();
                 setTablesList(data || []);
@@ -86,7 +86,7 @@ export default function DatabaseManagement() {
         setBackingUp(true);
         setBackupAlert(null);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/DatabaseManagement/BackupDatabase`, {
+            const res = await fetch(`${appsettings.UrlConfig.Host}/api/DatabaseManagement/BackupDatabase`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ backupFolder, backupFileName })
@@ -115,7 +115,7 @@ export default function DatabaseManagement() {
         setOptimizing(true);
         setBackupAlert(null);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/DatabaseManagement/OptimizeBackup`, {
+            const res = await fetch(`${appsettings.UrlConfig.Host}/api/DatabaseManagement/OptimizeBackup`, {
                 method: "POST"
             });
             const data = await res.json();
@@ -149,7 +149,7 @@ export default function DatabaseManagement() {
         setGeneratedScript("");
 
         try {
-            const res = await fetch(`${API_BASE_URL}/api/DatabaseManagement/GenerateScript`, {
+            const res = await fetch(`${appsettings.UrlConfig.Host}/api/DatabaseManagement/GenerateScript`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -255,7 +255,7 @@ export default function DatabaseManagement() {
                             ref={gridRef}
                             modelName="DatabaseManagement"
                             columns={gridColumns}
-                            apiBaseUrl={API_BASE_URL}
+                            apiBaseUrl={appsettings.UrlConfig.Host}
                             showSelectionCheckbox={false}
                             showCommandsColumn={false}
                             gridOption={{

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { API_BASE_URL } from '../config';
+import appsettings from '../../../host.json';
 import { notify } from '../../../TMIVCom/src/components/Notification';
 
 const SlaDesign = () => {
@@ -12,7 +12,7 @@ const SlaDesign = () => {
     // Editor view state
     const [isEditing, setIsEditing] = useState(false);
     const [editingSla, setEditingSla] = useState(null);
-
+   
     // Initial SLA template
     const defaultSlaTemplate = {
         dept: 'UW',
@@ -43,7 +43,7 @@ const SlaDesign = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/SLA/GetAll`);
+            const response = await fetch(`${appsettings.UrlConfig.Host}/api/SLA/GetAll`);
             if (!response.ok) throw new Error(`API returned status ${response.status}`);
             const data = await response.json();
             setSlaList(data || []);
@@ -105,7 +105,7 @@ const SlaDesign = () => {
             const formData = new FormData();
             formData.append('key', String(id));
 
-            const response = await fetch(`${API_BASE_URL}/api/SLA/DeleteData`, {
+            const response = await fetch(`${appsettings.UrlConfig.Host}/api/SLA/DeleteData`, {
                 method: 'DELETE',
                 body: formData
             });
@@ -235,7 +235,7 @@ const SlaDesign = () => {
                     ...dbModel
                 }));
 
-                response = await fetch(`${API_BASE_URL}/api/SLA/UpdateData`, {
+                response = await fetch(`${appsettings.UrlConfig.Host}/api/SLA/UpdateData`, {
                     method: 'PUT',
                     body: formData
                 });
@@ -243,7 +243,7 @@ const SlaDesign = () => {
                 // INSERT (POST)
                 formData.append('values', JSON.stringify(dbModel));
 
-                response = await fetch(`${API_BASE_URL}/api/SLA/InsertData`, {
+                response = await fetch(`${appsettings.UrlConfig.Host}/api/SLA/InsertData`, {
                     method: 'POST',
                     body: formData
                 });

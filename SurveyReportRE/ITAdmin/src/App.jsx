@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState,useMemo  } from 'react';
-import { API_BASE_URL } from './config';
+import appsettings from '../../host.json';
 
 import ChartPanel from './components/ChartPanel';
 import MailTemplateDesigner from './components/MailTemplateDesigner';
@@ -137,7 +137,7 @@ function App() {
   const [onlineUsers,setOnlineUsers]=useState([]);
   const [onlineUsersLoading,setOnlineUsersLoading]=useState(true);
   const [onlineUsersError,setOnlineUsersError]=useState('');
-
+//  const [appsettings, setAppsettings] = useState(null);
   // Demo Notification: Delay 5 seconds on load then trigger toast
   // useEffect(() => {
   //   const testTimer = setTimeout(() => {
@@ -155,12 +155,37 @@ function App() {
 
   //   return () => clearTimeout(testTimer);
   // }, []);
+  
+// useEffect(() => {
+//    const initialize = async () => {
+//        const config = await fetch("../../appsettings.json")
+//            .then(r => r.json());
+//        setAppsettings(config);
+//        const host = config.URLConfig.Host;
+//        debugger
+//        // Gọi API bằng host
+//        loadOnlineUsers(host);
+//       fetch(`${appsettings.UrlConfig.Host}/api/UsersSession/OnlineUsers`)
+//         .then(response => {
+//           if (!response.ok) throw new Error(`Online users failed (${response.status})`);
+//           return response.json();
+//         })
+//         .then(users => {
+//           setOnlineUsers(Array.isArray(users) ? users : []);
+//           setOnlineUsersError('');
+//         })
+//         .catch(error => setOnlineUsersError(error?.message || 'Unable to load active users'))
+//         .finally(() => setOnlineUsersLoading(false));
+//    };
+//    initialize();
+// }, []);
 
-  useEffect(() => {
-    let activeUsersTimer;
+        useEffect(() => {
+            let activeUsersTimer;
     const loadOnlineUsers = () => {
       setOnlineUsersLoading(true);
-      fetch(`${API_BASE_URL}/api/UsersSession/OnlineUsers`)
+      
+      fetch(`${appsettings.UrlConfig.Host}/api/UsersSession/OnlineUsers`)
         .then(response => {
           if (!response.ok) throw new Error(`Online users failed (${response.status})`);
           return response.json();
@@ -174,7 +199,7 @@ function App() {
     };
     loadOnlineUsers();
     activeUsersTimer = setInterval(loadOnlineUsers, 15000);
-    fetch(`${API_BASE_URL}/api/UsersSession/ExecuteCustomQuery`,{
+    fetch(`${appsettings.UrlConfig.Host}/api/UsersSession/ExecuteCustomQuery`,{
       method:"POST",
       headers:{
         "Content-Type":"application/json"
@@ -199,7 +224,7 @@ function App() {
       setLoginStats(result);
     });
 
-    fetch(`${API_BASE_URL}/api/UsersSession/ExecuteCustomQuery`,{
+    fetch(`${appsettings.UrlConfig.Host}/api/UsersSession/ExecuteCustomQuery`,{
       method:"POST",
       headers:{
         "Content-Type":"application/json"
@@ -211,7 +236,7 @@ function App() {
       setDisk(d[0]?.availableSpace||0)
     );
 
-    fetch(`${API_BASE_URL}/api/UsersSession/ExecuteCustomQuery`,{
+    fetch(`${appsettings.UrlConfig.Host}/api/UsersSession/ExecuteCustomQuery`,{
       method:"POST",
       headers:{
         "Content-Type":"application/json"
@@ -224,7 +249,7 @@ function App() {
     )
     .catch(err=>console.error("Fetch ticketData failed", err));
 
-    fetch(`${API_BASE_URL}/api/CommentLog/GetSerilogHourlyToday`)
+    fetch(`${appsettings.UrlConfig.Host}/api/CommentLog/GetSerilogHourlyToday`)
       .then(response => {
         if (!response.ok) throw new Error(`Serilog hourly count failed (${response.status})`);
         return response.json();
@@ -245,8 +270,8 @@ function App() {
       });
 
     Promise.all([
-      fetch(`${API_BASE_URL}/api/ClientBrowserError/CountTrend?interval=day&take=30`),
-      fetch(`${API_BASE_URL}/api/ErrorBrowserDetails/CountTrend?interval=day&take=30`)
+      fetch(`${appsettings.UrlConfig.Host}/api/ClientBrowserError/CountTrend?interval=day&take=30`),
+      fetch(`${appsettings.UrlConfig.Host}/api/ErrorBrowserDetails/CountTrend?interval=day&take=30`)
     ])
       .then(async ([clientResponse, detailResponse]) => {
         if (!clientResponse.ok) throw new Error(`ClientBrowserError trend failed (${clientResponse.status})`);
@@ -357,7 +382,7 @@ function App() {
         return (
           <CustomGrid
             modelName="WorkflowDefinition"
-            apiBaseUrl={API_BASE_URL}
+            apiBaseUrl={appsettings.UrlConfig.Host}
             onRowClick={(row) => {
               const rowId = row.id || row.Id;
               if (rowId) {
@@ -392,24 +417,24 @@ function App() {
         return (
           <div style={{ width: "100%", height: "calc(100vh - 120px)", overflow: "hidden", background: "white", borderRadius: "12px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}>
             <iframe 
-              src={`${API_BASE_URL}/Config/FormFieldDesign`} 
+              src={`${appsettings.UrlConfig.Host}/Config/FormFieldDesign`} 
               style={{ width: "100%", height: "100%", border: "none" }} 
               title="Form Field Designer"
             />
           </div>
         );
       case 'datagridconfig-grid':
-        return <CustomGrid modelName="DataGridConfig" gridType="System" apiBaseUrl={API_BASE_URL} editMode="batch" />;
+        return <CustomGrid modelName="DataGridConfig" gridType="System" apiBaseUrl={appsettings.UrlConfig.Host} editMode="batch" />;
       case 'menudesigner':
         return <MenuDesigner />;
       case 'menu-grid':
-        return <CustomGrid modelName="Menu" gridType="System" apiBaseUrl={API_BASE_URL} editMode="batch" />;
+        return <CustomGrid modelName="Menu" gridType="System" apiBaseUrl={appsettings.UrlConfig.Host} editMode="batch" />;
       case 'enum-design':
         return <EnumDesign />;
       case 'enumdata-grid':
-        return <CustomGrid modelName="EnumData" gridType="System" apiBaseUrl={API_BASE_URL} editMode="batch" />;
+        return <CustomGrid modelName="EnumData" gridType="System" apiBaseUrl={appsettings.UrlConfig.Host} editMode="batch" />;
       case 'notification-grid':
-        return <CustomGrid modelName="Notification" gridType="System" apiBaseUrl={API_BASE_URL} editMode="batch" />;
+        return <CustomGrid modelName="Notification" gridType="System" apiBaseUrl={appsettings.UrlConfig.Host} editMode="batch" />;
       case 'notification-hub':
         return <NotificationHub />;
       case 'notification-template':

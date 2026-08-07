@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { API_BASE_URL } from "../config";
+import appsettings from '../../../host.json';
 
 
 const statusClassName = (status) => {
@@ -27,13 +27,13 @@ const [displayedCount, setDisplayedCount] = useState(15);
 const [loadingMore, setLoadingMore] = useState(false);
 const [selectedMail, setSelectedMail] = useState(null);
 const [isResending, setIsResending] = useState(false);
-
+   
 const loadData = async () => {
   try {
     setLoading(true);
 
     const response = await fetch(
-      `${API_BASE_URL}/api/MailQueue/GetAll`
+      `${appsettings.UrlConfig.Host}/api/MailQueue/GetAll`
     );
 
     if (!response.ok)
@@ -176,7 +176,7 @@ const handleResend = async () => {
       IsSend: selectedMail.isSend
     };
 
-    const response = await fetch(`${API_BASE_URL}/api/MailQueue/Resend`, {
+    const response = await fetch(`${appsettings.UrlConfig.Host}/api/MailQueue/Resend`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

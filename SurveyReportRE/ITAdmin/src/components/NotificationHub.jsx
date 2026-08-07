@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { API_BASE_URL } from '../config';
+import appsettings from '../../../host.json';
 import './NotificationHub.css';
 
 export default function NotificationHub() {
@@ -13,12 +13,12 @@ export default function NotificationHub() {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
-
+   
   // Load notifications from API
   const loadNotifications = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/Notification/GetAll`);
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/Notification/GetAll`);
       if (!res.ok) throw new Error('Failed to fetch notifications');
       const data = await res.json();
       setNotifications(data || []);
@@ -149,7 +149,7 @@ export default function NotificationHub() {
       formData.append('key', item.id || item.Id);
       formData.append('values', JSON.stringify(updated));
 
-      const res = await fetch(`${API_BASE_URL}/api/Notification/UpdateData`, {
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/Notification/UpdateData`, {
         method: 'PUT',
         body: formData
       });
@@ -165,7 +165,7 @@ export default function NotificationHub() {
   const deleteNotification = async (id) => {
     if (!window.confirm('Bạn có chắc chắn muốn xoá thông báo này?')) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/Notification/DeleteData?key=${id}`, {
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/Notification/DeleteData?key=${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {

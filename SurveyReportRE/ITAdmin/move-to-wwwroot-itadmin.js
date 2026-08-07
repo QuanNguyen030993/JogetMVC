@@ -1,9 +1,10 @@
 import { rmSync, renameSync, existsSync, copyFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
+// import appsettings from '../host.json'
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const tempDir = path.resolve(__dirname, '../wwwroot/dist');
+// const __dirname = appsettings.UrlConfig.Host;
+const tempDir = path.resolve(__dirname, '../wwwroot/ITAdmin/dist');
 const wwwroot = path.resolve(__dirname, '../wwwroot');
 
 // Xóa assets cũ trong wwwroot (nếu có)

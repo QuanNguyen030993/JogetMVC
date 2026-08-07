@@ -34,7 +34,7 @@ const CustomForm = forwardRef(({
     const [validationErrors, setValidationErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
-
+    
     // Fetch schema / metadata if not provided
     useEffect(() => {
         if (columns && columns.length > 0) {

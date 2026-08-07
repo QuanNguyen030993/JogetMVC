@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { API_BASE_URL } from "../config";
+import appsettings from '../../../host.json';
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
 import { notify } from "../../../TMIVCom/src/components/Notification";
 
@@ -25,10 +25,11 @@ export default function MenuDesigner() {
   const [saving, setSaving] = useState(false);
   const [tagInput, setTagInput] = useState("");
 
+    
   const loadMenus = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/Menu/GetAll`);
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/Menu/GetAll`);
       if (!res.ok) throw new Error("Load menus failed");
       const data = await res.json();
 
@@ -218,7 +219,7 @@ export default function MenuDesigner() {
       for (const id of deletedIds) {
         const formData = new FormData();
         formData.append("key", id);
-        await fetch(`${API_BASE_URL}/api/Menu/DeleteData`, {
+        await fetch(`${appsettings.UrlConfig.Host}/api/Menu/DeleteData`, {
           method: "DELETE",
           body: formData
         });
@@ -240,7 +241,7 @@ export default function MenuDesigner() {
 
         if (m.isNew || m.id > 100000000000) {
           formData.append("values", JSON.stringify(payload));
-          const response = await fetch(`${API_BASE_URL}/api/Menu/InsertData`, {
+          const response = await fetch(`${appsettings.UrlConfig.Host}/api/Menu/InsertData`, {
             method: "POST",
             body: formData
           });
@@ -249,7 +250,7 @@ export default function MenuDesigner() {
           payload.id = m.id;
           formData.append("key", m.id);
           formData.append("values", JSON.stringify(payload));
-          const response = await fetch(`${API_BASE_URL}/api/Menu/UpdateData`, {
+          const response = await fetch(`${appsettings.UrlConfig.Host}/api/Menu/UpdateData`, {
             method: "PUT",
             body: formData
           });

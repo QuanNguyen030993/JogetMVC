@@ -4,9 +4,9 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/',
+  base: '/ITAdmin/dist',
   build: {
-    outDir: path.resolve(__dirname, '../wwwroot/dist'),
+    outDir: path.resolve(__dirname, '../wwwroot/ITAdmin/dist'),
     emptyOutDir: true,      // KHÔNG xóa toàn bộ wwwroot
   },
 });

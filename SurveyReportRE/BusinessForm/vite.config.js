@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [react()],
   base: '/dist/',
   build: {
-    outDir: path.resolve(__dirname, '../wwwroot/dist'),
+    outDir: path.resolve(__dirname, '../wwwroot/BusinessForm/dist'),
     assetsDir: 'assets-bizform',
-    emptyOutDir: false,
+    emptyOutDir: true,
   },
 });

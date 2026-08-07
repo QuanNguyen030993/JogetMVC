@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { API_BASE_URL } from "../config";
+import appsettings from '../../../host.json';
 
 export default function AspLogViewer() {
   const [files, setFiles] = useState([]);
@@ -13,8 +13,9 @@ export default function AspLogViewer() {
 
   const fetchFiles = async () => {
     try {
+      
       setLoadingFiles(true);
-      const res = await fetch(`${API_BASE_URL}/api/Utility/GetLogFiles`);
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/Utility/GetLogFiles`);
       if (!res.ok) throw new Error("Load log files list failed");
       const data = await res.json();
       setFiles(data || []);
@@ -33,7 +34,7 @@ export default function AspLogViewer() {
     if (!file) return;
     try {
       setLoadingContent(true);
-      const res = await fetch(`${API_BASE_URL}/api/Utility/GetLogContent?filename=${encodeURIComponent(file.filename)}`);
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/Utility/GetLogContent?filename=${encodeURIComponent(file.filename)}`);
       if (!res.ok) throw new Error("Load log content failed");
       const data = await res.json();
       setLogContent(data.content || "");

@@ -13,7 +13,7 @@ import {
     Position,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { API_BASE_URL } from '../config';
+import appsettings from '../../../host.json';
 
 const CustomEdge = ({
     id,
@@ -536,12 +536,12 @@ export default function Diagram({
     const [notificationsList, setNotificationsList] = React.useState([]);
 
     React.useEffect(() => {
-        fetch(`${API_BASE_URL}/api/MailTemplate/GetAll`)
+        fetch(`${appsettings.UrlConfig.Host}/api/MailTemplate/GetAll`)
             .then(res => res.json().catch(() => []))
             .then(data => setMailTemplates(data || []))
             .catch(e => console.error("Failed to load MailTemplates in Diagram:", e));
 
-        fetch(`${API_BASE_URL}/api/NotificationTemplate/GetAll`)
+        fetch(`${appsettings.UrlConfig.Host}/api/NotificationTemplate/GetAll`)
             .then(res => res.json().catch(() => []))
             .then(data => setNotificationsList(data || []))
             .catch(e => console.error("Failed to load NotificationTemplates in Diagram:", e));

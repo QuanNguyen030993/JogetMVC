@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { API_BASE_URL } from "../config";
+import appsettings from '../../../host.json';
 import { notify } from "../../../TMIVCom/src/components/Notification";
 
 const safeParseBinaryJson = (val) => {
@@ -58,7 +58,7 @@ export default function DataGridDesigner() {
   const loadTables = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/SysTable/GetAll`);
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/SysTable/GetAll`);
       if (!res.ok) throw new Error("Load tables failed");
       const data = await res.json();
       setTables(data || []);
@@ -124,7 +124,7 @@ export default function DataGridDesigner() {
       formData.append("key", selectedTable.id);
       formData.append("values", JSON.stringify(updatedTable));
 
-      const res = await fetch(`${API_BASE_URL}/api/SysTable/UpdateData`, {
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/SysTable/UpdateData`, {
         method: "PUT",
         body: formData
       });
@@ -159,7 +159,7 @@ export default function DataGridDesigner() {
       const formData = new FormData();
       formData.append("values", JSON.stringify(newTable));
 
-      const res = await fetch(`${API_BASE_URL}/api/SysTable/InsertData`, {
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/SysTable/InsertData`, {
         method: "POST",
         body: formData
       });

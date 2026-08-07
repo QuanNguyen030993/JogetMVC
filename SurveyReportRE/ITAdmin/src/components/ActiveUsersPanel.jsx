@@ -1,4 +1,4 @@
-import './ActiveUsersPanel.css';
+import '../styles/ActiveUsersPanel.css';
 
 export default function ActiveUsersPanel({ users = [], loading = false, error = '' }) {
   return (

@@ -4,10 +4,12 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/',  server: {
+  base: '/',  
+  server: {
     host: '0.0.0.0',
     port: 5174,
-  },  build: {
+  },  
+  build: {
     outDir: path.resolve(__dirname, '../wwwroot/TMIVCom/dist'),
     emptyOutDir: true,
   },

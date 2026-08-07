@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { API_BASE_URL } from "../config";
+import appsettings from '../../../host.json';
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
 import { notify } from "../../../TMIVCom/src/components/Notification";
 
@@ -45,7 +45,7 @@ export default function EnumDesign() {
   const [keyInput, setKeyInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
+   
   const getTableName = (sysTableId) => {
     const table = tables.find((t) => t.id === sysTableId || t.Id === sysTableId);
     return table ? (table.name || table.Name || table.caption || table.Caption || sysTableId) : sysTableId;
@@ -77,13 +77,13 @@ export default function EnumDesign() {
     try {
       setLoading(true);
       // 1. Fetch EnumData list
-      const resEnum = await fetch(`${API_BASE_URL}/api/EnumData/GetAll?take=9999`);
+      const resEnum = await fetch(`${appsettings.UrlConfig.Host}/api/EnumData/GetAll?take=9999`);
       if (!resEnum.ok) throw new Error("Fetch EnumData failed");
       const dataEnum = await resEnum.json();
       setEnumData(dataEnum || []);
 
       // 2. Fetch DataGridConfig fields of type dxSelectBox
-      const resGrid = await fetch(`${API_BASE_URL}/api/DataGridConfig/GetAll?take=9999`);
+      const resGrid = await fetch(`${appsettings.UrlConfig.Host}/api/DataGridConfig/GetAll?take=9999`);
       if (!resGrid.ok) throw new Error("Fetch DataGridConfig failed");
       const dataGrid = await resGrid.json();
       // Filter fields that are dxSelectBox
@@ -93,7 +93,7 @@ export default function EnumDesign() {
       setGridFields(selectBoxFields);
 
       // 3. Fetch SysTables for labeling
-      const resTables = await fetch(`${API_BASE_URL}/api/SysTable/GetAll`);
+      const resTables = await fetch(`${appsettings.UrlConfig.Host}/api/SysTable/GetAll`);
       if (resTables.ok) {
         const dataTables = await resTables.json();
         setTables(dataTables || []);
@@ -124,7 +124,7 @@ export default function EnumDesign() {
       const formData = new FormData();
       formData.append("values", JSON.stringify(payload));
 
-      const res = await fetch(`${API_BASE_URL}/api/EnumData/InsertData`, {
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/EnumData/InsertData`, {
         method: "POST",
         body: formData
       });
@@ -149,7 +149,7 @@ export default function EnumDesign() {
       for (const item of itemsToDelete) {
         const formData = new FormData();
         formData.append("key", item.id);
-        await fetch(`${API_BASE_URL}/api/EnumData/DeleteData`, {
+        await fetch(`${appsettings.UrlConfig.Host}/api/EnumData/DeleteData`, {
           method: "DELETE",
           body: formData
         });
@@ -181,7 +181,7 @@ export default function EnumDesign() {
       const formData = new FormData();
       formData.append("values", JSON.stringify(payload));
 
-      const res = await fetch(`${API_BASE_URL}/api/EnumData/InsertData`, {
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/EnumData/InsertData`, {
         method: "POST",
         body: formData
       });
@@ -203,7 +203,7 @@ export default function EnumDesign() {
       setSaving(true);
       const formData = new FormData();
       formData.append("key", keyId);
-      const res = await fetch(`${API_BASE_URL}/api/EnumData/DeleteData`, {
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/EnumData/DeleteData`, {
         method: "DELETE",
         body: formData
       });
@@ -235,7 +235,7 @@ export default function EnumDesign() {
         formItem: safeStringifyBinaryJson(updatedFormItem)
       }));
 
-      const res = await fetch(`${API_BASE_URL}/api/DataGridConfig/UpdateData`, {
+      const res = await fetch(`${appsettings.UrlConfig.Host}/api/DataGridConfig/UpdateData`, {
         method: "PUT",
         body: formData
       });

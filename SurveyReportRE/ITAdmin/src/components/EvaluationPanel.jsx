@@ -9,7 +9,8 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
-import { API_BASE_URL } from '../config';
+ import appsettings from '../../../host.json';
+
 import '../styles/evaluation.css';
 
 const COLORS = ['#334155', '#2563eb', '#0f766e', '#b45309', '#7c3aed', '#be123c', '#0369a1', '#4d7c0f'];
@@ -38,7 +39,7 @@ export default function EvaluationPanel() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
+   
   const loadEvaluation = useCallback(async () => {
     const options = {
       mode: dimension === 'total' ? 'trend_total' : `trend_${dimension}`,
@@ -53,9 +54,11 @@ export default function EvaluationPanel() {
     };
 
     try {
+      // const appsettings = await fetch('../../../appsettings.json').then(r => r.json());
+
       setLoading(true);
       setError('');
-      const response = await fetch(`${API_BASE_URL}/api/HttpRequestAuditLog/Query`, {
+      const response = await fetch(`${appsettings.UrlConfig.Host}/api/HttpRequestAuditLog/Query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         // API receives [FromBody] string, matching the existing Evaluation screen.
