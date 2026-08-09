@@ -27,11 +27,12 @@
      class="dept-tree overview-control-pane"
      role="navigation"
      aria-label="Request workflow controls">
+    @* <span class="dept-idle-clock-label" aria-hidden="true">Auto-saved</span> *@
     <div id="@(deptTreeId)_idleClock"
          class="dept-idle-clock"
          aria-hidden="true"
          title="Time without activity">
-        
+        <span class="auto-saved-text">Auto-saved</span>
         <span class="dept-idle-clock-value">02:00</span>
     </div>
     <div class="treeStack" id="@treeStackId">
@@ -75,7 +76,9 @@
                 <div class="dept-circle"
                      role="button"
                      tabindex="0"
-                     aria-label="Open @deptCode section">@deptCode</div>
+                     aria-label="Open @deptCode section">
+                    @deptCode
+                </div>
             </div>
         }
     </div>
@@ -108,8 +111,24 @@
                         : `${twoDigits(minutes)}:${twoDigits(seconds)}`;
                 }
 
+                // function renderClocks(idleDurationMs, shouldShow) {
+                //     clocks.forEach(function (clock) {
+                //         if (!clock.isConnected) {
+                //             clocks.delete(clock);
+                //             return;
+                //         }
+
+                //         const value = clock.querySelector(".dept-idle-clock-value");
+
+                //         if (value) value.textContent = formatDuration(idleDurationMs);
+                //         //show clock
+                //         clock.classList.toggle("is-visible", shouldShow);
+
+                //         clock.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+                //     });
+                // }
                 function renderClocks(idleDurationMs, shouldShow) {
-                    debugger
+                    // shouldShow = true; // debug clock adjust
                     clocks.forEach(function (clock) {
                         if (!clock.isConnected) {
                             clocks.delete(clock);
@@ -117,13 +136,26 @@
                         }
 
                         const value = clock.querySelector(".dept-idle-clock-value");
-                        
-                        if (value) value.textContent = formatDuration(idleDurationMs);
-                        //show clock
+
+                        if (value) {
+                            value.textContent = formatDuration(idleDurationMs);
+                        }
+
                         clock.classList.toggle("is-visible", shouldShow);
                         clock.setAttribute("aria-hidden", shouldShow ? "false" : "true");
-                        const valueLabel = $(`<span class="dept-idle-clock-label">Auto-saved</span>`);
-                        valueLabel.appendTo(clock);
+
+                        // Auto-saved ẩn khi idle clock xuất hiện
+                        const autoSaved = document.getElementById(
+                            clock.id.replace("_idleClock", "_autoSaved")
+                        );
+
+                        if (autoSaved) {
+                            autoSaved.classList.toggle("is-hidden", shouldShow);
+                            autoSaved.setAttribute(
+                                "aria-hidden",
+                                shouldShow ? "true" : "false"
+                            );
+                        }
                     });
                 }
 
@@ -181,7 +213,7 @@
                 }
                 treeStack.deptTreeScrollSpy = bindDeptTreeScrollSpy(
                     "@moduleCode",
-                    @Model.Id,
+    @Model.Id,
                     {
                         treeStack: treeStack,
                         container: overviewScroll

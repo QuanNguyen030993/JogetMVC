@@ -28953,7 +28953,7 @@ aside {
         transform .3s ease,
         visibility 0s linear .3s;
 }
-
+/*
 .dept-tree .dept-idle-clock::before {
     content: "";
     position: absolute;
@@ -28972,7 +28972,7 @@ aside {
     transform: translateY(0) scale(1);
     transition-delay: 0s;
 }
-/*
+
 .dept-tree .dept-idle-clock-label.is-visible {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -28994,7 +28994,7 @@ aside {
     text-align: center;
     white-space: nowrap;
     pointer-events: none;
-}*/
+}
 
 .dept-tree .dept-idle-clock-value {
     color: #1d4ed8;
@@ -29005,7 +29005,195 @@ aside {
     letter-spacing: -.04em;
     text-align: center;
 }
+*/
 
+/*.dept-tree .dept-idle-clock {
+    position: absolute;
+    top: -64px;
+    right: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 1px;
+
+    box-sizing: border-box;
+    width: 54px;
+    height: 54px;
+
+    padding: 9px 4px 5px;
+
+    color: #1d4ed8;
+
+    background:
+        radial-gradient(
+            circle at 32% 24%,
+            rgba(255, 255, 255, .98),
+            transparent 34%
+        ),
+        linear-gradient(
+            145deg,
+            #ffffff 0%,
+            #eff6ff 58%,
+            #dbeafe 100%
+        );
+
+    border: 2px solid #93c5fd;
+    border-radius: 50%;
+
+    box-shadow:
+        inset 0 0 0 3px rgba(255, 255, 255, .72),
+        0 7px 18px rgba(37, 99, 235, .16);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transform: translateY(7px) scale(.96);
+    transform-origin: top right;
+
+    transition:
+        opacity .3s ease,
+        transform .3s ease,
+        visibility 0s linear .3s;
+}
+
+.dept-tree .dept-idle-clock::before {
+    content: "";
+
+    position: absolute;
+    top: 4px;
+    left: 50%;
+
+    width: 2px;
+    height: 4px;
+
+    background: #3b82f6;
+    border-radius: 999px;
+
+    transform: translateX(-50%);
+}
+
+.dept-tree .dept-idle-clock.is-visible {
+    opacity: 1;
+    visibility: visible;
+
+    transform: translateY(0) scale(1);
+
+    transition-delay: 0s;
+}
+
+    .dept-tree .dept-idle-clock .auto-saved-text {
+        position: absolute;*/
+        /* Đẩy ra phía trên vòng tròn */
+        /*top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #64748b;
+        font-family: Arial, sans-serif;
+        font-size: 7px;
+        font-weight: 600;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        pointer-events: none;
+    }*/
+/* Đồng hồ phía dưới */
+/*.dept-tree .dept-idle-clock .dept-idle-clock-value {
+    display: block;
+
+    margin-top: 1px;
+
+    color: #1d4ed8;
+
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+
+    line-height: 1;
+    letter-spacing: -.04em;
+
+    text-align: center;
+}*/
+
+.dept-tree .dept-idle-clock {
+    position: absolute;
+    top: -54px;
+    right: 7px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    /* nhỏ ngang circle FO */
+    width: 40px;
+    height: 40px;
+    padding: 5px 3px 3px;
+    color: #1d4ed8;
+    background: radial-gradient( circle at 32% 24%, rgba(255, 255, 255, .98), transparent 34% ), linear-gradient( 145deg, #ffffff 0%, #eff6ff 58%, #dbeafe 100% );
+    border: 2px solid #93c5fd;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .72), 0 4px 10px rgba(37, 99, 235, .16);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(5px) scale(.96);
+    transform-origin: top right;
+    transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s;
+}
+
+    .dept-tree .dept-idle-clock::before {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 50%;
+        width: 2px;
+        height: 3px;
+        background: #3b82f6;
+        border-radius: 999px;
+        transform: translateX(-50%);
+    }
+
+    .dept-tree .dept-idle-clock.is-visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+        transition-delay: 0s;
+    }
+
+
+    /* Auto-saved nằm bên ngoài, trên đầu clock */
+    .dept-tree .dept-idle-clock .auto-saved-text {
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #64748b;
+        font-family: Arial, sans-serif;
+        font-size: 7px;
+        font-weight: 600;
+        line-height: 1;
+        letter-spacing: -.02em;
+        text-align: center;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+
+    /* 02:00 nằm giữa clock */
+    .dept-tree .dept-idle-clock .dept-idle-clock-value {
+        display: block;
+        margin-top: 2px;
+        color: #1d4ed8;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 9px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+        letter-spacing: -.04em;
+        text-align: center;
+    }
 
 .actionLeft {
     display: flex;

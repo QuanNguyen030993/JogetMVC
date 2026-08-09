@@ -394,7 +394,7 @@ function bindConnectionScopedEvents(connectionId) {
     //         ?.option("text", responseData.pdfButtonText);
     // });
 
-    connectionSignR.on(`sectionRender_${connectionId}`, function (responseData) {
+    connectionSignR.on(`sectionRender_${connectionId}`, function (responseData) {   
         signalRBlink("sectionRender_{connectionId}");
         const quotations = window.QuotationPage?.state?.quotes;
         if (Array.isArray(quotations)) {
