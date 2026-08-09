@@ -931,7 +931,6 @@
             saveButton.disabled = true;
             saveButton.textContent = "Saving...";
             try {
-                debugger
                 studioState.guide.key = studioState.guide.key.trim() || studioState.guide.id;
                 studioState.guide = await storage.save(studioState.guide);
                 const savedIdentity = studioState.guide.id || studioState.guide.key;

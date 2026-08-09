@@ -393,16 +393,6 @@ namespace ERPCore.ControllerUtil
             NotificationTemplate notificationTemplate = null,
             [CallerMemberName] string callerName = "")
         {
-            //notification = new Notification();
-            //notification.Title = transferObject.Title;
-            //notification.Message = transferObject.Subject;
-            //notification.IsRead = false;
-            //notification.Url = JsonConvert.SerializeObject(NotificationURLObjectMaking(transferObject));
-            //notification.Resource = $"{transferObject.Resource}";
-            //notification.System = "WM";
-            //notification.RecordGuid = transferObject.Guid;
-            //notification.ReceivedBy = transferObject.ReceivedBy;
-            //notification.Type = notificationTypeId;
             Notification notification = new Notification();
             dynamic transferObjectIn = new
             {

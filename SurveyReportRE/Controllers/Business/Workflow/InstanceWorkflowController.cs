@@ -1337,7 +1337,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             new
             {
                 title = transferObject.Title,
-                message = transferObject.Subject
+                message = transferObject.Message
             }
             , item, DOMAIN_NAME);
         }

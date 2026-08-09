@@ -91,8 +91,8 @@
     that3.uploaderAllow = _role == "@dept";
     that3.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that3.moduleName, @(policyIssuanceId)), Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
     var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, policyIssuanceId)`;
-    var acceptStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
-    var itemsDelay = [acceptButtonId, acceptStatusId];
+    var panelStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+    var itemsDelay = [acceptButtonId, panelStatusId];
 
 
 
@@ -191,11 +191,11 @@
                     }
                ]}];
     // var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
-    //         var acceptStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+    //         var panelStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
     //     var declinedButtonId = `DC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
     //         var declinedStatusId = `DC_Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
     //                     var items = [ `#${acceptButtonId}`, `#${declinedButtonId}`];
-    //                                 var itemsDelay = [ acceptButtonId , acceptStatusId, declinedButtonId, declinedStatusId,'', ''];
+    //                                 var itemsDelay = [ acceptButtonId , panelStatusId, declinedButtonId, declinedStatusId,'', ''];
 
     $.ajax({
         url: `/api/PolicyIssuance/GetSingle/@policyIssuanceId`,

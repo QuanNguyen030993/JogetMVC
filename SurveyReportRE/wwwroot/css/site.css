@@ -28972,28 +28972,29 @@ aside {
     transform: translateY(0) scale(1);
     transition-delay: 0s;
 }
-
+/*
 .dept-tree .dept-idle-clock-label.is-visible {
-    opacity: 0;
+    opacity: 1;
     transform: translateY(0) scale(1);
     transition-delay: 0s;
-    visibility: hidden;
+    visibility: visible;
 }
 
 .dept-tree .dept-idle-clock-label {
+    display: none;
     position: absolute;
     top: -78px;
     right: 0;
     width: 54px;
     color: #64748b;
-    font-size: 11px;
+    font-size: 9px;
     font-weight: 600;
     letter-spacing: 0;
     line-height: 1;
     text-align: center;
     white-space: nowrap;
     pointer-events: none;
-}
+}*/
 
 .dept-tree .dept-idle-clock-value {
     color: #1d4ed8;
@@ -29024,6 +29025,7 @@ aside {
    compact first row; user actions stay in the second row. */
 .workflow-decision-group .decision-status-row {
     display: flex;
+    width: 40px;
     min-height: 24px;
     align-items: center;
     flex-wrap: wrap;
@@ -34140,12 +34142,6 @@ textarea {
     height: 4px;
 }
 
-:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-idle-clock-label {
-    top: -62px;
-    right: 2px;
-    width: var(--overview-idle-clock-size);
-    font-size: 9px;
-}
 
 :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-idle-clock-value {
     font-size: 9px;

@@ -56,15 +56,15 @@
         // var submitBranchId = `@QTViewIdHelper.BtnSubmitBranch(dept, quotationId)`;
 
         var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
-        var acceptStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+        var panelStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
         // var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
         // var declinedStatusId = `DC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
-        // var itemsDelay = [acceptButtonId, acceptStatusId, declinedButtonId, declinedStatusId];
+        // var itemsDelay = [acceptButtonId, panelStatusId, declinedButtonId, declinedStatusId];
 
 
             var acceptDecisionV2 = {
         buttonId: acceptButtonId,
-        statusId: acceptStatusId,
+        statusId: panelStatusId,
         text: "Accept",
         icon: "check",
         type: "success",

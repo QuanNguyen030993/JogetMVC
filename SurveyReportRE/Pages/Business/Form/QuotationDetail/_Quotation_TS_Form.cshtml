@@ -51,12 +51,12 @@
 
 
     var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
-    var acceptStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+    var panelStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
     // V2 config: status/TAT, click handler va lifecycle cua Accept cung di qua
     // renderDecisionDeferredV2; khong con dung cap string legacy.
     var acceptDecisionV2 = {
         buttonId: acceptButtonId,
-        statusId: acceptStatusId,
+        statusId: panelStatusId,
         text: "Accept",
         icon: "check",
         type: "success",

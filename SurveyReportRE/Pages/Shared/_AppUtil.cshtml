@@ -5153,7 +5153,7 @@
                 $section.data("attachmentCanEdit", !!canEdit);
                 $section.find(".dx-fileuploader").each(function () {
                     $(this).dxFileUploader("instance")?.option("disabled", !canEdit);
-                }
+                });
                 $section.find(window.IdManager.attachmentControlHostsSelector()).each(function () {
                     $(this).fileuploader({disabled: !canEdit});
                 });
@@ -8672,7 +8672,7 @@
                         params[1] || params[3]
                     );
                     setTimeout(() => {
-                        setDecisionCommonStatus(initialStatusId, initialButtonId, "loading");
+                        // setDecisionCommonStatus(initialStatusId, initialButtonId, "loading");
                     }, 0);
                     waitForDecisionRouteStage(formProps.formId).then(function () {
                         setTimeout(() => {
@@ -8692,7 +8692,7 @@
             var $status = $(`#${statusId}`);
             var $button = buttonId ? $(`#${buttonId}`) : $();
             if (!$status.length) {
-                $status = $(`<span id="${statusId}" class="accept-status-indicator decision-common-status decision-status-button" role="status" aria-live="polite"></span>`);
+                $status = $(`<span id="${statusId}_labelStatus" role="status" aria-live="polite"></span>`);
             }
 
             var $fieldItem = $button.length ? $button.closest(".dx-field-item") : $status.closest(".dx-field-item");
@@ -8701,8 +8701,8 @@
                 : $fieldItem.find(".dx-field-item-content").first();
 
             if ($content.length) {
-                var $statusRow = $content.children(".decision-status-row").first();
                 var $actionRow = $content.children(".decision-action-row").first();
+                var $statusRow = $content.children(".decision-status-row").first();
                 if (!$statusRow.length) {
                     $statusRow = $('<div class="decision-status-row" aria-live="polite"></div>').prependTo($content);
                 }
@@ -8759,7 +8759,7 @@
                         backgroundColor: "var(--form-status-pending-bg)",
                         border: "1px solid var(--form-status-border)"
                     });
-                var $loader = $('<span class="decision-common-status-loader"></span>').appendTo($status);
+                var $loader = $(`<span class="decision-common-status-loader"></span>`).appendTo($status);
                 $loader.dxLoadIndicator({ width: 14, height: 14, visible: true });
                 return;
             }
@@ -8863,7 +8863,6 @@
             var primaryButtonId = getDelayAcceptButtonId(primaryItem);
             var commonStatusId = getDecisionFieldStatusId(formProps, buttonItems);
             var actionHostId = getDecisionFieldActionHostId(formProps);
-
             return {
                 dataField: formProps?.decisionDataField || primaryItem.dataField || "decision",
                 name: getDecisionFieldName(formProps, buttonItems),
@@ -8881,11 +8880,13 @@
                     // second action row and moving the primary button away.
                     var $content = $(itemElement)
                         .addClass("workflow-decision-field-content decision-field-v2-content");
-                    var $statusRow = $("<div>", {
-                        class: "decision-status-row",
+                    var $statusRow = $(`<div id="${commonStatusId}" class="decision-status-row accept-status-indicator decision-common-status decision-status-button statusTag unknown">`, {
                         "aria-live": "polite",
                         "data-decision-status-host": "true"
                     }).appendTo($content);
+
+                    var $loader = $(`<span class="decision-common-status-loader"></span>`).appendTo($statusRow);
+                     $loader.dxLoadIndicator({ width: 14, height: 14, visible: true });
                     $("<span>", {
                         id: commonStatusId,
                         class: "accept-status-indicator decision-common-status decision-status-button",
@@ -8939,10 +8940,10 @@
             };
         }
 
-        // Compatibility alias. Use workflowDecisionField for new and refactored forms.
-        function decisionFieldV2(formProps, ...params) {
-            return workflowDecisionField(formProps, ...params);
-        }
+        // Compatibility alias. Use workflowDecisionField for new and refactored forms. //comment out 2026-08-07
+        // function decisionFieldV2(formProps, ...params) {
+        //     return workflowDecisionField(formProps, ...params);
+        // }
 
         // Compatibility wrapper for existing department forms. New forms should pass
         // config objects to workflowDecisionField(formProps, ...buttonConfigs).
@@ -9320,7 +9321,7 @@
                         normalizedDecisionItems,
                         params[1] || params[3]
                     );
-                    setDecisionCommonStatus(commonStatusId, commonAcceptButtonId, "loading");
+                    // setDecisionCommonStatus(commonStatusId, commonAcceptButtonId, "loading");
                     setTimeout(() => {
                         var form = $(`#${formDataClone.formId}`).dxForm("instance");
                         if (!form) return;
@@ -9390,7 +9391,7 @@
                       if (latestTatObject?.[formDataClone.dept]?.AcceptDate)
                          {
                           var acceptButtonId = getDelayAcceptButtonId(params[0]);
-                          var acceptStatusId = getDecisionFieldStatusId(
+                          var panelStatusId = getDecisionFieldStatusId(
                               formDataClone,
                               normalizedDecisionItems,
                               params[1] || params[3]
@@ -9446,7 +9447,7 @@
                                  else{
                                      $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
                                      updateDelayAcceptStatus(
-                                         acceptStatusId,
+                                         panelStatusId,
                                          acceptButtonId,
                                          latestTatObject[formDataClone.dept]?.AcceptDate
                                      );

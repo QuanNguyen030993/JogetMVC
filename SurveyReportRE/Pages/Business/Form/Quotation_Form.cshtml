@@ -581,7 +581,7 @@ Note:
                                                 }
                                             }
                                             if (!$decisionGroup.length) {
-                                                console.warn("No decision group id matched the custom route.", routeData);
+                                                // console.warn("No decision group id matched the custom route.", routeData);
                                                 return $();
                                             }
 
@@ -655,10 +655,12 @@ Note:
                                                         appNotifyWarning("Please put your reason to remarks!", false);
                                                         return;
                                                     }
+                                                   
                                                     routeFormItems.comment = content;
                                                     if (route.isReturn) {
                                                         returnToStep(formModuleKeyQt, state.nextStep, route, routeFormItems);
                                                     } else {
+                                                      
                                                         submitNextStep(formModuleKeyQt, state.nextStep, route, routeFormItems);
                                                     }
                                                 }
@@ -793,13 +795,39 @@ Note:
                                                                 );
                                                                 $(`#${submitButtonId}`).find(".dx-button").css("background-color", window.DecisionColors.accepted);
                                                             }
-
-                                                            submitNextStep(
-                                                                `${formModuleKeyQt}`,
-                                                                state.nextStep,
-                                                                route,
-                                                                formItems
-                                                            );
+                                                              if (!route.isReturn && !content) {
+                                                                appNotifyWarning("You may leave your remark empty, system will remark default message?",  true,
+                                                                "Ok",
+                                                                "Cancel").then(function (result) {
+                                                                if (result.isConfirmed) {
+                                                                    formItems.comment = `${_loginUser} ${route.displayStatus}`;
+                                                                    submitNextStep(
+                                                                        `${formModuleKeyQt}`,
+                                                                        state.nextStep,
+                                                                        route,
+                                                                        formItems
+                                                                    );
+                                                                    return;
+                                                                }
+                                                                else return;
+                                                                    return;
+                                                                });
+                                                                return;
+                                                                }
+                                                                else {
+                                                                    submitNextStep(
+                                                                        `${formModuleKeyQt}`,
+                                                                        state.nextStep,
+                                                                        route,
+                                                                        formItems
+                                                                    );
+                                                                }
+                                                            // submitNextStep(
+                                                            //     `${formModuleKeyQt}`,
+                                                            //     state.nextStep,
+                                                            //     route,
+                                                            //     formItems
+                                                            // );
                                                         }
                                                     });
                                                     applyTransitionButtonClass(`#${buttonId}`, route);

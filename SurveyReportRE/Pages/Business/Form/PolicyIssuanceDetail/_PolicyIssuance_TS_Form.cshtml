@@ -199,12 +199,12 @@
      ;
    
     var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
-    var acceptStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+    var panelStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
     // Keep the Policy Issuance TS decision on the same V2 lifecycle as
     // Quotation TS so the deferred renderer wires AcceptTask correctly.
     var acceptDecisionV2 = {
         buttonId: acceptButtonId,
-        statusId: acceptStatusId,
+        statusId: panelStatusId,
         text: "Accept",
         icon: "check",
         type: "success",

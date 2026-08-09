@@ -27,11 +27,11 @@
      class="dept-tree overview-control-pane"
      role="navigation"
      aria-label="Request workflow controls">
-    <span class="dept-idle-clock-label" aria-hidden="true">Auto-saved</span>
     <div id="@(deptTreeId)_idleClock"
          class="dept-idle-clock"
          aria-hidden="true"
          title="Time without activity">
+        
         <span class="dept-idle-clock-value">02:00</span>
     </div>
     <div class="treeStack" id="@treeStackId">
@@ -109,6 +109,7 @@
                 }
 
                 function renderClocks(idleDurationMs, shouldShow) {
+                    debugger
                     clocks.forEach(function (clock) {
                         if (!clock.isConnected) {
                             clocks.delete(clock);
@@ -120,8 +121,9 @@
                         if (value) value.textContent = formatDuration(idleDurationMs);
                         //show clock
                         clock.classList.toggle("is-visible", shouldShow);
-
                         clock.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+                        const valueLabel = $(`<span class="dept-idle-clock-label">Auto-saved</span>`);
+                        valueLabel.appendTo(clock);
                     });
                 }
 
