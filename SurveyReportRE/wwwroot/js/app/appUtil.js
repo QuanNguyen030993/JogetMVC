@@ -327,7 +327,7 @@ var appNotifyError = function (message, isConfirm, confirmText, cancelText, dela
         showConfirmButton: isConfirm ?? false,
         confirmButtonText: confirmText ?? "OK",
         cancelButtonText: cancelText ?? "Cancel",
-        timer: delayTime ?? _swalPopupDelayTime
+        timer: 500000//delayTime ?? _swalPopupDelayTime
     });
 }
 

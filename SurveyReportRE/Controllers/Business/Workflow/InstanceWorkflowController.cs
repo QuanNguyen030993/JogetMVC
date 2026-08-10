@@ -30,6 +30,8 @@ using static WorkflowDefinition_FormModel;
 using ERPCore.Models.Migration.Config;
 using RESurveyTool.Models.Models.Parsing;
 using System.Text.RegularExpressions;
+using DocumentFormat.OpenXml.Office2013.Excel;
+using ERPCore.Models.Config;
 
 public class WorkflowTransitionSubmitRequest : SubmitRequest
 {
@@ -68,6 +70,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> _businessConfig;
     private string DOMAIN_NAME = "";
+    private readonly URLConfig _urlConfig;
     private MailConfig _emailSettings;
     public InstanceWorkflowController(IBaseRepository<InstanceWorkflow> BaseRepository
         , IConfiguration config
@@ -107,6 +110,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _hubContext = hubContext;
         _blobStorageSettings = blobStorageSettings;
         _businessConfig = businessConfig;
+        _urlConfig = configuration.GetSection("URLConfig").Get<URLConfig>();
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
     }
 
@@ -1052,11 +1056,44 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 parameters.Add((paramName, value?.ToString() ?? ""));
             }
 
+
             if (!string.IsNullOrWhiteSpace(mailTemplate.MailQuery))
             {
                 DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, parameters.ToArray()); // ("QuotationId", quotation.Id));
                 if (query != null)
                     if (query.Rows.Count > 0) templateData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+            }
+            var paramsObject = new
+            {
+                url = $"/Business/Form/{nameof(Quotation)}_Form/{quotation.Id}/{quotation.Guid}",
+                caption = $"form_{nameof(Quotation)}_Form_{quotation.Id}",
+                name = $"{nameof(Quotation)} {quotation.QuotationCode}",
+                data = ""
+            };
+
+            UrlCall urlCall = new UrlCall();
+            urlCall.Folder = "Business";
+            urlCall.Module = "Form";
+            urlCall.Controller = $"{nameof(Quotation)}";
+            urlCall.Action = "Index";
+            urlCall.TypeAction = "View";
+            urlCall.Token = "";
+            urlCall.RecordGuidId = quotation.Guid;
+            urlCall.Params = JsonConvert.SerializeObject(paramsObject);
+            urlCall.ExpireTime = DateTime.Now.AddDays(2);
+            urlCall.Expired = false;
+
+            urlCall = await _urlCallRepository.InsertData(urlCall);
+
+
+            urlCall = await _urlCallRepository.GetSingleObject(s => s.RecordGuidId == quotation.Guid);
+            if (urlCall != null)
+            {
+                //string redirectMainView = System.IO.Path.Combine(REDIRECT_MAIN_VIEW, typeof(UrlCall).Name, "ReturnView");
+                string redirectMainView = $"{_urlConfig.RedirectMainView}{typeof(UrlCall).Name}{"/ReturnView"}";
+                redirectMainView += $"?guid={urlCall.Guid}";
+                //parameters.Add(("urlCallView", redirectMainView));
+                mailTemplate.TemplateContent = mailTemplate.TemplateContent.Replace("urlCallView", redirectMainView);
             }
             templateData["RecordId"] = quotation.Id;
             templateData["RecordCode"] = quotation.QuotationCode ?? "";
@@ -1079,6 +1116,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 CC = string.Join(';', ccEmails),
                 BCC = mailTemplate.BCC ?? ""
             };
+
+           
+
 
             MailUtil.SendEmail(_emailSettings, mailItem, null).Wait();
             MailQueue mailQueue = Util.MakeMailQueueItem(mailItem, _emailSettings, null, "Workflow");
@@ -1108,9 +1148,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
             HashSet<string> ccEmails = new(StringComparer.OrdinalIgnoreCase);
             HashSet<string> seenAccounts = new(StringComparer.OrdinalIgnoreCase)
-            {
-                NormalizeWorkflowAccount(quotation.CreatedBy)
-            };
+        {
+            NormalizeWorkflowAccount(quotation.CreatedBy)
+        };
 
             foreach (string account in ExtractAssignedPicAccounts(quotation.PIC))
             {
@@ -1136,11 +1176,49 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             }
 
             Dictionary<string, object> templateData = new();
+            Dictionary<string, object> paramInObject = new();
+
+            paramInObject["RecordId"] = quotation.Id;
+            paramInObject["RecordCode"] = quotation.PolicyIssuanceCode ?? "";
+            paramInObject["PolicyIssuanceId"] = quotation.Id;
+            paramInObject["PolicyIssuanceCode"] = quotation.PolicyIssuanceCode ?? "";
+            paramInObject["WorkflowStatus"] = quotation.WorkflowStatus ?? "";
+            paramInObject["FromNodeId"] = submitRequest.StepsWorkflow?.FromNodeId ?? "";
+            paramInObject["ToNodeId"] = submitRequest.StepsWorkflow?.ToNodeId ?? "";
+            paramInObject["ActionCode"] = submitRequest.StepsWorkflow?.ActionCode ?? "";
+            paramInObject["ActionStatus"] = submitRequest.ActionStatus ?? "";
+            paramInObject["Comment"] = submitRequest.Comment ?? "";
+            string sql = mailTemplate.MailQuery;
+
+            List<(string, object)> parameters = new();
+
+            foreach (Match match in Regex.Matches(sql, @"\@(\w+)"))
+            {
+                string paramName = match.Groups[1].Value;
+
+                if (!paramInObject.TryGetValue(paramName, out object? value))
+                {
+                    throw new Exception($"Parameter '{paramName}' was not found.");
+                }
+
+                sql = sql.Replace(match.Value, $"@{paramName}");
+                parameters.Add((paramName, value?.ToString() ?? ""));
+            }
+
             if (!string.IsNullOrWhiteSpace(mailTemplate.MailQuery))
             {
-                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, ("", ""));
+                DataTable query = DataUtil.ExecuteSelectQuery(_BaseRepository._connectionString, mailTemplate.MailQuery, parameters.ToArray()); // ("PolicyIssuanceId", quotation.Id));
                 if (query != null)
-                if (query.Rows.Count > 0) templateData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+                    if (query.Rows.Count > 0) templateData = Util.MakeQueryIntoDirectory(query.Rows[0]);
+            }
+            UrlCall urlCall = new UrlCall();
+            urlCall = await _urlCallRepository.GetSingleObject(s => s.RecordGuidId == quotation.Guid);
+            if (urlCall != null)
+            {
+                //string redirectMainView = System.IO.Path.Combine(REDIRECT_MAIN_VIEW, typeof(UrlCall).Name, "ReturnView");
+                string redirectMainView = $"{_urlConfig.RedirectMainView}{typeof(UrlCall).Name}{"/ReturnView"}";
+                redirectMainView += $"?guid={urlCall.Guid}";
+                //parameters.Add(("urlCallView", redirectMainView));
             }
             templateData["RecordId"] = quotation.Id;
             templateData["RecordCode"] = quotation.PolicyIssuanceCode ?? "";
@@ -1163,6 +1241,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 CC = string.Join(';', ccEmails),
                 BCC = mailTemplate.BCC ?? ""
             };
+
+
+
 
             MailUtil.SendEmail(_emailSettings, mailItem, null).Wait();
             MailQueue mailQueue = Util.MakeMailQueueItem(mailItem, _emailSettings, null, "Workflow");

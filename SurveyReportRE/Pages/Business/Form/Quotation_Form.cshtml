@@ -581,7 +581,7 @@ Note:
                                                 }
                                             }
                                             if (!$decisionGroup.length) {
-                                                // console.warn("No decision group id matched the custom route.", routeData);
+                                                 console.warn("No decision group id matched the custom route.", routeData);
                                                 return $();
                                             }
 
@@ -1149,7 +1149,8 @@ Note:
             };
 
             Object.keys(map).forEach(dept => {
-                $(`#${formModuleKeyQt}-upd_${dept}_@ViewData["Id"]`).text("Updated: " + fmtTimeLocal(map[dept]));
+                completedDateSection(`${formModuleKeyQt}-upd_${dept}_@ViewData["Id"]`, map[dept])
+                // $(`#${formModuleKeyQt}-upd_${dept}_@ViewData["Id"]`).text("Updated: " + fmtTimeLocal(map[dept]));
             });
         }
 

@@ -1131,7 +1131,8 @@ Note:
             };
 
             Object.keys(map).forEach(dept => {
-            $(`#${formModuleKeyPi}-upd_${dept}_@ViewData["Id"]`).text("Updated: " + fmtTimeLocal(map[dept]));
+                completedDateSection(`${formModuleKeyPi}-upd_${dept}_@ViewData["Id"]`, map[dept])
+            // $(`#${formModuleKeyPi}-upd_${dept}_@ViewData["Id"]`).text("Updated: " + fmtTimeLocal(map[dept]));
             });
         }
 

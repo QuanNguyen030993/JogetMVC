@@ -4475,7 +4475,8 @@
 
                         if (item[0]) {
                             items.push({
-                                dataField: "quotation",
+                                dataField: item[0].data?.CustomField ? item[0].data?.CustomField : "default",
+                                validationRules: item[0].data?.ValidationRules ? item[0].data?.ValidationRules : null,
                                 editorType: "dxFileUploader",
                                 editorOptions: { name: "files" },
                                 template: function (data, itemElement) {
@@ -5001,7 +5002,7 @@
             //         .appendTo($container);
             const $uploader = $(`<div id="${attachmentHostIds.uploader}"></div>`)
                  .appendTo($container)
-             $uploader.fileuploader({
+                $uploader.fileuploader({
                 guid: editorOptionsIn.guid,
                 controllerName: "Document",
                 titleName: "Select or drag files to upload",
@@ -6223,7 +6224,7 @@
                         allGroups.forEach(function (group) {
                             if (group.dataset.decisionPlacement === "form") {
                                 rememberDecisionGroupPosition(root, section, dock, group);
-                                restoreDecisionGroupPosition(group);
+                                // restoreDecisionGroupPosition(group);
                             }
                         });
 
@@ -6939,7 +6940,7 @@
                 if (readOnly || syncingFromForm) return;
 
                 if (formInstance) {
-                    formInstance.updateData(item.dataField, html);
+                    // formInstance.updateData(item.dataField, html); // bug return to start 
                 }
                 editorOptions.value = html;
             };
@@ -8635,6 +8636,7 @@
            
 
                 function waitForDecisionRouteStage(formId) {
+                    console.log(formId);
                     var $form = $(`#${formId}`);
                     var $stageRoot = $form.closest("[data-render-stage]");
                     if (!$stageRoot.length || $stageRoot.attr("data-render-stage") === "routeState") {
@@ -8685,73 +8687,85 @@
                         }, FormStageDelay.routeState);
                     });
                 }
+                //Comment out 2026-08-10
+        // function ensureDecisionCommonStatus(statusId, buttonId) {
+        //     if (!statusId) return $();
 
-        function ensureDecisionCommonStatus(statusId, buttonId) {
-            if (!statusId) return $();
+        //     var $status = $(`#${statusId}`);
+        //     var $button = buttonId ? $(`#${buttonId}`) : $();
+        //     if (!$status.length) {
+        //         $status = $(`<span id="${statusId}_labelStatus" role="status" aria-live="polite"></span>`);
+        //     }
 
-            var $status = $(`#${statusId}`);
-            var $button = buttonId ? $(`#${buttonId}`) : $();
-            if (!$status.length) {
-                $status = $(`<span id="${statusId}_labelStatus" role="status" aria-live="polite"></span>`);
+        //     var $fieldItem = $button.length ? $button.closest(".dx-field-item") : $status.closest(".dx-field-item");
+        //     var $content = $button.length
+        //         ? $button.closest(".dx-field-item-content")
+        //         : $fieldItem.find(".dx-field-item-content").first();
+
+        //     if ($content.length) {
+        //         var $actionRow = $content.children(".decision-action-row").first();
+        //         var $statusRow = $content.children(".decision-status-row").first();
+        //         if (!$statusRow.length) {
+        //             $statusRow = $('<div class="decision-status-row" aria-live="polite"></div>').prependTo($content);
+        //         }
+        //         if (!$actionRow.length) {
+        //             $actionRow = $('<div class="decision-action-row"></div>').appendTo($content);
+        //         }
+        //         if (!$status.parent().is($statusRow)) {
+        //             $status.detach().appendTo($statusRow);
+        //         }
+        //         if ($button.length && !$button.parent().is($actionRow)) {
+        //             $button.detach().appendTo($actionRow);
+        //         }
+        //     } else if (!$status.parent().length && $button.length) {
+        //         $status.prependTo($button.parent());
+        //     }
+
+        //     $status
+        //     .addClass("decision-common-status decision-status-button")
+        //     .attr({ role: "status", "aria-live": "polite" })
+        //     .removeAttr("aria-disabled")
+        //     .css({
+        //         display: "inline-flex",
+        //         alignItems: "center",
+        //         justifyContent: "center",
+        //         gap: "5px",
+        //         minHeight: "20px",
+        //         padding: "2px 8px",
+        //         borderRadius: "999px",
+        //         fontSize: "var(--management-font-body, 10px)",
+        //         fontWeight: "600",
+        //         lineHeight: "16px",
+        //         boxSizing: "border-box",
+        //         width: "fit-content"
+        //     });
+
+        //     return $status;
+        // }
+
+        function setDecisionCommonStatus(statusId, typeRender, state) {
+
+            // var $status = ensureDecisionCommonStatus(statusId, buttonId);
+            try 
+            {
+                var $status = $(`#${statusId}`);
             }
-
-            var $fieldItem = $button.length ? $button.closest(".dx-field-item") : $status.closest(".dx-field-item");
-            var $content = $button.length
-                ? $button.closest(".dx-field-item-content")
-                : $fieldItem.find(".dx-field-item-content").first();
-
-            if ($content.length) {
-                var $actionRow = $content.children(".decision-action-row").first();
-                var $statusRow = $content.children(".decision-status-row").first();
-                if (!$statusRow.length) {
-                    $statusRow = $('<div class="decision-status-row" aria-live="polite"></div>').prependTo($content);
-                }
-                if (!$actionRow.length) {
-                    $actionRow = $('<div class="decision-action-row"></div>').appendTo($content);
-                }
-                if (!$status.parent().is($statusRow)) {
-                    $status.detach().appendTo($statusRow);
-                }
-                if ($button.length && !$button.parent().is($actionRow)) {
-                    $button.detach().appendTo($actionRow);
-                }
-            } else if (!$status.parent().length && $button.length) {
-                $status.prependTo($button.parent());
+            catch{
+                if (typeRender === "onLoaded")
+                return "No status";
             }
-
-            $status
-            .addClass("decision-common-status decision-status-button")
-            .attr({ role: "status", "aria-live": "polite" })
-            .removeAttr("aria-disabled")
-            .css({
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "5px",
-                minHeight: "20px",
-                padding: "2px 8px",
-                borderRadius: "999px",
-                fontSize: "var(--management-font-body, 10px)",
-                fontWeight: "600",
-                lineHeight: "16px",
-                boxSizing: "border-box",
-                width: "fit-content"
-            });
-
-            return $status;
-        }
-
-        function setDecisionCommonStatus(statusId, buttonId, state) {
-            var $status = ensureDecisionCommonStatus(statusId, buttonId);
+            // var $button = buttonId ? $(`#${buttonId}`) : $();
             if (!$status.length) return;
 
-            $status
+
+            if (typeRender === "onLoading") {
+                  $status
                 .removeClass("statusTag status-success accepted approved rejected declined unknown is-loading")
                 .removeAttr("title")
                 .css({ color: "", backgroundColor: "", border: "" })
                 .empty();
 
-            if (state === "loading") {
+
                 $status
                     .addClass("is-loading")
                     .css({
@@ -8763,7 +8777,9 @@
                 $loader.dxLoadIndicator({ width: 14, height: 14, visible: true });
                 return;
             }
-
+            else {
+                $status.empty();
+            }
             var statusText = String(state || "No status").trim() || "No status";
             var normalizedStatus = statusText.toLowerCase();
             var isAccepted = normalizedStatus.includes("accept") || normalizedStatus.includes("approv");
@@ -8778,8 +8794,8 @@
             }
 
             $status
-                .css({ width: "auto", margin: "0" })
-                .text(state);
+                .css({ width: "fit-content" })
+                .text(state || "No status");
         }
 
         function getDecisionCommonStatus(formItems, dept, tatObject) {
@@ -8887,12 +8903,12 @@
 
                     var $loader = $(`<span class="decision-common-status-loader"></span>`).appendTo($statusRow);
                      $loader.dxLoadIndicator({ width: 14, height: 14, visible: true });
-                    $("<span>", {
-                        id: commonStatusId,
-                        class: "accept-status-indicator decision-common-status decision-status-button",
-                        role: "status",
-                        "aria-live": "polite"
-                    }).appendTo($statusRow);
+                    // $("<span>", {
+                    //     id: commonStatusId,
+                    //     class: "accept-status-indicator decision-common-status decision-status-button",
+                    //     role: "status",
+                    //     "aria-live": "polite"
+                    // }).appendTo($statusRow);
 
                     var $actionRow = $("<div>", {
                         id: actionHostId,
@@ -8930,12 +8946,12 @@
                             .appendTo($actionRow);
                         if (config.buttonClass) $button.addClass(config.buttonClass);
                     });
-
-                    setDecisionCommonStatus(
-                        commonStatusId,
-                        primaryButtonId,
-                        formProps?.initialDecisionStatus || primaryItem.initialDecisionStatus || "No status"
-                    );
+                    //??
+                    // setDecisionCommonStatus(
+                    //     commonStatusId,
+                    //     primaryButtonId,
+                    //     formProps?.initialDecisionStatus || primaryItem.initialDecisionStatus || "No status"
+                    // );
                 }
             };
         }
@@ -8987,20 +9003,26 @@
             }
 
             function updateDelayAcceptStatus(statusId, buttonId, acceptDate, defaultStatus = "Accepted") {
-                if (!statusId || !acceptDate) return;
-                var statusLabel = defaultStatus;
-                if (statusLabel && typeof statusLabel === "object") {
-                    statusLabel = statusLabel.text
-                        || statusLabel.displayStatus
-                        || statusLabel.actionName
-                        || statusLabel.actionCode
-                        || statusLabel.statusName;
-                }
-                setDecisionCommonStatus(
-                    statusId,
-                    buttonId,
-                    `${statusLabel || "Accepted"} at: ${fmtTimeLocal(acceptDate)}`
-                );
+                setTimeout(() => {
+                    if (!statusId || !acceptDate) 
+                    {
+                        alert("Cannot load status from "+ statusId);
+                    return;
+                    }
+                    var statusLabel = defaultStatus;
+                    if (statusLabel && typeof statusLabel === "object") {
+                        statusLabel = statusLabel.text
+                            || statusLabel.displayStatus
+                            || statusLabel.actionName
+                            || statusLabel.actionCode
+                            || statusLabel.statusName;
+                    }
+                    setDecisionCommonStatus(
+                        statusId,
+                        "onLoaded",
+                        `${statusLabel || "Accepted"} at: ${fmtTimeLocal(acceptDate)}`
+                    );
+                }, _delayLoadFormDetailStatus);
             }
 
             function isRouteDecisionButton(item) {
@@ -9159,11 +9181,11 @@
                 // Status la chip/button nho o hang tren; button thao tac goc duoc giu
                 // o hang duoi de layout khong nhay khi actionStatus/TAT tra ve.
                 var statusElementId = getDelayAcceptStatusId(item) || item.statusButtonId || `${buttonId}_status`;
-                setDecisionCommonStatus(
-                    statusElementId,
-                    buttonId,
-                    item.statusTitle || statusText
-                );
+                // setDecisionCommonStatus(
+                //     statusElementId,
+                //     buttonId,
+                //     item.statusTitle || statusText
+                // );
 
                 return true;
             }
@@ -9325,8 +9347,15 @@
                     setTimeout(() => {
                         var form = $(`#${formDataClone.formId}`).dxForm("instance");
                         if (!form) return;
-
+                       
                         var formItems = form.option("formData") || {};
+                        if (formItems)
+                        {
+
+                        }
+                        else {
+                            console.log("Form " + " no data");
+                        }
                         var picObject = tryParseJSON(
                             formItems.pic ?? formItems.pIC ?? formItems.PIC,
                             "PIC Load Problem"
@@ -9334,7 +9363,7 @@
                         //var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
                         var pic = picObject[formDataClone.dept];
                         if (!pic) {
-
+                            console.log("No pic for "+ formDataClone.dept);
                             return;
 
                         }
@@ -9387,7 +9416,11 @@
                                 formDataClone.dept,
                                 latestTatObject
                         );
-
+                          setDecisionCommonStatus(
+                            commonStatusId,
+                            "onLoading",
+                            finalDecisionStatus.title || finalDecisionStatus.text
+                        );
                       if (latestTatObject?.[formDataClone.dept]?.AcceptDate)
                          {
                           var acceptButtonId = getDelayAcceptButtonId(params[0]);
@@ -9414,55 +9447,52 @@
                                     }
                               }
 
-                                 if (formDataClone.dept == "LMKT" || formDataClone.dept == "FO") {
-                                     var storedStatus = getDelayAcceptStoredStatus(formItems, formDataClone.dept, formItems);
-                                     if (storedStatus) {
-                                          try
-                                        {
-                                         $(`#${params[0]}`).dxButton("instance").option("visible", true);
-                                         if (params.length > 3) $(`#${params[2]}`).dxButton("instance").option("visible", true);
-                                         if (storedStatus.text == "Approved")
-                                             $(`#${params[0]}`).css("background-color", window.DecisionColors.accepted);
-                                         if (storedStatus.text == "Declined")
-                                          if (params.length > 3)    $(`#${params[2]}`).css("background-color", window.DecisionColors.accepted);
-                                         if (storedStatus)
-                                             disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
-                                             }
-                                             catch {
+                              if (formDataClone.dept == "LMKT" || formDataClone.dept == "FO") {
+                                  var storedStatus = getDelayAcceptStoredStatus(formItems, formDataClone.dept, formItems);
+                                  if (storedStatus) {
+                                       try
+                                     {
+                                      $(`#${params[0]}`).dxButton("instance").option("visible", true);
+                                      if (params.length > 3) $(`#${params[2]}`).dxButton("instance").option("visible", true);
+                                      if (storedStatus.text == "Approved")
+                                          $(`#${params[0]}`).css("background-color", window.DecisionColors.accepted);
+                                      if (storedStatus.text == "Declined")
+                                       if (params.length > 3)    $(`#${params[2]}`).css("background-color", window.DecisionColors.accepted);
+                                      if (storedStatus)
+                                          disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
+                                          }
+                                          catch {
 
-                                             }
-                                     }
-                                     else {
-                                             try 
-                                            {
-                                             $(`#${params[0]}`).dxButton("instance").option("visible", false);
-                                              if (params.length > 3) $(`#${params[2]}`).dxButton("instance").option("visible", false);
+                                          }
+                                  }
+                                  else {
+                                          try 
+                                         {
+                                          $(`#${params[0]}`).dxButton("instance").option("visible", false);
+                                           if (params.length > 3) $(`#${params[2]}`).dxButton("instance").option("visible", false);
 
-                                            }
-                                            catch{
+                                         }
+                                         catch{
 
-                                            }
-                                     }
-                                 }
-                                 else{
-                                     $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
-                                     updateDelayAcceptStatus(
-                                         panelStatusId,
-                                         acceptButtonId,
-                                         latestTatObject[formDataClone.dept]?.AcceptDate
-                                     );
-                                         disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
-                                     }
+                                         }
+                                  }
+                              }
+                              else{
+                                  debugger
+                                  $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
+                                  updateDelayAcceptStatus(
+                                      panelStatusId,
+                                      acceptButtonId,
+                                      latestTatObject[formDataClone.dept]?.AcceptDate
+                                  );
+                                  disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
+                              }
                           }
                                 
                          
 
                             // var finalDecisionStatus = "";
-                        setDecisionCommonStatus(
-                            commonStatusId,
-                            acceptButtonId,
-                            finalDecisionStatus.title || finalDecisionStatus.text
-                        );
+                       
                         // if (acceptButtonId
                         //     && formItems.stageDept == formDataClone.dept
                         //     && !latestTatObject?.[formDataClone.dept]?.AcceptDate
@@ -9473,37 +9503,36 @@
                       else {
                           if (params.length > 0)
                           {
-
-                          var acceptButtonId = getDelayAcceptButtonId(params[0]);
-                           if (acceptButtonId
-                            && formItems.stageDept == formDataClone.dept
-                            && !latestTatObject?.[formDataClone.dept]?.AcceptDate
-                            && !renderedStoredStatus) {
-                                $(`#${acceptButtonId}`).dxButton("instance")?.option("disabled", false);
-                        }
+                              var acceptButtonId = getDelayAcceptButtonId(params[0]);
+                              if (acceptButtonId
+                                  && formItems.stageDept == formDataClone.dept
+                                  && !latestTatObject?.[formDataClone.dept]?.AcceptDate
+                                  && !renderedStoredStatus) {
+                                      $(`#${acceptButtonId}`).dxButton("instance")?.option("disabled", false);
+                              }
                           }
                       }
 
-                          if (formDataClone.dept == "LMKT") { //  another logic
-                                     var storedStatus = getDelayAcceptStoredStatus(formItems, formDataClone.dept, formItems);
+                      if (formDataClone.dept == "LMKT") { //  another logic
+                                 var storedStatus = getDelayAcceptStoredStatus(formItems, formDataClone.dept, formItems);
+                                  updateDelayAcceptStatus(
+                                     commonStatusId,
+                                     commonAcceptButtonId,
+                                     latestTatObject[formDataClone.dept]?.CompleteDate, storedStatus
+                                 );
+                                
+                             }
+                      if (formItems.stageDept == "Client" && formDataClone.dept == "FO") { //  another logic
+                          var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
+                              if (storedStatus != "Accepted")
+                              {
                                       updateDelayAcceptStatus(
-                                         commonStatusId,
-                                         commonAcceptButtonId,
-                                         latestTatObject[formDataClone.dept]?.CompleteDate, storedStatus
-                                     );
-                                    
-                                 }
-                          if (formItems.stageDept == "Client" && formDataClone.dept == "FO") { //  another logic
-                              var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
-                                  if (storedStatus != "Accepted")
-                                  {
-                                          updateDelayAcceptStatus(
-                                          "Client_" + commonStatusId,
-                                          commonAcceptButtonId,
-                                          latestTatObject[formDataClone.dept]?.CompleteDate, storedStatus
-                                      );
-                                  }
-                          }
+                                      "Client_" + commonStatusId,
+                                      commonAcceptButtonId,
+                                      latestTatObject[formDataClone.dept]?.CompleteDate, storedStatus
+                                  );
+                              }
+                      }
     }, _delayUnlockForm);
 
 
@@ -9612,5 +9641,10 @@
          }
          function getAttachmentPreviewItemsByControlId(controlId) {
              return $(window.IdManager.attachmentPreviewItemsByControlIdSelector(controlId));
+         }
+
+         function completedDateSection(formModuleKey, map){
+             var $container =  $(`#${formModuleKey}`).text("Completed: " + fmtTimeLocal(map));
+             return $container;
          }
 </script>

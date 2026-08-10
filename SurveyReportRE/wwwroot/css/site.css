@@ -31253,7 +31253,6 @@ text-overflow: ellipsis;
 .dept-updated {
     font-size: 12px;
     font-weight: 800;
-    color: rgba(17,24,39,.65);
     white-space: nowrap;
 }
 
@@ -33338,7 +33337,7 @@ textarea {
 .dept-header .dept-updated {
     font-size: 11px !important;
     font-weight: 600 !important;
-    color: #94a3b8 !important;
+    color: var(--form-status-warning-text);
 }
 
 .dept-header .dept-toggle-icon {
@@ -35077,163 +35076,6 @@ body.skin-re .dx-popup-wrapper.dx-rtl > .dx-overlay-content > .dx-popup-title.dx
   box-shadow: var(--theme-tab-active-shadow, 0 4px 12px rgba(93, 149, 245, .28));
 }
 
-/* SweetAlert2 isolation: global typography rules above must not resize its
-   em-based icons or collapse the dialog hierarchy. */
-.swal2-container {
-  z-index: 100000 !important;
-  padding: 16px !important;
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
-}
-
-.swal2-container.swal2-backdrop-show {
-  background: rgba(15, 23, 42, .42) !important;
-  backdrop-filter: blur(2px);
-}
-
-.swal2-container .swal2-popup:not(.swal2-toast) {
-  width: min(420px, calc(100vw - 32px));
-  max-width: 100%;
-  padding: 24px;
-  overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, .28);
-  border-radius: 16px;
-  background: var(--theme-surface, #fff);
-  color: var(--theme-text, #0f172a);
-  box-shadow: 0 24px 70px rgba(15, 23, 42, .24);
-  font-size: 16px !important;
-}
-
-/* SweetAlert draws its icons with em-sized spans. Restore inheritance after
-   the application's global `span { font-size: 11px !important; }` rule. */
-.swal2-container .swal2-icon span,
-.swal2-container .swal2-icon [class^="swal2-"] {
-  font-size: 48px !important;
-}
-
-.swal2-container .swal2-icon {
-  margin: 0 auto 14px;
-}
-
-.swal2-container .swal2-title,
-.swal2-container .swal2-title * {
-  margin: 0;
-  padding: 0;
-  color: var(--theme-text-strong, #0f172a);
-  font-size: 18px !important;
-  font-weight: 700 !important;
-  line-height: 1.4;
-  letter-spacing: -.01em;
-}
-
-.swal2-container .swal2-html-container,
-.swal2-container .swal2-html-container * {
-  color: var(--theme-muted, #64748b);
-  font-size: 13px !important;
-  line-height: 1.55;
-}
-
-.swal2-container .swal2-html-container {
-  margin: 8px 0 0;
-  padding: 0 8px;
-}
-
-.swal2-container .swal2-actions {
-  gap: 8px;
-  margin: 20px 0 0;
-}
-
-.swal2-container .swal2-styled {
-  min-width: 88px;
-  min-height: 38px;
-  margin: 0;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 13px !important;
-  font-weight: 650 !important;
-  line-height: 1.2;
-  box-shadow: none;
-  transition: background-color .16s ease, border-color .16s ease,
-    box-shadow .16s ease, transform .1s ease;
-}
-
-.swal2-container .swal2-styled.swal2-confirm {
-  background: var(--theme-primary, #2563eb) !important;
-  color: var(--theme-on-primary, #fff) !important;
-}
-
-.swal2-container .swal2-styled.swal2-confirm:hover {
-  background: var(--theme-primary-hover, #1d4ed8) !important;
-}
-
-.swal2-container .swal2-styled.swal2-cancel {
-  border: 1px solid var(--theme-border, #dbe3ec);
-  background: var(--theme-surface-muted, #f8fafc) !important;
-  color: var(--theme-text, #334155) !important;
-}
-
-.swal2-container .swal2-styled.swal2-cancel:hover {
-  border-color: #cbd5e1;
-  background: #eef2f7 !important;
-}
-
-.swal2-container .swal2-styled:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--theme-primary-ring, rgba(37, 99, 235, .18));
-}
-
-.swal2-container .swal2-styled:active {
-  transform: translateY(1px);
-}
-
-.swal2-container :is(.swal2-input, .swal2-select, .swal2-textarea) {
-  border: 1px solid var(--theme-border-strong, #cbd5e1);
-  border-radius: 8px;
-  color: var(--theme-text, #0f172a);
-  font-size: 13px !important;
-  box-shadow: none;
-}
-
-.swal2-container :is(.swal2-input, .swal2-select, .swal2-textarea):focus {
-  border-color: var(--theme-primary, #2563eb);
-  outline: none;
-  box-shadow: 0 0 0 3px var(--theme-primary-ring, rgba(37, 99, 235, .18));
-}
-
-.swal2-container .swal2-close {
-  color: #94a3b8;
-  font-size: 32px !important;
-}
-
-.swal2-container .swal2-validation-message {
-  border-radius: 8px;
-  font-size: 12px !important;
-}
-
-@media (max-width: 480px) {
-  .swal2-container {
-    padding: 10px !important;
-  }
-
-  .swal2-container .swal2-popup:not(.swal2-toast) {
-    width: calc(100vw - 20px);
-    padding: 20px 16px;
-  }
-
-  .swal2-container .swal2-actions {
-    width: 100%;
-  }
-
-  .swal2-container .swal2-styled {
-    flex: 1 1 120px;
-  }
-}
-.launcher-title {
-    text-align: center;
-    background: var(--theme-tab-active, #5d95f5);
-    color: #fff;
-    margin-bottom: 100px;
-}
-
-swal2-icon-content {
-    font-size: 10px;
+.swal2-icon {
+    font-size: 10px !important;
 }

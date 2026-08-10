@@ -23,40 +23,40 @@ const HtmlEditor = forwardRef(({
     const [sourceHtml, setSourceHtml] = useState(value ?? "");
 
     const [showCropper, setShowCropper] =
-    useState(false);
+        useState(false);
 
-const [imageSrc, setImageSrc] =
-    useState("");
+    const [imageSrc, setImageSrc] =
+        useState("");
 
-const selectedImageRef =
-    useRef(null);
-
-
-const [selectedImage, setSelectedImage] =
-    useState(null);
-
-const [imageRect, setImageRect] =
-    useState(null);
-
-const resizeState =
-    useRef(null);
+    const selectedImageRef =
+        useRef(null);
 
 
-const change = () => {
+    const [selectedImage, setSelectedImage] =
+        useState(null);
 
-    const html =
-        editorRef.current.innerHTML;
+    const [imageRect, setImageRect] =
+        useState(null);
 
-    lastValueRef.current = html;
+    const resizeState =
+        useRef(null);
 
-    onChange?.(html);
-};
 
-const cropImageRef =
-    useRef(null);
+    const change = () => {
 
-const cropperRef =
-    useRef(null);
+        const html =
+            editorRef.current.innerHTML;
+
+        lastValueRef.current = html;
+
+        onChange?.(html);
+    };
+
+    const cropImageRef =
+        useRef(null);
+
+    const cropperRef =
+        useRef(null);
 
     // const resizeState = useRef({
     //     active: false,
@@ -65,7 +65,7 @@ const cropperRef =
     //     startHeight: 0
     // });
 
-   
+
     useLayoutEffect(() => {
 
         if (!editorRef.current)
@@ -127,92 +127,324 @@ const cropperRef =
 
     const startResizeTop = (e) => {
 
-    e.preventDefault();
-    e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
 
-    const img =
-        selectedImageRef.current;
+        const img =
+            selectedImageRef.current;
 
-    resizeState.current = {
-        type: "top",
-        startY: e.clientY,
-        startHeight: img.offsetHeight
+        resizeState.current = {
+            type: "top",
+            startY: e.clientY,
+            startHeight: img.offsetHeight
+        };
     };
-};
-const startResize = e => {
+    const startResize = e => {
 
-    e.preventDefault();
+        e.preventDefault();
 
-    resizeState.current = {
+        resizeState.current = {
 
-        startX:
-            e.clientX,
-        startY:
-            e.clientY,
-        startWidth:
-            imageRect.width,
+            startX:
+                e.clientX,
+            startY:
+                e.clientY,
+            startWidth:
+                imageRect.width,
 
-        startHeight:
-            imageRect.height
+            startHeight:
+                imageRect.height
+        };
     };
-};
-const startResizeHorizontal = (e) => {
+    const startResizeHorizontal = (e) => {
 
-    e.preventDefault();
-    e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
 
-    resizeState.current = {
-        type: "horizontal",
-        startX: e.clientX,
-        startWidth: imageRect.width
+        resizeState.current = {
+            type: "horizontal",
+            startX: e.clientX,
+            startWidth: imageRect.width
+        };
     };
-};
 
-const startResizeVertical = (e) => {
+    const startResizeVertical = (e) => {
 
-    e.preventDefault();
-    e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
 
-    const img = selectedImageRef.current;
+        const img = selectedImageRef.current;
 
-    resizeState.current = {
-        type: "vertical",
-        startY: e.clientY,
-        startHeight: img.offsetHeight,
-        startWidth: img.offsetWidth
+        resizeState.current = {
+            type: "vertical",
+            startY: e.clientY,
+            startHeight: img.offsetHeight,
+            startWidth: img.offsetWidth
+        };
     };
-};
-const startResizeCorner = (e) => {
+    const startResizeCorner = (e) => {
 
-    e.preventDefault();
-    e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
 
-    resizeState.current = {
-        type: "corner",
-        startX: e.clientX,
-        startY: e.clientY,
-        startWidth: imageRect.width,
-        startHeight: imageRect.height
+        resizeState.current = {
+            type: "corner",
+            startX: e.clientX,
+            startY: e.clientY,
+            startWidth: imageRect.width,
+            startHeight: imageRect.height
+        };
     };
-};
 
-useEffect(() => {
+    useEffect(() => {
 
-    const editor =
-        editorRef.current;
+        const editor =
+            editorRef.current;
 
-    const click = e => {
+        const click = e => {
+
+            if (
+                e.target.tagName === "IMG"
+            ) {
+
+                const rect =
+                    e.target.getBoundingClientRect();
+
+                setSelectedImage(
+                    e.target
+                );
+
+                setImageRect({
+                    left: rect.left,
+                    top: rect.top,
+                    width: rect.width,
+                    height: rect.height
+                });
+            }
+            else {
+
+                setSelectedImage(null);
+
+            }
+
+        };
+
+        editor.addEventListener(
+            "click",
+            click
+        );
+
+        return () =>
+            editor.removeEventListener(
+                "click",
+                click
+            );
+
+    }, []);
+    useEffect(() => {
 
         if (
-            e.target.tagName === "IMG"
-        ) {
+            !showCropper ||
+            !cropImageRef.current
+        )
+            return;
+
+        cropperRef.current =
+            new Cropper(
+                cropImageRef.current,
+                {
+                    viewMode: 1,
+                    autoCropArea: 1,
+                    responsive: true,
+                    movable: true,
+                    zoomable: true,
+                    rotatable: true,
+                    scalable: true
+                }
+            );
+
+        return () => {
+
+            cropperRef.current?.destroy();
+
+            cropperRef.current = null;
+        };
+
+    }, [showCropper]);
+    // useEffect(() => {
+
+    //     const move = (e) => {
+
+    //         if (!resizeState.current.active)
+    //             return;
+
+    //         const deltaX =
+    //             e.clientX -
+    //             resizeState.current.startX;
+
+    //         const width =
+    //             Math.max(
+    //                 50,
+    //                 resizeState.current.startWidth +
+    //                 deltaX
+    //             );
+
+    //         const ratio =
+    //             resizeState.current.startHeight /
+    //             resizeState.current.startWidth;
+
+    //         const height =
+    //             Math.round(width * ratio);
+
+    //         const img =
+    //             selectedImage?.element;
+
+    //         if (!img)
+    //             return;
+
+    //         img.style.width =
+    //             width + "px";
+
+    //         img.style.height =
+    //             height + "px";
+
+    //         const rect =
+    //             img.getBoundingClientRect();
+
+    //         setSelectedImage({
+    //             element: img,
+    //             width,
+    //             height,
+    //             x:
+    //                 rect.left +
+    //                 window.scrollX,
+    //             y:
+    //                 rect.top +
+    //                 window.scrollY
+    //         });
+    //     };
+
+    //     const up = () => {
+
+    //         if (
+    //             resizeState.current.active
+    //         ) {
+
+    //             resizeState.current.active =
+    //                 false;
+
+    //             change();
+    //         }
+    //     };
+
+    //     document.addEventListener(
+    //         "mousemove",
+    //         move
+    //     );
+
+    //     document.addEventListener(
+    //         "mouseup",
+    //         up
+    //     );
+
+    //     return () => {
+
+    //         document.removeEventListener(
+    //             "mousemove",
+    //             move
+    //         );
+
+    //         document.removeEventListener(
+    //             "mouseup",
+    //             up
+    //         );
+
+    //     };
+
+    // }, [selectedImage]);
+
+    useEffect(() => {
+
+        const move = e => {
+
+            if (
+                !resizeState.current ||
+                !selectedImage
+            )
+                return;
+
+            const img = selectedImage;
+
+            if (resizeState.current.type === "horizontal") {
+                const deltaX =
+                    e.clientX -
+                    resizeState.current.startX;
+
+                const width =
+                    Math.max(
+                        20,
+                        resizeState.current.startWidth +
+                        deltaX
+                    );
+
+                img.style.width =
+                    width + "px";
+            }
+            else if (
+                resizeState.current.type ===
+                "vertical"
+            ) {
+                const deltaY =
+                    e.clientY -
+                    resizeState.current.startY;
+
+                const height =
+                    Math.max(
+                        20,
+                        resizeState.current.startHeight +
+                        deltaY
+                    );
+
+                img.style.height =
+                    height + "px";
+            }
+            else if (
+                resizeState.current.type ===
+                "corner"
+            ) {
+                const deltaX =
+                    e.clientX -
+                    resizeState.current.startX;
+
+                const deltaY =
+                    e.clientY -
+                    resizeState.current.startY;
+
+                const width =
+                    Math.max(
+                        20,
+                        resizeState.current.startWidth +
+                        deltaX
+                    );
+
+                const height =
+                    Math.max(
+                        20,
+                        resizeState.current.startHeight +
+                        deltaY
+                    );
+
+                img.style.width =
+                    width + "px";
+                img.style.height =
+                    height + "px";
+            }
+            else {
+                return;
+            }
 
             const rect =
-                e.target.getBoundingClientRect();
-
-            setSelectedImage(
-                e.target
-            );
+                img.getBoundingClientRect();
 
             setImageRect({
                 left: rect.left,
@@ -220,275 +452,43 @@ useEffect(() => {
                 width: rect.width,
                 height: rect.height
             });
-        }
-        else {
+        };
 
-            setSelectedImage(null);
+        const up = () => {
 
-        }
+            resizeState.current =
+                null;
 
-    };
+            change();
+        };
 
-    editor.addEventListener(
-        "click",
-        click
-    );
-
-    return () =>
-        editor.removeEventListener(
-            "click",
-            click
-        );
-
-}, []);
-useEffect(() => {
-
-    if (
-        !showCropper ||
-        !cropImageRef.current
-    )
-        return;
-
-    cropperRef.current =
-        new Cropper(
-            cropImageRef.current,
-            {
-                viewMode: 1,
-                autoCropArea: 1,
-                responsive: true,
-                movable: true,
-                zoomable: true,
-                rotatable: true,
-                scalable: true
-            }
-        );
-
-    return () => {
-
-        cropperRef.current?.destroy();
-
-        cropperRef.current = null;
-    };
-
-}, [showCropper]);
-// useEffect(() => {
-
-//     const move = (e) => {
-
-//         if (!resizeState.current.active)
-//             return;
-
-//         const deltaX =
-//             e.clientX -
-//             resizeState.current.startX;
-
-//         const width =
-//             Math.max(
-//                 50,
-//                 resizeState.current.startWidth +
-//                 deltaX
-//             );
-
-//         const ratio =
-//             resizeState.current.startHeight /
-//             resizeState.current.startWidth;
-
-//         const height =
-//             Math.round(width * ratio);
-
-//         const img =
-//             selectedImage?.element;
-
-//         if (!img)
-//             return;
-
-//         img.style.width =
-//             width + "px";
-
-//         img.style.height =
-//             height + "px";
-
-//         const rect =
-//             img.getBoundingClientRect();
-
-//         setSelectedImage({
-//             element: img,
-//             width,
-//             height,
-//             x:
-//                 rect.left +
-//                 window.scrollX,
-//             y:
-//                 rect.top +
-//                 window.scrollY
-//         });
-//     };
-
-//     const up = () => {
-
-//         if (
-//             resizeState.current.active
-//         ) {
-
-//             resizeState.current.active =
-//                 false;
-
-//             change();
-//         }
-//     };
-
-//     document.addEventListener(
-//         "mousemove",
-//         move
-//     );
-
-//     document.addEventListener(
-//         "mouseup",
-//         up
-//     );
-
-//     return () => {
-
-//         document.removeEventListener(
-//             "mousemove",
-//             move
-//         );
-
-//         document.removeEventListener(
-//             "mouseup",
-//             up
-//         );
-
-//     };
-
-// }, [selectedImage]);
-
-useEffect(() => {
-
-    const move = e => {
-
-        if (
-            !resizeState.current ||
-            !selectedImage
-        )
-            return;
-
-        const img = selectedImage;
-
-        if (resizeState.current.type === "horizontal") {
-            const deltaX =
-                e.clientX -
-                resizeState.current.startX;
-
-            const width =
-                Math.max(
-                    20,
-                    resizeState.current.startWidth +
-                    deltaX
-                );
-
-            img.style.width =
-                width + "px";
-        }
-        else if (
-            resizeState.current.type ===
-            "vertical"
-        ) {
-            const deltaY =
-                e.clientY -
-                resizeState.current.startY;
-
-            const height =
-                Math.max(
-                    20,
-                    resizeState.current.startHeight +
-                    deltaY
-                );
-
-            img.style.height =
-                height + "px";
-        }
-        else if (
-            resizeState.current.type ===
-            "corner"
-        ) {
-            const deltaX =
-                e.clientX -
-                resizeState.current.startX;
-
-            const deltaY =
-                e.clientY -
-                resizeState.current.startY;
-
-            const width =
-                Math.max(
-                    20,
-                    resizeState.current.startWidth +
-                    deltaX
-                );
-
-            const height =
-                Math.max(
-                    20,
-                    resizeState.current.startHeight +
-                    deltaY
-                );
-
-            img.style.width =
-                width + "px";
-            img.style.height =
-                height + "px";
-        }
-        else {
-            return;
-        }
-
-        const rect =
-            img.getBoundingClientRect();
-
-        setImageRect({
-            left: rect.left,
-            top: rect.top,
-            width: rect.width,
-            height: rect.height
-        });
-    };
-
-    const up = () => {
-
-        resizeState.current =
-            null;
-
-        change();
-    };
-
-    document.addEventListener(
-        "mousemove",
-        move
-    );
-
-    document.addEventListener(
-        "mouseup",
-        up
-    );
-
-    return () => {
-
-        document.removeEventListener(
+        document.addEventListener(
             "mousemove",
             move
         );
 
-        document.removeEventListener(
+        document.addEventListener(
             "mouseup",
             up
         );
 
-    };
+        return () => {
 
-}, [selectedImage]);
+            document.removeEventListener(
+                "mousemove",
+                move
+            );
 
-const [rotationDegrees, setRotationDegrees] =
+            document.removeEventListener(
+                "mouseup",
+                up
+            );
+
+        };
+
+    }, [selectedImage]);
+
+    const [rotationDegrees, setRotationDegrees] =
         useState(0);
 
     const rotateImage = (direction) => {
@@ -556,109 +556,109 @@ const [rotationDegrees, setRotationDegrees] =
 
     const zoomIn = () => {
 
-    cropperRef.current?.zoom(
-        0.1
-    );
-
-};
-
-const zoomOut = () => {
-
-    cropperRef.current?.zoom(
-        -0.1
-    );
-
-};
-const applyCrop = () => {
-
-    if (
-        !cropperRef.current
-    )
-        return;
-
-    const canvas =
-        cropperRef.current
-            .getCroppedCanvas();
-
-    const base64 =
-        canvas.toDataURL(
-            "image/png"
+        cropperRef.current?.zoom(
+            0.1
         );
 
-    if (
-        selectedImageRef.current
-    ) {
-
-        selectedImageRef.current.src =
-            base64;
-
-    }
-
-    change();
-
-    setShowCropper(false);
-};
-
-const cancelCrop = () => {
-
-    setShowCropper(false);
-
-};
-useEffect(() => {
-
-    const editor = editorRef.current;
-
-    if (!editor) return;
-
-    const handleClick = (e) => {
-
-        editor
-            .querySelectorAll("img")
-            .forEach(img =>
-                img.classList.remove(
-                    "tmiv-selected-image"
-                )
-            );
-
-        if (e.target.tagName === "IMG") {
-
-            const img = e.target;
-
-            img.classList.add(
-                "tmiv-selected-image"
-            );
-
-            const rect =
-                img.getBoundingClientRect();
-
-            selectedImageRef.current = img;
-            setSelectedImage(img);
-            setImageRect({
-                left: rect.left,
-                top: rect.top,
-                width: rect.width,
-                height: rect.height
-            });
-        }
-        else {
-            selectedImageRef.current = null;
-            setSelectedImage(null);
-            setImageRect(null);
-        }
     };
 
-    editor.addEventListener(
-        "click",
-        handleClick
-    );
+    const zoomOut = () => {
 
-    return () =>
-        editor.removeEventListener(
+        cropperRef.current?.zoom(
+            -0.1
+        );
+
+    };
+    const applyCrop = () => {
+
+        if (
+            !cropperRef.current
+        )
+            return;
+
+        const canvas =
+            cropperRef.current
+                .getCroppedCanvas();
+
+        const base64 =
+            canvas.toDataURL(
+                "image/png"
+            );
+
+        if (
+            selectedImageRef.current
+        ) {
+
+            selectedImageRef.current.src =
+                base64;
+
+        }
+
+        change();
+
+        setShowCropper(false);
+    };
+
+    const cancelCrop = () => {
+
+        setShowCropper(false);
+
+    };
+    useEffect(() => {
+
+        const editor = editorRef.current;
+
+        if (!editor) return;
+
+        const handleClick = (e) => {
+
+            editor
+                .querySelectorAll("img")
+                .forEach(img =>
+                    img.classList.remove(
+                        "tmiv-selected-image"
+                    )
+                );
+
+            if (e.target.tagName === "IMG") {
+
+                const img = e.target;
+
+                img.classList.add(
+                    "tmiv-selected-image"
+                );
+
+                const rect =
+                    img.getBoundingClientRect();
+
+                selectedImageRef.current = img;
+                setSelectedImage(img);
+                setImageRect({
+                    left: rect.left,
+                    top: rect.top,
+                    width: rect.width,
+                    height: rect.height
+                });
+            }
+            else {
+                selectedImageRef.current = null;
+                setSelectedImage(null);
+                setImageRect(null);
+            }
+        };
+
+        editor.addEventListener(
             "click",
             handleClick
         );
 
-}, []);
+        return () =>
+            editor.removeEventListener(
+                "click",
+                handleClick
+            );
+
+    }, []);
     const toggleSourceView = () => {
         if (!showSource) {
             const html = editorRef.current?.innerHTML ?? "";
@@ -722,326 +722,326 @@ useEffect(() => {
 
                     <div className="tmiv-html-toolbar">
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() => command("undo")}
-    >
-        ↶
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => command("undo")}
+                        >
+                            ↶
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() => command("redo")}
-    >
-        ↷
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => command("redo")}
+                        >
+                            ↷
+                        </div>
 
-    <div className="tmiv-toolbar-separator" />
+                        <div className="tmiv-toolbar-separator" />
 
-    <select
-        className="tmiv-select"
-        onChange={e =>
-            command(
-                "fontName",
-                e.target.value
-            )
-        }
-    >
-         <option value="Asap">
-            Asap
-        </option>
-        <option value="Arial">
-            Arial
-        </option>
+                        <select
+                            className="tmiv-select"
+                            onChange={e =>
+                                command(
+                                    "fontName",
+                                    e.target.value
+                                )
+                            }
+                        >
+                            <option value="Asap">
+                                Asap
+                            </option>
+                            <option value="Arial">
+                                Arial
+                            </option>
 
-        <option value="Tahoma">
-            Tahoma
-        </option>
+                            <option value="Tahoma">
+                                Tahoma
+                            </option>
 
-        <option value="Verdana">
-            Verdana
-        </option>
+                            <option value="Verdana">
+                                Verdana
+                            </option>
 
-        <option value="Times New Roman">
-            Times
-        </option>
-    </select>
+                            <option value="Times New Roman">
+                                Times
+                            </option>
+                        </select>
 
-    <select
-        className="tmiv-select"
-        onChange={e =>
-            command(
-                "fontSize",
-                e.target.value
-            )
-        }
-    >
-        <option value="1">8</option>
-        <option value="2">10</option>
-        <option value="3">12</option>
-        <option value="4">16</option>
-        <option value="5">24</option>
-        <option value="6">32</option>
-        <option value="7">48</option>
-    </select>
+                        <select
+                            className="tmiv-select"
+                            onChange={e =>
+                                command(
+                                    "fontSize",
+                                    e.target.value
+                                )
+                            }
+                        >
+                            <option value="1">8</option>
+                            <option value="2">10</option>
+                            <option value="3">12</option>
+                            <option value="4">16</option>
+                            <option value="5">24</option>
+                            <option value="6">32</option>
+                            <option value="7">48</option>
+                        </select>
 
-    <div className="tmiv-toolbar-separator" />
+                        <div className="tmiv-toolbar-separator" />
 
-    <select
-        className="tmiv-select"
-        onChange={e =>
-            command(
-                "formatBlock",
-                e.target.value
-            )
-        }
-    >
-        <option value="p">
-            Normal
-        </option>
+                        <select
+                            className="tmiv-select"
+                            onChange={e =>
+                                command(
+                                    "formatBlock",
+                                    e.target.value
+                                )
+                            }
+                        >
+                            <option value="p">
+                                Normal
+                            </option>
 
-        <option value="h1">
-            H1
-        </option>
+                            <option value="h1">
+                                H1
+                            </option>
 
-        <option value="h2">
-            H2
-        </option>
+                            <option value="h2">
+                                H2
+                            </option>
 
-        <option value="h3">
-            H3
-        </option>
+                            <option value="h3">
+                                H3
+                            </option>
 
-        <option value="blockquote">
-            Quote
-        </option>
-    </select>
+                            <option value="blockquote">
+                                Quote
+                            </option>
+                        </select>
 
-    <div className="tmiv-toolbar-separator" />
+                        <div className="tmiv-toolbar-separator" />
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() => command("bold")}
-    >
-        <b>B</b>
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => command("bold")}
+                        >
+                            <b>B</b>
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() => command("italic")}
-    >
-        <i>I</i>
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => command("italic")}
+                        >
+                            <i>I</i>
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() => command("underline")}
-    >
-        <u>U</u>
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => command("underline")}
+                        >
+                            <u>U</u>
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() => command("strikeThrough")}
-    >
-        <s>S</s>
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => command("strikeThrough")}
+                        >
+                            <s>S</s>
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() => command("superscript")}
-    >
-        x²
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => command("superscript")}
+                        >
+                            x²
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() => command("subscript")}
-    >
-        x₂
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => command("subscript")}
+                        >
+                            x₂
+                        </div>
 
-    <div className="tmiv-toolbar-separator" />
+                        <div className="tmiv-toolbar-separator" />
 
-    <input
-        type="color"
-        title="Text Color"
-        onChange={e =>
-            command(
-                "foreColor",
-                e.target.value
-            )
-        }
-    />
+                        <input
+                            type="color"
+                            title="Text Color"
+                            onChange={e =>
+                                command(
+                                    "foreColor",
+                                    e.target.value
+                                )
+                            }
+                        />
 
-    <input
-        type="color"
-        title="Background Color"
-        onChange={e =>
-            command(
-                "hiliteColor",
-                e.target.value
-            )
-        }
-    />
+                        <input
+                            type="color"
+                            title="Background Color"
+                            onChange={e =>
+                                command(
+                                    "hiliteColor",
+                                    e.target.value
+                                )
+                            }
+                        />
 
-    <div className="tmiv-toolbar-separator" />
+                        <div className="tmiv-toolbar-separator" />
 
-    <div
-        className="tmiv-tool-item fa fa-align-left"
-        onClick={() => command("justifyLeft")}
-    />
+                        <div
+                            className="tmiv-tool-item fa fa-align-left"
+                            onClick={() => command("justifyLeft")}
+                        />
 
-    <div
-        className="tmiv-tool-item fa fa-align-center"
-        onClick={() => command("justifyCenter")}
-    />
+                        <div
+                            className="tmiv-tool-item fa fa-align-center"
+                            onClick={() => command("justifyCenter")}
+                        />
 
-    <div
-        className="tmiv-tool-item fa fa-align-right"
-        onClick={() => command("justifyRight")}
-    />
+                        <div
+                            className="tmiv-tool-item fa fa-align-right"
+                            onClick={() => command("justifyRight")}
+                        />
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() => command("justifyFull")}
-    >
-        J
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => command("justifyFull")}
+                        >
+                            J
+                        </div>
 
-    <div className="tmiv-toolbar-separator" />
+                        <div className="tmiv-toolbar-separator" />
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() =>
-            command("insertUnorderedList")
-        }
-    >
-        •
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() =>
+                                command("insertUnorderedList")
+                            }
+                        >
+                            •
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() =>
-            command("insertOrderedList")
-        }
-    >
-        1.
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() =>
+                                command("insertOrderedList")
+                            }
+                        >
+                            1.
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() =>
-            command("indent")
-        }
-    >
-        ⇥
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() =>
+                                command("indent")
+                            }
+                        >
+                            ⇥
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() =>
-            command("outdent")
-        }
-    >
-        ⇤
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() =>
+                                command("outdent")
+                            }
+                        >
+                            ⇤
+                        </div>
 
-    <div className="tmiv-toolbar-separator" />
+                        <div className="tmiv-toolbar-separator" />
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() => {
-            const url = prompt("URL");
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => {
+                                const url = prompt("URL");
 
-            if (url) {
-                command(
-                    "createLink",
-                    url
-                );
-            }
-        }}
-    >
-        🔗
-    </div>
+                                if (url) {
+                                    command(
+                                        "createLink",
+                                        url
+                                    );
+                                }
+                            }}
+                        >
+                            🔗
+                        </div>
 
-   
-        <div
-            className="tmiv-tool-item"
-            onClick={() => {
 
-                const url =
-                    prompt("Image URL");
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => {
 
-                if (!url) return;
+                                const url =
+                                    prompt("Image URL");
 
-                insertHtml(
-                    `<img src="${url}" style="max-width:100%; height:auto;"/>`
-                );
-            }}
-        >
-            🖼️
-        </div>
+                                if (!url) return;
 
-        <div
-            className="tmiv-tool-item"
-            onClick={rotateLeft}
-            title="Rotate selected image left"
-        >
-            ⟲
-        </div>
+                                insertHtml(
+                                    `<img src="${url}" style="max-width:100%; height:auto;"/>`
+                                );
+                            }}
+                        >
+                            🖼️
+                        </div>
 
-        <div
-            className="tmiv-tool-item"
-            onClick={rotateRight}
-            title="Rotate selected image right"
-        >
-            ⟳
-        </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={rotateLeft}
+                            title="Rotate selected image left"
+                        >
+                            ⟲
+                        </div>
 
-        <div className="tmiv-tool-item">
-            <input
-                type="number"
-                value={rotationDegrees}
-                onChange={(e) =>
-                    setRotationDegrees(
-                        Number(e.target.value)
-                    )
-                }
-                onBlur={() =>
-                    setImageRotation(rotationDegrees)
-                }
-                style={{
-                    width: 56,
-                    border: "1px solid #ccc",
-                    borderRadius: 4,
-                    padding: "2px 4px",
-                    fontSize: 12,
-                    marginRight: 4,
-                    height: 26
-                }}
-                title="Rotate selected image degree"
-            />
-            <button
-                type="button"
-                onClick={() => setImageRotation(rotationDegrees)}
-                style={{
-                    border: "1px solid #ccc",
-                    borderRadius: 4,
-                    padding: "2px 6px",
-                    fontSize: 12,
-                    cursor: "pointer"
-                }}
-            >
-                ↻
-            </button>
-        </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={rotateRight}
+                            title="Rotate selected image right"
+                        >
+                            ⟳
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() => {
+                        <div className="tmiv-tool-item">
+                            <input
+                                type="number"
+                                value={rotationDegrees}
+                                onChange={(e) =>
+                                    setRotationDegrees(
+                                        Number(e.target.value)
+                                    )
+                                }
+                                onBlur={() =>
+                                    setImageRotation(rotationDegrees)
+                                }
+                                style={{
+                                    width: 56,
+                                    border: "1px solid #ccc",
+                                    borderRadius: 4,
+                                    padding: "2px 4px",
+                                    fontSize: 12,
+                                    marginRight: 4,
+                                    height: 26
+                                }}
+                                title="Rotate selected image degree"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setImageRotation(rotationDegrees)}
+                                style={{
+                                    border: "1px solid #ccc",
+                                    borderRadius: 4,
+                                    padding: "2px 6px",
+                                    fontSize: 12,
+                                    cursor: "pointer"
+                                }}
+                            >
+                                ↻
+                            </button>
+                        </div>
 
-            insertHtml(`
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => {
+
+                                insertHtml(`
                 <table border="1" style="border-collapse:collapse;width:100%">
                     <tr>
                         <td>&nbsp;</td>
@@ -1060,65 +1060,65 @@ useEffect(() => {
                     </tr>
                 </table>
                 `);
-        }}
-    >
-        ⊞
-    </div>
+                            }}
+                        >
+                            ⊞
+                        </div>
 
-    <div className="tmiv-toolbar-separator" />
+                        <div className="tmiv-toolbar-separator" />
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() => {
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() => {
 
-            const text =
-                window
-                    .getSelection()
-                    ?.toString() || "";
+                                const text =
+                                    window
+                                        .getSelection()
+                                        ?.toString() || "";
 
-            document.execCommand(
-                "insertHTML",
-                false,
-                `<pre><code>${text}</code></pre>`
-            );
+                                document.execCommand(
+                                    "insertHTML",
+                                    false,
+                                    `<pre><code>${text}</code></pre>`
+                                );
 
-            change();
-        }}
-    >
-        {"</>"}
-    </div>
+                                change();
+                            }}
+                        >
+                            {"</>"}
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() =>
-            command(
-                "insertHorizontalRule"
-            )
-        }
-    >
-        ─
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() =>
+                                command(
+                                    "insertHorizontalRule"
+                                )
+                            }
+                        >
+                            ─
+                        </div>
 
-    <div className="tmiv-toolbar-separator" />
+                        <div className="tmiv-toolbar-separator" />
 
-    <div
-        className={`tmiv-tool-item ${showSource ? "is-active" : ""}`}
-        onClick={toggleSourceView}
-        title={showSource ? "Back to editor" : "View / edit HTML source"}
-    >
-        {"</>"}
-    </div>
+                        <div
+                            className={`tmiv-tool-item ${showSource ? "is-active" : ""}`}
+                            onClick={toggleSourceView}
+                            title={showSource ? "Back to editor" : "View / edit HTML source"}
+                        >
+                            {"</>"}
+                        </div>
 
-    <div
-        className="tmiv-tool-item"
-        onClick={() =>
-            command("removeFormat")
-        }
-    >
-        Tx
-    </div>
+                        <div
+                            className="tmiv-tool-item"
+                            onClick={() =>
+                                command("removeFormat")
+                            }
+                        >
+                            Tx
+                        </div>
 
-</div>
+                    </div>
 
                     {showSource ? (
                         <textarea
@@ -1199,7 +1199,7 @@ useEffect(() => {
                     )}
                 </div>
 
-     
+
 
             </div>
         </div>
@@ -1367,7 +1367,7 @@ export default HtmlEditor;
 //         className="tmiv-tool-item fa fa-align-left"
 //         onClick={()=>command("justifyLeft")}
 //     >
-        
+
 //     </div>
 
 
@@ -1375,7 +1375,7 @@ export default HtmlEditor;
 //         className="tmiv-tool-item fa fa-align-center"
 //         onClick={()=>command("justifyCenter")}
 //     >
-        
+
 //     </div>
 
 
@@ -1383,7 +1383,7 @@ export default HtmlEditor;
 //         className="tmiv-tool-item fa fa-align-right"
 //         onClick={()=>command("justifyRight")}
 //     >
-        
+
 //     </div>
 
 
@@ -1432,7 +1432,7 @@ export default HtmlEditor;
 
 
 
-//             <div 
+//             <div
 
 //                 ref={editorRef}
 

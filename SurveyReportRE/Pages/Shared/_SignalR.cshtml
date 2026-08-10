@@ -530,38 +530,40 @@ function startSignalRConnection() {
         showServerLogAlert(alert);
     });
     connectionSignR.on("R_ItemSubmitted", function (items) {
-            signalRBlink("R_ItemSubmitted");
+            // signalRBlink("R_ItemSubmitted");
             if (items.type === "Quotation" || items.type === "PolicyIssuance") {
-                if (typeof window.reloadOverviewViewComponents !== "function") {
-                    console.warn("Shared overview reload handler is not available.", items);
-                    return;
-                }
+                // if (typeof window.reloadOverviewViewComponents !== "function") {
+                //     console.warn("Shared overview reload handler is not available.", items);
+                //     return;
+                // }
 
-                // SignalR khong co DevExtreme event.e.element nhu btnRefreshOverview,
-                // nen resolve chinh root element cua view tu registry. Truyen true de
-                // su kien submit di cung dung full-refresh path cua nut Refresh.
-                const normalizedType = String(items.type || "")
-                    .replace(/\s+/g, "")
-                    .toLowerCase();
-                const moduleCode = normalizedType === "policyissuance" ? "pi" : "qt";
-                const viewKey = `${moduleCode}:${items.id}`;
-                if (window.WorkflowViewReloadState?.[viewKey] === Number.POSITIVE_INFINITY) {
-                    return;
-                }
-                const viewInstance = window.OverviewViewRegistry?.[viewKey];
-                const triggerElement = viewInstance?.rootId
-                    ? document.getElementById(viewInstance.rootId)
-                    : null;
+                // // SignalR khong co DevExtreme event.e.element nhu btnRefreshOverview,
+                // // nen resolve chinh root element cua view tu registry. Truyen true de
+                // // su kien submit di cung dung full-refresh path cua nut Refresh.
+                // const normalizedType = String(items.type || "")
+                //     .replace(/\s+/g, "")
+                //     .toLowerCase();
+                // const moduleCode = normalizedType === "policyissuance" ? "pi" : "qt";
+                // const viewKey = `${moduleCode}:${items.id}`;
+                // if (window.WorkflowViewReloadState?.[viewKey] === Number.POSITIVE_INFINITY) {
+                //     return;
+                // }
+                // const viewInstance = window.OverviewViewRegistry?.[viewKey];
+                // const triggerElement = viewInstance?.rootId
+                //     ? document.getElementById(viewInstance.rootId)
+                //     : null;
 
-                window.reloadOverviewViewComponents(
-                    items.type,
-                    items.id,
-                    triggerElement,
-                    true
-                )
-                    .catch(function (err) {
-                        console.error("Submitted item reload failed", err);
-                    });
+                // window.reloadOverviewViewComponents(
+                //     items.type,
+                //     items.id,
+                //     triggerElement,
+                //     true
+                // )
+                //     .catch(function (err) {
+                //         console.error("Submitted item reload failed", err);
+                //     });
+                    var prefix = items.type === "Quotation" ? "qt" : "pi";
+                            $(`${prefix}-btnRefreshOverview_${items.id}`).click();
             }
         }
     );

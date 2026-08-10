@@ -23,7 +23,6 @@
         var data = [];
         var quotationId = @quotationId;
         function prepareData(element) {
-            debugger
             const quotationAttachmentItems = getAttachmentPreviewItems("body", "@(prefix)", "@(dept)", "default", @(quotationId));
             const fileCount = quotationAttachmentItems.length || 0;
                 var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
@@ -36,7 +35,6 @@
             // var fileData = uploader.option("storageData") || [];
             data = [];
             $.each(quotationAttachmentItems,function (index, el) {
-                debugger
              const $el = $(el);
 
              data.push({
@@ -127,7 +125,6 @@
                      allowEditing: false,
                      cellTemplate: function (container, options) {
                         var x = options.data.AttachmentElement[0];
-                        debugger
                               const fileName = $(x).attr("aria-fileName");
     const ext = $(x).attr("aria-ext");
     const size = $(x).attr("aria-size");
@@ -378,7 +375,6 @@
             "Cancel"
         ).then(function (result) {
             if (result.isConfirmed) {
-                debugger
                 openMakeOptionPopup_@(quotationId)();
                 return true;
             }

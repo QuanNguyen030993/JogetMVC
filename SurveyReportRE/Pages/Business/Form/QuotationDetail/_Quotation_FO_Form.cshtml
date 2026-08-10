@@ -68,7 +68,7 @@
       thatRes.sectionName = "@(dept)";
       thatRes.titleName = "Upload RES Form";
       thatRes.uploaderAllow = _role == "@dept";
-      thatRes.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, thatRes.moduleName, @(quotationId)), Department: "@(dept)", FieldName: thatRes.moduleName, FormId: "@(QTViewIdHelper.Form(dept, quotationId))" }; //{"SectionName":"default_FO_410"}
+      thatRes.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, thatRes.moduleName, @(quotationId)), Department: "@(dept)", FieldName: thatRes.moduleName, FormId: "@(QTViewIdHelper.Form(dept, quotationId))", CustomField: "resAttachment", ValidationRules: [{ type: "required" }]}; //{"SectionName":"default_FO_410"}
 
 
      var acceptDecisionV2 = {
@@ -86,6 +86,110 @@
         skipAcceptedMainFields: false,
         statusButtonDisabled: true
     };
+    var mainFields = [
+
+
+                {itemType: "group",caption: "Request Date",colCount:2,items: [
+                {
+                    dataField: "requestedDate",
+                    editorType: "dxDateBox",
+                    editorOptions: { displayFormat: "dd/MM/yyyy" },
+                    label: {  template: labelTpl("RequestedDate - Ngày yêu cầu") }
+                },
+                {
+                    dataField: "dueDate",
+                    editorType: "dxDateBox",
+                    editorOptions: { displayFormat: "dd/MM/yyyy" },
+                    label: { template: labelTpl("DueDate - Due date") }
+                }
+                ]},
+
+                 {itemType: "group",caption: "Client",colCount:2,items: [
+                     { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
+                   { dataField: "policyHolder", label: { template: labelTpl("Policy Holder ID") }, editorOptions: { readOnly: true } },
+                    { dataField: "insuredId", label: { template: labelTpl("Insured ID") },visible: false, editorOptions: { readOnly: true } },
+                    { dataField: "clientCode", visible: false, label: { template: labelTpl("Client Code") }, editorOptions: { readOnly: true } },
+                    { dataField: "clientName", label: { template: labelTpl("Client Name") }, editorOptions: { readOnly: true } },
+                    { dataField: "businessAddress", label: { template: labelTpl("Business Address") }, editorOptions: { readOnly: true } },
+                        { dataField: "sourceOfBusinessName", label: { template: labelTpl("SourceOfBusinessName - Nguồn business (name)") } },
+
+                     ]},
+
+                 {
+                        itemType: "group",
+                        caption: "Products",
+                        colCount: 2,
+                        cssClass: "group-readonly",
+                        items: [
+                            { dataField: "lineName", label: { template: labelTpl("Line") }, editorOptions: { readOnly: true } },
+                            { dataField: "productName", label: { template: labelTpl("Product") }, editorOptions: { readOnly: true } },
+                        ]
+                    },
+
+                 // { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" ,editorOptions:{ switchedOnText: "Yes", switchedOffText: "No"} },
+                 {itemType: "group",
+                caption: "Request Infomation",
+                colCount: 3,
+                items: [
+                { dataField: "requestNo", label: { template: labelTpl("RequestNo - Mã Quotation Request") } },
+                { dataField: "policyNo",editorType: "dxTextBox",visible:true},
+                    { dataField: "requestRefNo", visible: false, label: { template: labelTpl("RequestRefNo - Refversion của request") } },
+                    { dataField: "quotationCode", label: { template: labelTpl("QuotationCode - Mã quotation khi request vào xử lý (Joget)") } },
+                     { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.requestType),displayExpr: "value",
+                      valueExpr: "id"
+                 },
+                    { dataField: "quotationType",visible: false, label:  { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
+                    { dataField: "businessChannelName", label: { template: labelTpl("BusinessChannelName - Kênh kinh doanh (name)") } },
+                    { dataField: "businessChannelDisplayName",visible: false, label: { template: labelTpl("BusinessChannelDisplayName - Tên hiển thị kênh (name of biz)") } },
+                     { dataField:"reinsuranceId", editorType:"dxSelectBox", label:{text:"Reinsurance"},
+                     editorOptions:{
+                     items:_enums.reInsuranceType ,
+                     displayExpr: "value",
+                      valueExpr: "id"}
+                 },
+
+
+                 { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3},
+
+                            ]}
+                ,
+                { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2)},
+                { itemType: "group", name:"resAttachment", caption: "RES Attachment", colCount: 1, items:  attachmentByCase(thatRes) },
+                {
+                        itemType: "group",
+                        name: "decision@(dept)Group",
+                        cssClass: "workflow-decision-group-client qt-decision-group-@(dept)",
+                        elementAttr: {
+                            id: "qt-decision-group-@(dept)-@(quotationId)",
+                            "data-form-group-name": "decision@(dept)Group",
+                            "data-route-dept": "@dept",
+                            "data-decision-group-key": "clientConfirm",
+                            "data-decision-placement": "form"
+                        },
+                        caption: "Client Confirm",
+                        colCount: 2,
+                        items: [
+                        {
+                                dataField: "decision",
+
+                                label: {
+                                    text: "Decision"
+                                },
+                                itemType: "simple",
+                                template: function (data, itemElement) {
+                                    // $(`<div id="${submitBranchId}" class="lmkt-submitbranch-decision-host"></div>`)
+                                    //     .appendTo(itemElement);
+
+                                    $(`#${clientStatusId}`).appendTo(itemElement);
+                                    $.each(items, function (itemIndex, item) {
+                                        $(`<div id="${item.id}">`).dxButton({ text: item.text, visible: false}).appendTo(itemElement);
+                                    });
+                                }
+                        }
+                    ]
+                }
+               ];
+
     // var itemsDelay = [null, null, declinedButtonId, declinedStatusId];
     var itemsDelay = [acceptDecisionV2];
 
@@ -139,112 +243,11 @@
         if ((formData.clientDecision || "") !== storedDecision) {
             e.component.updateData("clientDecision", storedDecision || null);
         }
-    },
-    items: [
-
-           
-                {itemType: "group",caption: "Request Date",colCount:2,items: [
-                {
-                    dataField: "requestedDate",
-                    editorType: "dxDateBox",
-                    editorOptions: { displayFormat: "dd/MM/yyyy" },
-                    label: {  template: labelTpl("RequestedDate - Ngày yêu cầu") }
-                },
-                {
-                    dataField: "dueDate",
-                    editorType: "dxDateBox",
-                    editorOptions: { displayFormat: "dd/MM/yyyy" },
-                    label: { template: labelTpl("DueDate - Due date") }
-                }
-                ]},
-
-                 {itemType: "group",caption: "Client",colCount:2,items: [
-                     { dataField:"clientName", label:{text:"Client Name"}, isRequired:true },
-                   { dataField: "policyHolder", label: { template: labelTpl("Policy Holder ID") }, editorOptions: { readOnly: true } },
-                    { dataField: "insuredId", label: { template: labelTpl("Insured ID") },visible: false, editorOptions: { readOnly: true } },
-                    { dataField: "clientCode", visible: false, label: { template: labelTpl("Client Code") }, editorOptions: { readOnly: true } },
-                    { dataField: "clientName", label: { template: labelTpl("Client Name") }, editorOptions: { readOnly: true } },
-                    { dataField: "businessAddress", label: { template: labelTpl("Business Address") }, editorOptions: { readOnly: true } },
-                        { dataField: "sourceOfBusinessName", label: { template: labelTpl("SourceOfBusinessName - Nguồn business (name)") } },
-
-                     ]},
-                      
-                 {
-                        itemType: "group",
-                        caption: "Products",
-                        colCount: 2,
-                        cssClass: "group-readonly",
-                        items: [
-                            { dataField: "lineName", label: { template: labelTpl("Line") }, editorOptions: { readOnly: true } },
-                            { dataField: "productName", label: { template: labelTpl("Product") }, editorOptions: { readOnly: true } },
-                        ]
-                    },
-                
-                 // { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" ,editorOptions:{ switchedOnText: "Yes", switchedOffText: "No"} },
-                 {itemType: "group",
-                caption: "Request Infomation",
-                colCount: 3,
-                items: [
-                { dataField: "requestNo", label: { template: labelTpl("RequestNo - Mã Quotation Request") } },
-                { dataField: "policyNo",editorType: "dxTextBox",visible:true},
-                    { dataField: "requestRefNo",visible: false, label: { template: labelTpl("RequestRefNo - Refversion của request") } },
-                    { dataField: "quotationCode", label: { template: labelTpl("QuotationCode - Mã quotation khi request vào xử lý (Joget)") } },
-                     { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.requestType),displayExpr: "value",
-                      valueExpr: "id"
-                 },
-                    { dataField: "quotationType",visible: false, label:  { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
-                    { dataField: "businessChannelName", label: { template: labelTpl("BusinessChannelName - Kênh kinh doanh (name)") } },
-                    { dataField: "businessChannelDisplayName",visible: false, label: { template: labelTpl("BusinessChannelDisplayName - Tên hiển thị kênh (name of biz)") } },
-                     { dataField:"reinsuranceId", editorType:"dxSelectBox", label:{text:"Reinsurance"},
-                     editorOptions:{
-                     items:_enums.reInsuranceType ,
-                     displayExpr: "value",
-                      valueExpr: "id"}
-                 },
-                 
-
-                 { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3},
-                
-                            ]}
-                ,{ itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2)},
-                { itemType: "group", name:"resAttachment", caption: "RES Attachment", colCount: 1, items:  attachmentByCase(thatRes) },
-                {
-                        itemType: "group",
-                        name: "decision@(dept)Group",
-                        cssClass: "workflow-decision-group qt-decision-group-@(dept)",
-                        elementAttr: {
-                            id: "qt-decision-group-@(dept)-@(quotationId)",
-                            "data-form-group-name": "decision@(dept)Group",
-                            "data-route-dept": "@dept",
-                            "data-decision-group-key": "clientConfirm",
-                            "data-decision-placement": "form"
-                        },
-                        caption: "Client Confirm",
-                        colCount: 2,
-                        items: [
-                        {
-                                dataField: "decision",
-
-                                label: {
-                                    text: "Decision"
-                                },
-                                itemType: "simple",
-                                template: function (data, itemElement) {
-                                    // $(`<div id="${submitBranchId}" class="lmkt-submitbranch-decision-host"></div>`)
-                                    //     .appendTo(itemElement);
-
-                                    $(`#${clientStatusId}`).appendTo(itemElement);
-                                    $.each(items, function (itemIndex, item) {
-                                        $(`<div id="${item.id}">`).dxButton({ text: item.text, visible: false}).appendTo(itemElement);
-                                    });
-                                }
-                        }
-                    ]
-                }   
-               ]
+    }, items: mainFields
     });
+
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
-    delayAcceptStatusV2(null, thisObject, ...itemsDelay);
+    // delayAcceptStatusV2([], thisObject, ...itemsDelay);
     setTimeout(() => {
         var picJson = PIC_JSON || "{}";
         var picMap = parsePicMap(picJson);

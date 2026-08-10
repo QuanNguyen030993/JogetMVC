@@ -829,7 +829,7 @@ namespace ERPCore.Common
 
         public static string ClearMailPlaceHolder(string input)
         {
-            return Regex.Replace(input, @"@@[a-zA-Z0-9]+", "");
+            return Regex.Replace(input, @"@@", "");
         }
 
         public static MailQueue NotifySession(Employee staff, MailTemplate mailTemplate, MailConfig emailSettings, Dictionary<string, object> dictionary, string FOLLOW_CC, List<string> attachments = null)
