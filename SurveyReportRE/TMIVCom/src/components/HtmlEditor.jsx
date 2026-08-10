@@ -18,6 +18,10 @@ const HtmlEditor = forwardRef(({
     const lastValueRef = useRef(null);
     const isComposingRef = useRef(false);
 
+    // View Code mode
+    const [showSource, setShowSource] = useState(false);
+    const [sourceHtml, setSourceHtml] = useState(value ?? "");
+
     const [showCropper, setShowCropper] =
     useState(false);
 
@@ -78,6 +82,7 @@ const cropperRef =
             editorRef.current.innerHTML =
                 nextValue;
             lastValueRef.current = nextValue;
+            setSourceHtml(nextValue);
         }
     }, [value]);
 
@@ -654,6 +659,23 @@ useEffect(() => {
         );
 
 }, []);
+    const toggleSourceView = () => {
+        if (!showSource) {
+            const html = editorRef.current?.innerHTML ?? "";
+            setSourceHtml(html);
+            setShowSource(true);
+            return;
+        }
+
+        if (editorRef.current) {
+            editorRef.current.innerHTML = sourceHtml;
+        }
+
+        lastValueRef.current = sourceHtml;
+        onChange?.(sourceHtml);
+        setShowSource(false);
+    };
+
     useImperativeHandle(ref, () => ({
 
         option(name, value) {
@@ -841,35 +863,27 @@ useEffect(() => {
 
     <div className="tmiv-toolbar-separator" />
 
-    <label className="tmiv-tool-item" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', width: '32px', height: '32px', padding: 0 }} title="Màu chữ (Text Color)">
-        <span style={{ fontWeight: 'bold', fontSize: '14px', borderBottom: '3px solid #3b82f6', lineHeight: 1 }}>A</span>
-        <input
-            type="color"
-            defaultValue="#000000"
-            onChange={e =>
-                command(
-                    "foreColor",
-                    e.target.value
-                )
-            }
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', padding: 0, margin: 0, border: 'none' }}
-        />
-    </label>
+    <input
+        type="color"
+        title="Text Color"
+        onChange={e =>
+            command(
+                "foreColor",
+                e.target.value
+            )
+        }
+    />
 
-    <label className="tmiv-tool-item" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', width: '32px', height: '32px', padding: 0 }} title="Màu nền chữ (Highlight Color)">
-        <span style={{ background: '#fef08a', padding: '2px 4px', borderRadius: '3px', fontSize: '11px', fontWeight: 'bold', color: '#000000', lineHeight: 1 }}>ab</span>
-        <input
-            type="color"
-            defaultValue="#ffffff"
-            onChange={e =>
-                command(
-                    "hiliteColor",
-                    e.target.value
-                )
-            }
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', padding: 0, margin: 0, border: 'none' }}
-        />
-    </label>
+    <input
+        type="color"
+        title="Background Color"
+        onChange={e =>
+            command(
+                "hiliteColor",
+                e.target.value
+            )
+        }
+    />
 
     <div className="tmiv-toolbar-separator" />
 
@@ -998,7 +1012,7 @@ useEffect(() => {
                     setImageRotation(rotationDegrees)
                 }
                 style={{
-                    width: 40,
+                    width: 56,
                     border: "1px solid #ccc",
                     borderRadius: 4,
                     padding: "2px 4px",
@@ -1008,7 +1022,7 @@ useEffect(() => {
                 }}
                 title="Rotate selected image degree"
             />
-            {/* <button
+            <button
                 type="button"
                 onClick={() => setImageRotation(rotationDegrees)}
                 style={{
@@ -1020,14 +1034,9 @@ useEffect(() => {
                 }}
             >
                 ↻
-            </button> */}
+            </button>
         </div>
-    <div
-        className="tmiv-tool-item"
-        onClick={() => setImageRotation(rotationDegrees)}
-    >
-        ↻
-    </div>
+
     <div
         className="tmiv-tool-item"
         onClick={() => {
@@ -1093,6 +1102,14 @@ useEffect(() => {
     <div className="tmiv-toolbar-separator" />
 
     <div
+        className={`tmiv-tool-item ${showSource ? "is-active" : ""}`}
+        onClick={toggleSourceView}
+        title={showSource ? "Back to editor" : "View / edit HTML source"}
+    >
+        {"</>"}
+    </div>
+
+    <div
         className="tmiv-tool-item"
         onClick={() =>
             command("removeFormat")
@@ -1103,29 +1120,57 @@ useEffect(() => {
 
 </div>
 
-                    <div
-                        ref={editorRef}
-                        contentEditable
-                        suppressContentEditableWarning
-                        onCompositionStart={() => {
-                            isComposingRef.current = true;
-                        }}
-                        onCompositionEnd={() => {
-                            isComposingRef.current = false;
-                            update();
-                        }}
-                        onInput={() => {
-                            if (!isComposingRef.current) {
+                    {showSource ? (
+                        <textarea
+                            className="tmiv-html-source"
+                            value={sourceHtml}
+                            onChange={(e) => {
+                                const html = e.target.value;
+                                setSourceHtml(html);
+                                lastValueRef.current = html;
+                                onChange?.(html);
+                            }}
+                            spellCheck={false}
+                            style={{
+                                minHeight: height,
+                                width: "100%",
+                                boxSizing: "border-box",
+                                resize: "vertical",
+                                padding: 12,
+                                border: "none",
+                                outline: "none",
+                                fontFamily: "Consolas, Monaco, 'Courier New', monospace",
+                                fontSize: 13,
+                                lineHeight: 1.5,
+                                whiteSpace: "pre",
+                                overflow: "auto"
+                            }}
+                        />
+                    ) : (
+                        <div
+                            ref={editorRef}
+                            contentEditable
+                            suppressContentEditableWarning
+                            onCompositionStart={() => {
+                                isComposingRef.current = true;
+                            }}
+                            onCompositionEnd={() => {
+                                isComposingRef.current = false;
                                 update();
-                            }
-                        }}
-                        className="tmiv-html-content"
-                        style={{
-                            minHeight: height
-                        }}
-                    />
+                            }}
+                            onInput={() => {
+                                if (!isComposingRef.current) {
+                                    update();
+                                }
+                            }}
+                            className="tmiv-html-content"
+                            style={{
+                                minHeight: height
+                            }}
+                        />
+                    )}
 
-                    {selectedImage && imageRect && (
+                    {!showSource && selectedImage && imageRect && (
                         <div
                             className="tmiv-image-overlay"
                             style={{
