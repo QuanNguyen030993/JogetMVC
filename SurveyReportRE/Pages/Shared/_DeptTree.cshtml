@@ -85,96 +85,842 @@
 </div>
 
 <script>
-    (function initializeDeptTreeEnhancements() {
+    // (function initializeDeptTreeEnhancements() {
+    //     var attempts = 0;
+    //     var treeStackId = "@treeStackId";
+    //     var overviewScrollId = "@overviewScrollId";
+    //     var idleClockId = "@(deptTreeId)_idleClock";
+
+    //     if (!window.DeptTreeIdleClock) {
+    //         window.DeptTreeIdleClock = (function () {
+         
+    //             const clocks = new Set();
+    //             let lastActivityAt = Date.now();
+    //             let isIdle = false;
+
+    //             function formatDuration(durationMs) {
+    //                 const totalSeconds = Math.max(0, Math.ceil(durationMs / 1000));
+    //                 const hours = Math.floor(totalSeconds / 3600);
+    //                 const minutes = Math.floor((totalSeconds % 3600) / 60);
+    //                 const seconds = totalSeconds % 60;
+    //                 const twoDigits = value => String(value).padStart(2, "0");
+
+    //                 return hours > 0
+    //                     ? `${twoDigits(hours)}:${twoDigits(minutes)}`
+    //                     : `${twoDigits(minutes)}:${twoDigits(seconds)}`;
+    //             }
+
+    //             // function renderClocks(idleDurationMs, shouldShow) {
+    //             //     clocks.forEach(function (clock) {
+    //             //         if (!clock.isConnected) {
+    //             //             clocks.delete(clock);
+    //             //             return;
+    //             //         }
+
+    //             //         const value = clock.querySelector(".dept-idle-clock-value");
+
+    //             //         if (value) value.textContent = formatDuration(idleDurationMs);
+    //             //         //show clock
+    //             //         clock.classList.toggle("is-visible", shouldShow);
+
+    //             //         clock.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+    //             //     });
+    //             // }
+    //             function renderClocks(idleDurationMs, shouldShow) {
+    //                 // shouldShow = true; // debug clock adjust
+    //                 clocks.forEach(function (clock) {
+    //                     if (!clock.isConnected) {
+    //                         clocks.delete(clock);
+    //                         return;
+    //                     }
+
+    //                     const value = clock.querySelector(".dept-idle-clock-value");
+
+    //                     if (value) {
+    //                         value.textContent = formatDuration(idleDurationMs);
+    //                     }
+
+    //                     clock.classList.toggle("is-visible", shouldShow);
+    //                     clock.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+
+    //                     // Auto-saved ẩn khi idle clock xuất hiện
+    //                     const autoSaved = document.getElementById(
+    //                         clock.id.replace("_idleClock", "_autoSaved")
+    //                     );
+
+    //                     if (autoSaved) {
+    //                         autoSaved.classList.toggle("is-hidden", shouldShow);
+    //                         autoSaved.setAttribute(
+    //                             "aria-hidden",
+    //                             shouldShow ? "true" : "false"
+    //                         );
+    //                     }
+    //                 });
+    //             }
+
+    //             function update() {
+    //                 const idleDurationMs = Date.now() - lastActivityAt;
+    //                 isIdle = idleDurationMs >= idleThresholdMs;
+    //                 const countdownElapsedMs = Math.max(0, idleDurationMs - idleThresholdMs);
+    //                 const remainingMs = Math.max(0, countdownDurationMs - countdownElapsedMs);
+    //                 renderClocks(remainingMs, isIdle);
+    //             }
+
+    //             function markActivity() {
+    //                 lastActivityAt = Date.now();
+    //                 if (!isIdle) return;
+
+    //                 isIdle = false;
+    //                 renderClocks(countdownDurationMs, false);
+    //             }
+
+    //             [
+    //                 "pointerdown",
+    //                 "pointermove",
+    //                 "keydown",
+    //                 "wheel",
+    //                 "touchstart"
+    //             ].forEach(function (eventName) {
+    //                 document.addEventListener(eventName, markActivity, {
+    //                     passive: true,
+    //                     capture: true
+    //                 });
+    //             });
+
+    //             window.setInterval(update, 1000);
+
+    //             return {
+    //                 register: function (clock) {
+    //                     if (!clock) return;
+    //                     clocks.add(clock);
+    //                     update();
+    //                 },
+    //                 reset: markActivity
+    //             };
+    //         })();
+    //     }
+
+    //     window.DeptTreeIdleClock.register(document.getElementById(idleClockId));
+
+    //     function bindWhenReady() {
+    //         var treeStack = document.getElementById(treeStackId);
+    //         var overviewScroll = document.getElementById(overviewScrollId);
+
+    //         if (treeStack && overviewScroll && typeof bindDeptTreeScrollSpy === "function") {
+    //             if (treeStack.deptTreeScrollSpy?.destroy) {
+    //                 treeStack.deptTreeScrollSpy.destroy();
+    //             }
+    //             treeStack.deptTreeScrollSpy = bindDeptTreeScrollSpy(
+    //                 "@moduleCode",
+    // @Model.Id,
+    //                 {
+    //                     treeStack: treeStack,
+    //                     container: overviewScroll
+    //                 }
+    //             );
+    //             if (treeStack.deptTreeScrollSpy) return;
+    //         }
+
+    //         attempts += 1;
+    //         if (attempts < 40) window.setTimeout(bindWhenReady, 50);
+    //     }
+
+    //     window.setTimeout(bindWhenReady, 0);
+    // })();
+
+
+        (function initializeDeptTreeEnhancements() {
         var attempts = 0;
+
         var treeStackId = "@treeStackId";
         var overviewScrollId = "@overviewScrollId";
         var idleClockId = "@(deptTreeId)_idleClock";
 
-        if (!window.DeptTreeIdleClock) {
-            window.DeptTreeIdleClock = (function () {
-                const idleThresholdMs = 5000;
-                const countdownDurationMs = 120000;
-                const clocks = new Set();
-                let lastActivityAt = Date.now();
-                let isIdle = false;
+        var moduleCode = "@moduleCode";
+        var quotationId = @quotationId;
+        var formPrefix = "@Model.Prefix";
 
+        /*
+         * Danh sách đầy đủ.
+         *
+         * QT:
+         * FO, TS, UW, LMKT, PM
+         *
+         * PI:
+         * FO, TS, PM
+         */
+        const fallbackDept = ["FO", "TS", "UW", "LMKT", "PM"];
+
+        const activeDeptCodes = moduleCode === "qt"
+        ? fallbackDept
+        : ["FO", "TS", "PM"];
+
+        if (!window.DeptTreeIdleClock) {
+
+            window.DeptTreeIdleClock = (function () {
+
+                /* Sau 5 giây không thao tác thì bắt đầu countdown */
+
+                /* Auto save mỗi 2 phút */
+
+                const clocks = new Set();
+
+                let lastActivityAt = Date.now();
+
+                /*
+                 * Thời điểm bắt đầu vòng countdown hiện tại.
+                 *
+                 * Ví dụ:
+                 * idle 5s
+                 * ↓
+                 * countdownCycleStartedAt được set
+                 * ↓
+                 * 2 phút sau autosave
+                 * ↓
+                 * countdownCycleStartedAt reset
+                 * ↓
+                 * tiếp tục vòng 2 phút tiếp theo
+                 */
+                let countdownCycleStartedAt = null;
+
+                let isIdle = false;
+                let isSaving = false;
+
+                /* =========================================================
+                 * FORMAT CLOCK
+                 * ========================================================= */
                 function formatDuration(durationMs) {
-                    const totalSeconds = Math.max(0, Math.ceil(durationMs / 1000));
+
+                    const totalSeconds = Math.max(
+                        0,
+                        Math.ceil(durationMs / 1000)
+                    );
+
                     const hours = Math.floor(totalSeconds / 3600);
                     const minutes = Math.floor((totalSeconds % 3600) / 60);
                     const seconds = totalSeconds % 60;
-                    const twoDigits = value => String(value).padStart(2, "0");
+
+                    const twoDigits = value =>
+                        String(value).padStart(2, "0");
 
                     return hours > 0
                         ? `${twoDigits(hours)}:${twoDigits(minutes)}`
                         : `${twoDigits(minutes)}:${twoDigits(seconds)}`;
                 }
 
-                // function renderClocks(idleDurationMs, shouldShow) {
-                //     clocks.forEach(function (clock) {
-                //         if (!clock.isConnected) {
-                //             clocks.delete(clock);
-                //             return;
-                //         }
+                /* =========================================================
+                 * RENDER CLOCK
+                 * ========================================================= */
+                function renderClocks(remainingMs, shouldShow) {
 
-                //         const value = clock.querySelector(".dept-idle-clock-value");
-
-                //         if (value) value.textContent = formatDuration(idleDurationMs);
-                //         //show clock
-                //         clock.classList.toggle("is-visible", shouldShow);
-
-                //         clock.setAttribute("aria-hidden", shouldShow ? "false" : "true");
-                //     });
-                // }
-                function renderClocks(idleDurationMs, shouldShow) {
-                    // shouldShow = true; // debug clock adjust
                     clocks.forEach(function (clock) {
+
                         if (!clock.isConnected) {
                             clocks.delete(clock);
                             return;
                         }
 
-                        const value = clock.querySelector(".dept-idle-clock-value");
-
-                        if (value) {
-                            value.textContent = formatDuration(idleDurationMs);
-                        }
-
-                        clock.classList.toggle("is-visible", shouldShow);
-                        clock.setAttribute("aria-hidden", shouldShow ? "false" : "true");
-
-                        // Auto-saved ẩn khi idle clock xuất hiện
-                        const autoSaved = document.getElementById(
-                            clock.id.replace("_idleClock", "_autoSaved")
+                        const value = clock.querySelector(
+                            ".dept-idle-clock-value"
                         );
 
-                        if (autoSaved) {
-                            autoSaved.classList.toggle("is-hidden", shouldShow);
-                            autoSaved.setAttribute(
-                                "aria-hidden",
-                                shouldShow ? "true" : "false"
-                            );
+                        if (value) {
+                            value.textContent =
+                                formatDuration(remainingMs);
                         }
+
+                        clock.classList.toggle(
+                            "is-visible",
+                            shouldShow
+                        );
+
+                        clock.setAttribute(
+                            "aria-hidden",
+                            shouldShow ? "false" : "true"
+                        );
                     });
                 }
 
-                function update() {
-                    const idleDurationMs = Date.now() - lastActivityAt;
-                    isIdle = idleDurationMs >= idleThresholdMs;
-                    const countdownElapsedMs = Math.max(0, idleDurationMs - idleThresholdMs);
-                    const remainingMs = Math.max(0, countdownDurationMs - countdownElapsedMs);
-                    renderClocks(remainingMs, isIdle);
+                /* =========================================================
+                 * LẤY FORM DATA THEO DEPARTMENT
+                 * ========================================================= */
+                function getDeptFormData(dept) {
+
+                    try {
+
+                        let formId;
+
+                        /*
+                         * Razor sinh ID đúng theo module.
+                         *
+                         * Không dùng trực tiếp:
+                         *
+                         * @QTViewIdHelper.Form("FO", quotationId)
+                         *
+                         * vì dept là biến JS runtime.
+                         *
+                         * Vì vậy lấy các ID từ Razor trước.
+                         */
+                        const qtForms = {
+                            FO: "@QTViewIdHelper.Form("FO", quotationId)",
+                            TS: "@QTViewIdHelper.Form("TS", quotationId)",
+                            UW: "@QTViewIdHelper.Form("UW", quotationId)",
+                            LMKT: "@QTViewIdHelper.Form("LMKT", quotationId)",
+                            PM: "@QTViewIdHelper.Form("PM", quotationId)"
+                        };
+
+                        const piForms = {
+                            FO: "@PIViewIdHelper.Form("FO", quotationId)",
+                            TS: "@PIViewIdHelper.Form("TS", quotationId)",
+                            PM: "@PIViewIdHelper.Form("PM", quotationId)"
+                        };
+
+                        if (moduleCode === "qt") {
+                            formId = qtForms[dept];
+                        } else {
+                            formId = piForms[dept];
+                        }
+
+                        if (!formId) {
+                            return null;
+                        }
+
+                        const $form = $("#" + formId);
+
+                        if (!$form.length) {
+                            return null;
+                        }
+
+                        const instance = $form.dxForm("instance");
+
+                        if (!instance) {
+                            return null;
+                        }
+
+                        return instance.option("formData") || null;
+
+                    } catch (err) {
+
+                        console.warn(
+                            "[AutoSave] Cannot read form:",
+                            dept,
+                            err
+                        );
+
+                        return null;
+                    }
                 }
 
+                /* =========================================================
+                 * SAVE 1 DEPARTMENT
+                 * ========================================================= */
+    async function saveDepartment() {
+        // if (isSaving) {
+        //     return;
+        // }
+
+        // isSaving = true;
+
+        try {
+
+            const mergedValues = {};
+            let recordId = null;
+
+            const qtForms = {
+                FO: "@QTViewIdHelper.Form("FO", quotationId)",
+                TS: "@QTViewIdHelper.Form("TS", quotationId)",
+                UW: "@QTViewIdHelper.Form("UW", quotationId)",
+                LMKT: "@QTViewIdHelper.Form("LMKT", quotationId)",
+                PM: "@QTViewIdHelper.Form("PM", quotationId)"
+            };
+
+            const piForms = {
+                FO: "@PIViewIdHelper.Form("FO", quotationId)",
+                TS: "@PIViewIdHelper.Form("TS", quotationId)",
+                PM: "@PIViewIdHelper.Form("PM", quotationId)"
+            };
+
+            const deptForms =
+                moduleCode === "qt"
+                    ? qtForms
+                    : piForms;
+
+            const depts =
+                moduleCode === "qt"
+                    ? ["FO", "TS", "UW", "LMKT", "PM"]
+                    : ["FO", "TS", "PM"];
+
+
+            /*
+             * Recursive lấy tất cả dataField đang visible.
+             * Hỗ trợ:
+             * - simple item
+             * - group
+             * - tab
+             * - nested items
+             */
+            function collectVisibleFields(items, result) {
+
+                result = result || new Set();
+
+                if (!Array.isArray(items)) {
+                    return result;
+                }
+
+                items.forEach(function (item) {
+
+                    if (!item || item.visible === false) {
+                        return;
+                    }
+
+                    /*
+                     * Field bình thường
+                     */
+                    if (item.dataField) {
+                        result.add(item.dataField);
+                    }
+
+                    /*
+                     * Group / nested items
+                     */
+                    if (Array.isArray(item.items)) {
+                        collectVisibleFields(
+                            item.items,
+                            result
+                        );
+                    }
+
+                    /*
+                     * Tabbed item
+                     */
+                    if (Array.isArray(item.tabs)) {
+
+                        item.tabs.forEach(function (tab) {
+
+                            if (!tab || tab.visible === false) {
+                                return;
+                            }
+
+                            if (Array.isArray(tab.items)) {
+                                collectVisibleFields(
+                                    tab.items,
+                                    result
+                                );
+                            }
+                        });
+                    }
+                });
+
+                return result;
+            }
+
+
+            /*
+             * Lấy value hỗ trợ cả:
+             *
+             * fieldName
+             *
+             * và
+             *
+             * customer.name
+             */
+            function getValue(formData, field) {
+
+                if (!formData || !field) {
+                    return undefined;
+                }
+
+                /*
+                 * Property exact
+                 */
+                if (
+                    Object.prototype.hasOwnProperty.call(
+                        formData,
+                        field
+                    )
+                ) {
+                    return formData[field];
+                }
+
+                /*
+                 * Nested path
+                 */
+                return field
+                    .split(".")
+                    .reduce(function (current, key) {
+
+                        if (
+                            current === null ||
+                            current === undefined
+                        ) {
+                            return undefined;
+                        }
+
+                        return current[key];
+
+                    }, formData);
+            }
+
+
+            /*
+             * =====================================================
+             * LOOP TẤT CẢ DEPARTMENT
+             * =====================================================
+             */
+            depts.forEach(function (dept) {
+                const formId = deptForms[dept];
+
+                if (!formId) {
+                    return;
+                }
+
+                const $form = $("#" + formId);
+
+                if (!$form.length) {
+                    return;
+                }
+
+                const formInstance =
+                    $form.dxForm("instance");
+
+                if (!formInstance) {
+                    return;
+                }
+
+                const formData =
+                    formInstance.option("formData") || {};
+
+                const items =
+                    formInstance.option("items") || [];
+
+
+                /*
+                 * Lấy ID record.
+                 */
+                if (
+                    recordId === null &&
+                    formData.id !== undefined &&
+                    formData.id !== null
+                ) {
+                    recordId = formData.id;
+                }
+
+
+                /*
+                 * Lấy field visible
+                 */
+                const visibleFields =
+                    collectVisibleFields(items);
+
+
+                /*
+                 * Merge vào payload chung.
+                 */
+                visibleFields.forEach(function (field) {
+
+                    const value =
+                        getValue(formData, field);
+
+                    /*
+                     * Chỉ bỏ undefined.
+                     *
+                     * Vẫn giữ:
+                     * null
+                     * ""
+                     * false
+                     * 0
+                     */
+                    if (value !== undefined) {
+                        mergedValues[field] = value;
+                    }
+                });
+            });
+
+
+            /*
+             * =====================================================
+             * VALIDATE
+             * =====================================================
+             */
+
+            if (
+                recordId === null ||
+                recordId === undefined
+            ) {
+
+                console.warn(
+                    "[AutoSave] Cannot find record id."
+                );
+
+                return;
+            }
+
+            if (
+                Object.keys(mergedValues).length === 0
+            ) {
+
+                console.debug(
+                    "[AutoSave] No visible fields to save."
+                );
+
+                return;
+            }
+
+
+            /*
+             * =====================================================
+             * API
+             * =====================================================
+             */
+
+            const apiUrl =
+                moduleCode === "qt"
+                    ? "/api/Quotation/UpdateData"
+                    : "/api/PolicyIssuance/UpdateData";
+
+
+            console.debug(
+                "[AutoSave] ID:",
+                recordId
+            );
+
+            console.debug(
+                "[AutoSave] Values:",
+                mergedValues
+            );
+
+
+            await new Promise(function (resolve) {
+
+                ajaxPut(
+                    apiUrl,
+                    {
+                        key: recordId,
+                        values: JSON.stringify(
+                            mergedValues
+                        )
+                    },
+                    {
+                        onSuccess: function (response) {
+
+                            console.debug(
+                                "[AutoSave] Success"
+                            );
+
+                            updateAutoSavedText();
+
+                            resolve(response);
+                        },
+
+                        onError: function (err) {
+
+                            console.error(
+                                "[AutoSave] Error:",
+                                err
+                            );
+
+                            resolve(null);
+                        }
+                    }
+                );
+            });
+
+        } catch (err) {
+
+            console.error(
+                "[AutoSave] Unexpected error:",
+                err
+            );
+
+        } finally {
+
+            isSaving = false;
+        }
+    }
+
+
+                /* =========================================================
+                 * SAVE TẤT CẢ DEPARTMENT
+                 * ========================================================= */
+                async function saveAllDepartments() {
+
+                    if (isSaving) {
+                        return;
+                    }
+
+                    isSaving = true;
+
+                    try {
+
+                        /*
+                         * Không show globalLoadPanel ở auto-save
+                         * để user không bị màn hình loading mỗi 2 phút.
+                         *
+                         * Nếu muốn show thì có thể bật lại.
+                         */
+                         await saveDepartment();
+
+                        // const results = await Promise.all(tasks);
+
+                        // console.debug(
+                        //     "[AutoSave] Completed:",
+                        //     results
+                        // );
+
+                        /*
+                         * Có thể update text Auto-saved ở đây.
+                         */
+                        updateAutoSavedText();
+
+                    } catch (err) {
+
+                        console.error(
+                            "[AutoSave] Unexpected error:",
+                            err
+                        );
+
+                    } finally {
+
+                        isSaving = false;
+                    }
+                }
+
+                /* =========================================================
+                 * AUTO SAVED TEXT
+                 * ========================================================= */
+                function updateAutoSavedText() {
+
+                    clocks.forEach(function (clock) {
+
+                        if (!clock.isConnected) {
+                            return;
+                        }
+
+                        const text = clock.querySelector(
+                            ".auto-saved-text"
+                        );
+
+                        if (!text) {
+                            return;
+                        }
+
+                        /*
+                         * Có thể chỉ dùng "Auto-saved"
+                         * hoặc thêm giờ.
+                         */
+                        text.textContent = "Auto-saved";
+                    });
+                }
+
+                /* =========================================================
+                 * UPDATE TIMER
+                 * ========================================================= */
+                async function update() {
+
+                    const now = Date.now();
+
+                    const idleDurationMs =
+                        now - lastActivityAt;
+
+                    /*
+                     * User chưa idle đủ 5s.
+                     */
+                    if (idleDurationMs < idleThresholdMs) {
+
+                        isIdle = false;
+                        countdownCycleStartedAt = null;
+
+                        renderClocks(
+                            countdownDurationMs,
+                            false
+                        );
+
+                        return;
+                    }
+
+                    /*
+                     * Bắt đầu idle.
+                     */
+                    if (!isIdle) {
+
+                        isIdle = true;
+
+                        countdownCycleStartedAt =
+                            lastActivityAt + idleThresholdMs;
+                    }
+
+                    /*
+                     * Trường hợp chưa có cycle.
+                     */
+                    if (countdownCycleStartedAt === null) {
+                        countdownCycleStartedAt = now;
+                    }
+
+                    const elapsed =
+                        now - countdownCycleStartedAt;
+
+                    const remainingMs =
+                        Math.max(
+                            0,
+                            countdownDurationMs - elapsed
+                        );
+
+                    renderClocks(
+                        remainingMs,
+                        true
+                    );
+
+                    /*
+                     * Countdown đã hết.
+                     */
+                    if (
+                        remainingMs <= 0 &&
+                        !isSaving
+                    ) {
+
+                        /*
+                         * Reset cycle TRƯỚC khi gọi API.
+                         *
+                         * Như vậy timer bắt đầu vòng mới ngay.
+                         */
+                        countdownCycleStartedAt = Date.now();
+
+                        /*
+                         * Hiển thị lại 02:00 ngay.
+                         */
+                        renderClocks(
+                            countdownDurationMs,
+                            true
+                        );
+                        debugger
+                        await saveAllDepartments();
+                    }
+                }
+
+                /* =========================================================
+                 * USER ACTIVITY
+                 * ========================================================= */
                 function markActivity() {
+
                     lastActivityAt = Date.now();
-                    if (!isIdle) return;
+
+                    countdownCycleStartedAt = null;
+
+                    if (!isIdle) {
+                        return;
+                    }
 
                     isIdle = false;
-                    renderClocks(countdownDurationMs, false);
+
+                    renderClocks(
+                        countdownDurationMs,
+                        false
+                    );
                 }
 
+                /* =========================================================
+                 * EVENTS
+                 * ========================================================= */
                 [
                     "pointerdown",
                     "pointermove",
@@ -182,50 +928,102 @@
                     "wheel",
                     "touchstart"
                 ].forEach(function (eventName) {
-                    document.addEventListener(eventName, markActivity, {
-                        passive: true,
-                        capture: true
-                    });
+
+                    document.addEventListener(
+                        eventName,
+                        markActivity,
+                        {
+                            passive: true,
+                            capture: true
+                        }
+                    );
                 });
 
-                window.setInterval(update, 1000);
+                /*
+                 * Tick 500ms cho clock mượt.
+                 */
+                setInterval(function () {
+                    update();
+                }, 500);
 
+                /* =========================================================
+                 * PUBLIC API
+                 * ========================================================= */
                 return {
+
                     register: function (clock) {
-                        if (!clock) return;
+
+                        if (!clock) {
+                            return;
+                        }
+
                         clocks.add(clock);
-                        update();
+
+                        renderClocks(
+                            countdownDurationMs,
+                            false
+                        );
                     },
-                    reset: markActivity
+
+                    unregister: function (clock) {
+
+                        if (!clock) {
+                            return;
+                        }
+
+                        clocks.delete(clock);
+                    },
+
+                    /*
+                     * Có thể gọi manual:
+                     *
+                     * window.DeptTreeIdleClock.save();
+                     */
+                    save: function () {
+                        return saveAllDepartments();
+                    },
+
+                    reset: function () {
+
+                        lastActivityAt = Date.now();
+                        countdownCycleStartedAt = null;
+                        isIdle = false;
+
+                        renderClocks(
+                            countdownDurationMs,
+                            false
+                        );
+                    }
                 };
             })();
         }
 
-        window.DeptTreeIdleClock.register(document.getElementById(idleClockId));
+        /* =============================================================
+         * REGISTER CLOCK CỦA TREE HIỆN TẠI
+         * ============================================================= */
 
-        function bindWhenReady() {
-            var treeStack = document.getElementById(treeStackId);
-            var overviewScroll = document.getElementById(overviewScrollId);
+        function registerIdleClock() {
 
-            if (treeStack && overviewScroll && typeof bindDeptTreeScrollSpy === "function") {
-                if (treeStack.deptTreeScrollSpy?.destroy) {
-                    treeStack.deptTreeScrollSpy.destroy();
+            const idleClock =
+        document.getElementById(idleClockId);
+
+        if (!idleClock) {
+
+                /*
+        * Partial có thể chưa render hoàn chỉnh.
+        */
+                if (attempts++ < 20) {
+            setTimeout(registerIdleClock, 100);
                 }
-                treeStack.deptTreeScrollSpy = bindDeptTreeScrollSpy(
-                    "@moduleCode",
-    @Model.Id,
-                    {
-                        treeStack: treeStack,
-                        container: overviewScroll
-                    }
-                );
-                if (treeStack.deptTreeScrollSpy) return;
+
+        return;
             }
 
-            attempts += 1;
-            if (attempts < 40) window.setTimeout(bindWhenReady, 50);
+        window.DeptTreeIdleClock.register(idleClock);
         }
 
-        window.setTimeout(bindWhenReady, 0);
+        registerIdleClock();
+
     })();
+</script>
 </script>
