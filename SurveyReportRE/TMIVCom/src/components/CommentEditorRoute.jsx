@@ -50,6 +50,7 @@ const CommentEditorRoute = forwardRef(({
     emptyText = 'No comments yet.',
     renderItem,
     showComposer = true,
+    disableComment = false, // true: chỉ hiển thị log comment, ẩn toàn bộ phần chat/composer
     submitLabel = 'Send',
     headerTitle = 'Comments',
     headerSubtitle = '',
@@ -373,7 +374,7 @@ const CommentEditorRoute = forwardRef(({
             </div>
 
             {/* Comment Composer */}
-            {showComposer && (
+            {showComposer && !disableComment && (
                 <div className="comment-compose" style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     
                     {/* Routing Department Selection */}

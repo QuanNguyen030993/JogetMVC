@@ -1,5 +1,6 @@
 import DateBox from "../components/Datebox.jsx"; 
 import HtmlEditor from "../components/HtmlEditor.jsx"; 
+import HtmlEditorCommentBox from "../components/HtmlEditorCommentBox.jsx"; 
 import CustomGrid from "../components/CustomGrid.jsx"; 
 import CommentEditor from "../components/CommentEditor.jsx";
 import CommentEditorRoute from "../components/CommentEditorRoute.jsx";
@@ -445,6 +446,322 @@ createJQueryPlugin("checkbox", "CheckBox");
 createJQueryPlugin("selectbox", "SelectBox");
 createJQueryPlugin("dropdownbox", "DropDownBox");
 
+
+$.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
+    const getInstance = (el) => roots.get(el);
+
+    const getControl = (el) => {
+        const instance = getInstance(el);
+        return instance?.ref?.current || null;
+    };
+
+    const callButtonsMethod = (el, method, args) => {
+        const control = getControl(el);
+        return control?.buttons?.[method]?.(...args);
+    };
+
+    // Command mode:
+    // $("#x").tmivhtmleditorcommentbox("option", "value")
+    // $("#x").tmivhtmleditorcommentbox("option", "value", "<b>Hello</b>")
+    // $("#x").tmivhtmleditorcommentbox("value")
+    // $("#x").tmivhtmleditorcommentbox("focus")
+    // $("#x").tmivhtmleditorcommentbox("buttons", "push", button)
+    // $("#x").tmivhtmleditorcommentbox("buttons", "unshift", button)
+    // $("#x").tmivhtmleditorcommentbox("buttons", "shift")
+    // $("#x").tmivhtmleditorcommentbox("buttons", "pop")
+    // $("#x").tmivhtmleditorcommentbox("buttons", "splice", start, deleteCount, ...items)
+    // $("#x").tmivhtmleditorcommentbox("buttons", "remove", "buttonName")
+    // $("#x").tmivhtmleditorcommentbox("buttons", "clear")
+    if (typeof arg1 === "string") {
+        if (arg1 === "option") {
+            if (arguments.length === 2 && this.length === 1) {
+                const instance = getInstance(this[0]);
+                if (!instance) return undefined;
+
+                const control = instance.ref?.current;
+                return control?.option?.(arg2) ?? instance.options?.[arg2];
+            }
+
+            this.each(function() {
+                const instance = getInstance(this);
+                if (!instance) return;
+
+                const control = instance.ref?.current;
+
+                if (control?.option) {
+                    control.option(arg2, arg3);
+                } else {
+                    instance.options[arg2] = arg3;
+
+                    const Component = controls[instance.name];
+                    instance.root.render(
+                        <Component
+                            ref={instance.ref}
+                            {...instance.options}
+                        />
+                    );
+                }
+            });
+
+            return this;
+        }
+
+        if (arg1 === "value") {
+            if (arguments.length === 1) {
+                if (this.length === 1) {
+                    const instance = getInstance(this[0]);
+                    if (!instance) return "";
+
+                    return instance.ref?.current?.value?.()
+                        ?? instance.options?.value
+                        ?? "";
+                }
+
+                return this.map(function() {
+                    const instance = getInstance(this);
+                    if (!instance) return null;
+
+                    return instance.ref?.current?.value?.()
+                        ?? instance.options?.value
+                        ?? null;
+                }).get();
+            }
+
+            this.each(function() {
+                const instance = getInstance(this);
+                if (!instance) return;
+
+                if (instance.ref?.current?.option) {
+                    instance.ref.current.option("value", arg2);
+                } else {
+                    instance.options.value = arg2;
+
+                    const Component = controls[instance.name];
+                    instance.root.render(
+                        <Component
+                            ref={instance.ref}
+                            {...instance.options}
+                        />
+                    );
+                }
+            });
+
+            return this;
+        }
+
+        if (arg1 === "focus") {
+            return this.each(function() {
+                getControl(this)?.focus?.();
+            });
+        }
+
+        if (arg1 === "buttons") {
+            const method = arg2;
+
+            if (!method) {
+                if (this.length === 1) {
+                    return getControl(this[0])?.buttons?.get?.() ?? [];
+                }
+                return [];
+            }
+
+            const methodArgs = [arg3, ...rest];
+
+            // commands with no arg
+            if (
+                method === "shift" ||
+                method === "pop" ||
+                method === "clear" ||
+                method === "get"
+            ) {
+                methodArgs.length = 0;
+            }
+
+            // Getter-like button methods on a single element
+            if (
+                this.length === 1 &&
+                (method === "get" || method === "shift" || method === "pop")
+            ) {
+                return callButtonsMethod(
+                    this[0],
+                    method,
+                    methodArgs
+                );
+            }
+
+            this.each(function() {
+                callButtonsMethod(
+                    this,
+                    method,
+                    methodArgs
+                );
+            });
+
+            return this;
+        }
+
+        if (arg1 === "addButton") {
+            return this.each(function() {
+                getControl(this)?.addButton?.(
+                    arg2,
+                    arg3 || "push"
+                );
+            });
+        }
+
+        if (arg1 === "removeButton") {
+            return this.each(function() {
+                getControl(this)?.removeButton?.(arg2);
+            });
+        }
+
+        return this;
+    }
+
+    // Initialization
+    const options = arg1 || {};
+
+    if (this.length === 1) {
+        mount(
+            this[0],
+            "HtmlEditorCommentBox",
+            options
+        );
+
+        const el = this[0];
+
+        return {
+            option(name, value) {
+                const instance = getInstance(el);
+                if (!instance) return undefined;
+
+                const control = instance.ref?.current;
+
+                if (arguments.length === 1) {
+                    return control?.option?.(name)
+                        ?? instance.options?.[name];
+                }
+
+                if (control?.option) {
+                    control.option(name, value);
+                } else {
+                    instance.options[name] = value;
+
+                    const Component = controls[instance.name];
+                    instance.root.render(
+                        <Component
+                            ref={instance.ref}
+                            {...instance.options}
+                        />
+                    );
+                }
+
+                return this;
+            },
+
+            value(nextValue) {
+                const instance = getInstance(el);
+                if (!instance) return "";
+
+                const control = instance.ref?.current;
+
+                if (arguments.length === 0) {
+                    return control?.value?.()
+                        ?? instance.options?.value
+                        ?? "";
+                }
+
+                control?.option?.(
+                    "value",
+                    nextValue
+                );
+
+                return this;
+            },
+
+            focus() {
+                getControl(el)?.focus?.();
+                return this;
+            },
+
+            buttons: {
+                get() {
+                    return getControl(el)?.buttons?.get?.() ?? [];
+                },
+
+                set(items) {
+                    getControl(el)?.buttons?.set?.(items);
+                    return this;
+                },
+
+                push(...items) {
+                    getControl(el)?.buttons?.push?.(...items);
+                    return this;
+                },
+
+                unshift(...items) {
+                    getControl(el)?.buttons?.unshift?.(...items);
+                    return this;
+                },
+
+                pop() {
+                    return getControl(el)?.buttons?.pop?.();
+                },
+
+                shift() {
+                    return getControl(el)?.buttons?.shift?.();
+                },
+
+                splice(start, deleteCount, ...items) {
+                    getControl(el)?.buttons?.splice?.(
+                        start,
+                        deleteCount,
+                        ...items
+                    );
+                    return this;
+                },
+
+                remove(nameOrPredicate) {
+                    getControl(el)?.buttons?.remove?.(
+                        nameOrPredicate
+                    );
+                    return this;
+                },
+
+                clear() {
+                    getControl(el)?.buttons?.clear?.();
+                    return this;
+                }
+            },
+
+            addButton(button, position = "push") {
+                getControl(el)?.addButton?.(
+                    button,
+                    position
+                );
+                return this;
+            },
+
+            removeButton(nameOrPredicate) {
+                getControl(el)?.removeButton?.(
+                    nameOrPredicate
+                );
+                return this;
+            }
+        };
+    }
+
+    // Multiple elements: jQuery chaining
+    return this.each(function() {
+        mount(
+            this,
+            "HtmlEditorCommentBox",
+            options
+        );
+    });
+};
+
+
 $.fn.customform = function(arg1, arg2, arg3) {
     if (typeof arg1 === "string") {
         if (arg1 === "option") {
@@ -790,6 +1107,11 @@ register(
     "HtmlEditor",
     HtmlEditor
 );
+
+register(
+    "HtmlEditorCommentBox",
+    HtmlEditorCommentBox
+);
 register(
     "CustomGrid",
     CustomGrid
@@ -891,4 +1213,4 @@ if (typeof window !== "undefined") {
     //}, 5000);
 }
 
-export default { DateBox, HtmlEditor, CustomGrid, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify, TourGuide, startTour, exportTour };
+export default { DateBox, HtmlEditor, HtmlEditorCommentBox, CustomGrid, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify, TourGuide, startTour, exportTour };
