@@ -9012,18 +9012,18 @@
                         console.log("Cannot load status from " + statusId);
                     }
                     var statusLabel = defaultStatus;
-                    if (statusLabel && typeof statusLabel === "object") {
-                        statusLabel = statusLabel.text
-                            || statusLabel.displayStatus
-                            || statusLabel.actionName
-                            || statusLabel.actionCode
-                            || statusLabel.statusName;
-                    }
+                    // if (statusLabel && typeof statusLabel === "object") {
+                    //     statusLabel = statusLabel.text
+                    //         || statusLabel.displayStatus
+                    //         || statusLabel.actionName
+                    //         || statusLabel.actionCode
+                    //         || statusLabel.statusName;
+                    // }
                   
                     setDecisionCommonStatus(
                         statusId,
                         "onLoaded",
-                        acceptDate == "No Status" ? acceptDate : `${statusLabel || "Accepted"} at: ${fmtTimeLocal(acceptDate)}`
+                        acceptDate == "No Status" ? acceptDate : (statusLabel != "Accepted" ? statusLabel : `Accepted at: ${fmtTimeLocal(acceptDate)}`)
                     );
                 }, _delayLoadFormDetailStatus);
             }
@@ -9425,8 +9425,8 @@
                             "onLoading",
                             finalDecisionStatus.title || finalDecisionStatus.text
                         );
-                          if (latestTatObject?.[formDataClone.dept]?.AcceptDate)
-                          {
+                      if (latestTatObject?.[formDataClone.dept]?.AcceptDate)
+                      {
                               var acceptButtonId = getDelayAcceptButtonId(params[0]);
                               var panelStatusId = getDecisionFieldStatusId(
                                   formDataClone,
@@ -9463,7 +9463,7 @@
                                           if (storedStatus.text == "Declined")
                                            if (params.length > 3)    $(`#${params[2]}`).css("background-color", window.DecisionColors.accepted);
                                           if (storedStatus)
-                                              disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
+                                              disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
                                               }
                                               catch {
 
@@ -9490,12 +9490,13 @@
                                           panelStatusId,
                                           acceptButtonId,
                                           latestTatObject[formDataClone.dept]?.AcceptDate
+
                                       );
-                                      disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
+                                      disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
                                   }
                               }
                            
-                          } // if TAT Accept and Button Accept
+                      } // if TAT Accept and Button Accept
                       else {
                           if (params.length > 0)
                           {
@@ -9507,18 +9508,30 @@
                                    latestTatObject[formDataClone.dept]?.AcceptDate
                                );
                                enableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
+                               if (latestFormItems.actionStatus)
+                               {
+                                   var customStatus = tryParseJSON(latestFormItems.actionStatus, "Custom parsing problem")
+                                   updateDelayAcceptStatus(
+                                       commonStatusId,
+                                       acceptButtonId,
+                                       latestTatObject[formDataClone.dept]?.AcceptDate,
+                                       customStatus[formDataClone.dept]
+                                   );
+                                   disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
+                               }
+                                
                           }
                       }
 
                       if (formDataClone.dept == "LMKT") { //  another logic
-                                 var storedStatus = getDelayAcceptStoredStatus(formItems, formDataClone.dept, formItems);
-                                  updateDelayAcceptStatus(
-                                     commonStatusId,
-                                     commonAcceptButtonId,
-                                     latestTatObject[formDataClone.dept]?.CompleteDate, storedStatus
-                                 );
-                                
-                             }
+                              var storedStatus = getDelayAcceptStoredStatus(formItems, formDataClone.dept, formItems);
+                               updateDelayAcceptStatus(
+                                  commonStatusId,
+                                  commonAcceptButtonId,
+                                  latestTatObject[formDataClone.dept]?.CompleteDate, storedStatus
+                              );
+                             
+                          }
                       if (formItems.stageDept == "Client" && formDataClone.dept == "FO") { //  another logic
                           var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
                               if (storedStatus != "Accepted")
@@ -9613,14 +9626,14 @@
             }
             return PIC_MAP[deptKey] || null;
         }
-         function disableAllDecisionButton(items){
+         function disableAllDecisionButton(items, latestFormItems){
              $.each(items, function(itemIndex, item){
                  setTimeout(() => {
                      try
                      {  
                          if (item.includes("make-option"))
                          {
-                             $(`#${item}`).dxButton("instance").option("disabled", false);
+                             $(`#${item}`).dxButton("instance").option("disabled", latestFormItems.stageDept == "TS" ? false : true);
                          }
                          else
                             {
