@@ -414,329 +414,329 @@
                 /* =========================================================
                  * SAVE 1 DEPARTMENT
                  * ========================================================= */
-    async function saveDepartment() {
-        // if (isSaving) {
-        //     return;
-        // }
+                async function saveDepartment() {
+                    // if (isSaving) {
+                    //     return;
+                    // }
 
-        // isSaving = true;
+                    // isSaving = true;
 
-        try {
+                    try {
 
-            const mergedValues = {};
-            let recordId = null;
+                        const mergedValues = {};
+                        let recordId = null;
 
-            const qtForms = {
-                FO: "@QTViewIdHelper.Form("FO", quotationId)",
-                TS: "@QTViewIdHelper.Form("TS", quotationId)",
-                UW: "@QTViewIdHelper.Form("UW", quotationId)",
-                LMKT: "@QTViewIdHelper.Form("LMKT", quotationId)",
-                PM: "@QTViewIdHelper.Form("PM", quotationId)"
-            };
+                        const qtForms = {
+                            FO: "@QTViewIdHelper.Form("FO", quotationId)",
+                            TS: "@QTViewIdHelper.Form("TS", quotationId)",
+                            UW: "@QTViewIdHelper.Form("UW", quotationId)",
+                            LMKT: "@QTViewIdHelper.Form("LMKT", quotationId)",
+                            PM: "@QTViewIdHelper.Form("PM", quotationId)"
+                        };
 
-            const piForms = {
-                FO: "@PIViewIdHelper.Form("FO", quotationId)",
-                TS: "@PIViewIdHelper.Form("TS", quotationId)",
-                PM: "@PIViewIdHelper.Form("PM", quotationId)"
-            };
+                        const piForms = {
+                            FO: "@PIViewIdHelper.Form("FO", quotationId)",
+                            TS: "@PIViewIdHelper.Form("TS", quotationId)",
+                            PM: "@PIViewIdHelper.Form("PM", quotationId)"
+                        };
 
-            const deptForms =
-                moduleCode === "qt"
-                    ? qtForms
-                    : piForms;
+                        const deptForms =
+                            moduleCode === "qt"
+                                ? qtForms
+                                : piForms;
 
-            const depts =
-                moduleCode === "qt"
-                    ? ["FO", "TS", "UW", "LMKT", "PM"]
-                    : ["FO", "TS", "PM"];
+                        const depts =
+                            moduleCode === "qt"
+                                ? ["FO", "TS", "UW", "LMKT", "PM"]
+                                : ["FO", "TS", "PM"];
 
 
-            /*
-             * Recursive lấy tất cả dataField đang visible.
-             * Hỗ trợ:
-             * - simple item
-             * - group
-             * - tab
-             * - nested items
-             */
-            function collectVisibleFields(items, result) {
+                        /*
+                         * Recursive lấy tất cả dataField đang visible.
+                         * Hỗ trợ:
+                         * - simple item
+                         * - group
+                         * - tab
+                         * - nested items
+                         */
+                        function collectVisibleFields(items, result) {
 
-                result = result || new Set();
+                            result = result || new Set();
 
-                if (!Array.isArray(items)) {
-                    return result;
-                }
+                            if (!Array.isArray(items)) {
+                                return result;
+                            }
 
-                items.forEach(function (item) {
+                            items.forEach(function (item) {
 
-                    if (!item || item.visible === false) {
-                        return;
-                    }
+                                if (!item || item.visible === false) {
+                                    return;
+                                }
 
-                    /*
-                     * Field bình thường
-                     */
-                    if (item.dataField) {
-                        result.add(item.dataField);
-                    }
+                                /*
+                                 * Field bình thường
+                                 */
+                                if (item.dataField) {
+                                    result.add(item.dataField);
+                                }
 
-                    /*
-                     * Group / nested items
-                     */
-                    if (Array.isArray(item.items)) {
-                        collectVisibleFields(
-                            item.items,
-                            result
-                        );
-                    }
+                                /*
+                                 * Group / nested items
+                                 */
+                                if (Array.isArray(item.items)) {
+                                    collectVisibleFields(
+                                        item.items,
+                                        result
+                                    );
+                                }
 
-                    /*
-                     * Tabbed item
-                     */
-                    if (Array.isArray(item.tabs)) {
+                                /*
+                                 * Tabbed item
+                                 */
+                                if (Array.isArray(item.tabs)) {
 
-                        item.tabs.forEach(function (tab) {
+                                    item.tabs.forEach(function (tab) {
 
-                            if (!tab || tab.visible === false) {
+                                        if (!tab || tab.visible === false) {
+                                            return;
+                                        }
+
+                                        if (Array.isArray(tab.items)) {
+                                            collectVisibleFields(
+                                                tab.items,
+                                                result
+                                            );
+                                        }
+                                    });
+                                }
+                            });
+
+                            return result;
+                        }
+
+
+                        /*
+                         * Lấy value hỗ trợ cả:
+                         *
+                         * fieldName
+                         *
+                         * và
+                         *
+                         * customer.name
+                         */
+                        function getValue(formData, field) {
+
+                            if (!formData || !field) {
+                                return undefined;
+                            }
+
+                            /*
+                             * Property exact
+                             */
+                            if (
+                                Object.prototype.hasOwnProperty.call(
+                                    formData,
+                                    field
+                                )
+                            ) {
+                                return formData[field];
+                            }
+
+                            /*
+                             * Nested path
+                             */
+                            return field
+                                .split(".")
+                                .reduce(function (current, key) {
+
+                                    if (
+                                        current === null ||
+                                        current === undefined
+                                    ) {
+                                        return undefined;
+                                    }
+
+                                    return current[key];
+
+                                }, formData);
+                        }
+
+
+                        /*
+                         * =====================================================
+                         * LOOP TẤT CẢ DEPARTMENT
+                         * =====================================================
+                         */
+                        depts.forEach(function (dept) {
+                            const formId = deptForms[dept];
+
+                            if (!formId) {
                                 return;
                             }
 
-                            if (Array.isArray(tab.items)) {
-                                collectVisibleFields(
-                                    tab.items,
-                                    result
-                                );
+                            const $form = $("#" + formId);
+
+                            if (!$form.length) {
+                                return;
                             }
+
+                            const formInstance =
+                                $form.dxForm("instance");
+
+                            if (!formInstance) {
+                                return;
+                            }
+
+                            const formData =
+                                formInstance.option("formData") || {};
+
+                            const items =
+                                formInstance.option("items") || [];
+
+
+                            /*
+                             * Lấy ID record.
+                             */
+                            if (
+                                recordId === null &&
+                                formData.id !== undefined &&
+                                formData.id !== null
+                            ) {
+                                recordId = formData.id;
+                            }
+
+
+                            /*
+                             * Lấy field visible
+                             */
+                            const visibleFields =
+                                collectVisibleFields(items);
+
+
+                            /*
+                             * Merge vào payload chung.
+                             */
+                            visibleFields.forEach(function (field) {
+
+                                const value =
+                                    getValue(formData, field);
+
+                                /*
+                                 * Chỉ bỏ undefined.
+                                 *
+                                 * Vẫn giữ:
+                                 * null
+                                 * ""
+                                 * false
+                                 * 0
+                                 */
+                                if (value !== undefined) {
+                                    mergedValues[field] = value;
+                                }
+                            });
                         });
-                    }
-                });
-
-                return result;
-            }
 
 
-            /*
-             * Lấy value hỗ trợ cả:
-             *
-             * fieldName
-             *
-             * và
-             *
-             * customer.name
-             */
-            function getValue(formData, field) {
-
-                if (!formData || !field) {
-                    return undefined;
-                }
-
-                /*
-                 * Property exact
-                 */
-                if (
-                    Object.prototype.hasOwnProperty.call(
-                        formData,
-                        field
-                    )
-                ) {
-                    return formData[field];
-                }
-
-                /*
-                 * Nested path
-                 */
-                return field
-                    .split(".")
-                    .reduce(function (current, key) {
+                        /*
+                         * =====================================================
+                         * VALIDATE
+                         * =====================================================
+                         */
 
                         if (
-                            current === null ||
-                            current === undefined
+                            recordId === null ||
+                            recordId === undefined
                         ) {
-                            return undefined;
+
+                            console.warn(
+                                "[AutoSave] Cannot find record id."
+                            );
+
+                            return;
                         }
 
-                        return current[key];
-
-                    }, formData);
-            }
-
-
-            /*
-             * =====================================================
-             * LOOP TẤT CẢ DEPARTMENT
-             * =====================================================
-             */
-            depts.forEach(function (dept) {
-                const formId = deptForms[dept];
-
-                if (!formId) {
-                    return;
-                }
-
-                const $form = $("#" + formId);
-
-                if (!$form.length) {
-                    return;
-                }
-
-                const formInstance =
-                    $form.dxForm("instance");
-
-                if (!formInstance) {
-                    return;
-                }
-
-                const formData =
-                    formInstance.option("formData") || {};
-
-                const items =
-                    formInstance.option("items") || [];
-
-
-                /*
-                 * Lấy ID record.
-                 */
-                if (
-                    recordId === null &&
-                    formData.id !== undefined &&
-                    formData.id !== null
-                ) {
-                    recordId = formData.id;
-                }
-
-
-                /*
-                 * Lấy field visible
-                 */
-                const visibleFields =
-                    collectVisibleFields(items);
-
-
-                /*
-                 * Merge vào payload chung.
-                 */
-                visibleFields.forEach(function (field) {
-
-                    const value =
-                        getValue(formData, field);
-
-                    /*
-                     * Chỉ bỏ undefined.
-                     *
-                     * Vẫn giữ:
-                     * null
-                     * ""
-                     * false
-                     * 0
-                     */
-                    if (value !== undefined) {
-                        mergedValues[field] = value;
-                    }
-                });
-            });
-
-
-            /*
-             * =====================================================
-             * VALIDATE
-             * =====================================================
-             */
-
-            if (
-                recordId === null ||
-                recordId === undefined
-            ) {
-
-                console.warn(
-                    "[AutoSave] Cannot find record id."
-                );
-
-                return;
-            }
-
-            if (
-                Object.keys(mergedValues).length === 0
-            ) {
-
-                console.debug(
-                    "[AutoSave] No visible fields to save."
-                );
-
-                return;
-            }
-
-
-            /*
-             * =====================================================
-             * API
-             * =====================================================
-             */
-
-            const apiUrl =
-                moduleCode === "qt"
-                    ? "/api/Quotation/UpdateData"
-                    : "/api/PolicyIssuance/UpdateData";
-
-
-            console.debug(
-                "[AutoSave] ID:",
-                recordId
-            );
-
-            console.debug(
-                "[AutoSave] Values:",
-                mergedValues
-            );
-
-
-            await new Promise(function (resolve) {
-
-                ajaxPut(
-                    apiUrl,
-                    {
-                        key: recordId,
-                        values: JSON.stringify(
-                            mergedValues
-                        )
-                    },
-                    {
-                        onSuccess: function (response) {
+                        if (
+                            Object.keys(mergedValues).length === 0
+                        ) {
 
                             console.debug(
-                                "[AutoSave] Success"
+                                "[AutoSave] No visible fields to save."
                             );
 
-                            updateAutoSavedText();
-
-                            resolve(response);
-                        },
-
-                        onError: function (err) {
-
-                            console.error(
-                                "[AutoSave] Error:",
-                                err
-                            );
-
-                            resolve(null);
+                            return;
                         }
+
+
+                        /*
+                         * =====================================================
+                         * API
+                         * =====================================================
+                         */
+
+                        const apiUrl =
+                            moduleCode === "qt"
+                                ? "/api/Quotation/UpdateData"
+                                : "/api/PolicyIssuance/UpdateData";
+
+
+                        console.debug(
+                            "[AutoSave] ID:",
+                            recordId
+                        );
+
+                        console.debug(
+                            "[AutoSave] Values:",
+                            mergedValues
+                        );
+
+
+                        await new Promise(function (resolve) {
+
+                            ajaxPut(
+                                apiUrl,
+                                {
+                                    key: recordId,
+                                    values: JSON.stringify(
+                                        mergedValues
+                                    )
+                                },
+                                {
+                                    onSuccess: function (response) {
+
+                                        console.debug(
+                                            "[AutoSave] Success"
+                                        );
+
+                                        updateAutoSavedText();
+
+                                        resolve(response);
+                                    },
+
+                                    onError: function (err) {
+
+                                        console.error(
+                                            "[AutoSave] Error:",
+                                            err
+                                        );
+
+                                        resolve(null);
+                                    }
+                                }
+                            );
+                        });
+
+                    } catch (err) {
+
+                        console.error(
+                            "[AutoSave] Unexpected error:",
+                            err
+                        );
+
+                    } finally {
+
+                        isSaving = false;
                     }
-                );
-            });
-
-        } catch (err) {
-
-            console.error(
-                "[AutoSave] Unexpected error:",
-                err
-            );
-
-        } finally {
-
-            isSaving = false;
-        }
-    }
+                }
 
 
                 /* =========================================================
@@ -892,7 +892,6 @@
                             countdownDurationMs,
                             true
                         );
-                        debugger
                         await saveAllDepartments();
                     }
                 }
@@ -1025,5 +1024,4 @@
         registerIdleClock();
 
     })();
-</script>
 </script>

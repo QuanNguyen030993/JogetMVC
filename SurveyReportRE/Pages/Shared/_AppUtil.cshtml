@@ -3471,7 +3471,6 @@
             //                         onClosed: function (itemChild) { //onChanged: function (itemChild, editor) {
             //                             // var  itemChild =    e.component.option("selectedItems") || []
 
-            //                             debugger
             //                         if (!stateLayout.isAssigneeBoxRender) return;
             //                         var formId = window.QuotationIdManager.form(item,this.dataForm.id);
             //                         var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
@@ -3541,7 +3540,6 @@
             //                         dataForm: data[item],
             //                         //value: formItems.lmktAssigneeId || null,
             //                             onClosed: function (itemChild) {
-            //                                 debugger
             //                         if (!stateLsayout.isAssigneeBoxRender) return;
             //                         var formId = window.PolicyIssuanceIdManager.form(item, this.dataForm.id);
             //                         var ds = $(`#${formId}`).dxForm("instance").option("dataSource");
@@ -6968,7 +6966,10 @@
                 height: editorOptions.formHeight || item.formHeight || 150,
                 readOnly: readOnly,
                 disabled: readOnly,
-                onChange: onChange
+                onChange: onChange,
+                onBlur: function (e) {
+                    formInstance.updateData(item.dataField, e.value);
+                }
             });
 
             if (formInstance && item.dataField) {
@@ -8678,6 +8679,8 @@
                     }, 0);
                     waitForDecisionRouteStage(formProps.formId).then(function () {
                         setTimeout(() => {
+
+                          
                             renderDecisionDeferredV2(
                                 formProps,
                                 decisionGroupName,
@@ -8819,11 +8822,11 @@
 
             if (statusText) return { text: statusText, title: "" };
 
-            var acceptDate = tatObject?.[dept]?.AcceptDate;
+            var acceptDate = tatObject?.[dept]?.AcceptDate || "No status";
             if (acceptDate) {
                 return {
                     text: "Accepted",
-                    title: `Accepted at: ${fmtTimeLocal(acceptDate)}`
+                    title: acceptDate == "No status" ? acceptDate : `Accepted at: ${fmtTimeLocal(acceptDate)}`
                 };
             }
 
@@ -9006,8 +9009,7 @@
                 setTimeout(() => {
                     if (!statusId || !acceptDate) 
                     {
-                        alert("Cannot load status from "+ statusId);
-                    return;
+                        console.log("Cannot load status from " + statusId);
                     }
                     var statusLabel = defaultStatus;
                     if (statusLabel && typeof statusLabel === "object") {
@@ -9017,10 +9019,11 @@
                             || statusLabel.actionCode
                             || statusLabel.statusName;
                     }
+                  
                     setDecisionCommonStatus(
                         statusId,
                         "onLoaded",
-                        `${statusLabel || "Accepted"} at: ${fmtTimeLocal(acceptDate)}`
+                        acceptDate == "No Status" ? acceptDate : `${statusLabel || "Accepted"} at: ${fmtTimeLocal(acceptDate)}`
                     );
                 }, _delayLoadFormDetailStatus);
             }
@@ -9343,6 +9346,7 @@
                         normalizedDecisionItems,
                         params[1] || params[3]
                     );
+                    
                     // setDecisionCommonStatus(commonStatusId, commonAcceptButtonId, "loading");
                     setTimeout(() => {
                         var form = $(`#${formDataClone.formId}`).dxForm("instance");
@@ -9421,94 +9425,88 @@
                             "onLoading",
                             finalDecisionStatus.title || finalDecisionStatus.text
                         );
-                      if (latestTatObject?.[formDataClone.dept]?.AcceptDate)
-                         {
-                          var acceptButtonId = getDelayAcceptButtonId(params[0]);
-                          var panelStatusId = getDecisionFieldStatusId(
-                              formDataClone,
-                              normalizedDecisionItems,
-                              params[1] || params[3]
-                          );
+                          if (latestTatObject?.[formDataClone.dept]?.AcceptDate)
+                          {
+                              var acceptButtonId = getDelayAcceptButtonId(params[0]);
+                              var panelStatusId = getDecisionFieldStatusId(
+                                  formDataClone,
+                                  normalizedDecisionItems,
+                                  params[1] || params[3]
+                              );
 
-                          var skipAcceptedMainFields = params[0] && typeof params[0] === "object" && params[0].skipAcceptedMainFields;
-                          if (acceptButtonId)
-                             {
-                              if (!skipAcceptedMainFields) {
-                                  if (mainField) {
-                                        form.option("items", [
-                                            ...form.option("items"),
-                                            ...mainField
-                                        ]);
-                                    }
-                                    else {
-                                        form.option("items", [
-                                            ...form.option("items"),
+                              var skipAcceptedMainFields = params[0] && typeof params[0] === "object" && params[0].skipAcceptedMainFields;
+                              if (acceptButtonId)
+                                 {
+                                  if (!skipAcceptedMainFields) {
+                                      if (mainField) {
+                                            form.option("items", [
+                                                ...form.option("items"),
+                                                ...mainField
                                             ]);
-                                    }
-                              }
-
-                              if (formDataClone.dept == "LMKT" || formDataClone.dept == "FO") {
-                                  var storedStatus = getDelayAcceptStoredStatus(formItems, formDataClone.dept, formItems);
-                                  if (storedStatus) {
-                                       try
-                                     {
-                                      $(`#${params[0]}`).dxButton("instance").option("visible", true);
-                                      if (params.length > 3) $(`#${params[2]}`).dxButton("instance").option("visible", true);
-                                      if (storedStatus.text == "Approved")
-                                          $(`#${params[0]}`).css("background-color", window.DecisionColors.accepted);
-                                      if (storedStatus.text == "Declined")
-                                       if (params.length > 3)    $(`#${params[2]}`).css("background-color", window.DecisionColors.accepted);
-                                      if (storedStatus)
-                                          disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
-                                          }
-                                          catch {
-
-                                          }
+                                        }
+                                        else {
+                                            form.option("items", [
+                                                ...form.option("items"),
+                                                ]);
+                                        }
                                   }
-                                  else {
-                                          try 
+
+                                  if (formDataClone.dept == "LMKT" || formDataClone.dept == "FO") {
+                                      var storedStatus = getDelayAcceptStoredStatus(formItems, formDataClone.dept, formItems);
+                                      if (storedStatus) {
+                                           try
                                          {
-                                          $(`#${params[0]}`).dxButton("instance").option("visible", false);
-                                           if (params.length > 3) $(`#${params[2]}`).dxButton("instance").option("visible", false);
+                                          $(`#${params[0]}`).dxButton("instance").option("visible", true);
+                                          if (params.length > 3) $(`#${params[2]}`).dxButton("instance").option("visible", true);
+                                          if (storedStatus.text == "Approved")
+                                              $(`#${params[0]}`).css("background-color", window.DecisionColors.accepted);
+                                          if (storedStatus.text == "Declined")
+                                           if (params.length > 3)    $(`#${params[2]}`).css("background-color", window.DecisionColors.accepted);
+                                          if (storedStatus)
+                                              disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
+                                              }
+                                              catch {
 
-                                         }
-                                         catch{
+                                              }
+                                      }
+                                      else {
+                                              try 
+                                             {
+                                              $(`#${params[0]}`).dxButton("instance").option("visible", false);
+                                               if (params.length > 3) $(`#${params[2]}`).dxButton("instance").option("visible", false);
 
-                                         }
+                                             }
+                                             catch{
+
+                                             }
+                                      }
+                                  }
+                                  else{
+                                      $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
+                                      if (formDataClone.dept == "UW")
+                                      {
+                                      }
+                                      updateDelayAcceptStatus(
+                                          panelStatusId,
+                                          acceptButtonId,
+                                          latestTatObject[formDataClone.dept]?.AcceptDate
+                                      );
+                                      disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
                                   }
                               }
-                              else{
-                                  $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
-                                  updateDelayAcceptStatus(
-                                      panelStatusId,
-                                      acceptButtonId,
-                                      latestTatObject[formDataClone.dept]?.AcceptDate
-                                  );
-                                  disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
-                              }
-                          }
-                                
-                         
-
-                            // var finalDecisionStatus = "";
-                       
-                        // if (acceptButtonId
-                        //     && formItems.stageDept == formDataClone.dept
-                        //     && !latestTatObject?.[formDataClone.dept]?.AcceptDate
-                        //     && !renderedStoredStatus) {
-                        //         $(`#${acceptButtonId}`).dxButton("instance")?.option("disabled", false);
-                        // }
-                      } // if TAT Accept and Button Accept
+                           
+                          } // if TAT Accept and Button Accept
                       else {
                           if (params.length > 0)
                           {
-                              var acceptButtonId = getDelayAcceptButtonId(params[0]);
-                              if (acceptButtonId
-                                  && formItems.stageDept == formDataClone.dept
-                                  && !latestTatObject?.[formDataClone.dept]?.AcceptDate
-                                  && !renderedStoredStatus) {
-                                      $(`#${acceptButtonId}`).dxButton("instance")?.option("disabled", false);
-                              }
+                               $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
+
+                               updateDelayAcceptStatus(
+                                   commonStatusId,
+                                   acceptButtonId,
+                                   latestTatObject[formDataClone.dept]?.AcceptDate
+                               );
+                               enableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
                           }
                       }
 
@@ -9626,8 +9624,22 @@
                          }
                          else
                             {
-                         $(`#${item}`).dxButton("instance").option("disabled", true);
+                            $(`#${item}`).dxButton("instance").option("disabled", true);
                         }
+                     }
+                     catch {
+                         console.log("error while try parse dxForm");
+                     }
+                 },1);
+             });
+         }
+
+          function enableAllDecisionButton(items){
+             $.each(items, function(itemIndex, item){
+                 setTimeout(() => {
+                     try
+                     {
+                         $(`#${item}`).dxButton("instance").option("disabled", false);
                      }
                      catch {
                          console.log("error while try parse dxForm");

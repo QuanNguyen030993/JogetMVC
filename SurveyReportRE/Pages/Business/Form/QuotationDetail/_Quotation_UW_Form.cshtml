@@ -130,13 +130,13 @@
              items: [
                  {
              itemType: "group",
-             name: "decision@(dept)Group",
-             cssClass: "workflow-decision-group qt-decision-group-@(dept)",
+             name: "decision@(dept)@(quotationId)Group",
+                 cssClass: "workflow-decision-group qt-decision-group-@(dept)-@(quotationId)",
              elementAttr: {
-                 id: "qt-decision-group-@(dept)-@(quotationId)",
+                  id: "qt-decision-group-@(dept)-@(quotationId)",
                  "data-form-group-name": "decision@(dept)Group",
                  "data-route-dept": "@dept"
-             },
+             }, 
              caption: "UW Review",
              colCount: 2,
              items: [
@@ -223,6 +223,9 @@
     ]        
     }
 );
+     var $elems = $(".qt-decision-group-@(dept)").first();
+     $elems.attr("id", "qt-decision-group-@(dept)-@(quotationId)");
+        
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
 
 
@@ -279,6 +282,7 @@
         } else {
             $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
         }
+           
     }, 100);
 
 })

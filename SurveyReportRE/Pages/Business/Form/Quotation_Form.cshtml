@@ -495,350 +495,374 @@ Note:
                                         var submitButtonId = window.QuotationIdManager.btnSubmitBranch(stageDept,@ViewData["Id"]);
                                         // var remarkBoxId = window.QuotationIdManager.remarkBox(stageDept,@ViewData["Id"]);
                                         if (qtDeptModuleCode.find(f => f == stageDept))
-                                        {
-                                        var formId = window.QuotationIdManager.form(stageDept,@ViewData["Id"]);
-                                        var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                         var tatObject = new Object();
+                                            {
+                                                var formId = window.QuotationIdManager.form(stageDept,@ViewData["Id"]);
+                                                var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                                                var tatObject = new Object();
 
-                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem") || {};
-                                         var actionStatusObject = tryParseJSON(formItems.actionStatus, "Submit Button ActionStatus Problem") || {};
-                                         var hasAcceptedRouteStatus = stageDept === "LMKT" && (actionStatusObject[`${stageDept}Button`] || actionStatusObject[stageDept]);
-                                         if (hasAcceptedRouteStatus) {
-                                             findRoutes = [];
-                                         }
-                                        const recordId = @ViewData["Id"];
-                                        const normalizeRouteDept = function (value) {
-                                            return String(value || "").trim().toUpperCase();
-                                        };
-                                        const normalizeRouteGroupKey = function (value) {
-                                            return normalizeRouteDept(value).replace(/[^A-Z0-9]/g, "");
-                                        };
-                                        const getRouteGroupKeys = function (routeData) {
-                                            const route = typeof routeData === "object" && routeData
-                                                ? routeData
-                                                : { fromNodeId: routeData };
-                                            return [
-                                                route.fromNodeId,
-                                                route.fromDeptCode,
-                                                route.departmentCode,
-                                                route.deptCode,
-                                                route.roleCode,
-                                                route.nodeName
-                                            ]
-                                                .map(normalizeRouteGroupKey)
-                                                .filter(function (value, index, values) {
-                                                    return value.length >= 2 && values.indexOf(value) === index;
-                                                });
-                                        };
-                                        const isSimilarRouteGroup = function (routeKeys, groupDept) {
-                                            const groupKey = normalizeRouteGroupKey(groupDept);
-                                            return routeKeys.some(function (routeKey) {
-                                                return routeKey === groupKey
-                                                    || routeKey.indexOf(groupKey) >= 0
-                                                    || groupKey.indexOf(routeKey) >= 0;
-                                            });
-                                        };
-                                        const ensureCustomRouteHost = function (routeData) {
-                                            const routeKeys = getRouteGroupKeys(routeData);
-                                            if (!routeKeys.length) return $();
+                                                tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem") || {};
+                                                
+                                                try {
+                                                    if (findRouteReturns?.length && tatObject) {
 
-                                            let $host = $(`[data-route-custom-host][data-record-id="${recordId}"]`)
-                                                .filter(function () {
-                                                    return isSimilarRouteGroup(
-                                                        routeKeys,
-                                                        $(this).attr("data-route-dept"));
-                                                })
-                                                .first();
-                                            if ($host.length) return $host;
+                                                        for (const [routeIndex, route] of findRouteReturns.entries()) {
+                                                            await quotationFormStages.pace(customRoutes.length + routeIndex);
 
-                                            const groupIdPrefix = "qt-decision-group-";
-                                            const groupIdSuffix = `-${recordId}`;
-                                            let $decisionGroup = $(`[id^="${groupIdPrefix}"][id$="${groupIdSuffix}"]`)
-                                                .filter(function () {
-                                                    const groupId = this.id || "";
+                                                            const buttonId =
+                                                                `${returnButtonId}_${route.routeId || route.actionCode}`;
+
+                                                            const routeButtonHost = `#${returnButtonId}`;
+
+                                                            if (!$(`#${buttonId}`).length) {
+                                                                $(`<div id="${buttonId}"></div>`)
+                                                                    .appendTo(routeButtonHost);
+                                                            } else if (!$(`#${buttonId}`).parent().is(routeButtonHost)) {
+                                                                $(`#${buttonId}`).appendTo(routeButtonHost);
+                                                            }
+
+                                                            $(`#${buttonId}`).dxButton({
+                                                                disabled: false,
+                                                                text: route.displayStatus || "",
+                                                                icon: getTransitionButtonIcon(route, "undo"),
+                                                                type: "danger",
+                                                                onClick: function () {
+                                                                    var content = remarkBoxs[stageDept].controlRemark.value();
+                                                                    if (content)
+                                                                        {
+                                                                        formItems =
+                                                                            $(`#${formId}`)
+                                                                                .dxForm("instance")
+                                                                                ?.option("formData") || {};
+
+                                                                        formItems.comment = content || "";
+
+                                                                        returnToStep(
+                                                                            `${formModuleKeyQt}`,
+                                                                            state.nextStep,
+                                                                            route,
+                                                                            formItems
+                                                                        );
+                                                                        }
+                                                                    else {
+                                                                        appNotifyWarning("Please put your reason to remarks!",false);
+                                                                    }
+                                                                }
+                                                            });
+                                                            applyTransitionButtonClass(`#${buttonId}`, route);
+                                                        }
+                                                    }
+                                                }
+                                                catch (exception) {
+                                                    console.log("Return problem", exception);
+                                                }
+                                                try {
+
+                                                    if (findRoutes?.length) {
+
+                                                        for (const [routeIndex, route] of findRoutes.entries()) {
+                                                            await quotationFormStages.pace(
+                                                                customRoutes.length + findRouteReturns.length + routeIndex
+                                                            );
+
+                                                            const buttonId =
+                                                                `${submitButtonId}_${route.routeId || route.actionCode}`;
+
+                                                            const routeButtonHost = `#${submitButtonId}`;
+
+                                                            if (!$(`#${buttonId}`).length) {
+                                                                $(`<div id="${buttonId}"></div>`)
+                                                                    .appendTo(routeButtonHost);
+                                                            } else if (!$(`#${buttonId}`).parent().is(routeButtonHost)) {
+                                                                $(`#${buttonId}`).appendTo(routeButtonHost);
+                                                            }
+
+                                                            $(`#${buttonId}`).dxButton({
+                                                                disabled: stageDept === "LMKT"
+                                                                    ? false
+                                                                    : (tatObject?.[stageDept]?.AcceptDate ? false : true),
+                                                                text: route.displayStatus || "",
+                                                                icon: getTransitionButtonIcon(route, "fa-solid fa-person-running"),
+                                                                type: "info",
+                                                                onClick: function () {
+
+                                                                    var content =
+                                                                        remarkBoxs[stageDept].controlRemark.value();
+
+                                                                    formItems =
+                                                                        $(`#${formId}`)
+                                                                            .dxForm("instance")
+                                                                            ?.option("formData") || {};
+
+                                                                    formItems.comment = content || "";
+
+                                                                    if (stageDept === "LMKT") {
+                                                                        var currentTatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "LMKT SubmitBranch TAT Problem") || {};
+                                                                        if (!currentTatObject[stageDept]) {
+                                                                            currentTatObject[stageDept] = {
+                                                                                AcceptDate: "",
+                                                                                CompleteDate: ""
+                                                                            };
+                                                                        }
+                                                                        if (!currentTatObject[stageDept].AcceptDate) {
+                                                                            currentTatObject[stageDept].AcceptDate = formatDateToString(new Date()).gmt7;
+                                                                        }
+
+                                                                        var currentActionStatus = tryParseJSON(formItems.actionStatus, "LMKT SubmitBranch ActionStatus Problem") || {};
+                                                                        currentActionStatus[stageDept] = route.displayStatus || route.actionName || route.actionCode || "Submitted";
+                                                                        currentActionStatus[`${stageDept}Button`] = {
+                                                                            text: route.displayStatus || route.actionName || route.actionCode || "Submitted",
+                                                                            actionCode: route.actionCode || "",
+                                                                            icon: getTransitionButtonIcon(route, "check"),
+                                                                            buttonClass: getTransitionButtonClass(route, "dx-button-info")
+                                                                        };
+
+                                                                        formItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
+                                                                        formItems.actionStatus = JSON.stringify(currentActionStatus);
+                                                                        ajaxPut('/api/Quotation/UpdateData',
+                                                                            {
+                                                                                key: formItems.id,
+                                                                                values: JSON.stringify(formItems)
+                                                                            },
+                                                                            {
+                                                                                onSuccess: function () { },
+                                                                                onError: function (err) { console.log("LMKT SubmitBranch status update problem", err); }
+                                                                            }
+                                                                        );
+                                                                        $(`#${submitButtonId}`).find(".dx-button").css("background-color", window.DecisionColors.accepted);
+                                                                    }
+                                                                      if (!route.isReturn && !content) {
+                                                                        appNotifyWarning("You may leave your remark empty, system will remark default message?",  true,
+                                                                        "Ok",
+                                                                        "Cancel").then(function (result) {
+                                                                        if (result.isConfirmed) {
+                                                                            formItems.comment = `${_loginUser} ${route.displayStatus}`;
+                                                                            submitNextStep(
+                                                                                `${formModuleKeyQt}`,
+                                                                                state.nextStep,
+                                                                                route,
+                                                                                formItems
+                                                                            );
+                                                                            return;
+                                                                        }
+                                                                        else return;
+                                                                            return;
+                                                                        });
+                                                                        return;
+                                                                        }
+                                                                        else {
+                                                                            submitNextStep(
+                                                                                `${formModuleKeyQt}`,
+                                                                                state.nextStep,
+                                                                                route,
+                                                                                formItems
+                                                                            );
+                                                                        }
+                                                                    // submitNextStep(
+                                                                    //     `${formModuleKeyQt}`,
+                                                                    //     state.nextStep,
+                                                                    //     route,
+                                                                    //     formItems
+                                                                    // );
+                                                                }
+                                                            });
+                                                            applyTransitionButtonClass(`#${buttonId}`, route);
+
+                                                        }
+                                                    }
+                                                }
+                                                catch (exception) {
+                                                    console.log("Submit problem", exception);
+                                                }
+                                            }
+
+                                            //custom route
+                                            $.each(qtDeptModuleCode, async function (index, deptItem) {
+                                            
+                                             var actionStatusObject = tryParseJSON(formItems.actionStatus, "Submit Button ActionStatus Problem") || {};
+                                                 var hasAcceptedRouteStatus = stageDept === "LMKT" && (actionStatusObject[`${stageDept}Button`] || actionStatusObject[stageDept]);
+                                                 if (hasAcceptedRouteStatus) {
+                                                     findRoutes = [];
+                                                 }
+                                                const recordId = @ViewData["Id"];
+                                                const normalizeRouteDept = function (value) {
+                                                    return String(value || "").trim().toUpperCase();
+                                                };
+                                                const normalizeRouteGroupKey = function (value) {
+                                                    return normalizeRouteDept(value).replace(/[^A-Z0-9]/g, "");
+                                                };
+                                                const getRouteGroupKeys = function (routeData) {
+                                                    const route = typeof routeData === "object" && routeData
+                                                        ? routeData
+                                                        : { fromNodeId: routeData };
+                                                    return [
+                                                        route.fromNodeId,
+                                                        route.fromDeptCode,
+                                                        route.departmentCode,
+                                                        route.deptCode,
+                                                        route.roleCode,
+                                                        route.nodeName
+                                                    ]
+                                                        .map(normalizeRouteGroupKey)
+                                                        .filter(function (value, index, values) {
+                                                            return value.length >= 2 && values.indexOf(value) === index;
+                                                        });
+                                                };
+                                                const isSimilarRouteGroup = function (routeKeys, groupDept) {
+                                                    const groupKey = normalizeRouteGroupKey(groupDept);
+                                                    return routeKeys.some(function (routeKey) {
+                                                        return routeKey === groupKey
+                                                            || routeKey.indexOf(groupKey) >= 0
+                                                            || groupKey.indexOf(routeKey) >= 0;
+                                                    });
+                                                };
+                                                const ensureCustomRouteHost = function (routeData) {
+                                                    const routeKeys = getRouteGroupKeys(routeData);
+                                                    if (!routeKeys.length) return $();
+                                                    let $host = $(`[data-route-custom-host][data-record-id="${recordId}"]`)
+                                                        .filter(function () {
+                                                            return isSimilarRouteGroup(
+                                                                routeKeys,
+                                                                $(this).attr("data-route-dept"));
+                                                        })
+                                                        .first();
+                                                    if ($host.length) return $host;
+
+                                                    const groupIdPrefix = "qt-decision-group";
+                                                    const groupIdSuffix = `-${deptItem}-${recordId}`;
+
+                                                    let $decisionGroup = $(`.${groupIdPrefix}${groupIdSuffix}`)
+                                                    //     // .filter(function ()
+                                                    //     //     const groupId = this.id || "";
+                                                    //     //     const groupDept = groupId.substring(
+                                                    //     //         groupIdPrefix.length,
+                                                    //     //         groupId.length - groupIdSuffix.length);
+                                                    //     //     return isSimilarRouteGroup(routeKeys, groupDept);
+                                                    //     // })
+                                                        .first();
+
+                                                    // let $decisionGroup = $(`.${groupIdPrefix}${groupIdSuffix}']`).first();
+                                                    // if (!$decisionGroup.length) {
+                                                    //     const fallbackDept = ["FO", "TS", "UW", "LMKT", "PM"]
+                                                    //         .find(function (dept) {
+                                                    //             return isSimilarRouteGroup(routeKeys, dept);
+                                                    //         });
+                                                    //     if (fallbackDept) {
+                                                    //         const fallbackFormId = window.QuotationIdManager.form(
+                                                    //             fallbackDept,
+                                                    //             recordId);
+                                                    //          $decisionGroup = $(`#${fallbackFormId} .qt-decision-group-${fallbackDept}`)
+                                                    //             .first()
+                                                    //             .attr({
+                                                    //                 id: `${groupIdPrefix}${fallbackDept}${groupIdSuffix}`,
+                                                    //                 "data-form-group-name": `decision${fallbackDept}Group`,
+                                                    //                 "data-route-dept": fallbackDept
+                                                    //             });
+                                                    //     }
+                                                    // }
+
+                                                    if ($decisionGroup.length == 0) {
+                                                         console.warn("No decision group id matched the custom route.", routeData);
+                                                        return $();
+                                                    }
+
+                                                    const groupId = `${groupIdPrefix}${groupIdSuffix}`;//$decisionGroup.attr("id");
                                                     const groupDept = groupId.substring(
                                                         groupIdPrefix.length,
                                                         groupId.length - groupIdSuffix.length);
-                                                    return isSimilarRouteGroup(routeKeys, groupDept);
-                                                })
-                                                .first();
-                                            if (!$decisionGroup.length) {
-                                                const fallbackDept = ["FO", "TS", "UW", "LMKT", "PM"]
-                                                    .find(function (dept) {
-                                                        return isSimilarRouteGroup(routeKeys, dept);
-                                                    });
-                                                if (fallbackDept) {
-                                                    const fallbackFormId = window.QuotationIdManager.form(
-                                                        fallbackDept,
-                                                        recordId);
-                                                    $decisionGroup = $(`#${fallbackFormId} .qt-decision-group-${fallbackDept}`)
-                                                        .first()
-                                                        .attr({
-                                                            id: `${groupIdPrefix}${fallbackDept}${groupIdSuffix}`,
-                                                            "data-form-group-name": `decision${fallbackDept}Group`,
-                                                            "data-route-dept": fallbackDept
-                                                        });
-                                                }
-                                            }
-                                            if (!$decisionGroup.length) {
-                                                 console.warn("No decision group id matched the custom route.", routeData);
-                                                return $();
-                                            }
-
-                                            const groupId = $decisionGroup.attr("id");
-                                            const groupDept = groupId.substring(
-                                                groupIdPrefix.length,
-                                                groupId.length - groupIdSuffix.length);
-                                            const $decisionArea = $decisionGroup
-                                                .find(".dx-form-group-content")
-                                                .first();
-                                            if (!$decisionArea.length) {
-                                                console.warn(`Decision content for group '${groupId}' was not found.`);
-                                                return $();
-                                            }
-
-                                            $host = $(`<div class="workflow-custom-route-host" data-route-custom-host="true" data-record-id="${recordId}" data-route-dept="${groupDept}"></div>`);
-                                            const $actionArea = $decisionArea
-                                                .find(".decision-action-row")
-                                                .first();
-                                            $host
-                                                .attr("data-route-group-id", groupId)
-                                                .appendTo($actionArea.length ? $actionArea : $decisionArea);
-                                            return $host;
-                                        };
-
-                                        $(`[data-route-custom-host][data-record-id="${recordId}"] [data-custom-route-button]`).each(function () {
-                                            $(this).dxButton("instance")?.dispose();
-                                            $(this).remove();
-                                        });
-
-                                        const $uwRouteSlot = ensureCustomRouteHost({ fromNodeId: "UW" });
-                                        const hasUwCustomRoute = customRoutes.some(function (route) {
-                                            return isSimilarRouteGroup(getRouteGroupKeys(route), "UW");
-                                        });
-                                        if ($uwRouteSlot.length) {
-                                            $uwRouteSlot
-                                                .removeClass("is-route-pending")
-                                                .toggleClass("has-flow-route", hasUwCustomRoute)
-                                                .toggleClass("is-fallback-ready", !hasUwCustomRoute)
-                                                .attr("data-has-flow-route", hasUwCustomRoute ? "true" : "false");
-                                            const fallbackInstance = $uwRouteSlot.find("[data-uw-route-fallback]").dxButton("instance");
-                                            if (fallbackInstance && !hasUwCustomRoute) {
-                                                fallbackInstance.option("disabled", stageDept !== "UW" || !!tatObject?.UW?.AcceptDate);
-                                            }
-                                        }
-                                        for (const [routeIndex, route] of customRoutes.entries()) {
-                                            await quotationFormStages.pace(routeIndex);
-                                            const $routeHost = ensureCustomRouteHost(route);
-                                            if (!$routeHost.length) continue;
-                                            const routeDept = normalizeRouteDept($routeHost.attr("data-route-dept"));
-                                            if (!routeDept) continue;
-
-                                            const rawRouteKey = route?.routeId || route?.id || route?.actionCode || routeIndex;
-                                            const safeRouteKey = String(rawRouteKey).replace(/[^a-zA-Z0-9_-]/g, "_");
-                                            const customButtonId = `qt-custom-route-${recordId}-${routeDept}-${safeRouteKey}-${routeIndex}`;
-                                            const isCurrentRoute = routeDept === normalizeRouteDept(stageDept)
-                                                && route?.fNodeId == state.nextStep.currentStep;
-                                            const $customButton = $(`<div id="${customButtonId}" data-custom-route-button="true"></div>`)
-                                                .appendTo($routeHost);
-
-                                            $customButton.dxButton({
-                                                disabled: !isCurrentRoute,
-                                                text: route.displayStatus || route.actionName || route.actionCode || "Custom action",
-                                                icon: getTransitionButtonIcon(route, route.isReturn ? "undo" : ""),
-                                                type: route.isReturn ? "danger" : "info",
-                                                onClick: function () {
-                                                    const routeFormId = window.QuotationIdManager.form(routeDept, recordId);
-                                                    const routeFormItems = $(`#${routeFormId}`).dxForm("instance")?.option("formData") || {};
-                                                    const content = remarkBoxs?.[routeDept]?.controlRemark?.value?.() || "";
-                                                    if (route.isReturn && !content) {
-                                                        appNotifyWarning("Please put your reason to remarks!", false);
-                                                        return;
-                                                    }
-                                                   
-                                                    routeFormItems.comment = content;
-                                                    if (route.isReturn) {
-                                                        returnToStep(formModuleKeyQt, state.nextStep, route, routeFormItems);
-                                                    } else {
-                                                      
-                                                        submitNextStep(formModuleKeyQt, state.nextStep, route, routeFormItems);
-                                                    }
-                                                }
-                                            });
-                                            applyTransitionButtonClass(`#${customButtonId}`, route);
-                                        }
-                                           try {
-                                            if (findRouteReturns?.length && tatObject) {
-
-                                                for (const [routeIndex, route] of findRouteReturns.entries()) {
-                                                    await quotationFormStages.pace(customRoutes.length + routeIndex);
-
-                                                    const buttonId =
-                                                        `${returnButtonId}_${route.routeId || route.actionCode}`;
-
-                                                    const routeButtonHost = `#${returnButtonId}`;
-
-                                                    if (!$(`#${buttonId}`).length) {
-                                                        $(`<div id="${buttonId}"></div>`)
-                                                            .appendTo(routeButtonHost);
-                                                    } else if (!$(`#${buttonId}`).parent().is(routeButtonHost)) {
-                                                        $(`#${buttonId}`).appendTo(routeButtonHost);
+                                                    const $decisionArea = $decisionGroup
+                                                        .find(".dx-form-group-content")
+                                                        .first();
+                                                    if (!$decisionArea.length) {
+                                                        console.warn(`Decision content for group '${groupId}' was not found.`);
+                                                        return $();
                                                     }
 
-                                                    $(`#${buttonId}`).dxButton({
-                                                        disabled: false,
-                                                        text: route.displayStatus || "",
-                                                        icon: getTransitionButtonIcon(route, "undo"),
-                                                        type: "danger",
+                                                    $host = $(`<div class="workflow-custom-route-host" data-route-custom-host="true" data-record-id="${recordId}" data-route-dept="${groupDept}"></div>`);
+                                                    const $actionArea = $decisionArea
+                                                        .find(".decision-action-row")
+                                                        .first();
+                                                    $host
+                                                        .attr("data-route-group-id", groupId)
+                                                        .appendTo($actionArea.length ? $actionArea : $decisionArea);
+                                                    return $host;
+                                                    
+
+                                                };
+
+                                                $(`[data-route-custom-host][data-record-id="${recordId}"] [data-custom-route-button]`).each(function () {
+                                                    $(this).dxButton("instance")?.dispose();
+                                                    $(this).remove();
+                                                });
+
+                                                const $uwRouteSlot = ensureCustomRouteHost({ fromNodeId: "UW" });
+                                                // const hasUwCustomRoute = customRoutes.some(function (route) {
+                                                //     return isSimilarRouteGroup(getRouteGroupKeys(route), "UW");
+                                                // });
+                                                // if ($uwRouteSlot.length) {
+                                                //     $uwRouteSlot
+                                                //         .removeClass("is-route-pending")
+                                                //         .toggleClass("has-flow-route", hasUwCustomRoute)
+                                                //         .toggleClass("is-fallback-ready", !hasUwCustomRoute)
+                                                //         .attr("data-has-flow-route", hasUwCustomRoute ? "true" : "false");
+                                                //     const fallbackInstance = $uwRouteSlot.find("[data-uw-route-fallback]").dxButton("instance");
+                                                //     if (fallbackInstance && !hasUwCustomRoute) {
+                                                //         fallbackInstance.option("disabled", stageDept !== "UW" || !!tatObject?.UW?.AcceptDate);
+                                                //     }
+                                                // }
+
+                                                const customRoutesInDept = customRoutes.filter(f => f.fromNodeId == deptItem && f.data.includes(`decision${deptItem}Group`) && f.flowType.trim().toLowerCase() === "custom" );
+                                                if (customRoutesInDept.length > 0)
+                                                for (const [routeIndex, route] of customRoutesInDept.entries()) {
+                                                    await quotationFormStages.pace(routeIndex);
+                                                    // const $routeHost = ensureCustomRouteHost(route);
+                                                    // const $routeHost = $uwRouteSlot;
+
+                                                    const groupIdPrefixIn = "qt-decision-group";
+                                                    const groupIdSuffixIn = `-${deptItem}-${recordId}`;
+                                                    const $routeHost = $(`#decision-actions-qt-form_${deptItem}_${recordId}-${deptItem}`)
+                                                        .first();
+                                                    if (!$routeHost.length) continue;
+                                                    const routeDept = normalizeRouteDept($routeHost.attr("data-route-dept")); ///????
+                                                    // if (!routeDept) continue;//
+
+                                                    const rawRouteKey = route?.routeId || route?.id || route?.actionCode || routeIndex;
+                                                    const safeRouteKey = String(rawRouteKey).replace(/[^a-zA-Z0-9_-]/g, "_");
+                                                    const customButtonId = `qt-custom-route-${recordId}-${routeDept}-${safeRouteKey}-${routeIndex}`;
+                                                    const isCurrentRoute = routeDept === normalizeRouteDept(stageDept)
+                                                        && route?.fNodeId == state.nextStep.currentStep;
+                                                    const $customButton = $(`<div id="${customButtonId}" data-custom-route-button="true"></div>`)
+                                                        .appendTo($routeHost);
+
+                                                    var latestTatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
+
+                                                    $customButton.dxButton({
+                                                        disabled: latestTatObject?.[stageDept]?.AcceptDate ? true : false ,//!isCurrentRoute,
+                                                        text: route.displayStatus || route.actionName || route.actionCode || "Custom action",
+                                                        icon: getTransitionButtonIcon(route, route.isReturn ? "undo" : ""),
+                                                        type: route.isReturn ? "danger" : "info",
                                                         onClick: function () {
-                                                            var content = remarkBoxs[stageDept].controlRemark.value();
-                                                            if (content)
-                                                                {
-                                                                formItems =
-                                                                    $(`#${formId}`)
-                                                                        .dxForm("instance")
-                                                                        ?.option("formData") || {};
-
-                                                                formItems.comment = content || "";
-
-                                                                returnToStep(
-                                                                    `${formModuleKeyQt}`,
-                                                                    state.nextStep,
-                                                                    route,
-                                                                    formItems
-                                                                );
-                                                                }
-                                                            else {
-                                                                appNotifyWarning("Please put your reason to remarks!",false);
-                                                            }
-                                                        }
-                                                    });
-                                                    applyTransitionButtonClass(`#${buttonId}`, route);
-                                                }
-                                            }
-                                        }
-                                        catch (exception) {
-                                            console.log("Return problem", exception);
-                                        }
-                                        try {
-
-                                            if (findRoutes?.length) {
-
-                                                for (const [routeIndex, route] of findRoutes.entries()) {
-                                                    await quotationFormStages.pace(
-                                                        customRoutes.length + findRouteReturns.length + routeIndex
-                                                    );
-
-                                                    const buttonId =
-                                                        `${submitButtonId}_${route.routeId || route.actionCode}`;
-
-                                                    const routeButtonHost = `#${submitButtonId}`;
-
-                                                    if (!$(`#${buttonId}`).length) {
-                                                        $(`<div id="${buttonId}"></div>`)
-                                                            .appendTo(routeButtonHost);
-                                                    } else if (!$(`#${buttonId}`).parent().is(routeButtonHost)) {
-                                                        $(`#${buttonId}`).appendTo(routeButtonHost);
-                                                    }
-
-                                                    $(`#${buttonId}`).dxButton({
-                                                        disabled: stageDept === "LMKT"
-                                                            ? false
-                                                            : (tatObject?.[stageDept]?.AcceptDate ? false : true),
-                                                        text: route.displayStatus || "",
-                                                        icon: getTransitionButtonIcon(route, "fa-solid fa-person-running"),
-                                                        type: "info",
-                                                        onClick: function () {
-
-                                                            var content =
-                                                                remarkBoxs[stageDept].controlRemark.value();
-
-                                                            formItems =
-                                                                $(`#${formId}`)
-                                                                    .dxForm("instance")
-                                                                    ?.option("formData") || {};
-
-                                                            formItems.comment = content || "";
-
-                                                            if (stageDept === "LMKT") {
-                                                                var currentTatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "LMKT SubmitBranch TAT Problem") || {};
-                                                                if (!currentTatObject[stageDept]) {
-                                                                    currentTatObject[stageDept] = {
-                                                                        AcceptDate: "",
-                                                                        CompleteDate: ""
-                                                                    };
-                                                                }
-                                                                if (!currentTatObject[stageDept].AcceptDate) {
-                                                                    currentTatObject[stageDept].AcceptDate = formatDateToString(new Date()).gmt7;
-                                                                }
-
-                                                                var currentActionStatus = tryParseJSON(formItems.actionStatus, "LMKT SubmitBranch ActionStatus Problem") || {};
-                                                                currentActionStatus[stageDept] = route.displayStatus || route.actionName || route.actionCode || "Submitted";
-                                                                currentActionStatus[`${stageDept}Button`] = {
-                                                                    text: route.displayStatus || route.actionName || route.actionCode || "Submitted",
-                                                                    actionCode: route.actionCode || "",
-                                                                    icon: getTransitionButtonIcon(route, "check"),
-                                                                    buttonClass: getTransitionButtonClass(route, "dx-button-info")
-                                                                };
-
-                                                                formItems.turnAroundTimeAttributes = JSON.stringify(currentTatObject);
-                                                                formItems.actionStatus = JSON.stringify(currentActionStatus);
-                                                                ajaxPut('/api/Quotation/UpdateData',
-                                                                    {
-                                                                        key: formItems.id,
-                                                                        values: JSON.stringify(formItems)
-                                                                    },
-                                                                    {
-                                                                        onSuccess: function () { },
-                                                                        onError: function (err) { console.log("LMKT SubmitBranch status update problem", err); }
-                                                                    }
-                                                                );
-                                                                $(`#${submitButtonId}`).find(".dx-button").css("background-color", window.DecisionColors.accepted);
-                                                            }
-                                                              if (!route.isReturn && !content) {
-                                                                appNotifyWarning("You may leave your remark empty, system will remark default message?",  true,
-                                                                "Ok",
-                                                                "Cancel").then(function (result) {
-                                                                if (result.isConfirmed) {
-                                                                    formItems.comment = `${_loginUser} ${route.displayStatus}`;
-                                                                    submitNextStep(
-                                                                        `${formModuleKeyQt}`,
-                                                                        state.nextStep,
-                                                                        route,
-                                                                        formItems
-                                                                    );
-                                                                    return;
-                                                                }
-                                                                else return;
-                                                                    return;
-                                                                });
+                                                            const routeFormId = window.QuotationIdManager.form(stageDept, recordId);
+                                                            const routeFormItems = $(`#${routeFormId}`).dxForm("instance")?.option("formData") || {};
+                                                            const content = remarkBoxs?.[routeDept]?.controlRemark?.value?.() || "";
+                                                            if (route.isReturn && !content) {
+                                                                appNotifyWarning("Please put your reason to remarks!", false);
                                                                 return;
-                                                                }
-                                                                else {
-                                                                    submitNextStep(
-                                                                        `${formModuleKeyQt}`,
-                                                                        state.nextStep,
-                                                                        route,
-                                                                        formItems
-                                                                    );
-                                                                }
-                                                            // submitNextStep(
-                                                            //     `${formModuleKeyQt}`,
-                                                            //     state.nextStep,
-                                                            //     route,
-                                                            //     formItems
-                                                            // );
+                                                            }
+
+                                                            routeFormItems.comment = content;
+                                                            if (route.isReturn) {
+                                                                returnToStep(formModuleKeyQt, state.nextStep, route, routeFormItems);
+                                                            } else {
+                                                                submitNextStep(formModuleKeyQt, state.nextStep, route, routeFormItems);
+                                                            }
                                                         }
                                                     });
-                                                    applyTransitionButtonClass(`#${buttonId}`, route);
-
+                                                    debugger
+                                                    applyTransitionButtonClass(`#${customButtonId}`, route);
                                                 }
-                                            }
-                                        }
-                                        catch (exception) {
-                                            console.log("Submit problem", exception);
-                                        }
-                                        }
+                                            });//each
+                                            //end custom route
+
                                    });
                             // });
                         });

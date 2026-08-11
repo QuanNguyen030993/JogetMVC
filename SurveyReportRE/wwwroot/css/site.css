@@ -33510,7 +33510,7 @@ textarea {
 .dept-tree .dept-scroll-beacon {
     position: absolute;
     left: 50%;
-    top: 0;
+    top: 0px;
     width: 10px;
     height: 10px;
     border: 2px solid #fff;

@@ -690,18 +690,24 @@ useEffect(() => {
 }, []);
     const toggleSourceView = () => {
         if (!showSource) {
-            const html = editorRef.current?.innerHTML ?? "";
+            // Editor vẫn mounted, chỉ lấy HTML hiện tại đưa sang source view.
+            const html = editorRef.current?.innerHTML ?? lastValueRef.current ?? "";
             setSourceHtml(html);
+            lastValueRef.current = html;
             setShowSource(true);
             return;
         }
 
-        if (editorRef.current) {
-            editorRef.current.innerHTML = sourceHtml;
+        // Editor không bị unmount khi ở source mode nên ref luôn còn tồn tại.
+        // Chỉ restore DOM đúng 1 lần khi quay lại visual editor.
+        const html = sourceHtml ?? "";
+
+        if (editorRef.current && editorRef.current.innerHTML !== html) {
+            editorRef.current.innerHTML = html;
         }
 
-        lastValueRef.current = sourceHtml;
-        onChange?.(sourceHtml);
+        lastValueRef.current = html;
+        onChange?.(html);
         setShowSource(false);
     };
 
@@ -713,7 +719,9 @@ useEffect(() => {
 
                 case "value":
                     if (arguments.length === 1) {
-                        return editorRef.current?.innerHTML || "";
+                        return showSource
+                            ? sourceHtml
+                            : (editorRef.current?.innerHTML || "");
                     }
 
                     if (editorRef.current) {
@@ -735,10 +743,9 @@ useEffect(() => {
         },
 
         value() {
-            return (
-                editorRef.current?.innerHTML ||
-                ""
-            );
+            return showSource
+                ? sourceHtml
+                : (editorRef.current?.innerHTML || "");
         }
 
     }));
@@ -1149,7 +1156,7 @@ useEffect(() => {
 
 </div>
 
-                    {showSource ? (
+                    {showSource && (
                         <textarea
                             className={`tmiv-html-source ${isFocused ? "is-focused" : ""}`}
                             value={sourceHtml}
@@ -1177,31 +1184,32 @@ useEffect(() => {
                                 overflow: "auto"
                             }}
                         />
-                    ) : (
-                        <div
-                            ref={editorRef}
-                            contentEditable
-                            suppressContentEditableWarning
-                            onFocus={handleFocusIn}
-                            onBlur={handleFocusOut}
-                            onCompositionStart={() => {
-                                isComposingRef.current = true;
-                            }}
-                            onCompositionEnd={() => {
-                                isComposingRef.current = false;
-                                update();
-                            }}
-                            onInput={() => {
-                                if (!isComposingRef.current) {
-                                    update();
-                                }
-                            }}
-                            className={`tmiv-html-content ${isFocused ? "is-focused" : ""}`}
-                            style={{
-                                minHeight: height
-                            }}
-                        />
                     )}
+
+                    <div
+                        ref={editorRef}
+                        contentEditable
+                        suppressContentEditableWarning
+                        onFocus={handleFocusIn}
+                        onBlur={handleFocusOut}
+                        onCompositionStart={() => {
+                            isComposingRef.current = true;
+                        }}
+                        onCompositionEnd={() => {
+                            isComposingRef.current = false;
+                            update();
+                        }}
+                        onInput={() => {
+                            if (!isComposingRef.current) {
+                                update();
+                            }
+                        }}
+                        className={`tmiv-html-content ${isFocused ? "is-focused" : ""}`}
+                        style={{
+                            minHeight: height,
+                            display: showSource ? "none" : "block"
+                        }}
+                    />
 
                     {!showSource && selectedImage && imageRect && (
                         <div
