@@ -486,13 +486,15 @@ $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
                 const instance = getInstance(this);
                 if (!instance) return;
 
+                // Luôn sync option trong core để lần render/mount kế tiếp
+                // không ghi đè state React bằng giá trị cũ.
+                instance.options[arg2] = arg3;
+
                 const control = instance.ref?.current;
 
                 if (control?.option) {
                     control.option(arg2, arg3);
                 } else {
-                    instance.options[arg2] = arg3;
-
                     const Component = controls[instance.name];
                     instance.root.render(
                         <Component
@@ -531,11 +533,11 @@ $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
                 const instance = getInstance(this);
                 if (!instance) return;
 
+                instance.options.value = arg2;
+
                 if (instance.ref?.current?.option) {
                     instance.ref.current.option("value", arg2);
                 } else {
-                    instance.options.value = arg2;
-
                     const Component = controls[instance.name];
                     instance.root.render(
                         <Component
@@ -602,6 +604,10 @@ $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
 
         if (arg1 === "setDepartments") {
             return this.each(function() {
+                const instance = getInstance(this);
+                if (!instance) return;
+
+                instance.options.departments = arg2;
                 getControl(this)?.setDepartments?.(arg2);
             });
         }
@@ -670,11 +676,12 @@ $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
                         ?? instance.options?.[name];
                 }
 
+                // Giữ core options và React state đồng bộ.
+                instance.options[name] = value;
+
                 if (control?.option) {
                     control.option(name, value);
                 } else {
-                    instance.options[name] = value;
-
                     const Component = controls[instance.name];
                     instance.root.render(
                         <Component
@@ -698,6 +705,8 @@ $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
                         ?? instance.options?.value
                         ?? "";
                 }
+
+                instance.options.value = nextValue;
 
                 control?.option?.(
                     "value",
@@ -763,6 +772,12 @@ $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
             },
 
             setDepartments(items) {
+                const instance = getInstance(el);
+
+                if (instance) {
+                    instance.options.departments = items;
+                }
+
                 getControl(el)?.setDepartments?.(items);
                 return this;
             },

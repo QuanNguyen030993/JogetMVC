@@ -274,9 +274,32 @@ const HtmlEditor = forwardRef(({
         setActionButtons(Array.isArray(customButtons) ? customButtons : []);
     }, [customButtons]);
 
+    const normalizeDepartments = (source) => {
+        if (Array.isArray(source)) {
+            return source;
+        }
+
+        // Hỗ trợ một số core trả về { data: [...] }, { items: [...] }
+        // hoặc DevExtreme-like datasource có items().
+        if (Array.isArray(source?.data)) {
+            return source.data;
+        }
+
+        if (Array.isArray(source?.items)) {
+            return source.items;
+        }
+
+        if (typeof source?.items === "function") {
+            const result = source.items();
+            return Array.isArray(result) ? result : [];
+        }
+
+        return [];
+    };
+
     const [selectedDeptId, setSelectedDeptId] = useState(selectedDepartment);
     const [departmentItems, setDepartmentItems] = useState(
-        Array.isArray(departments) ? departments : []
+        normalizeDepartments(departments)
     );
 
     useEffect(() => {
@@ -285,7 +308,7 @@ const HtmlEditor = forwardRef(({
 
     useEffect(() => {
         setDepartmentItems(
-            Array.isArray(departments) ? departments : []
+            normalizeDepartments(departments)
         );
     }, [departments]);
 
@@ -1282,7 +1305,7 @@ useEffect(() => {
                     }
 
                     setDepartmentItems(
-                        Array.isArray(value) ? value : []
+                        normalizeDepartments(value)
                     );
                     return;
 
@@ -1353,7 +1376,7 @@ useEffect(() => {
         },
 
         setDepartments(items) {
-            const next = Array.isArray(items) ? items : [];
+            const next = normalizeDepartments(items);
             setDepartmentItems(next);
             return next;
         },
@@ -1889,6 +1912,7 @@ useEffect(() => {
                             gap: 8,
                             paddingTop: 10,
                             marginTop: 8,
+                            marginBottom: 8,
                             borderTop: "1px solid #e2e8f0"
                         }}
                     >

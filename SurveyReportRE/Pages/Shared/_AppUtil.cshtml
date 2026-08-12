@@ -1945,30 +1945,6 @@
 
                                         var routeEditorOptions = null;
 
-                                        function renderRouteEditorItems(comments) {
-                                            routeEditorOptions.items = comments || [];
-                                            $(itemElement).tmivcommenteditorroute(routeEditorOptions);
-                                        }
-
-                                        function reloadRouteComments() {
-                                            return loadSectionCommentsCached(guid).then(function (result) {
-                                                var updatedComments = mapRouteComments(result);
-                                                renderRouteEditorItems(updatedComments);
-                                                return updatedComments;
-                                            });
-                                        }
-
-                                        var departmentCodes = moduleKey === "pi"
-                                            ? (window.piDeptModuleCode || [])
-                                            : (window.qtDeptModuleCode || []);
-                                        var routeDepartments = departmentCodes.filter(f => f != dept).map(function (code) {
-                                            return { id: code, name: code };
-                                        });
-
-                                        if (typeof $.fn.tmivcommenteditorroute !== "function") {
-                                            throw new Error("TMIVCom CommentEditorRoute is not loaded.");
-                                        }
-                                        var typeRequest = moduleKey == "qt" ? "Quotation" : "PolicyIssuance"; 
 
                                         routeEditorOptions = {
                                             items: initialComments,
@@ -2012,12 +1988,85 @@
                                                     .done(function () {
                                                         DevExpress.ui.notify("Send message successfully", "success", 2000);
                                                         invalidateSectionCommentCache(guid);
-                                                        reloadRouteComments();
+                                                        reloadRouteComments(guid);
                                                     })
                                                     .fail(function (error) {
                                                         console.error(error);
                                                         DevExpress.ui.notify("Send message failed", "error", 2000);
-                                                        reloadRouteComments();
+                                                        reloadRouteComments(guid);
+                                                    });
+                                            }
+                                        };
+
+                                        function renderRouteEditorItems(comments) {
+                                            routeEditorOptions.items = comments || [];
+                                            $(itemElement).tmivcommenteditorroute(routeEditorOptions);
+                                            // $(itemElement).tmivhtmleditorcommentbox(routeEditorOptions);
+                                        }
+
+                                       
+
+                                        var departmentCodes = moduleKey === "pi"
+                                            ? (window.piDeptModuleCode || [])
+                                            : (window.qtDeptModuleCode || []);
+                                        var routeDepartments = departmentCodes.filter(f => f != dept).map(function (code) {
+                                            return { id: code, name: code };
+                                        });
+
+                                        if (typeof $.fn.tmivcommenteditorroute !== "function") {
+                                            throw new Error("TMIVCom CommentEditorRoute is not loaded.");
+                                        }
+                                        var typeRequest = moduleKey == "qt" ? "Quotation" : "PolicyIssuance"; 
+
+                                        routeEditorOptions = {
+                                            items: initialComments,
+                                            departments: routeDepartments,
+                                            valueExpr: "id",
+                                            displayExpr: "name",
+                                            selectedDepartment: "",
+                                            recordGuid: guid,
+                                            fromDepartment: _role,
+                                            submitUrl: `api/Notification/CommentNotify?sendTo=quan.nh&typeRequest=${typeRequest}&id=${id}`,
+                                            // currentDepartment: dept,
+                                            type: "Discussion",
+                                            author: _displayName,
+                                            createdBy: _loginUser,
+                                            showComposer: true,
+                                            emptyText: "No comments.",
+                                            headerTitle: "",
+                                            // routeLabel: "Route to:",
+                                            routePlaceholder: "Select department",
+                                            onChange: function (value) {
+                                                parentForm.updateData(updateField, value);
+                                            },
+                                            disableComment: true,
+                                            onSubmit: function (newComment) {
+                                                var commentText = newComment.Content || newComment.text || "";
+                                                var commentData = {
+                                                    RecordGuid: guid,
+                                                    FromDepartment: _role,
+                                                    ToDepartment: newComment.ToDepartment || newComment.toDepartment,
+                                                    CurrentDepartment: newComment.ToDepartment,
+                                                    Type: newComment.Type || "Discussion",
+                                                    Content: commentText,
+                                                    IsPrimaryNote: false,
+                                                    IsPinned: false,
+                                                    IsUrgent: false,
+                                                    IsRead: false,
+                                                    IsResolved: false,
+                                                    Author: _displayName
+                                                };
+
+                                                store.insert(commentData)
+                                                    .done(function () {
+                                                        DevExpress.ui.notify("Send message successfully", "success", 2000);
+                                                        invalidateSectionCommentCache(guid);
+                                                        reloadRouteComments(guid);
+                                                    })
+                                                    .fail(function (error) {
+                                                        console.error(error);
+                                                        DevExpress.ui.notify("Send message failed", "error", 2000);
+                                                        reloadRouteComments(guid);
                                                     });
                                             }
                                         };
@@ -2304,7 +2353,7 @@
             `;
         }
 
-            function TinyMCEElementMaker(classform, dept, id, control, moduleKey = "qt")
+            function TinyMCEElementMaker(classform, dept, id, control, moduleKey = "qt", guid = null)
             {
             var item = new Object();
 
@@ -2341,23 +2390,84 @@
                     if (existingControl && $element.children().length) {
                         return existingControl;
                     }
+                    var typeRequest = moduleKey == "qt" ? "Quotation" : "PolicyIssuance";
+                     var departmentCodes = moduleKey === "pi"
+                                            ? (piDeptModuleCode || [])
+                                            : (qtDeptModuleCode || []);
+                                        var routeDepartments = departmentCodes.filter(f => f != dept).map(function (code) {
+                                            return { id: code, name: code };
+                                        });
+                             var that = new Object();
+                             that.ModelName = "SectionCommentNote";
+                             var dataSource = makeBasicDataSource(that, false);
+                             var store = dataSource.store();
+                    var routeEditorOptions = {
+                                            departments: routeDepartments,
+                                            valueExpr: "id",
+                                            displayExpr: "name",
+                                            selectedDepartment: "",
+                                            recordGuid: guid,
+                                            fromDepartment: dept, // or _role
+                                            submitUrl: `api/Notification/CommentNotify?sendTo=quan.nh&typeRequest=${typeRequest}&id=${id}`,
+                                            // currentDepartment: _role,
+                                            type: "Discussion",
+                                            author: _displayName,
+                                            createdBy: _loginUser,
+                                            showComposer: true,
+                                            emptyText: "No comments.",
+                                            headerTitle: "",
+                                            // routeLabel: "Route to:",
+                                            routePlaceholder: "Select department",
+                                            onBlur: function (value) {
+                                                //parentForm.updateData(updateField, value);
+                                            },
+                                            onSubmit: function (newComment) {
+                                                var commentText = newComment.Content || newComment.text || "";
+                                                var commentData = {
+                                                    RecordGuid: guid,
+                                                    FromDepartment:  dept, // or _role
+                                                    ToDepartment: newComment.ToDepartment || newComment.toDepartment,
+                                                    CurrentDepartment: newComment.ToDepartment,
+                                                    Type: newComment.Type || "Discussion",
+                                                    Content: commentText,
+                                                    IsPrimaryNote: false,
+                                                    IsPinned: false,
+                                                    IsUrgent: false,
+                                                    IsRead: false,
+                                                    IsResolved: false,
+                                                    Author: _displayName
+                                                };
+
+                                                store.insert(commentData)
+                                                    .done(function () {
+                                                        DevExpress.ui.notify("Send message successfully", "success", 2000);
+                                                        invalidateSectionCommentCache(guid);
+                                                        reloadRouteComments(guid);
+                                                    })
+                                                    .fail(function (error) {
+                                                        console.error(error);
+                                                        DevExpress.ui.notify("Send message failed", "error", 2000);
+                                                        reloadRouteComments(guid);
+                                                    });
+                                            }
+                                        };
 
                     if ($element.length > 0) {
-                        item.control = $element.htmleditor(
-                                    {
+                        item.control = $element.tmivhtmleditorcommentbox(routeEditorOptions);
+                                //     {
 
-                                        // value:
-                                        //     "<p>Hello</p>",
+                                //         // value:
+                                //         //     "<p>Hello</p>",
 
 
-                                        // onChange: function (html) {
+                                //         // onChange: function (html) {
 
-                                        //     console.log(html);
+                                //         //     console.log(html);
 
-                                        // }
+                                //         // }
 
-                                    }
-                                );
+                                //     }
+                                // );
                         $element.data("workflowRemarkControl", item.control);
                         // createEditor(item, itemElement, $("<div>"), item);
 
@@ -9671,4 +9781,11 @@
              var $container =  $(`#${formModuleKey}`).text("Completed: " + fmtTimeLocal(map));
              return $container;
          }
+          function reloadRouteComments(guid) {
+                                            return loadSectionCommentsCached(guid).then(function (result) {
+                                                var updatedComments = mapRouteComments(result);
+                                                renderRouteEditorItems(updatedComments);
+                                                return updatedComments;
+                                            });
+                                        }
 </script>

@@ -1639,7 +1639,7 @@ Note:
                 if (q.stageDept == item)
                 {
                     $(`#${QuotationIdManager.actionBarDept(item,@ViewData["Id"])}`).css({"display": "block"});
-                    var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control, "qt");
+                    var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control, "qt", q.guid);
                     remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
                 }
                 else {
