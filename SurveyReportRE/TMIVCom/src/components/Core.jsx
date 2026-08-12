@@ -600,6 +600,22 @@ $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
             return this;
         }
 
+        if (arg1 === "setDepartments") {
+            return this.each(function() {
+                getControl(this)?.setDepartments?.(arg2);
+            });
+        }
+
+        if (arg1 === "getDepartments") {
+            if (this.length === 1) {
+                return getControl(this[0])?.getDepartments?.() ?? [];
+            }
+
+            return this.map(function() {
+                return getControl(this)?.getDepartments?.() ?? [];
+            }).get();
+        }
+
         if (arg1 === "addComment") {
             if (this.length === 1) {
                 return getControl(this[0])?.addComment?.(arg2 ?? null);
@@ -744,6 +760,15 @@ $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
                     getControl(el)?.buttons?.clear?.();
                     return this;
                 }
+            },
+
+            setDepartments(items) {
+                getControl(el)?.setDepartments?.(items);
+                return this;
+            },
+
+            getDepartments() {
+                return getControl(el)?.getDepartments?.() ?? [];
             },
 
             addComment(event = null) {

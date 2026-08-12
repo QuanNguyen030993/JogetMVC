@@ -7,8 +7,212 @@ import React, {
     useState
 } from "react";
 import SelectBox from "./SelectBox.jsx";
+import { createPortal } from "react-dom";
 
 
+
+
+const RouteSelectBoxDropUp = ({
+    value = "",
+    onChange,
+    dataSource = [],
+    valueExpr = "id",
+    displayExpr = "name",
+    placeholder = "Select routing department..."
+}) => {
+    const triggerRef = useRef(null);
+    const popupRef = useRef(null);
+    const [opened, setOpened] = useState(false);
+    const [popupStyle, setPopupStyle] = useState(null);
+
+    const getValue = (item) => (
+        typeof item === "object"
+            ? (item?.[valueExpr] ?? item?.id ?? item?.key ?? "")
+            : item
+    );
+
+    const getText = (item) => (
+        typeof item === "object"
+            ? (item?.[displayExpr] ?? item?.value ?? item?.name ?? "")
+            : item
+    );
+
+    const selectedItem = (dataSource || []).find(
+        item => String(getValue(item)) === String(value ?? "")
+    );
+
+    const selectedText = selectedItem
+        ? getText(selectedItem)
+        : "";
+
+    const positionPopup = () => {
+        const el = triggerRef.current;
+        if (!el) return;
+
+        const rect = el.getBoundingClientRect();
+
+        setPopupStyle({
+            position: "fixed",
+            left: rect.left,
+            bottom: window.innerHeight - rect.top + 4,
+            width: rect.width,
+            maxHeight: Math.min(260, Math.max(120, rect.top - 16)),
+            overflowY: "auto",
+            zIndex: 20001,
+            background: "#fff",
+            border: "1px solid #cbd5e1",
+            borderRadius: 6,
+            boxShadow: "0 8px 24px rgba(15, 23, 42, .18)",
+            boxSizing: "border-box"
+        });
+    };
+
+    const toggle = () => {
+        if (!opened) {
+            positionPopup();
+        }
+        setOpened(prev => !prev);
+    };
+
+    useEffect(() => {
+        if (!opened) return;
+
+        const reposition = () => positionPopup();
+
+        const handleOutside = (e) => {
+            if (
+                triggerRef.current?.contains(e.target) ||
+                popupRef.current?.contains(e.target)
+            ) {
+                return;
+            }
+            setOpened(false);
+        };
+
+        document.addEventListener("mousedown", handleOutside, true);
+        window.addEventListener("resize", reposition);
+        window.addEventListener("scroll", reposition, true);
+
+        return () => {
+            document.removeEventListener("mousedown", handleOutside, true);
+            window.removeEventListener("resize", reposition);
+            window.removeEventListener("scroll", reposition, true);
+        };
+    }, [opened]);
+
+    return (
+        <>
+            <div
+                ref={triggerRef}
+                className="tmiv-route-selectbox-dropup"
+                onClick={toggle}
+                style={{
+                    position: "relative",
+                    width: "100%",
+                    minHeight: 30,
+                    height: 30,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    padding: "0 9px",
+                    background: "#fff",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: 6,
+                    boxSizing: "border-box",
+                    cursor: "pointer",
+                    userSelect: "none",
+                    fontSize: 13,
+                    zIndex: 1
+                }}
+            >
+                <span
+                    style={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        color: selectedText ? "#0f172a" : "#94a3b8"
+                    }}
+                >
+                    {selectedText || placeholder}
+                </span>
+
+                <i
+                    className="fa fa-chevron-up"
+                    style={{
+                        flex: "0 0 auto",
+                        fontSize: 10,
+                        color: "#64748b",
+                        transform: opened ? "rotate(180deg)" : "none",
+                        transition: "transform .15s ease"
+                    }}
+                />
+            </div>
+
+            {opened && popupStyle && createPortal(
+                <div
+                    ref={popupRef}
+                    className="tmiv-route-selectbox-popup drop-up"
+                    style={popupStyle}
+                >
+                    {(dataSource || []).length === 0 ? (
+                        <div
+                            style={{
+                                padding: "9px 10px",
+                                color: "#94a3b8",
+                                fontSize: 13
+                            }}
+                        >
+                            No data
+                        </div>
+                    ) : (
+                        (dataSource || []).map((item, index) => {
+                            const itemValue = getValue(item);
+                            const itemText = getText(item);
+                            const selected =
+                                String(itemValue) === String(value ?? "");
+
+                            return (
+                                <div
+                                    key={`${String(itemValue)}_${index}`}
+                                    onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        onChange?.(itemValue);
+                                        setOpened(false);
+                                    }}
+                                    style={{
+                                        padding: "8px 10px",
+                                        cursor: "pointer",
+                                        fontSize: 13,
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        background: selected ? "#eff6ff" : "#fff",
+                                        color: selected ? "#2563eb" : "#0f172a",
+                                        fontWeight: selected ? 600 : 400
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (!selected) {
+                                            e.currentTarget.style.background = "#f8fafc";
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.background =
+                                            selected ? "#eff6ff" : "#fff";
+                                    }}
+                                >
+                                    {itemText}
+                                </div>
+                            );
+                        })
+                    )}
+                </div>,
+                document.body
+            )}
+        </>
+    );
+};
 
 const HtmlEditor = forwardRef(({
     value = "",
@@ -71,13 +275,22 @@ const HtmlEditor = forwardRef(({
     }, [customButtons]);
 
     const [selectedDeptId, setSelectedDeptId] = useState(selectedDepartment);
+    const [departmentItems, setDepartmentItems] = useState(
+        Array.isArray(departments) ? departments : []
+    );
 
     useEffect(() => {
         setSelectedDeptId(selectedDepartment);
     }, [selectedDepartment]);
 
+    useEffect(() => {
+        setDepartmentItems(
+            Array.isArray(departments) ? departments : []
+        );
+    }, [departments]);
+
     const getSelectedDeptName = () => {
-        const found = (departments || []).find(item => {
+        const found = (departmentItems || []).find(item => {
             const itemValue = typeof item === "object"
                 ? (item?.[valueExpr] ?? item?.id ?? item?.key ?? "")
                 : item;
@@ -1064,7 +1277,14 @@ useEffect(() => {
                     return;
 
                 case "departments":
-                    return departments;
+                    if (arguments.length === 1) {
+                        return departmentItems;
+                    }
+
+                    setDepartmentItems(
+                        Array.isArray(value) ? value : []
+                    );
+                    return;
 
                 default:
                     return undefined;
@@ -1132,6 +1352,16 @@ useEffect(() => {
             }
         },
 
+        setDepartments(items) {
+            const next = Array.isArray(items) ? items : [];
+            setDepartmentItems(next);
+            return next;
+        },
+
+        getDepartments() {
+            return departmentItems;
+        },
+
         addComment(event = null) {
             return addComment(event);
         },
@@ -1160,7 +1390,7 @@ useEffect(() => {
         <div className="jira-comment-box">
             <div className="jira-comment-editor-wrap">
 
-                <div className="tmiv-html-editor">
+                <div className="tmiv-html-editor-route">
 
                     <div className="tmiv-html-toolbar">
 
@@ -1613,7 +1843,11 @@ useEffect(() => {
                         className={`tmiv-html-content ${isFocused ? "is-focused" : ""}`}
                         style={{
                             minHeight: height,
-                            display: showSource ? "none" : "block"
+                            height: height,
+                            display: showSource ? "none" : "block",
+                            resize: "vertical",
+                            overflow: "auto",
+                            boxSizing: "border-box"
                         }}
                     />
 
@@ -1649,8 +1883,8 @@ useEffect(() => {
                         className="comment-editor-actions"
                         style={{
                             display: "flex",
-                            justifyContent: "space-between",
                             alignItems: "center",
+                            justifyContent: "flex-end",
                             flexWrap: "wrap",
                             gap: 8,
                             paddingTop: 10,
@@ -1659,59 +1893,60 @@ useEffect(() => {
                         }}
                     >
                         <div
-                            className="comment-route-wrap"
+                            className="comment-custom-buttons"
                             style={{
-                                display: "flex",
+                                display: "inline-flex",
                                 alignItems: "center",
-                                gap: 8,
-                                flex: "1 1 320px",
-                                minWidth: 240
-                            }}
-                        >
-                            {routeLabel && (
-                                <span
-                                    style={{
-                                        fontWeight: 600,
-                                        fontSize: 13,
-                                        color: "#475569",
-                                        whiteSpace: "nowrap"
-                                    }}
-                                >
-                                    {routeLabel}
-                                </span>
-                            )}
-
-                            <div style={{ flex: 1, minWidth: 160 }}>
-                                <SelectBox
-                                    value={selectedDeptId}
-                                    onChange={setSelectedDeptId}
-                                    dataSource={departments}
-                                    valueExpr={valueExpr}
-                                    displayExpr={displayExpr}
-                                    placeholder={routePlaceholder}
-                                />
-                            </div>
-                        </div>
-
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "flex-end",
                                 flexWrap: "wrap",
                                 gap: 8
                             }}
                         >
+                            {actionButtons.map(renderActionButton)}
+                        </div>
+
+                        <div
+                            className="comment-route-actions"
+                            style={{
+                                marginLeft: "auto",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "flex-end",
+                                gap: 8,
+                                flexWrap: "nowrap"
+                            }}
+                        >
                             <div
-                                className="comment-custom-buttons"
+                                className="comment-route-wrap"
                                 style={{
-                                    display: "inline-flex",
+                                    display: "flex",
                                     alignItems: "center",
-                                    flexWrap: "wrap",
+                                    justifyContent: "flex-end",
                                     gap: 8
                                 }}
                             >
-                                {actionButtons.map(renderActionButton)}
+                                {routeLabel && (
+                                    <span
+                                        style={{
+                                            fontWeight: 600,
+                                            fontSize: 13,
+                                            color: "#475569",
+                                            whiteSpace: "nowrap"
+                                        }}
+                                    >
+                                        {routeLabel}
+                                    </span>
+                                )}
+
+                                <div style={{ width: 200, minWidth: 160 }}>
+                                    <RouteSelectBoxDropUp
+                                        value={selectedDeptId}
+                                        onChange={setSelectedDeptId}
+                                        dataSource={departmentItems}
+                                        valueExpr={valueExpr}
+                                        displayExpr={displayExpr}
+                                        placeholder={routePlaceholder}
+                                    />
+                                </div>
                             </div>
 
                             {showSendButton && (
@@ -1721,9 +1956,11 @@ useEffect(() => {
                                     title={sendLabel || "Send"}
                                     onClick={addComment}
                                     style={{
+                                        position: "static",
                                         width: 30,
+                                        minWidth: 30,
                                         height: 30,
-                                        position: 'static',
+                                        minHeight: 30,
                                         border: "none",
                                         borderRadius: 6,
                                         background: "#2563eb",
@@ -1733,7 +1970,10 @@ useEffect(() => {
                                         alignItems: "center",
                                         justifyContent: "center",
                                         padding: 0,
-                                        fontSize: 14
+                                        margin: 0,
+                                        fontSize: 13,
+                                        lineHeight: 1,
+                                        flex: "0 0 30px"
                                     }}
                                 >
                                     <i className={sendIcon || "fa fa-paper-plane"} />
