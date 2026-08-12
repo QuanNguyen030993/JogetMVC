@@ -6,6 +6,8 @@ import React, {
     useImperativeHandle,
     useState
 } from "react";
+import SelectBox from "./SelectBox.jsx";
+
 
 
 const HtmlEditor = forwardRef(({
@@ -20,6 +22,32 @@ const HtmlEditor = forwardRef(({
     sendIcon = "fa fa-paper-plane",
     onSendComment,
 
+    // Route department
+    departments = [],
+    valueExpr = "id",
+    displayExpr = "name",
+    selectedDepartment = "",
+    routePlaceholder = "Select routing department...",
+    routeLabel = "Send message to:",
+
+    // Comment context
+    currentSection = "",
+    currentDepartment = "",
+    fromDepartment = "",
+    authorName = "You",
+    roleName = "Member",
+    recordGuid = "",
+    type = null,
+    onItemsChange,
+    onSubmit,
+    items = [],
+    submitUrl = "",
+
+    // Route behavior:
+    // true  => bắt buộc chọn phòng ban, nếu thiếu sẽ cảnh báo
+    // false => nếu chưa chọn thì comment vào currentSection/currentDepartment
+    requireDepartment = false,
+
     // Array of dxButton-like configs.
     customButtons = []
 }, ref) => {
@@ -32,15 +60,219 @@ const HtmlEditor = forwardRef(({
         Array.isArray(customButtons) ? customButtons : []
     );
 
+    const [comments, setComments] = useState(Array.isArray(items) ? items : []);
+
+    useEffect(() => {
+        setComments(Array.isArray(items) ? items : []);
+    }, [items]);
+
     useEffect(() => {
         setActionButtons(Array.isArray(customButtons) ? customButtons : []);
     }, [customButtons]);
+
+    const [selectedDeptId, setSelectedDeptId] = useState(selectedDepartment);
+
+    useEffect(() => {
+        setSelectedDeptId(selectedDepartment);
+    }, [selectedDepartment]);
+
+    const getSelectedDeptName = () => {
+        const found = (departments || []).find(item => {
+            const itemValue = typeof item === "object"
+                ? (item?.[valueExpr] ?? item?.id ?? item?.key ?? "")
+                : item;
+
+            return String(itemValue) === String(selectedDeptId);
+        });
+
+        if (!found) return "";
+
+        return typeof found === "object"
+            ? (found?.[displayExpr] ?? found?.value ?? found?.name ?? "")
+            : found;
+    };
 
     const getCurrentValue = () => (
         showSource
             ? sourceHtml
             : (editorRef.current?.innerHTML ?? "")
     );
+
+
+    const generateGuid = () => {
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === "x" ? r : (r & 0x3 | 0x8);
+            return v.toString(16).toUpperCase();
+        });
+    };
+
+    const formatDate = (date) => {
+        const pad = (num, size = 2) => {
+            let s = String(num);
+            while (s.length < size) s = "0" + s;
+            return s;
+        };
+
+        return [
+            date.getFullYear(),
+            "-",
+            pad(date.getMonth() + 1),
+            "-",
+            pad(date.getDate()),
+            " ",
+            pad(date.getHours()),
+            ":",
+            pad(date.getMinutes()),
+            ":",
+            pad(date.getSeconds()),
+            ".",
+            pad(date.getMilliseconds(), 3),
+            "0000"
+        ].join("");
+    };
+
+    const resolveRoute = () => {
+        if (selectedDeptId) {
+            return {
+                id: selectedDeptId,
+                name: getSelectedDeptName()
+            };
+        }
+
+        const fallbackName =
+            currentSection ||
+            currentDepartment ||
+            fromDepartment ||
+            "";
+
+        return {
+            id: fallbackName,
+            name: fallbackName
+        };
+    };
+
+    const postCommentToApi = async (commentData) => {
+        if (!submitUrl) return null;
+
+        const response = await fetch(submitUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(commentData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status}`);
+        }
+
+        try {
+            return await response.json();
+        } catch {
+            return null;
+        }
+    };
+
+    const addComment = async (event = null) => {
+        const htmlText = getCurrentValue();
+        const textOnly = (htmlText || "")
+            .replace(/<[^>]*>/g, "")
+            .replace(/&nbsp;/gi, " ")
+            .trim();
+
+        const hasMedia =
+            /<img[\s>]/i.test(htmlText || "") ||
+            /<iframe[\s>]/i.test(htmlText || "");
+
+        if (!textOnly && !hasMedia) {
+            alert("Please enter a comment!");
+            return null;
+        }
+
+        if (requireDepartment && !selectedDeptId) {
+            alert("Please select a routing department!");
+            return null;
+        }
+
+        const route = resolveRoute();
+
+        const now = new Date();
+        const formattedDate = formatDate(now);
+        const generatedGuid = generateGuid();
+
+        const nextComment = {
+            Id: Date.now(),
+            RecordGuid: recordGuid,
+            FromDepartment:
+                fromDepartment ||
+                currentDepartment ||
+                currentSection ||
+                "",
+            ToDepartment: route.name || null,
+            CurrentDepartment:
+                currentDepartment ||
+                currentSection ||
+                "",
+            Type: type || null,
+            Content: htmlText,
+            Guid: generatedGuid,
+            CreatedDate: formattedDate,
+            ModifiedDate: formattedDate,
+            Author: authorName,
+
+            // Legacy/UI aliases
+            id: Date.now(),
+            author: authorName,
+            role:
+                currentDepartment ||
+                currentSection ||
+                roleName,
+            text: htmlText,
+            time: now.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            }),
+            toDepartmentId: route.id || null,
+            toDepartment: route.name || null
+        };
+
+        const nextComments = [nextComment, ...comments];
+
+        setComments(nextComments);
+        onItemsChange?.(nextComments);
+        onSubmit?.(nextComment, nextComments);
+
+        onSendComment?.({
+            event,
+            value: htmlText,
+            html: htmlText,
+            comment: nextComment,
+            comments: nextComments,
+            departmentId: route.id || null,
+            departmentName: route.name || null,
+            editor: editorRef.current,
+            component: editorRef.current
+        });
+
+        try {
+            await postCommentToApi(nextComment);
+        } catch (error) {
+            console.error("Error posting comment:", error);
+            alert("Có lỗi xảy ra khi lưu dữ liệu!");
+            return null;
+        }
+
+        if (editorRef.current) {
+            editorRef.current.innerHTML = "";
+        }
+
+        setSourceHtml("");
+        lastValueRef.current = "";
+        onChange?.("");
+
+        return nextComment;
+    };
 
     const renderActionButton = (button, index) => {
         if (!button || button.visible === false) return null;
@@ -823,13 +1055,28 @@ useEffect(() => {
                     setActionButtons(Array.isArray(value) ? value : []);
                     return;
 
+                case "selectedDepartment":
+                    if (arguments.length === 1) {
+                        return selectedDeptId;
+                    }
+
+                    setSelectedDeptId(value ?? "");
+                    return;
+
+                case "departments":
+                    return departments;
+
                 default:
                     return undefined;
             }
         },
 
         value() {
-            return getCurrentValue();
+            return {
+                text: getCurrentValue(),
+                departmentId: selectedDeptId,
+                departmentName: getSelectedDeptName()
+            };
         },
 
         focus() {
@@ -883,6 +1130,10 @@ useEffect(() => {
             clear() {
                 setActionButtons([]);
             }
+        },
+
+        addComment(event = null) {
+            return addComment(event);
         },
 
         addButton(button, position = "push") {
@@ -1398,7 +1649,7 @@ useEffect(() => {
                         className="comment-editor-actions"
                         style={{
                             display: "flex",
-                            justifyContent: "flex-end",
+                            justifyContent: "space-between",
                             alignItems: "center",
                             flexWrap: "wrap",
                             gap: 8,
@@ -1408,51 +1659,87 @@ useEffect(() => {
                         }}
                     >
                         <div
-                            className="comment-custom-buttons"
+                            className="comment-route-wrap"
                             style={{
-                                display: "inline-flex",
+                                display: "flex",
                                 alignItems: "center",
+                                gap: 8,
+                                flex: "1 1 320px",
+                                minWidth: 240
+                            }}
+                        >
+                            {routeLabel && (
+                                <span
+                                    style={{
+                                        fontWeight: 600,
+                                        fontSize: 13,
+                                        color: "#475569",
+                                        whiteSpace: "nowrap"
+                                    }}
+                                >
+                                    {routeLabel}
+                                </span>
+                            )}
+
+                            <div style={{ flex: 1, minWidth: 160 }}>
+                                <SelectBox
+                                    value={selectedDeptId}
+                                    onChange={setSelectedDeptId}
+                                    dataSource={departments}
+                                    valueExpr={valueExpr}
+                                    displayExpr={displayExpr}
+                                    placeholder={routePlaceholder}
+                                />
+                            </div>
+                        </div>
+
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "flex-end",
                                 flexWrap: "wrap",
                                 gap: 8
                             }}
                         >
-                            {actionButtons.map(renderActionButton)}
-                        </div>
-
-                        {showSendButton && (
-                            <button
-                                type="button"
-                                className="comment-send-btn"
-                                onClick={(event) => {
-                                    const html = getCurrentValue();
-
-                                    onSendComment?.({
-                                        event,
-                                        value: html,
-                                        html,
-                                        editor: editorRef.current,
-                                        component: editorRef.current
-                                    });
-                                }}
+                            <div
+                                className="comment-custom-buttons"
                                 style={{
-                                    minHeight: 32,
-                                    border: "none",
-                                    borderRadius: 6,
-                                    background: "#2563eb",
-                                    color: "#fff",
-                                    padding: "6px 12px",
-                                    cursor: "pointer",
                                     display: "inline-flex",
                                     alignItems: "center",
-                                    gap: 6,
-                                    fontSize: 13,
-                                    fontWeight: 600
+                                    flexWrap: "wrap",
+                                    gap: 8
                                 }}
                             >
-                                {sendIcon && <i className={sendIcon} />}
-                                {sendLabel}
-                            </button>
-                        )}
+                                {actionButtons.map(renderActionButton)}
+                            </div>
+
+                            {showSendButton && (
+                                <button
+                                    type="button"
+                                    className="comment-send-btn"
+                                    title={sendLabel || "Send"}
+                                    onClick={addComment}
+                                    style={{
+                                        width: 30,
+                                        height: 30,
+                                        position: 'static',
+                                        border: "none",
+                                        borderRadius: 6,
+                                        background: "#2563eb",
+                                        color: "#fff",
+                                        cursor: "pointer",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        padding: 0,
+                                        fontSize: 14
+                                    }}
+                                >
+                                    <i className={sendIcon || "fa fa-paper-plane"} />
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 

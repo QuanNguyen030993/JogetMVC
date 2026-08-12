@@ -600,6 +600,18 @@ $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
             return this;
         }
 
+        if (arg1 === "addComment") {
+            if (this.length === 1) {
+                return getControl(this[0])?.addComment?.(arg2 ?? null);
+            }
+
+            this.each(function() {
+                getControl(this)?.addComment?.(arg2 ?? null);
+            });
+
+            return this;
+        }
+
         if (arg1 === "addButton") {
             return this.each(function() {
                 getControl(this)?.addButton?.(
@@ -732,6 +744,10 @@ $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
                     getControl(el)?.buttons?.clear?.();
                     return this;
                 }
+            },
+
+            addComment(event = null) {
+                return getControl(el)?.addComment?.(event);
             },
 
             addButton(button, position = "push") {
