@@ -11,4 +11,9 @@ public sealed class SharePointUploadOptions
     public string SiteId { get; set; } = string.Empty;
     public string DriveId { get; set; } = string.Empty;
     public string RootFolder { get; set; } = "WorkflowManagement";
+
+    //Read         1073741826
+//    Contribute   1073741827
+//Edit         1073741830
+//Full Control 1073741829
 }

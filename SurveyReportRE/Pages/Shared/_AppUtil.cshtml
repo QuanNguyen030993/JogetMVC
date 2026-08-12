@@ -3742,6 +3742,7 @@
                 await renderDepartmentAssigneeBox(`#${idManager.assigneeBox(dept, dataForm.id)}`, {
                     groupName: dept,
                     dataForm: dataForm,
+                    isDisabled: dept == "LMKT" ? true : false,
                     currentSection: function () {
                         return workflowPage?.state?.currentUserRole || _role;
                     },
@@ -3949,6 +3950,7 @@
             const settings = $.extend(true, {
                 groupName: "",
                 dataForm: {},
+                isDisabled: options?.options || false,
                 currentUserId: null,
                 currentSection: null,
                 value: null, // string: acc1,acc2
@@ -4066,11 +4068,11 @@
                 await new Promise(resolve => requestAnimationFrame(resolve));
                 return;
             }
-
             const tagBox = $el.dxTagBox({
                 elementAttr: {
                     class: "outlined-tagbox"
                 },
+                disabled:settings.isDisabled,
                 dataSource: resolvedStore,
                 valueExpr: "accountName",
                 displayExpr: "fullName",
@@ -4389,14 +4391,14 @@
                             return ajaxPost(`/api/InstanceWorkflow/${flowName}SubmitNextStep`, sendData, {processData: true,
                         onSuccess: function (response) {
                             appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
-                            reloadWorkflowViewComponents(flowName, formItems.id, null, true)
-                                .then(function (reloaded) {
-                                    if (!reloaded) failWorkflowViewLoading(loadingContext, "Workflow refresh unavailable");
-                                })
-                                .catch(function (err) {
-                                    failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
-                                    console.error("Submit route reload failed", err);
-                                });
+                            // reloadWorkflowViewComponents(flowName, formItems.id, null, true)
+                            //     .then(function (reloaded) {
+                            //         if (!reloaded) failWorkflowViewLoading(loadingContext, "Workflow refresh unavailable");
+                            //     })
+                            //     .catch(function (err) {
+                            //         failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
+                            //         console.error("Submit route reload failed", err);
+                            //     });
                         },
                         onError: function (err) {
                             failWorkflowViewLoading(loadingContext, "Submit failed");
@@ -5115,8 +5117,8 @@
                 controllerName: "Document",
                 titleName: "Select or drag files to upload",
                 // LEGACY ROLLBACK: this uploader was forced to SharePoint.
-                // uploadUrl: "/api/Document/AsyncUploadFileSharePoint",
-                uploadUrl: "/api/Document/AsyncUploadFile",
+                uploadUrl: "/api/Document/AsyncUploadFileSharePoint",
+                //uploadUrl: "/api/Document/AsyncUploadFile",
                 data: {
                     ModuleName: editorOptionsIn.ModelName,
                     code: editorOptionsIn.ModelName, // subfolder Sharepoint
@@ -6564,21 +6566,21 @@
 
            window.WorkflowViewReloadState = window.WorkflowViewReloadState || {};
            function beginWorkflowViewLoading(schemeName, recordId, message) {
-                var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
-                var moduleCode = normalizedScheme === "policyissuance" ? "pi" : "qt";
-                var reloadKey = `${moduleCode}:${recordId}`;
-                var viewInstance = window.OverviewViewRegistry?.[`${moduleCode}:${recordId}`];
-                var renderGate = viewInstance?.renderGate;
+                // var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
+                // var moduleCode = normalizedScheme === "policyissuance" ? "pi" : "qt";
+                // var reloadKey = `${moduleCode}:${recordId}`;
+                // var viewInstance = window.OverviewViewRegistry?.[`${moduleCode}:${recordId}`];
+                // var renderGate = viewInstance?.renderGate;
 
-                if (!renderGate || typeof renderGate.begin !== "function") return null;
-                // The action itself owns the next refresh. Suppress the matching hub
-                // event so the old view is not rendered twice while the request runs.
-                window.WorkflowViewReloadState[reloadKey] = Number.POSITIVE_INFINITY;
-                return {
-                    renderGate: renderGate,
-                    token: renderGate.begin(message || "Processing workflow action…"),
-                    reloadKey: reloadKey
-                };
+                // if (!renderGate || typeof renderGate.begin !== "function") return null;
+                // // The action itself owns the next refresh. Suppress the matching hub
+                // // event so the old view is not rendered twice while the request runs.
+                // window.WorkflowViewReloadState[reloadKey] = Number.POSITIVE_INFINITY;
+                // return {
+                //     renderGate: renderGate,
+                //     token: renderGate.begin(message || "Processing workflow action…"),
+                //     reloadKey: reloadKey
+                // };
            }
 
            function failWorkflowViewLoading(context, message) {
@@ -6609,6 +6611,7 @@
            window.reloadCurrentTabView = reloadCurrentTabView;
 
            function reloadOverviewViewComponents(moduleCode, recordId, triggerElement, forceReload) {
+               debugger
                 var normalizedModule = String(moduleCode || "").replace(/\s+/g, "").toLowerCase();
                 var isPolicyIssuance = normalizedModule === "pi" || normalizedModule === "policyissuance";
                 var resolvedModuleCode = isPolicyIssuance ? "pi" : "qt";

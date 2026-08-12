@@ -562,8 +562,9 @@ function startSignalRConnection() {
                 //     .catch(function (err) {
                 //         console.error("Submitted item reload failed", err);
                 //     });
-                    var prefix = items.type === "Quotation" ? "qt" : "pi";
-                            $(`${prefix}-btnRefreshOverview_${items.id}`).click();
+                debugger
+                     var prefix = items.type === "Quotation" ? "qt" : "pi";
+                                 $(`#${prefix}-btnRefreshOverview_${items.id}`).trigger("click");
             }
         }
     );

@@ -1059,7 +1059,8 @@ public class QuotationController : BaseControllerApi<Quotation>
             quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
             quotation.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
             quotation.StatusId = stepsWorkflow.StatusId;
-
+            picS.PICMain.LMKT = picS.PICHOD.FO;
+            quotation.PIC = JsonConvert.SerializeObject(picS.PICMain);
             EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
 
             quotation.WorkflowStatus = enumData?.Value ?? "";
@@ -1719,6 +1720,35 @@ public class QuotationController : BaseControllerApi<Quotation>
             }
         });
         ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = form.key, type = nameof(Quotation) }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        return new HttpResponseMessage(HttpStatusCode.OK);
+    }
+
+    [HttpPut]
+    public  HttpResponseMessage UpdateDataAutoSaved([FromForm] UpdateFormCollection form)
+    {
+        var entity = new Quotation();
+        JsonConvert.PopulateObject(form.values, entity);
+        _BaseRepository.UpdateData(entity, form.values, form.key, "Id").GetAwaiter().GetResult();
+
+
+
+        Task.Run(async () =>
+        {
+            string connectionId = "";
+            IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
+            OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == CURRENT_USER);
+            if (onlineUser != null)
+            {
+                connectionId = onlineUser.ConnectionId;
+                if (!string.IsNullOrEmpty(connectionId))
+                    await _hubContext.Clients.Client(connectionId).SendAsync($"sectionRender_{connectionId}", new
+                    {
+                        data = entity,
+                        connectionId = connectionId
+                    });
+
+            }
+        });
         return new HttpResponseMessage(HttpStatusCode.OK);
     }
     public async Task BulkInsertQuotationAsync(List<Quotation> data)

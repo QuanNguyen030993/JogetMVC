@@ -63,7 +63,7 @@
 
 
             var acceptDecisionV2 = {
-        buttonId: acceptButtonId,
+        buttonId: null,
         statusId: panelStatusId,
         text: "Accept",
         icon: "check",
@@ -97,24 +97,25 @@
                             "data-form-group-name": "decision@(dept)Group",
                             "data-route-dept": "@dept"
                         },
-                        caption: "Decision",
+                        caption: "MKT MGR Review",
                         colCount: 2,
                         items: [
-                {
-                     dataField: "decision",
+                // {
+                //      dataField: "decision",
 
-                     label: {
-                         text: "Decision"
-                     },
-                     itemType: "simple",
-                     template: function (data, itemElement) {
-                         // $(`<div id="${submitBranchId}" class="lmkt-submitbranch-decision-host"></div>`)
-                         //     .appendTo(itemElement);
-                         $.each(items, function (itemIndex, item) {
-                             $(`<div id="${item.id}">`).dxButton({ text: item.text, visible: false}).appendTo(itemElement);
-                         });
-                     }
-                }
+                //      label: {
+                //          text: "Decision"
+                //      },
+                //      itemType: "simple",
+                //      template: function (data, itemElement) {
+                //          // $(`<div id="${submitBranchId}" class="lmkt-submitbranch-decision-host"></div>`)
+                //          //     .appendTo(itemElement);
+                //          $.each(items, function (itemIndex, item) {
+                //              $(`<div id="${item.id}">`).dxButton({ text: item.text, visible: false}).appendTo(itemElement);
+                //          });
+                //      }
+                // }
+                workflowDecisionField(thisObject, ...itemsDelay)
     ]}, 
              ...mainFields
            
@@ -122,8 +123,8 @@
     });
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
 
-
-        delayAcceptStatusV2(null, thisObject, ...itemsDelay);
+    debugger
+    delayAcceptStatusV2(null, thisObject, ...itemsDelay);
 
         setTimeout(() => {
         var picJson = PIC_JSON || "{}";

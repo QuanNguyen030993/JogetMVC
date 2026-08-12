@@ -526,7 +526,8 @@ Note:
                                                                 icon: getTransitionButtonIcon(route, "undo"),
                                                                 type: "danger",
                                                                 onClick: function () {
-                                                                    var content = remarkBoxs[stageDept].controlRemark.value();
+                                                                    
+                                                                    var content = remarkBoxs[stageDept].controlRemark.value().text;
                                                                     if (content)
                                                                         {
                                                                         formItems =
@@ -584,9 +585,9 @@ Note:
                                                                 icon: getTransitionButtonIcon(route, "fa-solid fa-person-running"),
                                                                 type: "info",
                                                                 onClick: function () {
-
+                                                                    debugger
                                                                     var content =
-                                                                        remarkBoxs[stageDept].controlRemark.value();
+                                                                        remarkBoxs[stageDept].controlRemark.value().text;
 
                                                                     formItems =
                                                                         $(`#${formId}`)
@@ -624,11 +625,14 @@ Note:
                                                                                 values: JSON.stringify(formItems)
                                                                             },
                                                                             {
-                                                                                onSuccess: function () { },
+                                                                                onSuccess: function (
+                                                                                 
+                                                                                ) { },
                                                                                 onError: function (err) { console.log("LMKT SubmitBranch status update problem", err); }
                                                                             }
                                                                         );
                                                                         $(`#${submitButtonId}`).find(".dx-button").css("background-color", window.DecisionColors.accepted);
+                                                                        window.reloadOverviewViewComponents("@prefix", formItems.id, null, false);
                                                                     }
                                                                       if (!route.isReturn && !content) {
                                                                         appNotifyWarning("You may leave your remark empty, system will remark default message?",  true,

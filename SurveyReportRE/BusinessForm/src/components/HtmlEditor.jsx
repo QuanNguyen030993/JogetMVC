@@ -1045,7 +1045,7 @@ useEffect(() => {
 
     <div className="tmiv-toolbar-separator" />
 
-    <div
+    {/* <div
         className="tmiv-tool-item"
         onClick={() => {
 
@@ -1064,7 +1064,7 @@ useEffect(() => {
         }}
     >
         {"</>"}
-    </div>
+    </div> */}
 
     <div
         className="tmiv-tool-item"

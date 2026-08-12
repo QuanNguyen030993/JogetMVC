@@ -1911,8 +1911,8 @@ useEffect(() => {
                             flexWrap: "wrap",
                             gap: 8,
                             paddingTop: 10,
-                            marginTop: 8,
-                            marginBottom: 8,
+                            marginTop: 0,
+                            paddingBottom: 8,
                             borderTop: "1px solid #e2e8f0"
                         }}
                     >
