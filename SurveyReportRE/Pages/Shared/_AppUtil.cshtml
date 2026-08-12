@@ -5378,6 +5378,20 @@
                         $item.attr('aria-date',date);
                         $item.attr('aria-subDirectory',subDirectory);
 
+                const url = String(
+                    item.url ||
+                    item.Url ||
+                    item.downloadUrl ||
+                    item.DownloadUrl ||
+                    ""
+                );
+
+                const isSharePoint = url.toLowerCase().includes("sharepoint");
+
+                const storageIcon = isSharePoint
+                    ? `<span class="preview-storage-icon" title="SharePoint">☁️</span>`
+                    : `<span class="preview-storage-icon" title="Local storage">💾</span>`;
+
 
                 if (!(options && options.showFillListSelect)) {
                     $item.css({
@@ -5389,9 +5403,9 @@
 
                 $("<div>")
                     .addClass("att-ico")
-                    .text(getIconByExt(ext))
+                    .text(s(ext))
                     .appendTo($item);
-
+        storageIcon.appendTo($item);
                 const $meta = $("<div>").addClass("att-meta").appendTo($item);
 
                 $("<div>")
@@ -5399,7 +5413,7 @@
                     .attr("title", fileName)
                     .text(`${fileName}`)
                     .appendTo($meta);
-
+               
                 $("<div>")
                     .addClass("att-sub")
                     .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size) + ` -  ${author}  -  ${fmtTimeLocal(date)}`)

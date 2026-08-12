@@ -35079,3 +35079,13 @@ body.skin-re .dx-popup-wrapper.dx-rtl > .dx-overlay-content > .dx-popup-title.dx
 .swal2-icon {
     font-size: 10px !important;
 }
+.preview-storage-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 4px;
+    font-size: 11px;
+    line-height: 1;
+    vertical-align: middle;
+    opacity: .75;
+}
