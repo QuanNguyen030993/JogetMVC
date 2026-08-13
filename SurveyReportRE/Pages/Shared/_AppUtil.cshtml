@@ -5378,19 +5378,12 @@
                         $item.attr('aria-date',date);
                         $item.attr('aria-subDirectory',subDirectory);
 
-                const url = String(
-                    item.url ||
-                    item.Url ||
-                    item.downloadUrl ||
-                    item.DownloadUrl ||
-                    ""
-                );
 
-                const isSharePoint = url.toLowerCase().includes("sharepoint");
+                const isSharePoint = subDirectory.toLowerCase().includes("sharepoint");
 
                 const storageIcon = isSharePoint
-                    ? `<span class="preview-storage-icon" title="SharePoint">☁️</span>`
-                    : `<span class="preview-storage-icon" title="Local storage">💾</span>`;
+                    ? `<i class="fa-solid fa-cloud"></i>`
+                    : `<i class="fa-solid fa-database"></i>`;
 
 
                 if (!(options && options.showFillListSelect)) {
@@ -5403,17 +5396,22 @@
 
                 $("<div>")
                     .addClass("att-ico")
-                    .text(s(ext))
+                    .text(getIconByExt(ext))
                     .appendTo($item);
-        storageIcon.appendTo($item);
+
+               
+
+
                 const $meta = $("<div>").addClass("att-meta").appendTo($item);
 
-                $("<div>")
+                const $divFileName = $("<div>")
                     .addClass("att-name")
                     .attr("title", fileName)
                     .text(`${fileName}`)
                     .appendTo($meta);
-               
+                $(storageIcon).appendTo($divFileName);
+
+
                 $("<div>")
                     .addClass("att-sub")
                     .text((ext ? ext.toUpperCase() : "FILE") + " • " + formatBytes(size) + ` -  ${author}  -  ${fmtTimeLocal(date)}`)
@@ -6625,7 +6623,6 @@
            window.reloadCurrentTabView = reloadCurrentTabView;
 
            function reloadOverviewViewComponents(moduleCode, recordId, triggerElement, forceReload) {
-               debugger
                 var normalizedModule = String(moduleCode || "").replace(/\s+/g, "").toLowerCase();
                 var isPolicyIssuance = normalizedModule === "pi" || normalizedModule === "policyissuance";
                 var resolvedModuleCode = isPolicyIssuance ? "pi" : "qt";
@@ -8890,7 +8887,7 @@
 
             if (typeRender === "onLoading") {
                   $status
-                .removeClass("statusTag status-success accepted approved rejected declined unknown is-loading")
+                .removeClass("status-success accepted approved rejected declined unknown is-loading")
                 .removeAttr("title")
                 .css({ color: "", backgroundColor: "", border: "" })
                 .empty();
@@ -9136,7 +9133,8 @@
                 setTimeout(() => {
                     if (!statusId || !acceptDate) 
                     {
-                        console.log("Cannot load status from " + statusId);
+                        console.log("Cannot load status from " + statusId, statusId);
+                        console.log("Cannot load acceptDate from " + statusId, acceptDate);
                     }
                     var statusLabel = defaultStatus;
                     // if (statusLabel && typeof statusLabel === "object") {
@@ -9634,6 +9632,7 @@
                                    acceptButtonId,
                                    latestTatObject[formDataClone.dept]?.AcceptDate
                                );
+                               console.log("enable");
                                enableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
                                if (latestFormItems.actionStatus)
                                {
@@ -9805,4 +9804,864 @@
                                                 return updatedComments;
                                             });
                                         }
+
+    function loadSelectedWorkflow(params) {
+        params = params || {};
+
+        const moduleCode = String(params.moduleCode || "")
+            .trim()
+            .toLowerCase();
+
+        if (moduleCode !== "qt" && moduleCode !== "pi") {
+            return $.Deferred()
+                .reject(new Error("moduleCode must be 'qt' or 'pi'"))
+                .promise();
+        }
+
+        const id = params.id;
+        const guid = params.guid;
+        const stageDept = params.stageDept;
+
+        const state = params.state || {};
+        const deptCodes = params.deptCodes || [];
+        const formStages = params.formStages;
+        const remarkBoxes = params.remarkBoxes || {};
+        const prefix = params.prefix || "";
+        const reload = params.reload === true;
+
+        const loadScreenConditions =
+            params.loadScreenConditions ||
+            function () {
+                return $.Deferred().resolve().promise();
+            };
+
+        const submitNextStepFn =
+            params.submitNextStep || function () {};
+
+        const returnToStepFn =
+            params.returnToStep || function () {};
+
+        const moduleConfigs = {
+            qt: {
+                key: "qt",
+
+                workflowUrl: function (selectedGuid) {
+                    return `/api/Quotation/GetQuotationWorkflow/${selectedGuid}`;
+                },
+
+                nextStepUrl: function (workflowDefinitionId, currentStep) {
+                    return `/api/StepsWorkflow/GetNextStep/${workflowDefinitionId}/${currentStep}`;
+                },
+
+                updateUrl: "/api/Quotation/UpdateData",
+
+                formKey:
+                    params.formModuleKey ||
+                    (
+                        typeof formModuleKeyQt !== "undefined"
+                            ? formModuleKeyQt
+                            : "qt"
+                    ),
+
+                getFormId: function (dept, recordId) {
+                    if (
+                        window.QuotationIdManager &&
+                        typeof window.QuotationIdManager.form === "function"
+                    ) {
+                        return window.QuotationIdManager.form(dept, recordId);
+                    }
+
+                    return null;
+                },
+
+                getReturnButtonId: function (dept, recordId) {
+                    if (
+                        window.QuotationIdManager &&
+                        typeof window.QuotationIdManager.btnReturnBranch === "function"
+                    ) {
+                        return window.QuotationIdManager.btnReturnBranch(
+                            dept,
+                            recordId
+                        );
+                    }
+
+                    return null;
+                },
+
+                getSubmitButtonId: function (dept, recordId) {
+                    if (
+                        window.QuotationIdManager &&
+                        typeof window.QuotationIdManager.btnSubmitBranch === "function"
+                    ) {
+                        return window.QuotationIdManager.btnSubmitBranch(
+                            dept,
+                            recordId
+                        );
+                    }
+
+                    return null;
+                }
+            },
+
+            pi: {
+                key: "pi",
+
+                // Change these API routes here if the real PI endpoints differ.
+                workflowUrl: function (selectedGuid) {
+                    return `/api/PolicyIssuance/GetPolicyIssuanceWorkflow/${selectedGuid}`;
+                },
+
+                nextStepUrl: function (workflowDefinitionId, currentStep) {
+                    return `/api/StepsWorkflow/GetNextStep/${workflowDefinitionId}/${currentStep}`;
+                },
+
+                updateUrl: "/api/PolicyIssuance/UpdateData",
+
+                formKey:
+                    params.formModuleKey ||
+                    (
+                        typeof formModuleKeyPi !== "undefined"
+                            ? formModuleKeyPi
+                            : "pi"
+                    ),
+
+                getFormId: function (dept, recordId) {
+                    if (
+                        window.PolicyIssuanceIdManager &&
+                        typeof window.PolicyIssuanceIdManager.form === "function"
+                    ) {
+                        return window.PolicyIssuanceIdManager.form(
+                            dept,
+                            recordId
+                        );
+                    }
+
+                    return null;
+                },
+
+                getReturnButtonId: function (dept, recordId) {
+                    if (
+                        window.PolicyIssuanceIdManager &&
+                        typeof window.PolicyIssuanceIdManager.btnReturnBranch === "function"
+                    ) {
+                        return window.PolicyIssuanceIdManager.btnReturnBranch(
+                            dept,
+                            recordId
+                        );
+                    }
+
+                    return null;
+                },
+
+                getSubmitButtonId: function (dept, recordId) {
+                    if (
+                        window.PolicyIssuanceIdManager &&
+                        typeof window.PolicyIssuanceIdManager.btnSubmitBranch === "function"
+                    ) {
+                        return window.PolicyIssuanceIdManager.btnSubmitBranch(
+                            dept,
+                            recordId
+                        );
+                    }
+
+                    return null;
+                }
+            }
+        };
+
+        const moduleConfig = $.extend(
+            true,
+            {},
+            moduleConfigs[moduleCode],
+            params.moduleConfig || {}
+        );
+
+        function normalizeDept(value) {
+            return String(value || "")
+                .trim()
+                .toUpperCase();
+        }
+
+        function normalizeGroupKey(value) {
+            return normalizeDept(value)
+                .replace(/[^A-Z0-9]/g, "");
+        }
+
+        function safeKey(value) {
+            return String(value ?? "")
+                .replace(/[^a-zA-Z0-9_-]/g, "_");
+        }
+
+        function getFormItems(dept) {
+            const formId = moduleConfig.getFormId(dept, id);
+
+            if (!formId) {
+                return {};
+            }
+
+            const formInstance =
+                $(`#${formId}`).dxForm("instance");
+
+            return formInstance?.option("formData") || {};
+        }
+
+        function getRemark(dept) {
+            const value =
+                remarkBoxes?.[dept]
+                    ?.controlRemark
+                    ?.value?.();
+
+            if (value == null) {
+                return "";
+            }
+
+            if (typeof value === "string") {
+                return value;
+            }
+
+            return value.text || "";
+        }
+
+        function getRouteGroupKeys(routeData) {
+            const route =
+                typeof routeData === "object" && routeData
+                    ? routeData
+                    : {
+                        fromNodeId: routeData
+                    };
+
+            return [
+                route.fromNodeId,
+                route.fromDeptCode,
+                route.departmentCode,
+                route.deptCode,
+                route.roleCode,
+                route.nodeName
+            ]
+                .map(normalizeGroupKey)
+                .filter(function (value, index, values) {
+                    return (
+                        value.length >= 2 &&
+                        values.indexOf(value) === index
+                    );
+                });
+        }
+
+        function getRouteDept(route, fallbackDept) {
+            return normalizeDept(
+                route?.fromDeptCode ||
+                route?.departmentCode ||
+                route?.deptCode ||
+                route?.fromNodeId ||
+                fallbackDept
+            );
+        }
+
+        function cleanupDynamicButtons() {
+            $(`[data-workflow-record-id="${id}"]`).each(function () {
+                try {
+                    const instance = $(this).dxButton("instance");
+
+                    if (instance) {
+                        instance.dispose();
+                    }
+                } catch (e) {}
+
+                $(this).remove();
+            });
+
+            $(
+                `[data-route-custom-host="true"]` +
+                `[data-record-id="${id}"]`
+            ).remove();
+        }
+
+        function resolveNormalButtonHost(buttonHostId, context) {
+            let $host = $(`#${buttonHostId}`);
+
+            if ($host.length) {
+                return $host;
+            }
+
+            $host = $(`<div id="${buttonHostId}"></div>`);
+
+            if (typeof params.resolveButtonHost === "function") {
+                const target = params.resolveButtonHost(context);
+
+                if (target?.length) {
+                    $host.appendTo(target);
+                }
+            }
+
+            return $host;
+        }
+
+        function buildNormalRouteButton(options) {
+            const route = options.route;
+            const isReturn = options.type === "return";
+
+            const buttonHostId =
+                isReturn
+                    ? moduleConfig.getReturnButtonId(stageDept, id)
+                    : moduleConfig.getSubmitButtonId(stageDept, id);
+
+            if (!buttonHostId) {
+                return;
+            }
+
+            const rawRouteKey =
+                route?.routeId ||
+                route?.id ||
+                route?.actionCode ||
+                options.routeIndex;
+
+            const buttonId =
+                `${buttonHostId}_${safeKey(rawRouteKey)}`;
+
+            const $oldButton = $(`#${buttonId}`);
+
+            if ($oldButton.length) {
+                try {
+                    $oldButton.dxButton("instance")?.dispose();
+                } catch (e) {}
+
+                $oldButton.remove();
+            }
+
+            const $host = resolveNormalButtonHost(
+                buttonHostId,
+                {
+                    type: isReturn ? "return" : "submit",
+                    dept: stageDept,
+                    route: route,
+                    id: id,
+                    moduleCode: moduleCode
+                }
+            );
+
+            if (!$host.length) {
+                return;
+            }
+
+            const $button = $(
+                `<div
+                    id="${buttonId}"
+                    data-workflow-record-id="${id}"
+                    data-workflow-route-button="true">
+                </div>`
+            ).appendTo($host);
+
+            $button.dxButton({
+                disabled: false,
+
+                text:
+                    route?.displayStatus ||
+                    route?.actionName ||
+                    route?.actionCode ||
+                    (isReturn ? "Return" : "Submit"),
+
+                icon:
+                    typeof getTransitionButtonIcon === "function"
+                        ? getTransitionButtonIcon(
+                            route,
+                            isReturn
+                                ? "undo"
+                                : "fa-solid fa-person-running"
+                        )
+                        : undefined,
+
+                type:
+                    isReturn
+                        ? "danger"
+                        : "info",
+
+                onClick: function () {
+                    const formItems =
+                        getFormItems(stageDept);
+
+                    const content =
+                        getRemark(stageDept);
+
+                    if (isReturn && !content) {
+                        appNotifyWarning(
+                            "Please put your reason to remarks!",
+                            false
+                        );
+
+                        return;
+                    }
+
+                    formItems.comment =
+                        content || "";
+
+                    if (isReturn) {
+                        return returnToStepFn(
+                            moduleConfig.formKey,
+                            state.nextStep,
+                            route,
+                            formItems,
+                            params
+                        );
+                    }
+                        if (!route.isReturn && !content) {
+                            appNotifyWarning("You may leave your remark empty, system will remark default message?",  true,
+                            "Ok",
+                            "Cancel").then(function (result) {
+                            if (result.isConfirmed) {
+                                formItems.comment = `${_loginUser} ${route.displayStatus}`;
+                                return submitNextStepFn(
+                                moduleConfig.formKey,
+                                    state.nextStep,
+                                    route,
+                                    formItems,
+                                    params
+                                );
+                                }
+                                });
+                            }
+                            else {
+                                return;
+                            }
+                        }
+                        // else {
+                        //     return submitNextStepFn(
+                        //         moduleConfig.formKey,
+                        //         state.nextStep,
+                        //         route,
+                        //         formItems,
+                        //         params
+                        //     );
+                        // }
+                // }
+            });
+
+            if (
+                typeof applyTransitionButtonClass === "function"
+            ) {
+                applyTransitionButtonClass(
+                    `#${buttonId}`,
+                    route
+                );
+            }
+        }
+
+        async function buildCustomRoutes(customRoutes) {
+            for (
+                const [deptIndex, deptItem]
+                of deptCodes.entries()
+            ) {
+                const normalizedDept =
+                    normalizeDept(deptItem);
+
+                const customRoutesInDept =
+                    customRoutes.filter(function (route) {
+                        const routeKeys =
+                            getRouteGroupKeys(route);
+
+                        const deptKey =
+                            normalizeGroupKey(deptItem);
+
+                        const isDeptMatch =
+                            routeKeys.some(function (routeKey) {
+                                return (
+                                    routeKey === deptKey ||
+                                    routeKey.indexOf(deptKey) >= 0 ||
+                                    deptKey.indexOf(routeKey) >= 0
+                                );
+                            });
+
+                        const routeData =
+                            String(route?.data || "");
+
+                        const groupMatch =
+                            !routeData ||
+                            routeData.includes(
+                                `decision${deptItem}Group`
+                            );
+
+                        return isDeptMatch && groupMatch;
+                    });
+
+                if (!customRoutesInDept.length) {
+                    continue;
+                }
+
+                for (
+                    const [routeIndex, route]
+                    of customRoutesInDept.entries()
+                ) {
+                    if (formStages?.pace) {
+                        await formStages.pace(routeIndex);
+                    }
+
+                    const routeDept =
+                        getRouteDept(
+                            route,
+                            normalizedDept
+                        );
+
+                    let $routeHost =
+                        typeof params.resolveCustomRouteHost === "function"
+                            ? params.resolveCustomRouteHost({
+                                moduleCode: moduleCode,
+                                dept: routeDept,
+                                deptItem: deptItem,
+                                route: route,
+                                id: id,
+                                prefix: prefix
+                            })
+                            : $();
+
+                    if (
+                        !$routeHost?.length &&
+                        moduleCode === "qt"
+                    ) {
+                        $routeHost =
+                            $(
+                                `#decision-actions-qt-form_${deptItem}_${id}-${deptItem}`
+                            )
+                                .first();
+                    }
+
+                    if (
+                        !$routeHost?.length &&
+                        moduleCode === "pi"
+                    ) {
+                        $routeHost =
+                            $(
+                                `#decision-actions-pi-form_${deptItem}_${id}-${deptItem}`
+                            )
+                                .first();
+                    }
+
+                    if (!$routeHost.length) {
+                        console.warn(
+                            "Custom route host not found",
+                            {
+                                moduleCode: moduleCode,
+                                deptItem: deptItem,
+                                routeDept: routeDept,
+                                route: route
+                            }
+                        );
+
+                        continue;
+                    }
+
+                    const rawRouteKey =
+                        route?.routeId ||
+                        route?.id ||
+                        route?.actionCode ||
+                        routeIndex;
+
+                    const customButtonId =
+                        `${moduleCode}-custom-route-` +
+                        `${id}-` +
+                        `${routeDept}-` +
+                        `${safeKey(rawRouteKey)}-` +
+                        `${routeIndex}`;
+
+                    const $old =
+                        $(`#${customButtonId}`);
+
+                    if ($old.length) {
+                        try {
+                            $old.dxButton("instance")?.dispose();
+                        } catch (e) {}
+
+                        $old.remove();
+                    }
+
+                    const $customButton =
+                        $(
+                            `<div
+                                id="${customButtonId}"
+                                data-workflow-record-id="${id}"
+                                data-custom-route-button="true">
+                            </div>`
+                        )
+                            .appendTo($routeHost);
+
+                    const formItems =
+                        getFormItems(routeDept);
+
+                    const latestTatObject =
+                        typeof tryParseJSON === "function"
+                            ? (
+                                tryParseJSON(
+                                    formItems.turnAroundTimeAttributes,
+                                    "TAT Load Button Problem"
+                                ) || {}
+                            )
+                            : {};
+
+                    const disabled =
+                        !!latestTatObject?.[
+                            routeDept
+                        ]?.AcceptDate;
+
+                    $customButton.dxButton({
+                        disabled: true,
+
+                        text:
+                            route?.displayStatus ||
+                            route?.actionName ||
+                            route?.actionCode ||
+                            "Custom action",
+
+                        icon:
+                            typeof getTransitionButtonIcon === "function"
+                                ? getTransitionButtonIcon(
+                                    route,
+                                    route?.isReturn
+                                        ? "undo"
+                                        : ""
+                                )
+                                : undefined,
+
+                        type:
+                            route?.isReturn
+                                ? "danger"
+                                : "info",
+
+                        onClick: function () {
+                            const routeFormItems =
+                                getFormItems(routeDept);
+
+                            const content =
+                                getRemark(routeDept);
+
+                            if (
+                                route?.isReturn &&
+                                !content
+                            ) {
+                                appNotifyWarning(
+                                    "Please put your reason to remarks!",
+                                    false
+                                );
+
+                                return;
+                            }
+
+                            routeFormItems.comment =
+                                content || "";
+
+                            if (route?.isReturn) {
+                                return returnToStepFn(
+                                    moduleConfig.formKey,
+                                    state.nextStep,
+                                    route,
+                                    routeFormItems,
+                                    params
+                                );
+                            }
+
+                            return submitNextStepFn(
+                                moduleConfig.formKey,
+                                state.nextStep,
+                                route,
+                                routeFormItems,
+                                params
+                            );
+                        }
+                    });
+
+                    if (
+                        typeof applyTransitionButtonClass === "function"
+                    ) {
+                        applyTransitionButtonClass(
+                            `#${customButtonId}`,
+                            route
+                        );
+                    }
+                }
+            }
+        }
+
+        if (reload) {
+            cleanupDynamicButtons();
+        }
+
+        if (!guid) {
+            state.selectedGuid = null;
+
+            return $.Deferred()
+                .resolve()
+                .promise();
+        }
+
+        state.selectedGuid = guid;
+
+        return ajaxGet(
+            moduleConfig.workflowUrl(guid),
+            null
+        )
+            .then(function (instance) {
+                state.workflowInstance =
+                    instance;
+
+                return $.when(
+                    loadScreenConditions(
+                        instance?.currentStep,
+                        params.selectedId ?? id,
+                        instance,
+                        params
+                    )
+                )
+                    .then(function () {
+                        const workflowDefinitionId =
+                            instance?.workflowDefinitionId ||
+                            "00000000-0000-0000-0000-000000000000";
+
+                        const currentStep =
+                            instance?.currentStep ?? 0;
+
+                        return ajaxGet(
+                            moduleConfig.nextStepUrl(
+                                workflowDefinitionId,
+                                currentStep
+                            ),
+                            null
+                        );
+                    })
+                    .then(function (data) {
+                        data =
+                            Array.isArray(data)
+                                ? data
+                                : [];
+
+                        state.nextStep =
+                            state.nextStep || {};
+
+                        state.nextStep.instanceWorkflow =
+                            instance;
+
+                        state.nextStep.flowSteps =
+                            data;
+
+                        state.nextStep.currentStep =
+                            instance?.currentStep ?? 0;
+
+                        const customRoutes =
+                            data.filter(function (route) {
+                                return String(
+                                    route?.flowType || ""
+                                )
+                                    .trim()
+                                    .toLowerCase() === "custom";
+                            });
+
+                        const normalRoutes =
+                            data.filter(function (route) {
+                                return (
+                                    !route?.isReturn &&
+                                    String(
+                                        route?.flowType || ""
+                                    )
+                                        .trim()
+                                        .toLowerCase() !== "custom" &&
+                                    normalizeDept(
+                                        route?.fromNodeId
+                                    ) ===
+                                        normalizeDept(stageDept) &&
+                                    route?.fNodeId ===
+                                        state.nextStep.currentStep
+                                );
+                            });
+
+                        const returnRoutes =
+                            data.filter(function (route) {
+                                return (
+                                    route?.isReturn &&
+                                    String(
+                                        route?.flowType || ""
+                                    )
+                                        .trim()
+                                        .toLowerCase() !== "custom" &&
+                                    normalizeDept(
+                                        route?.fromNodeId
+                                    ) ===
+                                        normalizeDept(stageDept) &&
+                                    route?.fNodeId ===
+                                        state.nextStep.currentStep
+                                );
+                            });
+
+                        return $.when(
+                            formStages?.enter
+                                ? formStages.enter("routeState")
+                                : null
+                        )
+                            .then(async function () {
+                                for (
+                                    const [routeIndex, route]
+                                    of returnRoutes.entries()
+                                ) {
+                                    if (formStages?.pace) {
+                                        await formStages.pace(
+                                            routeIndex
+                                        );
+                                    }
+
+                                    buildNormalRouteButton({
+                                        route: route,
+                                        type: "return",
+                                        routeIndex: routeIndex
+                                    });
+                                }
+
+                                for (
+                                    const [routeIndex, route]
+                                    of normalRoutes.entries()
+                                ) {
+                                    if (formStages?.pace) {
+                                        await formStages.pace(
+                                            returnRoutes.length +
+                                            routeIndex
+                                        );
+                                    }
+
+                                    buildNormalRouteButton({
+                                        route: route,
+                                        type: "submit",
+                                        routeIndex: routeIndex
+                                    });
+                                }
+
+                                await buildCustomRoutes(
+                                    customRoutes
+                                );
+
+                                if (
+                                    typeof params.onLoaded === "function"
+                                ) {
+                                    await params.onLoaded({
+                                        instance: instance,
+                                        routes: data,
+                                        normalRoutes: normalRoutes,
+                                        returnRoutes: returnRoutes,
+                                        customRoutes: customRoutes,
+                                        state: state,
+                                        params: params
+                                    });
+                                }
+
+                                return {
+                                    instance: instance,
+                                    routes: data,
+                                    normalRoutes: normalRoutes,
+                                    returnRoutes: returnRoutes,
+                                    customRoutes: customRoutes,
+                                    state: state
+                                };
+                            });
+                    });
+            });
+    }
+    window.WorkflowLoader =
+        window.WorkflowLoader || {};
+
+    window.WorkflowLoader.load =
+        loadSelectedWorkflow;
+
 </script>

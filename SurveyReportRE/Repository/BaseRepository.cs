@@ -22,6 +22,7 @@ using Core.Arango.Linq;
 using ERPCore.ControllerUtil;
 using TMIVHashing;
 using ERPCore.Models.Models.Parsing;
+using static ERPCore.Common.Util;
 public interface IBaseRepository<T> where T : class
 {
     Task<T> GetObjectByIdAsync(long id); //Use for Base processing 

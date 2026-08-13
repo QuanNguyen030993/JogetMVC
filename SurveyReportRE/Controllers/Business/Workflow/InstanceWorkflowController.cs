@@ -9,29 +9,24 @@ using ERPCore.Models.Base;
 using ERPCore.Models.Migration.Business.Data;
 using ERPCore.Models.Migration.Business.Form;
 using ERPCore.Models.Migration.Business.Workflow;
-using Syncfusion.Pdf.Graphics;
 using System.Data;
 using ERPCore.Models.Request;
-using Microsoft.SharePoint.WebControls;
 using ERPCore.Models;
 using ERPCore.ControllerUtil;
 using ERPCore.Models.Migration.Business.HumanResource;
 using ERPCore.Models.Migration.Business.MasterData;
-using ERPCore.Repository;
 using ERPCore.Models.Migration.Business.Config;
 using ERPCore.Models.Migration.Business.Social;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.SharePoint.Client;
-using iText.Kernel.Pdf.Canvas.Wmf;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
 using ERPCore.Models.Business.Migration.Config;
-using ERPCore.Models.Migration.Business.Workflow;
 using static WorkflowDefinition_FormModel;
 using ERPCore.Models.Migration.Config;
 using RESurveyTool.Models.Models.Parsing;
 using System.Text.RegularExpressions;
-using DocumentFormat.OpenXml.Office2013.Excel;
 using ERPCore.Models.Config;
+using ERPCore.Storage;
+using System;
 
 public class WorkflowTransitionSubmitRequest : SubmitRequest
 {
@@ -145,7 +140,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         }
 
         submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
-        await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");
+        //await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");    //comment in 
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
         quotation.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
         quotation.StatusId = submitRequest.StepsWorkflow.StatusId;
@@ -221,7 +216,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             quotation.StageAccount = "";
         }    
 
-        await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id");
+        //await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id"); // comment in 
 
         if (submitRequest.StepsWorkflow.Command != null)
         {
@@ -267,32 +262,13 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
 
 
-        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+        //await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings); // comment in 
 
 
 
         PICAttributes pICAttributes = new PICAttributes();
         pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
         string accountName = Util.PICPicker(pICAttributes, submitRequest.StepsWorkflow.ToNodeId);
-        //switch
-        //{
-        //    "FO" => pICAttributes.FO,
-        //    "TS" => pICAttributes.TS,
-        //    "UW" => pICAttributes.UW,
-        //    "LMKT" => pICAttributes.LMKT,
-        //    "PM" => pICAttributes.PM,
-        //    _ =>
-        //        string.Join(",",
-        //                            new[]
-        //                            {
-        //                                pICAttributes.FO,
-        //                                pICAttributes.TS,
-        //                                pICAttributes.UW,
-        //                                pICAttributes.LMKT,
-        //                                pICAttributes.PM
-        //                            }.Where(x => !string.IsNullOrEmpty(x)))
-
-        //};
         ControllerHelper.SignalRResponse(_usersSessionRepository,"R_ItemSubmitted", new { id = quotation.Id, type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
         await SendAttachedWorkflowMailAsync(submitRequest, quotation);
 
@@ -520,29 +496,303 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
         return Ok();
     }
-    private async Task HandleTransferFile(TransferFileConfig config, dynamic ObjectIn)
-    {//{   "sourceDepartment": "FO",   "strategy": "Latest",   "fileSelector": "First",   "allowOverride": false }
+    private async Task HandleTransferFile(
+  TransferFileConfig config,
+  dynamic ObjectIn)
+    {
         if (config == null)
             throw new Exception("Invalid TransferFile config");
         Guid guid = (Guid)ObjectIn.Guid;
-        List<Document> files = new List<Document>();
-        files = await _documentRepository.GetListObject(l => l.RecordGuid == guid);
+        List<Document> files =
+            await _documentRepository.GetListObject(
+                x => x.RecordGuid == guid
+            );
+        if (files == null || files.Count == 0)
+            throw new Exception("No document found");
         List<Document> result = new List<Document>();
         if (config.FileSelector == "First")
-            result.Add(files.OrderByDescending(x => x.CreatedDate).FirstOrDefault(x => x.Attributes.Contains(config.SourceDepartment)));
-
-
-        if (result == null)
-            throw new Exception($"No file found in department {config.SourceDepartment}");
-        foreach (Document item in result)
         {
-            if (item == null || item.Attributes == null) continue;
-            Document newDocument = new Document();
-            newDocument.Attributes = item.Attributes.Replace(config.SourceDepartment, config.TargetDepartment);
-            await _documentRepository.UpdateData(newDocument, item, ["Attributes"], "Id");
+            Document sourceDocument = files
+                .Where(x =>
+                    x != null &&
+                    !string.IsNullOrWhiteSpace(x.Attributes) &&
+                    x.Attributes.Contains(config.SourceDepartment)
+                )
+                .OrderByDescending(x => x.CreatedDate)
+                .FirstOrDefault();
+            if (sourceDocument != null)
+                result.Add(sourceDocument);
         }
-        
+        if (result.Count == 0)
+        {
+            throw new Exception(
+                $"No file found in department {config.SourceDepartment}"
+            );
+        }
+ 
+   
+            foreach (Document item in result)
+        {
+            await using Stream sourceStream =
+              await GetTransferFileStream(item);
+            if (sourceStream == null)
+            {
+                throw new Exception(
+                    $"Cannot load source file: {item.FileName}"
+                );
+            }
+            if (item == null)
+                continue;
+            // Path file Word hiện tại
+            string sourcePath = item.SubDirectory;
+            if (string.IsNullOrWhiteSpace(sourcePath))
+                throw new Exception("Source file path is empty");
+            if (!System.IO.File.Exists(sourcePath) && !sourcePath.Contains("sharepoint"))
+                throw new FileNotFoundException(
+                    "Source file not found",
+                    sourcePath
+                );
+            // Folder hiện tại của file Word
+            string directory = _blobStorageSettings.CurrentValue.Path;
+            // Tên file không có extension
+
+
+
+
+            string fileNameWithoutExt = Path.GetFileNameWithoutExtension(item.FileName);
+
+            if (sourcePath.Contains("sharepoint"))
+            {
+                var query = Util.ParseQueryString(sourcePath);
+                query.TryGetValue(
+                    "sourcedoc",
+                    out var sourceDoc
+                );
+                query.TryGetValue(
+                    "file",
+                    out var fileName
+                );
+
+                fileNameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+            }
+
+            // Tạo tên PDF
+            string pdfFileName =
+                fileNameWithoutExt + ".pdf";
+            // PDF nằm cùng folder với Word
+            string pdfPath = Path.Combine(
+                directory,
+                pdfFileName
+            );
+            // ============================
+            // CONVERT WORD -> PDF
+            // ============================
+
+            Util.ConvertPDFStream(
+                sourceStream,
+                pdfPath
+            );
+            // ============================
+            // INSERT DOCUMENT MỚI
+            // ============================
+            Document newDocument = new Document();
+            newDocument.RecordGuid = item.RecordGuid;
+            newDocument.Attributes =
+                item.Attributes?.Replace(
+                    config.SourceDepartment,
+                    config.TargetDepartment
+                );
+            newDocument.FileName = pdfFileName;
+            newDocument.FileType = "pdf";
+            newDocument.SubDirectory = pdfPath;
+            newDocument.Size =
+                new FileInfo(pdfPath).Length;
+            await _documentRepository.InsertData(
+                newDocument
+            );
+        }
     }
+    private async Task<Stream> GetTransferFileStream(
+   Document document,
+   CancellationToken cancellationToken = default)
+    {
+        if (document == null)
+            throw new ArgumentNullException(
+                nameof(document)
+            );
+        var subDirectory =
+            document.SubDirectory ?? "";
+        var isSharePoint =
+            subDirectory.Contains(
+                "sharepoint",
+                StringComparison.OrdinalIgnoreCase
+            );
+        if (isSharePoint)
+        {
+            /*
+             * Ví dụ SubDirectory:
+             *
+             * SharePoint\Quotation\QT001\FO
+             *
+             * Nếu options.RootFolder đã là "SharePoint"
+             * thì phải bỏ "SharePoint" khỏi SubDirectory,
+             * tránh thành:
+             *
+             * SharePoint/SharePoint/Quotation/...
+             */
+            var folder =
+                Util.RemoveSharePointPrefix(
+                    subDirectory
+                );
+
+            var sharePointStorage = HttpContext.RequestServices
+                  .GetRequiredService<ISharePointDocumentStorage>();
+            var remoteFileName =
+                $"{document.Guid}_{System.IO.Path.GetFileName(document.FileName)}";
+
+
+            return await sharePointStorage.DownloadFromDocumentUrlAsync(
+                document.SubDirectory,
+                cancellationToken);
+        }
+        if (string.IsNullOrWhiteSpace(document.SubDirectory))
+        {
+            throw new InvalidOperationException(
+                $"FilePath is empty for document '{document.FileName}'."
+            );
+        }
+        if (!System.IO.File.Exists(document.SubDirectory))
+        {
+            throw new FileNotFoundException(
+                $"File '{document.FileName}' was not found.",
+                document.SubDirectory
+            );
+        }
+        return new FileStream(
+            document.SubDirectory,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 81920,
+            useAsync: true
+        );
+    }
+    // private async Task HandleTransferFile(
+    //TransferFileConfig config,
+    //dynamic ObjectIn)
+    // {
+    //     // {
+    //     //   "sourceDepartment": "FO",
+    //     //   "targetDepartment": "UW",
+    //     //   "strategy": "Latest",
+    //     //   "fileSelector": "First",
+    //     //   "allowOverride": false
+    //     // }
+    //     if (config == null)
+    //         throw new Exception("Invalid TransferFile config");
+    //     Guid guid = (Guid)ObjectIn.Guid;
+    //     List<Document> files = await _documentRepository.GetListObject(
+    //         l => l.RecordGuid == guid
+    //     );
+    //     if (files == null || files.Count == 0)
+    //         throw new Exception("No document found");
+    //     List<Document> result = new List<Document>();
+    //     if (config.FileSelector == "First")
+    //     {
+    //         Document sourceDocument = files
+    //             .Where(x =>
+    //                 x != null &&
+    //                 !string.IsNullOrEmpty(x.Attributes) &&
+    //                 x.Attributes.Contains(config.SourceDepartment)
+    //             )
+    //             .OrderByDescending(x => x.CreatedDate)
+    //             .FirstOrDefault();
+    //         if (sourceDocument != null)
+    //             result.Add(sourceDocument);
+    //     }
+    //     if (result.Count == 0)
+    //     {
+    //         throw new Exception(
+    //             $"No file found in department {config.SourceDepartment}"
+    //         );
+    //     }
+    //     foreach (Document item in result)
+    //     {
+    //         if (item == null)
+    //             continue;
+    //         // Path file Word hiện tại
+    //         string sourcePath = item.SubDirectory;
+    //         if (string.IsNullOrWhiteSpace(sourcePath))
+    //             throw new Exception("Source file path is empty");
+    //         if (!System.IO.File.Exists(sourcePath))
+    //             throw new FileNotFoundException(
+    //                 "Source file not found",
+    //                 sourcePath
+    //             );
+    //         // Folder hiện tại của file Word
+    //         string directory = _blobStorageSettings.CurrentValue.Path;
+    //         // Tên file không có extension
+    //         string fileNameWithoutExt =
+    //             Path.GetFileNameWithoutExtension(sourcePath);
+    //         // Tạo tên PDF
+    //         string pdfFileName =
+    //             fileNameWithoutExt + ".pdf";
+    //         // PDF nằm cùng folder với Word
+    //         string pdfPath = Path.Combine(
+    //             directory,
+    //             pdfFileName
+    //         );
+    //         // ============================
+    //         // CONVERT WORD -> PDF
+    //         // ============================
+    //         Util.ConvertPDF(
+    //             sourcePath,
+    //             pdfPath
+    //         );
+    //         // ============================
+    //         // INSERT DOCUMENT MỚI
+    //         // ============================
+    //         Document newDocument = new Document();
+    //         newDocument.RecordGuid = item.RecordGuid;
+    //         newDocument.Attributes =
+    //             item.Attributes?.Replace(
+    //                 config.SourceDepartment,
+    //                 config.TargetDepartment
+    //             );
+    //         newDocument.FileName = pdfFileName;
+    //         newDocument.FileType = "pdf";
+    //         newDocument.SubDirectory = pdfPath;
+    //         newDocument.Size =
+    //             new FileInfo(pdfPath).Length;
+    //         await _documentRepository.InsertData(
+    //             newDocument
+    //         );
+    //     }
+    // }
+
+    //private async Task HandleTransferFile(TransferFileConfig config, dynamic ObjectIn)
+    //{//{   "sourceDepartment": "FO",   "strategy": "Latest",   "fileSelector": "First",   "allowOverride": false }
+    //    if (config == null)
+    //        throw new Exception("Invalid TransferFile config");
+    //    Guid guid = (Guid)ObjectIn.Guid;
+    //    List<Document> files = new List<Document>();
+    //    files = await _documentRepository.GetListObject(l => l.RecordGuid == guid);
+    //    List<Document> result = new List<Document>();
+    //    if (config.FileSelector == "First")
+    //        result.Add(files.OrderByDescending(x => x.CreatedDate).FirstOrDefault(x => x.Attributes.Contains(config.SourceDepartment)));
+
+
+    //    if (result == null)
+    //        throw new Exception($"No file found in department {config.SourceDepartment}");
+    //    foreach (Document item in result)
+    //    {
+    //        if (item == null || item.Attributes == null) continue;
+    //        Document newDocument = new Document();
+    //        newDocument.Attributes = item.Attributes.Replace(config.SourceDepartment, config.TargetDepartment);
+    //        await _documentRepository.UpdateData(newDocument, item, ["Attributes"], "Id");
+    //    }
+
+    //}
     [HttpPost]
     public async Task<IActionResult> QuotationReturnToStep([FromBody] WorkflowTransitionSubmitRequest submitRequest)
     {

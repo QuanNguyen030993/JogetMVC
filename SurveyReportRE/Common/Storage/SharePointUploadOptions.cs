@@ -10,6 +10,7 @@ public sealed class SharePointUploadOptions
     public string ClientSecret { get; set; } = string.Empty;
     public string SiteId { get; set; } = string.Empty;
     public string DriveId { get; set; } = string.Empty;
+    public string? ListId { get; set; } = string.Empty; 
     public string RootFolder { get; set; } = "WorkflowManagement";
 
     //Read         1073741826

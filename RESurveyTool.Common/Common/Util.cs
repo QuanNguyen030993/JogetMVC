@@ -32,6 +32,10 @@ using static SkiaSharp.HarfBuzz.SKShaper;
 using Newtonsoft.Json.Linq;
 using JsonException = System.Text.Json.JsonException;
 using Syncfusion.DocIO.DLS.XML;
+using Syncfusion.DocIORenderer;
+using Syncfusion.DocIO.DLS;
+using Syncfusion.DocIO;
+using System.IO;
 namespace ERPCore.Common
 {
     public static class Util
@@ -206,7 +210,7 @@ namespace ERPCore.Common
                 paramerters);
         }
 
-      
+
         public static void AddFontFamilyToNodes(HtmlDocument document, string fontFamily = "Asap")
         {
             // Chọn các thẻ div, p, và span
@@ -242,8 +246,8 @@ namespace ERPCore.Common
                 string CodeField = objectType.GetProperties().FirstOrDefault(f => f.Name.Contains("Code"))?.Name ?? "";
                 string fieldValue = objectType.GetProperties().FirstOrDefault(f => f.Name.Contains(objectType + "Code"))?.GetValue((dynamic)transferObject) ?? "";
                 string Guid = "/";
-                    
-                    try
+
+                try
                 {
                     Guid = "/" + objectType.GetProperties().FirstOrDefault(f => f.Name == "Guid")?.GetValue(transferObject) ?? "";
 
@@ -254,22 +258,23 @@ namespace ERPCore.Common
                 }
 
                 if (string.IsNullOrEmpty(CodeField))
-                return new
-                {
-                    url = $"/Business/Form/{objectType.Name}_Form/{transferObject.Id}{Guid}",
-                    caption = $"form_{objectType.Name}_Form_{transferObject.Id}",
-                    name = $"{(objectType.Name)}",
-                    data = ""
+                    return new
+                    {
+                        url = $"/Business/Form/{objectType.Name}_Form/{transferObject.Id}{Guid}",
+                        caption = $"form_{objectType.Name}_Form_{transferObject.Id}",
+                        name = $"{(objectType.Name)}",
+                        data = ""
 
-                }; else
-                return new
-                {
-                    url = $"/Business/Form/{objectType.Name}_Form/{transferObject.Id}{Guid}",
-                    caption = $"form_{objectType.Name}_Form_{transferObject.Id}",
-                    name = $"{(objectType.Name)} {fieldValue}",
-                    data = ""
+                    };
+                else
+                    return new
+                    {
+                        url = $"/Business/Form/{objectType.Name}_Form/{transferObject.Id}{Guid}",
+                        caption = $"form_{objectType.Name}_Form_{transferObject.Id}",
+                        name = $"{(objectType.Name)} {fieldValue}",
+                        data = ""
 
-                };
+                    };
 
             }
             catch
@@ -788,7 +793,7 @@ namespace ERPCore.Common
 
         }
 
-     
+
 
         public static List<Dictionary<string, object>> ConvertDataTableToDictionaryList(System.Data.DataTable dt)
         {
@@ -837,7 +842,7 @@ namespace ERPCore.Common
             string contentHandle = MailUtil.BodyContentHandle(mailTemplate.TemplateContent, dictionary);
             mailTemplate.TemplateMailTitle = MailUtil.TitleContentHandle(mailTemplate.TemplateMailTitle, dictionary);
             mailTemplate.PrefixTitleMail = MailUtil.TitleContentHandle(mailTemplate.PrefixTitleMail, dictionary);
-            if  (mailTemplate != null && staff != null)
+            if (mailTemplate != null && staff != null)
             {
                 if (mailTemplate.IsActive ?? false)
                 {
@@ -1458,7 +1463,7 @@ namespace ERPCore.Common
             //var userName = httpContextAccessor?.HttpContext?.User?.Identity?.Name;
             //HandleSystemAttribute(entity, httpContextAccessor, CommandQueryType.Update);
             if (changeFields.Count() > 0)
-     
+
             {
                 var properties = typeof(T).GetProperties();//typeof(T).GetProperties().Where(w => w.Name != w.PropertyType.Name).Where(w => w.PropertyType.Name != "List`1").Where(w => w.Name != "Id").Where(w => !w.Name.EndsWith("FK")).Where(w => !w.Name.EndsWith("Enum"));
 
@@ -1583,7 +1588,7 @@ namespace ERPCore.Common
         public static void TurnAroundTimeHandle(dynamic objectIn, StepsWorkflow stepsWorkflow)
         {
             TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(objectIn.TurnAroundTimeAttributes);
-            TurnAroundItem tatObject = TurnAroundTimePicker(result, stepsWorkflow.FromNodeId); 
+            TurnAroundItem tatObject = TurnAroundTimePicker(result, stepsWorkflow.FromNodeId);
             //stepsWorkflow.FromNodeId switch
             //{
             //    "FO" => result.FO,
@@ -1622,7 +1627,7 @@ namespace ERPCore.Common
             }
             objectIn.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
         }
-      
+
         public static Dictionary<string, object> MakeQueryIntoDirectory(DataRow row)
         {
             var dictionary = new Dictionary<string, object>();
@@ -1736,17 +1741,17 @@ namespace ERPCore.Common
             string sourceTable,
             string targetTable,
             string idValue)
-                {
-                        var sourceFields = new List<string>();
-                        var targetFields = new List<string>();
+        {
+            var sourceFields = new List<string>();
+            var targetFields = new List<string>();
 
-                        foreach (DataRow r in mappingTable.Rows)
-                        {
-                            sourceFields.Add(r[0].ToString()!); // cột 1
-                            targetFields.Add(r[1].ToString()!); // cột 2
-                        }
+            foreach (DataRow r in mappingTable.Rows)
+            {
+                sourceFields.Add(r[0].ToString()!); // cột 1
+                targetFields.Add(r[1].ToString()!); // cột 2
+            }
 
-                        return $@"
+            return $@"
             SELECT {string.Join(", ", sourceFields)}
             FROM {sourceTable}
             WHERE c_jogetQuoNum = ''{idValue}''
@@ -1845,7 +1850,7 @@ namespace ERPCore.Common
 
                     //if (p.Source.Contains("oductName"))
                     //{
-                      
+
                     //}
 
                     // Tạo parameter (SqlParameter tự infer type là được trong nhiều case)
@@ -1897,7 +1902,7 @@ VALUES
                     return dec;
                 DateTime dateValue = new DateTime();
                 string[] formats = { "dd-mm-yyyy" };
-                string[] excludesFormats = {"m.d.y", "d.m.y" };
+                string[] excludesFormats = { "m.d.y", "d.m.y" };
                 if (DateTime.TryParseExact(s, formats,
                         CultureInfo.InvariantCulture,
                         DateTimeStyles.None,
@@ -1912,7 +1917,7 @@ VALUES
                 }
                 // datetime (optional)
                 if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime dt))
-                { 
+                {
                     if (DateTime.TryParseExact(s, excludesFormats,
                         CultureInfo.InvariantCulture,
                         DateTimeStyles.None,
@@ -2334,7 +2339,7 @@ VALUES
             // 3) Build base SQL
             // =========================
             var sql = new StringBuilder();
-            var parameters = new Dictionary<string,Dictionary<string, object>>(StringComparer.OrdinalIgnoreCase);
+            var parameters = new Dictionary<string, Dictionary<string, object>>(StringComparer.OrdinalIgnoreCase);
             Dictionary<string, object> parameterProcess = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
             int pIndex = 0;
 
@@ -2378,7 +2383,7 @@ VALUES
                     parameterProcess[pName] = NormalizeToDbValue(fieldValue);
                 }
             }
-           
+
             // =========================
             // 5) DevExtreme filter JSON (nếu cần giữ)
             // =========================
@@ -2398,7 +2403,7 @@ VALUES
             // Ví dụ: ?Type=Request&IsRead=false
             // KHÔNG xử lý refField/refKey ở đây nữa
             // =========================
-            foreach (KeyValuePair<string,Dictionary<string,object>> kv in parameters)
+            foreach (KeyValuePair<string, Dictionary<string, object>> kv in parameters)
             {
                 var key = kv.Key;
                 foreach (var item in kv.Value)
@@ -2407,7 +2412,7 @@ VALUES
                     if (_reservedKeys.Contains(key)) continue;
                     AppendNormalCondition(sql, key, value);
                 }
-             
+
 
             }
 
@@ -2532,7 +2537,7 @@ VALUES
         private static void AppendNormalCondition(
     StringBuilder sql,
     string key,
-    KeyValuePair<string,object> value)
+    KeyValuePair<string, object> value)
         {
 
             sql.Append(" AND ");
@@ -2648,7 +2653,7 @@ VALUES
             // Ví dụ receivedBy=quan.nh
             //// =========================
 
-            
+
             var combineParams = new List<RefFilter>();
 
             for (int i = 1; i <= 20; i++)
@@ -2731,7 +2736,7 @@ VALUES
 
                 sql.AppendLine();
             }
-//``
+            //``
 
             //foreach (var kv in combineParams)
             //{
@@ -2744,7 +2749,7 @@ VALUES
             //        ? pkTieBreaker
             //        : key;
 
-                
+
 
             //    var pName = "@p" + (++pIndex);
 
@@ -3139,7 +3144,7 @@ string? mainTableAlias = null
                     allParams[field.Item1] = (value.Item1, value.Item2);
 
 
-                   
+
                 }
 
                 // =========================
@@ -3155,7 +3160,7 @@ string? mainTableAlias = null
 
                     // nếu có refField thì bỏ key
                     if (hasRefPair && string.Equals(key, "key", StringComparison.OrdinalIgnoreCase))
-                    { allParams["key"] = (kv.Value.Item1, kv.Value.Item2);  continue; }
+                    { allParams["key"] = (kv.Value.Item1, kv.Value.Item2); continue; }
 
                     allParams[key] = (kv.Value.Item1, kv.Value.Item2);
                 }
@@ -3163,12 +3168,12 @@ string? mainTableAlias = null
 
             int skip = ParseInt(GetTuple(allParams, "skip") != null ? GetTuple(allParams, "skip").Value.value : "0", 0);
             int take = ParseInt(GetTuple(allParams, "take") != null ? GetTuple(allParams, "take").Value.value : "0",
-                       ParseInt(GetTuple(allParams, "pageSize") != null ?  GetTuple(allParams, "pageSize").Value.value : "0", 50));
+                       ParseInt(GetTuple(allParams, "pageSize") != null ? GetTuple(allParams, "pageSize").Value.value : "0", 50));
 
             skip = Math.Max(skip, 0);
             take = Math.Clamp(take, 1, maxTake);
 
-            var mode = GetTuple(allParams, "mode") != null  ? GetTuple(allParams, "mode").Value.value : "";
+            var mode = GetTuple(allParams, "mode") != null ? GetTuple(allParams, "mode").Value.value : "";
             var pagingFlag = GetTuple(allParams, "paging") != null ? GetTuple(allParams, "paging").Value.value : "";
 
             bool paging =
@@ -3287,7 +3292,7 @@ string? mainTableAlias = null
             }
 
             // DevExtreme filter
-            var filterJson = GetTuple(allParams, "filter") != null ? GetTuple(allParams, "filter") .Value.value : "";
+            var filterJson = GetTuple(allParams, "filter") != null ? GetTuple(allParams, "filter").Value.value : "";
             if (!string.IsNullOrWhiteSpace(filterJson))
             {
                 try
@@ -3517,7 +3522,7 @@ string? mainTableAlias = null
                 }
                 sql.AppendLine();
 
-                
+
             }
 
 
@@ -3802,16 +3807,16 @@ string? mainTableAlias = null
             return result;
         }
         public static string ReplaceDynamicProperties(string template, object data)
-            {
+        {
             if (string.IsNullOrWhiteSpace(template) || data == null)
-            return template;
+                return template;
             return Regex.Replace(template, @"\{\{(.*?)\}\}", match =>
             {
-            string propertyPath = match.Groups[1].Value.Trim();
-            object value = GetPropertyValue(data, propertyPath);
-            return value?.ToString() ?? string.Empty;
+                string propertyPath = match.Groups[1].Value.Trim();
+                object value = GetPropertyValue(data, propertyPath);
+                return value?.ToString() ?? string.Empty;
             });
-            }
+        }
         public static (string ResolvedNodeId, string ResolvedDeptCode) ResolveWorkflowJumps(
             string workflowNodesJson,
             string startNodeId,
@@ -3954,11 +3959,182 @@ string? mainTableAlias = null
 
             return false;
         }
+
+
+        //public static void ConvertPDF(string wordPath, string pdfOutputPath)
+        //{
+
+        //    using (FileStream docStream = new FileStream(wordPath, FileMode.Open, FileAccess.Read))
+        //    {
+        //        using var wordDocument = new WordDocument(docStream, FormatType.Automatic);
+
+
+        //        DocIORenderer renderer = new DocIORenderer();
+        //        using var pdfDocument = renderer.ConvertToPDF(wordDocument);
+        //        using var pdfStream = new MemoryStream();
+        //        pdfDocument.Save(pdfStream);
+        //    }
+        //}
+        public static void ConvertPDF(
+   string wordPath,
+   string pdfOutputPath)
+        {
+            using FileStream docStream = new FileStream(
+                wordPath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read
+            );
+            using WordDocument wordDocument =
+                new WordDocument(
+                    docStream,
+                    FormatType.Automatic
+                );
+            using DocIORenderer renderer =
+                new DocIORenderer();
+            using var pdfDocument =
+                renderer.ConvertToPDF(wordDocument);
+            using FileStream pdfStream = new FileStream(
+                pdfOutputPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None
+            );
+            pdfDocument.Save(pdfStream);
+        }
+
+        public static void ConvertPDFStream(
+  Stream stream,
+  string pdfOutputPath)
+        {
+             using var docStream =
+            new MemoryStream();
+             stream.CopyToAsync(docStream);
+            using WordDocument wordDocument =
+                new WordDocument(
+                    docStream,
+                    FormatType.Automatic
+                );
+            using DocIORenderer renderer =
+                new DocIORenderer();
+            using var pdfDocument =
+                renderer.ConvertToPDF(wordDocument);
+            using FileStream pdfStream = new FileStream(
+                pdfOutputPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None
+            );
+            pdfDocument.Save(pdfStream);
+        }
+        public static string RemoveSharePointPrefix(
+   string? subDirectory)
+        {
+            if (string.IsNullOrWhiteSpace(subDirectory))
+                return "";
+            var value = subDirectory.Trim();
+            if (value.StartsWith(
+                "SharePoint\\",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                return value[
+                    "SharePoint\\".Length..
+                ];
+            }
+            if (value.StartsWith(
+                "SharePoint/",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                return value[
+                    "SharePoint/".Length..
+                ];
+            }
+            if (value.Equals(
+                "SharePoint",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                return "";
+            }
+            return value;
+        }
+        public static Dictionary<string, string> ParseQueryString(
+   string? queryString)
+        {
+            var result =
+                new Dictionary<string, string>(
+                    StringComparer.OrdinalIgnoreCase
+                );
+            if (string.IsNullOrWhiteSpace(queryString))
+                return result;
+            var query =
+                queryString.TrimStart('?');
+            foreach (var part in query.Split(
+                '&',
+                StringSplitOptions.RemoveEmptyEntries))
+            {
+                var index = part.IndexOf('=');
+                string key;
+                string value;
+                if (index >= 0)
+                {
+                    key = part[..index];
+                    value =
+                        part[(index + 1)..];
+                }
+                else
+                {
+                    key = part;
+                    value = "";
+                }
+                key =
+                    Uri.UnescapeDataString(key);
+                value =
+                    Uri.UnescapeDataString(
+                        value.Replace("+", " ")
+                    );
+                if (!string.IsNullOrWhiteSpace(key))
+                {
+                    result[key] = value;
+                }
+            }
+            return result;
+        }
+
+        public static string? NormalizeGuid(
+   string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+            value = value
+                .Trim()
+                .Trim('{', '}');
+            return Guid.TryParse(
+                value,
+                out var guid)
+                    ? guid.ToString()
+                    : value;
+        }
+        public  static string SanitizePathSegment(string value)
+        {
+            var invalid = new HashSet<char>("\"*:<>?/\\|");
+            var sanitized = new string(value
+                .Trim()
+                .Select(character => invalid.Contains(character) ? '_' : character)
+                .ToArray())
+                .TrimEnd('.');
+            if (string.IsNullOrWhiteSpace(sanitized))
+            {
+                throw new InvalidOperationException("SharePoint folder or file name is empty after sanitizing.");
+            }
+            return sanitized.Length <= 180 ? sanitized : sanitized[..180];
+        }
     }
-    public enum CommandQueryType
-    {
-        Insert,
-        Update,
-        Delete
-    }
+
+
 }
+        public enum CommandQueryType
+        {
+            Insert,
+            Update,
+            Delete
+        }

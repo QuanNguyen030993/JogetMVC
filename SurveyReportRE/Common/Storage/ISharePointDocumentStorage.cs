@@ -10,4 +10,12 @@ public interface ISharePointDocumentStorage
         string? folder,
         string? contentType,
         CancellationToken cancellationToken);
+    Task<Stream> DownloadAsync(
+        string fileName,
+        string? folder,
+        string? mimeFileType,
+        CancellationToken cancellationToken
+    );
+    Task<Stream> DownloadFromDocumentUrlAsync(string documentUrl,
+   CancellationToken cancellationToken = default);
 }
