@@ -36,6 +36,10 @@ using Syncfusion.DocIORenderer;
 using Syncfusion.DocIO.DLS;
 using Syncfusion.DocIO;
 using System.IO;
+using Syncfusion.XlsIO;
+using Syncfusion.Pdf;
+using iText.Kernel.Pdf;
+using Syncfusion.XlsIORenderer;
 namespace ERPCore.Common
 {
     public static class Util
@@ -4005,27 +4009,88 @@ string? mainTableAlias = null
 
         public static void ConvertPDFStream(
   Stream stream,
+  string fileExtension,
   string pdfOutputPath)
         {
-             using var docStream =
-            new MemoryStream();
-             stream.CopyToAsync(docStream);
-            using WordDocument wordDocument =
-                new WordDocument(
-                    docStream,
-                    FormatType.Automatic
-                );
-            using DocIORenderer renderer =
-                new DocIORenderer();
-            using var pdfDocument =
-                renderer.ConvertToPDF(wordDocument);
-            using FileStream pdfStream = new FileStream(
-                pdfOutputPath,
-                FileMode.Create,
-                FileAccess.Write,
-                FileShare.None
-            );
-            pdfDocument.Save(pdfStream);
+            using var docStream =
+                        new MemoryStream();
+            stream.CopyToAsync(docStream);
+            switch (fileExtension)
+            {
+                case ".docx":
+                case ".doc":
+                    {
+                        
+                        using WordDocument  wordDocument =
+                            new WordDocument(
+                                docStream,
+                                FormatType.Automatic
+                            );
+                        using DocIORenderer renderer =
+                            new DocIORenderer();
+                        using var pdfDocument =
+                            renderer.ConvertToPDF(wordDocument);
+
+                        using FileStream pdfStream = new FileStream(
+                              pdfOutputPath,
+                              FileMode.Create,
+                              FileAccess.Write,
+                              FileShare.None
+                          );
+                                        pdfDocument.Save(pdfStream);
+                    }
+                    break;
+                case ".xlsx":
+                case ".xls":
+                    {
+                        using var excelEngine = new ExcelEngine();
+                        IApplication application = excelEngine.Excel;
+                        docStream.Position = 0;
+                        IWorkbook workbook = application.Workbooks.Open(docStream);
+                        //IWorksheet sheet = workbook.Worksheets[0];
+
+                        foreach (IWorksheet sheet in workbook.Worksheets)
+                        {
+                            // A4
+                            sheet.PageSetup.PaperSize = ExcelPaperSize.PaperA4;
+
+                            // Portrait hoặc Landscape
+                            sheet.PageSetup.Orientation =
+                                ExcelPageOrientation.Portrait;
+
+                            // Fit vào nhiều trang
+                            sheet.PageSetup.FitToPagesWide = 1;
+                            sheet.PageSetup.FitToPagesTall = 0; // bao nhiêu trang cũng được
+
+                            // Canh lề
+                            sheet.PageSetup.LeftMargin = 0.3;
+                            sheet.PageSetup.RightMargin = 0.3;
+                            sheet.PageSetup.TopMargin = 0.5;
+                            sheet.PageSetup.BottomMargin = 0.5;
+                        }
+
+                        //string value = sheet.Range["A1"].Text;
+                        XlsIORenderer renderer =
+                           new XlsIORenderer();
+                        using var pdfDocument =
+                            renderer.ConvertToPDF(workbook);
+
+                        //var converter = new ExcelToPdfConverter(workbook);
+                        using FileStream pdfStream = new FileStream(
+                           pdfOutputPath,
+                           FileMode.Create,
+                           FileAccess.Write,
+                           FileShare.None
+                       );
+                        pdfDocument.Save(pdfStream);
+                    }
+                    break;
+                default:
+                    break;
+            }
+       
+          
+
         }
         public static string RemoveSharePointPrefix(
    string? subDirectory)

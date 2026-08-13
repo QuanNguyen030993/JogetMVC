@@ -9,7 +9,7 @@ using System.Net.Http.Headers;
 using ERPCore.Models.Models.Parsing;
 using Microsoft.AspNetCore.Authorization;
 using System.Text;
-using Microsoft.SharePoint.WebControls;
+
 using Newtonsoft.Json;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
 using ERPCore.Models.Migration.Config;
@@ -502,8 +502,8 @@ public class DocumentController : BaseControllerApi<Document>
                     : Path.GetFileName(d.SubDirectory ?? "");
 
                 var ext = d.FileType;
-                if (!IsRemoteDocumentUrl(d.SubDirectory)
-                    && !System.IO.File.Exists(
+                if (!IsRemoteDocumentUrl(d.SubDirectory))
+                    if (!System.IO.File.Exists(
                         Path.Combine(
                             path.Value,
                             d.SubDirectory,

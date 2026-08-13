@@ -79,11 +79,7 @@
     };
 
     var itemsDelay = [acceptDecisionV2];
-        var items = [
-            { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)", text: "Approved", value: true },
-            // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
-            { id: "DC_@QTViewIdHelper.Decision(dept, quotationId)", text: "Declined", value: false }
-        ];
+        
         // var itemsDelay = [...items];
         $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         dataSource: makeBasicDataSource(that, true),
@@ -123,10 +119,8 @@
     });
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
 
-    delayAcceptStatusV2(null, thisObject, ...itemsDelay);
-
-        setTimeout(() => {
-        var picJson = PIC_JSON || "{}";
+    delayAcceptStatusV2Promise(null, thisObject, ...itemsDelay).then(itemsResolve => {
+    var picJson = PIC_JSON || "{}";
         var picMap = parsePicMap(picJson);
         var picVal = picMap["@dept"] || "";
         var sectionId = `#qt-sec_@(dept)_@(quotationId)`;
@@ -135,7 +129,16 @@
         } else {
             $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
         }
-    }, 100);
+        debugger
+        var buttonItems = $(`[id^='qt-custom-route-']`);
+        console.log(buttonItems);
+        enableAllDecisionButton(itemsResolve);
+    } );
+    //     setTimeout(() => {
+        
+
+
+    // }, 100);
 
     })  
 </script>

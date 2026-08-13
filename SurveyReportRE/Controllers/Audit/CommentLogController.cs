@@ -12,7 +12,6 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using System.Text.RegularExpressions;
 using MimeKit;
 using DocumentFormat.OpenXml.Bibliography;
-using Microsoft.SharePoint.Taxonomy.WebServices;
 using ERPCore.Models;
 using ERPCore.Models.Business.Migration.Config;
 using System.Dynamic;

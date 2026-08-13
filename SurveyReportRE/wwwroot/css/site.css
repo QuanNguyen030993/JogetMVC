@@ -35089,3 +35089,34 @@ body.skin-re .dx-popup-wrapper.dx-rtl > .dx-overlay-content > .dx-popup-title.dx
     vertical-align: middle;
     opacity: .75;
 }
+/*.submit-btn-style{
+    display: flex;
+    gap: 5px;
+}
+.return-btn-style {
+    display: flex;
+    gap: 5px;
+}*/
+
+.submit-btn-style,
+.return-btn-style {
+    display: flex;
+    gap: 5px;
+   
+}
+
+.submit-btn-visible,
+.return-btn-visible {
+    opacity: 0;
+    animation: actionButtonFadeIn 0.5s ease forwards;
+}
+
+@keyframes actionButtonFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

@@ -5164,19 +5164,7 @@ window.AttachmentUtil = (function () {
     };
 })();
 
-function getIconByExt(ext) {
-    ext = (ext || "").toLowerCase();
-    if (ext === "not found on server") return "!";
-    if (ext === "pdf") return "📕";
-    if (ext === "xls" || ext === "xlsx" || ext === "csv") return "📗";
-    if (ext === "doc" || ext === "docx") return "📘";
-    if (ext === "ppt" || ext === "pptx") return "📙";
-    if (ext === "msg" || ext === "eml") return "✉️";
-    if (ext === "xml" || ext === "json") return "🧾";
-    if (ext === "zip" || ext === "rar" || ext === "7z") return "🗜️";
-    if (["png", "jpg", "jpeg", "gif", "bmp", "webp"].includes(ext)) return "🖼️";
-    return "📎";
-}
+
 
 function getExt(fileName) {
     const s = (fileName || "");

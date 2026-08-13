@@ -140,7 +140,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         }
 
         submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
-        //await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");    //comment in 
+        await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");    //comment in 
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
         quotation.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
         quotation.StatusId = submitRequest.StepsWorkflow.StatusId;
@@ -216,7 +216,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             quotation.StageAccount = "";
         }    
 
-        //await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id"); // comment in 
+        
 
         if (submitRequest.StepsWorkflow.Command != null)
         {
@@ -237,8 +237,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                     var config = JsonConvert.DeserializeObject<TransferFileConfig>(
                         submitRequest.StepsWorkflow.CommandConfig ?? "{}"
                     );
-
-                    await HandleTransferFile(config, quotation);
+                    string subDir = _blobStorageSettings.CurrentValue.QuotationAttachmentFolder + "\\" + quotation.QuotationCode;
+                    await HandleTransferFile(config, quotation, subDir);
                     break;
 
                 case WorkflowCommand.CopyFile:
@@ -256,13 +256,13 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                     break;
             }
         }
+        await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id"); // comment in 
 
 
 
 
 
-
-        //await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings); // comment in 
+        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings); // comment in 
 
 
 
@@ -426,8 +426,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                     var config = JsonConvert.DeserializeObject<TransferFileConfig>(
                         submitRequest.StepsWorkflow.CommandConfig ?? "{}"
                     );
-
-                    await HandleTransferFile(config, quotation);
+                    string subDir = _blobStorageSettings.CurrentValue.QuotationAttachmentFolder + "\\" + quotation.QuotationCode;
+                    await HandleTransferFile(config, quotation, subDir);
                     break;
 
                 case WorkflowCommand.CopyFile:
@@ -498,7 +498,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     }
     private async Task HandleTransferFile(
   TransferFileConfig config,
-  dynamic ObjectIn)
+  dynamic ObjectIn, string subDir)
     {
         if (config == null)
             throw new Exception("Invalid TransferFile config");
@@ -577,24 +577,23 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             }
 
             // Tạo tên PDF
-            string pdfFileName =
-                fileNameWithoutExt + ".pdf";
+            
             // PDF nằm cùng folder với Word
-            string pdfPath = Path.Combine(
-                directory,
-                pdfFileName
-            );
+            if (!System.IO.Path.Exists(Path.Combine(directory, subDir)))
+                System.IO.Directory.CreateDirectory(Path.Combine(directory, subDir));
+            if (!System.IO.Path.Exists(Path.Combine(directory, subDir, _blobStorageSettings.CurrentValue.AskingSignature)))
+                System.IO.Directory.CreateDirectory(Path.Combine(directory, subDir, _blobStorageSettings.CurrentValue.AskingSignature));
+          
             // ============================
             // CONVERT WORD -> PDF
             // ============================
 
-            Util.ConvertPDFStream(
-                sourceStream,
-                pdfPath
-            );
+            
             // ============================
             // INSERT DOCUMENT MỚI
             // ============================
+            string pdfFileName =
+             fileNameWithoutExt + ".pdf";
             Document newDocument = new Document();
             newDocument.RecordGuid = item.RecordGuid;
             newDocument.Attributes =
@@ -603,12 +602,28 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                     config.TargetDepartment
                 );
             newDocument.FileName = pdfFileName;
-            newDocument.FileType = "pdf";
-            newDocument.SubDirectory = pdfPath;
+           
+           
+            newDocument.FileType = ".pdf";
+            newDocument.SubDirectory = Path.Combine(subDir, _blobStorageSettings.CurrentValue.AskingSignature);
             newDocument.Size =
-                new FileInfo(pdfPath).Length;
-            await _documentRepository.InsertData(
+                sourceStream.Length;
+            newDocument = await _documentRepository.InsertData(
                 newDocument
+            );
+
+
+            ObjectIn.DocumentId = newDocument.Id;
+            string localPdfFileName =
+             newDocument.Guid.ToString() + ".pdf";
+            string pdfPath = Path.Combine(
+               directory, subDir, _blobStorageSettings.CurrentValue.AskingSignature,
+               localPdfFileName
+           );
+            Util.ConvertPDFStream(
+                sourceStream,
+                item.FileType,
+                pdfPath
             );
         }
     }

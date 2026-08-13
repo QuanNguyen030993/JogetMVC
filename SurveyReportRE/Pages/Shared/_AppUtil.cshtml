@@ -161,18 +161,37 @@
                             }
                             else {
                                 var params = new URLSearchParams();
-                               if (instance?.refKey)
-                                params.set("refKey", instance?.refKey);
-                              if (instance?.refField)
-                                params.set("refField", instance?.refField);
-                                 if (instance?.refOperator)
-                                params.set("refOperator", instance?.refOperator);
-                              if (instance?.refKey2)
-                                params.set("refKey2", instance?.refKey2);
-                              if(instance?.refField2)
-                                params.set("refField2", instance?.refField2);
-                              if (instance?.refOperator2)
-                                params.set("refOperator2", instance?.refOperator2);
+                              //  if (instance?.refKey)
+                              //   params.set("refKey", instance?.refKey);
+                              // if (instance?.refField)
+                              //   params.set("refField", instance?.refField);
+                              //    if (instance?.refOperator)
+                              //   params.set("refOperator", instance?.refOperator);
+                              // if (instance?.refKey2)
+                              //   params.set("refKey2", instance?.refKey2);
+                              // if(instance?.refField2)
+                              //   params.set("refField2", instance?.refField2);
+                              // if (instance?.refOperator2)
+                              //   params.set("refOperator2", instance?.refOperator2);
+                                  for (let i = 1; i <= 10; i++) {
+                                  const suffix = i === 1 ? "" : i;
+
+                                  const refKey = instance?.[`refKey${suffix}`];
+                                  const refField = instance?.[`refField${suffix}`];
+                                  const refOperator = instance?.[`refOperator${suffix}`];
+
+                                  if (refKey) {
+                                    params.set(`refKey${suffix}`, refKey);
+                                  }
+
+                                  if (refField) {
+                                    params.set(`refField${suffix}`, refField);
+                                  }
+
+                                  if (refOperator) {
+                                    params.set(`refOperator${suffix}`, refOperator);
+                                  }
+                                }
                                 return new DevExpress.data.DataSource({
                                     // filter: filter,
                                     paginate: true,
@@ -5333,6 +5352,7 @@
                     return;
                 }
                 if (ext === "pdf") {
+                    debugger
                     openPDFPopup(id);
                     return;
                 }
@@ -8761,7 +8781,6 @@
            
 
                 function waitForDecisionRouteStage(formId) {
-                    console.log(formId);
                     var $form = $(`#${formId}`);
                     var $stageRoot = $form.closest("[data-render-stage]");
                     if (!$stageRoot.length || $stageRoot.attr("data-render-stage") === "routeState") {
@@ -8812,6 +8831,44 @@
                                 ...params
                             )
                         }, FormStageDelay.routeState);
+                    });
+                }
+
+                function delayAcceptStatusV2Promise(mainFields,formProps, ...params ) {
+                    return new Promise((resolve, reject) => {
+                            setTimeout(() => {
+                            
+                            var delayObject = structuredClone(formProps);
+                            var decisionItems = normalizeDecisionFieldButtons(params);
+                            var decisionFieldName = getDecisionFieldName(formProps, decisionItems);
+                            var decisionGroupName = `decision${delayObject.dept}Group.${decisionFieldName}`;
+                            var decisionRegistryKey = `${formProps.formId}:${String(delayObject.dept || "").trim().toUpperCase()}`;
+                            window.WorkflowDecisionRegistry = window.WorkflowDecisionRegistry || {};
+                            window.WorkflowDecisionRegistry[decisionRegistryKey] = {
+                                formProps: formProps,
+                                groupName: decisionGroupName,
+                                mainFields: mainFields,
+                                params: params
+                            };
+                            var initialButtonId = getDelayAcceptButtonId(decisionItems[0]);
+                            var initialStatusId = getDecisionFieldStatusId(
+                                formProps,
+                                decisionItems,
+                                params[1] || params[3]
+                            );
+                            waitForDecisionRouteStage(formProps.formId).then(function () {
+                                setTimeout(() => {
+                                    renderDecisionDeferredV2(
+                                        formProps,
+                                        decisionGroupName,
+                                        mainFields,
+                                        ...params
+                                    )
+                                }, FormStageDelay.routeState);
+                            });
+                            
+                            resolve(params); // báo hoàn thành
+                    }, FormStageDelay.routeState + 5000);
                     });
                 }
                 //Comment out 2026-08-10
@@ -9632,8 +9689,7 @@
                                    acceptButtonId,
                                    latestTatObject[formDataClone.dept]?.AcceptDate
                                );
-                               console.log("enable");
-                               enableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
+                               // enableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)));
                                if (latestFormItems.actionStatus)
                                {
                                    var customStatus = tryParseJSON(latestFormItems.actionStatus, "Custom parsing problem")
@@ -9650,13 +9706,14 @@
                       }
 
                       if (formDataClone.dept == "LMKT") { //  another logic
-                              var storedStatus = getDelayAcceptStoredStatus(formItems, formDataClone.dept, formItems);
+                          
+                              var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
                                updateDelayAcceptStatus(
                                   commonStatusId,
                                   commonAcceptButtonId,
-                                  latestTatObject[formDataClone.dept]?.CompleteDate, storedStatus
+                                  latestTatObject[formItems.stageDept]?.CompleteDate, storedStatus
                               );
-                             
+                              
                           }
                       if (formItems.stageDept == "Client" && formDataClone.dept == "FO") { //  another logic
                           var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
@@ -9806,6 +9863,7 @@
                                         }
 
     function loadSelectedWorkflow(params) {
+        showLoading();
         params = params || {};
 
         const moduleCode = String(params.moduleCode || "")
@@ -10153,7 +10211,7 @@
 
             $button.dxButton({
                 disabled: false,
-
+                className: "submit-btn-visible",
                 text:
                     route?.displayStatus ||
                     route?.actionName ||
@@ -10223,16 +10281,7 @@
                                 return;
                             }
                         }
-                        // else {
-                        //     return submitNextStepFn(
-                        //         moduleConfig.formKey,
-                        //         state.nextStep,
-                        //         route,
-                        //         formItems,
-                        //         params
-                        //     );
-                        // }
-                // }
+                        
             });
 
             if (
@@ -10627,6 +10676,7 @@
                                         routeIndex: routeIndex
                                     });
                                 }
+                                hideLoading("actionRight");
 
                                 await buildCustomRoutes(
                                     customRoutes
@@ -10658,6 +10708,25 @@
                     });
             });
     }
+    function getLoadingIndicator(actionRightId) {
+        const selector = $(`.${actionRightId}_loading`)[0];
+       return selector;
+    }
+    function showLoading(actionRightId) {
+        const selector = $(`<div class="${actionRightId}_loading">`);
+        selector.appendTo($(`.${actionRightId}`)[0]);
+        selector.dxLoadIndicator({ width: 14, height: 14, visible: false });
+       if (selector) {
+           selector.dxLoadIndicator("instance").option("visible", true);
+       }
+    }
+    function hideLoading(actionRightId) {
+       const indicator = getLoadingIndicator(actionRightId);
+        if (indicator) {
+           $(indicator).dxLoadIndicator("instance").option("visible", false);
+       }
+    }
+
     window.WorkflowLoader =
         window.WorkflowLoader || {};
 

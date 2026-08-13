@@ -462,7 +462,7 @@ Note:
         }
 
         function loadSelectedWorkflow() {
-
+            showLoading("actionRight");
             window.WorkflowLoader.load({
                 moduleCode: "qt",
                 id: @ViewData["Id"],
