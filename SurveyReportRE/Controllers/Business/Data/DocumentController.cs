@@ -597,7 +597,272 @@ public class DocumentController : BaseControllerApi<Document>
         await bulkCopy.WriteToServerAsync(dt);
     }
 
+    [HttpPost("{id}")]
+    public async Task<IActionResult> DigiSignPfx(
+    long id,
+    [FromQuery] string keyword,
+    CancellationToken cancellationToken)
+    {
+        try
+        {
+            var document =
+                await _BaseRepository.GetObjectByIdAsync(id);
 
+            if (document == null)
+            {
+                return NotFound(
+                    $"Document id={id} not found."
+                );
+            }
+
+            await using var stream =
+                await GetDocumentStreamAsync(
+                    document,
+                    cancellationToken
+                );
+
+            var signedBytes =
+                await SignPfxByKeywordAsync(
+                    stream,
+                    document.FileName,
+                    keyword,
+                    null,
+                    cancellationToken
+                );
+
+            return File(
+                signedBytes,
+                "application/pdf",
+                Path.GetFileNameWithoutExtension(
+                    document.FileName
+                ) + "_signed.pdf"
+            );
+        }
+        catch (Exception ex)
+        {
+            Log.Error(
+                ex,
+                "DigiSignPfx failed for Document {DocumentId}",
+                id
+            );
+
+            return StatusCode(
+                500,
+                new
+                {
+                    message = "Digital signing failed.",
+                    detail = ex.Message
+                }
+            );
+        }
+    }
+
+
+    private async Task<byte[]> SignHsmByKeywordAsync(
+    Stream documentStream,
+    string fileName,
+    string keyword,
+    string passcode,
+    CancellationToken cancellationToken = default)
+    {
+        using var multipart =
+            new MultipartFormDataContent();
+
+        using var fileContent =
+            new StreamContent(documentStream);
+
+        fileContent.Headers.ContentType =
+            new MediaTypeHeaderValue(
+                Util.GetMimeType(fileName)
+            );
+
+        multipart.Add(
+            fileContent,
+            "file",
+            fileName
+        );
+
+        multipart.Add(
+            new StringContent(keyword ?? ""),
+            "keyword"
+        );
+
+        multipart.Add(
+            new StringContent(passcode ?? ""),
+            "passcode"
+        );
+
+        using var response =
+            await CallDigiSignApiAsync(
+                "/api/MakeDigiSigns/sign-hsm-by-keyword-form",
+                multipart,
+                cancellationToken
+            );
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var error =
+                await response.Content.ReadAsStringAsync(
+                    cancellationToken
+                );
+
+            throw new Exception(
+                $"DigiSign HSM failed. " +
+                $"HTTP {(int)response.StatusCode}: {error}"
+            );
+        }
+
+        return await response.Content.ReadAsByteArrayAsync(
+            cancellationToken
+        );
+    }
+    private async Task<HttpResponseMessage> CallDigiSignApiAsync(
+   string endpoint,
+   HttpContent content,
+   CancellationToken cancellationToken = default)
+    {
+        var baseUrl = configuration["DigiSign:BaseUrl"];
+
+        var url =
+            $"{baseUrl}/{endpoint.TrimStart('/')}".TrimEnd('/'); ;
+
+        var client = new HttpClient
+        {
+            Timeout = TimeSpan.FromMinutes(
+                configuration.GetValue<int?>(
+                    "DigiSign:TimeoutMinutes"
+                ) ?? 10
+            )
+        };
+
+        client.DefaultRequestHeaders.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("*/*")
+        );
+
+        var response = await client.PostAsync(
+            url,
+            content,
+            cancellationToken
+        );
+
+        return response;
+    }
+
+
+    private async Task<byte[]> SignPfxByKeywordAsync(
+    Stream documentStream,
+    string fileName,
+    string keyword,
+    string? password = null,
+    CancellationToken cancellationToken = default)
+    {
+        using var multipart =
+            new MultipartFormDataContent();
+
+        using var fileContent =
+            new StreamContent(documentStream);
+
+        fileContent.Headers.ContentType =
+            new MediaTypeHeaderValue(
+                Util.GetMimeType(fileName)
+            );
+
+        multipart.Add(
+            fileContent,
+            "file",
+            fileName
+        );
+
+        multipart.Add(
+            new StringContent(keyword ?? ""),
+            "keyword"
+        );
+
+        if (!string.IsNullOrWhiteSpace(password))
+        {
+            multipart.Add(
+                new StringContent(password),
+                "password"
+            );
+        }
+
+        using var response =
+            await CallDigiSignApiAsync(
+                "/api/MakeDigiSigns/sign-pfx-by-keyword",
+                multipart,
+                cancellationToken
+            );
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var error =
+                await response.Content.ReadAsStringAsync(
+                    cancellationToken
+                );
+
+            throw new Exception(
+                $"DigiSign PFX failed. " +
+                $"HTTP {(int)response.StatusCode}: {error}"
+            );
+        }
+
+        return await response.Content.ReadAsByteArrayAsync(
+            cancellationToken
+        );
+    }
+
+
+    [HttpPost("{id}")]
+    public async Task<IActionResult> DigiSignHsm(
+    long id,
+    [FromBody] DigiSignHsmRequest request,
+    CancellationToken cancellationToken)
+    {
+        try
+        {
+            var document =
+                await _BaseRepository.GetObjectByIdAsync(id);
+
+            if (document == null)
+                return NotFound();
+
+            await using var stream =
+                await GetDocumentStreamAsync(
+                    document,
+                    cancellationToken
+                );
+
+            var result =
+                await SignHsmByKeywordAsync(
+                    stream,
+                    document.FileName,
+                    request.Keyword,
+                    request.Passcode,
+                    cancellationToken
+                );
+
+            return File(
+                result,
+                "application/pdf",
+                Path.GetFileNameWithoutExtension(
+                    document.FileName
+                ) + "_signed.pdf"
+            );
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "DigiSignHsm failed.");
+
+            return StatusCode(
+                500,
+                new
+                {
+                    message = "HSM signing failed.",
+                    detail = ex.Message
+                }
+            );
+        }
+    }
     public static List<SystemProperties> ConvertToSystemPropertiesList(List<Dictionary<string, object>> rawData)
     {
         var result = new List<SystemProperties>();
@@ -630,6 +895,66 @@ public class DocumentController : BaseControllerApi<Document>
         }
 
         return result;
+    }
+
+    private async Task<Stream> GetDocumentStreamAsync(
+    Document document,
+    CancellationToken cancellationToken = default)
+    {
+        if (document == null)
+            throw new ArgumentNullException(nameof(document));
+
+        /*
+         * SharePoint / Remote
+         */
+        if (IsRemoteDocumentUrl(document.SubDirectory))
+        {
+            var client = new HttpClient();
+
+            var response = await client.GetAsync(
+                document.SubDirectory,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken
+            );
+
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadAsStreamAsync(
+                cancellationToken
+            );
+        }
+
+        /*
+         * Local
+         */
+        var fullPath = Path.Combine(
+            path.Value,
+            document.SubDirectory ?? "",
+            document.Guid.ToString() + document.FileType
+        );
+
+        if (!System.IO.File.Exists(fullPath))
+        {
+            throw new FileNotFoundException(
+                $"Document file not found: {fullPath}",
+                fullPath
+            );
+        }
+
+        return new FileStream(
+            fullPath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            81920,
+            useAsync: true
+        );
+    }
+
+    public class DigiSignHsmRequest
+    {
+        public string Keyword { get; set; } = "";
+        public string Passcode { get; set; } = "";
     }
 }
 
