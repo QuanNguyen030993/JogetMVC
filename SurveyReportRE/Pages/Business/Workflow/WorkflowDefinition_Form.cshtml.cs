@@ -72,7 +72,8 @@ public class WorkflowDefinition_FormModel : PageModel
         CopyFile = 1,
         TransferFile = 2,
         LockFileLocal = 3,
-        ClearTurnaroundTimesAttributes = 4
+        ClearTurnaroundTimesAttributes = 4,
+        CallAPI = 5
     }
 
 }

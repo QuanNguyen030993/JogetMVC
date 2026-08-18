@@ -5352,7 +5352,6 @@
                     return;
                 }
                 if (ext === "pdf") {
-                    debugger
                     openPDFPopup(id);
                     return;
                 }
@@ -9094,7 +9093,10 @@
             }
 
             if (statusText) return { text: statusText, title: "" };
-
+            if (dept == "LMKT")
+            {
+                debugger
+            }
             var acceptDate = tatObject?.[dept]?.AcceptDate || "No status";
             if (acceptDate) {
                 return {
@@ -9278,14 +9280,19 @@
                 return item.statusId || item.statusElement || item.statusElementId || "";
             }
 
-            function updateDelayAcceptStatus(statusId, buttonId, acceptDate, defaultStatus = "Accepted") {
+            function updateDelayAcceptStatus(statusId, buttonId, acceptDate, defaultStatus = null) {
                 setTimeout(() => {
+                    debugger
                     if (!statusId || !acceptDate) 
                     {
                         console.log("Cannot load status from " + statusId, statusId);
                         console.log("Cannot load acceptDate from " + statusId, acceptDate);
                     }
                     var statusLabel = defaultStatus;
+                    if (acceptDate)
+                    statusLabel = "Accepted";
+                    if (acceptDate && defaultStatus)
+                    statusLabel = defaultStatus;
                     // if (statusLabel && typeof statusLabel === "object") {
                     //     statusLabel = statusLabel.text
                     //         || statusLabel.displayStatus
@@ -9293,11 +9300,13 @@
                     //         || statusLabel.actionCode
                     //         || statusLabel.statusName;
                     // }
-                  
+                    if (statusId.includes("LMKT"))
+                    {
+                    }
                     setDecisionCommonStatus(
                         statusId,
                         "onLoaded",
-                        acceptDate == "No Status" ? acceptDate : (statusLabel != "Accepted" ? statusLabel : `Accepted at: ${fmtTimeLocal(acceptDate)}`)
+                        statusLabel == null ? "No status" : (statusLabel != "Accepted" ? statusLabel : `Accepted at: ${fmtTimeLocal(acceptDate)}`)
                     );
                 }, _delayLoadFormDetailStatus);
             }
@@ -9726,34 +9735,34 @@
                                   }
 
                                   if (formDataClone.dept == "LMKT" || formDataClone.dept == "FO") {
-                                      var storedStatus = getDelayAcceptStoredStatus(formItems, formDataClone.dept, formItems);
-                                      if (storedStatus) {
-                                           try
-                                         {
-                                          $(`#${params[0]}`).dxButton("instance").option("visible", true);
-                                          if (params.length > 3) $(`#${params[2]}`).dxButton("instance").option("visible", true);
-                                          if (storedStatus.text == "Approved")
-                                              $(`#${params[0]}`).css("background-color", window.DecisionColors.accepted);
-                                          if (storedStatus.text == "Declined")
-                                           if (params.length > 3)    $(`#${params[2]}`).css("background-color", window.DecisionColors.accepted);
-                                          if (storedStatus)
-                                              disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
-                                              }
-                                              catch {
+                                      // var storedStatus = getDelayAcceptStoredStatus(formItems, formDataClone.dept, formItems);
+                                      // if (storedStatus) {
+                                      //      try
+                                      //    {
+                                      //     $(`#${params[0]}`).dxButton("instance").option("visible", true);
+                                      //     if (params.length > 3) $(`#${params[2]}`).dxButton("instance").option("visible", true);
+                                      //     if (storedStatus.text == "Approved")
+                                      //         $(`#${params[0]}`).css("background-color", window.DecisionColors.accepted);
+                                      //     if (storedStatus.text == "Declined")
+                                      //      if (params.length > 3)    $(`#${params[2]}`).css("background-color", window.DecisionColors.accepted);
+                                      //     if (storedStatus)
+                                      //         disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
+                                      //         }
+                                      //         catch {
 
-                                              }
-                                      }
-                                      else {
-                                              try 
-                                             {
-                                              $(`#${params[0]}`).dxButton("instance").option("visible", false);
-                                               if (params.length > 3) $(`#${params[2]}`).dxButton("instance").option("visible", false);
+                                      //         }
+                                      // }
+                                      // else {
+                                      //         try 
+                                      //        {
+                                      //         $(`#${params[0]}`).dxButton("instance").option("visible", false);
+                                      //          if (params.length > 3) $(`#${params[2]}`).dxButton("instance").option("visible", false);
 
-                                             }
-                                             catch{
+                                      //        }
+                                      //        catch{
 
-                                             }
-                                      }
+                                      //        }
+                                      // }
                                   }
                                   else{
                                       $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
@@ -9799,13 +9808,14 @@
 
                       if (formDataClone.dept == "LMKT") { //  another logic
                           
-                              var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
-                               updateDelayAcceptStatus(
-                                  commonStatusId,
-                                  commonAcceptButtonId,
-                                  latestTatObject[formItems.stageDept]?.CompleteDate, storedStatus
-                              );
-                              
+                              // var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
+                              // debugger
+                              //  updateDelayAcceptStatus(
+                              //     commonStatusId,
+                              //     commonAcceptButtonId,
+                              //     latestTatObject[formItems.stageDept]?.CompleteDate, storedStatus
+                              // );
+              
                           }
                       if (formItems.stageDept == "Client" && formDataClone.dept == "FO") { //  another logic
                           var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
@@ -10542,7 +10552,7 @@
                         ]?.AcceptDate;
 
                     $customButton.dxButton({
-                        disabled: true,
+                        disabled: disabled,
 
                         text:
                             route?.displayStatus ||

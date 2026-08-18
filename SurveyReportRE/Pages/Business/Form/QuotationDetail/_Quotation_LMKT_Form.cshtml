@@ -179,7 +179,7 @@
         // ============================================================
         // DECISION CONTEXT
         // ============================================================
-
+        // delayAcceptStatusV2(mainFields,thisObject, ...itemsDelay);
         delayAcceptStatusV2Promise(
             null,
             thisObject,
@@ -199,7 +199,6 @@
                  * decisionContext.disable()
                  * decisionContext.setDisabled(...)
                  */
-
                 var picJson =
                     PIC_JSON || "{}";
 
@@ -342,7 +341,6 @@
                 /*
                  * Ví dụ tìm route cụ thể
                  */
-
                 var approveRoute =
                     lmktRoutes.find(
                         function (item) {
@@ -353,22 +351,21 @@
                             );
                         }
                     );
+                // $(approveRoute).dxButton("instance").option("disabled", false);
+                // if (approveRoute) {
 
+                //     console.log(
+                //         "Approve route:",
+                //         approveRoute
+                //     );
 
-                if (approveRoute) {
+                //      approveRoute.enable();
 
-                    console.log(
-                        "Approve route:",
-                        approveRoute
-                    );
+                //     // approveRoute.disable();
 
-                    // approveRoute.enable();
-
-                    // approveRoute.disable();
-
-                    // approveRoute.button.instance
-                    //     ?.option("disabled", false);
-                }
+                //     // approveRoute.button.instance
+                //     //     ?.option("disabled", false);
+                // }
 
             })
             .catch(function (error) {
@@ -380,6 +377,9 @@
 
             });
 
+            setTimeout(() => {
+            
+            });
     });
 </script>
 <div id="@QTViewIdHelper.Form(dept, quotationId)">

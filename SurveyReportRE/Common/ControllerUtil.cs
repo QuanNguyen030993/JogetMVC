@@ -28,6 +28,10 @@ using ERPCore.Models.Migration.Business.MasterData;
 using ERPCore.Models.Migration.Business.Config;
 using ERPCore.Models.Migration.Business.HumanResource;
 using System.Reflection;
+using ERPCore.Models.Config;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Net.Http.Headers;
+using ERPCore.Models.Migration.Business.Data;
 
 namespace ERPCore.ControllerUtil
 {
@@ -903,6 +907,94 @@ namespace ERPCore.ControllerUtil
 
 
             return builderStr.ConnectionString;
+        }
+        public static async Task<byte[]?> DigiSign(long? id, IBaseRepository<Document> baseRepository)
+        {
+            var uRLConfig = baseRepository._baseConfiguration.GetSection("URLConfig").Get<URLConfig>();
+            var blobSettings = baseRepository._baseConfiguration.GetSection("BlobStorage").Get<BlobStorageSettings>();
+            string URL = uRLConfig.DigiSignHost;
+            //Change lại thành hàm của chính link host cho source này từ 
+            //TestCallBackUrl  -> CallbackFileHandle
+            string callURL = uRLConfig.DigisignStorageHost;
+            string endpoint = $"{URL}/api/convert";
+            string keyApi = baseRepository._baseConfiguration.GetSection("DigiSignServer:Key").Value;
+            try
+            {
+                if (string.IsNullOrWhiteSpace(endpoint))
+                    throw new Exception("Config UrlConfig:DigiSignHost is empty.");
+
+                // Ví dụ: lấy thông tin file theo id từ DB
+                // Bạn thay Attachment bằng model thực tế của bạn
+                var attachment = await baseRepository.GetObjectByIdAsync(id ?? 0);
+                if (attachment == null)
+                    throw new Exception($"Attachment id={id} not found.");
+
+                // Ví dụ: đường dẫn vật lý file
+                // Bạn sửa lại theo cấu trúc thật của hệ thống
+                string filePath = Path.Combine(
+                    blobSettings.Path,
+                    attachment.SubDirectory ?? ""
+                );
+
+                if (!System.IO.File.Exists(filePath))
+                    throw new Exception($"File not found: {filePath}");
+
+                await using var fileStream = System.IO.File.OpenRead(filePath);
+
+                using var multipart = new MultipartFormDataContent();
+
+                var fileContent = new StreamContent(fileStream);
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(Util.GetMimeType(filePath));
+
+                // "file" phải đúng tên field mà API bên convert yêu cầu
+                multipart.Add(fileContent, "file", Path.GetFileName(filePath));
+
+                // Các field form-data khác
+                multipart.Add(new StringContent("pdf"), "outputFormat");
+                multipart.Add(new StringContent(callURL), "callbackUrl");
+                multipart.Add(new StringContent(JsonConvert.SerializeObject(new { Document = new Document() { Id = id ?? 0 } })), "metadata");
+
+                var client = new HttpClient();
+                client.Timeout = TimeSpan.FromMinutes(10);
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
+                client.DefaultRequestHeaders.Add("X-API-KEY", keyApi);
+
+
+                var response = await client.PostAsync(endpoint, multipart);
+                var responseBytes = await response.Content.ReadAsByteArrayAsync();
+                var responseText = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception("Signing server returned error.");
+                }
+
+                // Nếu server convert trả thẳng file đã convert về
+                var outputFileName = Path.GetFileNameWithoutExtension(filePath) + ".pdf";
+
+                string getStreamHost = uRLConfig.GetStreamHost + $"?fileName={outputFileName}";
+                var responseGet = await client.GetAsync(getStreamHost);
+                var responseBytesGet = await responseGet.Content.ReadAsByteArrayAsync();
+                var responseTextGet = await responseGet.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception("Signing server returned error.");
+                }
+
+                return responseBytesGet;
+                //return File(responseBytesGet, "application/pdf", outputFileName);
+
+                // Nếu bạn chỉ muốn lưu xuống disk rồi return ok thì dùng đoạn này thay thế:
+                // var outputPath = Path.Combine(Path.GetDirectoryName(filePath)!, outputFileName);
+                // await System.IO.File.WriteAllBytesAsync(outputPath, responseBytes);
+                // return Ok(new { message = "Signing success", outputPath });
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Signing failed");
+              
+            }
         }
 
     }

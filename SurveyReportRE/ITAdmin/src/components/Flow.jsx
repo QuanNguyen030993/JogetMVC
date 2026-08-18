@@ -2099,6 +2099,7 @@ const updateSelectedEdge = useCallback(
                         <option value="TransferFile">TransferFile</option>
                         <option value="LockFileLocal">LockFileLocal</option>
                         <option value="ClearTurnaroundTimesAttributes">ClearTurnaroundTimesAttributes</option>
+                        <option value="CallAPI">CallAPI</option>
                     </select>
                 </label>
                 <label>

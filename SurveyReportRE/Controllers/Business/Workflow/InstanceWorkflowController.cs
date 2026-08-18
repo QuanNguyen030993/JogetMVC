@@ -141,7 +141,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         }
 
         submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
-        await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");    //comment in 
+        //await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");    //comment in 
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
         quotation.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
         quotation.StatusId = submitRequest.StepsWorkflow.StatusId;
@@ -251,19 +251,21 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
                     //await HandleLockFile();
                     break;
-
+                case WorkflowCommand.CallAPI:
+                    byte[]? fileData = await ControllerUtil.DigiSign(quotation.DocumentId,_documentRepository);
+                    break;
                 default:
                     // do nothing
                     break;
             }
         }
-        await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id"); // comment in 
+        //await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id"); // comment in 
 
 
 
 
 
-        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings); // comment in 
+        //await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings); // comment in 
 
 
 
