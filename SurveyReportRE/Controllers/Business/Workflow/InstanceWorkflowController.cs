@@ -2073,6 +2073,15 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         public string? FileSelector { get; set; } // First
     }
 
+    public class CallAPI
+    {
+        public string? URL { get; set; }
+        public string? MethodInvoke { get; set; }
+        public string? MethodType { get; set; }
+        public string? Strategy { get; set; } // Latest
+        public string? FileSelector { get; set; } // First
+    }
+
     public class WorkflowRecoverRequest
     {
         public long InstanceWorkflowId { get; set; }
