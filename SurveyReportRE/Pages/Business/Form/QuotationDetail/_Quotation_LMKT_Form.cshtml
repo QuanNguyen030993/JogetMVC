@@ -1,4 +1,4 @@
-@using JogetMVC.Model
+﻿@using JogetMVC.Model
 @{
     string dept = "LMKT";
     string prefix = "qt";
@@ -12,140 +12,375 @@
     }
 </style>
 <script type="text/javascript">
-    $(function() {
-    var sectionId = "@(ViewData["Cd"])";
-        var thisObject = new Object();
-        thisObject.ModelName =  "Quotation";
-        thisObject.formId = `@QTViewIdHelper.Form(dept, quotationId)`;
-            thisObject.dept = `@dept`;
-        thisObject.prefix = `@prefix`;
+    $(function () {
+
+        var sectionId = "@(ViewData["Cd"])";
+
+        var thisObject = {
+            ModelName: "Quotation",
+            formId: `@QTViewIdHelper.Form(dept, quotationId)`,
+            dept: "@dept",
+            prefix: "@prefix"
+        };
+
+        var that = {
+            ModelName: "Quotation",
+            moduleName: "default",
+            editorType: "dxFileUploader",
+            id: @(quotationId),
+            guid: "@(quotationGuid)",
+            sectionName: "@dept",
+            titleName: "Upload Quotation",
+            uploaderAllow: _role == "@dept"
+        };
+
+        that.data = {
+            SectionName: window.IdManager.attachmentSectionKey(
+                sectionId,
+                that.moduleName,
+    @(quotationId)
+            ),
+            Department: "@dept",
+            FieldName: that.moduleName,
+            FormId: "@QTViewIdHelper.Form(dept, quotationId)"
+        };
 
 
+        var that2 = {
+            ModelName: "Quotation",
+            moduleName: "supportingDoc",
+            editorType: "dxFileUploader",
+            id: @(quotationId),
+            guid: "@(quotationGuid)",
+            sectionName: "@dept",
+            titleName: "Upload Supporting Document",
+            uploaderAllow: _role == "@dept"
+        };
 
-    var that = new Object();
-    that.ModelName = "Quotation";
-    that.moduleName = "default";
-    that.editorType = "dxFileUploader"
-    that.id = @(quotationId);
-    that.guid = "@(quotationGuid)";
-    that.sectionName = "@(dept)";
-    that.titleName = "Upload Quotation";
-    that.uploaderAllow = _role == "@dept";
-    that.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that.moduleName, @(quotationId)), Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" };; //{"SectionName":"default_FO_410"}
-
-
-    var that2 = new Object();
-    that2.ModelName = "Quotation";
-    that2.moduleName = "supportingDoc";
-    that2.editorType = "dxFileUploader"
-    that2.id = @(quotationId);
-    that2.guid = "@(quotationGuid)";
-    that2.sectionName = "@(dept)";
-    that2.titleName = "Upload Supporting Document";
-    that2.uploaderAllow = _role == "@dept";
-    that2.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that2.moduleName, @(quotationId)), Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
-
-     var mainFields =  [
-                {itemType: "group",caption: "MGR Review",colCount:1,items: [
-                    { itemType: "group", caption: "Attachment", colCount: 1, items:  attachmentByCase(that , that2) },
-                     // { dataField:"leaderComment", label:{text:"Comment"}, editorType:"dxTextArea", colSpan:2 }
-                ]}
-        ];
-
-        var deptCode = "@dept";
-        // var submitBranchId = `@QTViewIdHelper.BtnSubmitBranch(dept, quotationId)`;
-
-        var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
-        var panelStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
-        // var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
-        // var declinedStatusId = `DC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
-        // var itemsDelay = [acceptButtonId, panelStatusId, declinedButtonId, declinedStatusId];
+        that2.data = {
+            SectionName: window.IdManager.attachmentSectionKey(
+                sectionId,
+                that2.moduleName,
+    @(quotationId)
+            ),
+            Department: "@dept",
+            FieldName: that2.moduleName,
+            FormId: "@QTViewIdHelper.Form(dept, quotationId)"
+        };
 
 
-            var acceptDecisionV2 = {
-        buttonId: null,
-        statusId: panelStatusId,
-        text: "Accept",
-        icon: "check",
-        type: "success",
-        buttonClass: "dx-button-success",
-        disabled: true,
-        useDefaultDecisionClick: true,
-        acceptStatusField: "actionStatus",
-        useTatAcceptStatus: true,
-        tatStatusText: "Accepted",
-        skipAcceptedMainFields: false,
-        statusButtonDisabled: true
-    };
-
-    var itemsDelay = [acceptDecisionV2];
-        
-        // var itemsDelay = [...items];
-        $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
-        dataSource: makeBasicDataSource(that, true),
-               items: [
+        var mainFields = [
+            {
+                itemType: "group",
+                caption: "MGR Review",
+                colCount: 1,
+                items: [
                     {
                         itemType: "group",
-                        name: "decision@(dept)Group",
-                        cssClass: "workflow-decision-group qt-decision-group-@(dept)",
-                        elementAttr: {
-                            id: "qt-decision-group-@(dept)-@(quotationId)",
-                            "data-form-group-name": "decision@(dept)Group",
-                            "data-route-dept": "@dept"
-                        },
-                        caption: "MKT MGR Review",
-                        colCount: 2,
-                        items: [
-                // {
-                //      dataField: "decision",
+                        caption: "Attachment",
+                        colCount: 1,
+                        items: attachmentByCase(that, that2)
+                    }
+                ]
+            }
+        ];
 
-                //      label: {
-                //          text: "Decision"
-                //      },
-                //      itemType: "simple",
-                //      template: function (data, itemElement) {
-                //          // $(`<div id="${submitBranchId}" class="lmkt-submitbranch-decision-host"></div>`)
-                //          //     .appendTo(itemElement);
-                //          $.each(items, function (itemIndex, item) {
-                //              $(`<div id="${item.id}">`).dxButton({ text: item.text, visible: false}).appendTo(itemElement);
-                //          });
-                //      }
-                // }
-                workflowDecisionField(thisObject, ...itemsDelay)
-    ]}, 
-             ...mainFields
-           
-           ]
+
+        var acceptButtonId =
+            `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
+
+        var panelStatusId =
+            `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+
+
+        var acceptDecisionV2 = {
+            buttonId: null,
+
+            statusId: panelStatusId,
+
+            text: "Accept",
+            icon: "check",
+            type: "success",
+            buttonClass: "dx-button-success",
+
+            disabled: true,
+
+            useDefaultDecisionClick: true,
+
+            acceptStatusField: "actionStatus",
+
+            useTatAcceptStatus: true,
+
+            tatStatusText: "Accepted",
+
+            skipAcceptedMainFields: false,
+
+            statusButtonDisabled: true
+        };
+
+
+        var itemsDelay = [
+            acceptDecisionV2
+        ];
+
+
+        var formId =
+            "@QTViewIdHelper.Form(dept, quotationId)";
+
+
+        $(`#${formId}`).dxForm({
+
+            dataSource: makeBasicDataSource(
+                that,
+                true
+            ),
+
+            items: [
+                {
+                    itemType: "group",
+
+                    name: "decision@(dept)Group",
+
+                    cssClass:
+                        "workflow-decision-group qt-decision-group-@(dept)",
+
+                    elementAttr: {
+                        id:
+                            "qt-decision-group-@(dept)-@(quotationId)",
+
+                        "data-form-group-name":
+                            "decision@(dept)Group",
+
+                        "data-route-dept":
+                            "@dept"
+                    },
+
+                    caption:
+                        "MKT MGR Review",
+
+                    colCount: 2,
+
+                    items: [
+                        workflowDecisionField(
+                            thisObject,
+                            ...itemsDelay
+                        )
+                    ]
+                },
+
+                ...mainFields
+            ]
+        });
+
+
+        viewFieldAdjust(formId);
+
+
+        // ============================================================
+        // DECISION CONTEXT
+        // ============================================================
+
+        delayAcceptStatusV2Promise(
+            null,
+            thisObject,
+            ...itemsDelay
+        )
+            .then(async function (decisionContext) {
+
+                /*
+                 * decisionContext hiện có:
+                 *
+                 * decisionContext.status
+                 * decisionContext.buttons
+                 * decisionContext.primaryButton
+                 * decisionContext.actionHost
+                 *
+                 * decisionContext.enable()
+                 * decisionContext.disable()
+                 * decisionContext.setDisabled(...)
+                 */
+
+                var picJson =
+                    PIC_JSON || "{}";
+
+                var picMap =
+                    parsePicMap(picJson);
+
+                var picVal =
+                    picMap["@dept"] || "";
+
+                var $section =
+                    $(`#qt-sec_@(dept)_@(quotationId)`);
+
+
+                if (!picVal) {
+
+                    $section
+                        .find(
+                            ".dept-upperbody, " +
+                            ".dept-body, " +
+                            ".dept-lowerbody, " +
+                            ".dept-footer"
+                        )
+                        .hide();
+
+                }
+                else {
+
+                    $section
+                        .find(
+                            ".dept-upperbody, " +
+                            ".dept-body, " +
+                            ".dept-lowerbody, " +
+                            ".dept-footer"
+                        )
+                        .show();
+                }
+
+
+                /*
+                 * =========================================================
+                 * DECISION
+                 * =========================================================
+                 */
+
+                console.log(
+                    "LMKT decision context:",
+                    decisionContext
+                );
+
+
+                /*
+                 * Nếu muốn enable tất cả decision button
+                 */
+                decisionContext.enable();
+
+
+                /*
+                 * Nếu chỉ muốn primary button:
+                 *
+                 * decisionContext.primaryButton?.enable();
+                 *
+                 * decisionContext.primaryButton?.disable();
+                 */
+
+
+                /*
+                 * Status object
+                 */
+                console.log(
+                    "Status:",
+                    decisionContext.status
+                );
+
+
+                /*
+                 * =========================================================
+                 * CUSTOM ROUTE
+                 * =========================================================
+                 */
+
+                var workflowResult =
+                    await loadSelectedWorkflow({
+
+                        moduleCode: "qt",
+
+                        id: @(quotationId),
+
+                        guid: "@quotationGuid",
+
+                        reload: false
+                    });
+
+
+                console.log(
+                    "Workflow result:",
+                    workflowResult
+                );
+
+
+                var customRouteObjects =
+                    workflowResult?.customRouteObjects || [];
+
+
+                console.log(
+                    "LMKT custom routes:",
+                    customRouteObjects
+                );
+
+
+                /*
+                 * Chỉ lấy route của LMKT
+                 */
+                var lmktRoutes =
+                    customRouteObjects.filter(
+                        function (item) {
+                            return item.dept === "@dept";
+                        }
+                    );
+
+
+                /*
+                 * Enable toàn bộ custom route LMKT
+                 */
+                lmktRoutes.forEach(
+                    function (item) {
+                        item.enable();
+                    }
+                );
+
+
+                /*
+                 * Nếu cần disable:
+                 *
+                 * lmktRoutes.forEach(function (item) {
+                 *     item.disable();
+                 * });
+                 */
+
+
+                /*
+                 * Ví dụ tìm route cụ thể
+                 */
+
+                var approveRoute =
+                    lmktRoutes.find(
+                        function (item) {
+
+                            return (
+                                item.route?.actionCode === "Approve" ||
+                                item.route?.displayStatus === "Approve"
+                            );
+                        }
+                    );
+
+
+                if (approveRoute) {
+
+                    console.log(
+                        "Approve route:",
+                        approveRoute
+                    );
+
+                    // approveRoute.enable();
+
+                    // approveRoute.disable();
+
+                    // approveRoute.button.instance
+                    //     ?.option("disabled", false);
+                }
+
+            })
+            .catch(function (error) {
+
+                console.error(
+                    "LMKT decision initialization failed:",
+                    error
+                );
+
+            });
+
     });
-    viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
-
-    delayAcceptStatusV2Promise(null, thisObject, ...itemsDelay).then(itemsResolve => {
-    var picJson = PIC_JSON || "{}";
-        var picMap = parsePicMap(picJson);
-        var picVal = picMap["@dept"] || "";
-        var sectionId = `#qt-sec_@(dept)_@(quotationId)`;
-        if (!picVal) {
-            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
-        } else {
-            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
-        }
-        debugger
-        var buttonItems = $(`[id^='qt-custom-route-']`);
-        console.log(buttonItems);
-        enableAllDecisionButton(itemsResolve);
-    } );
-    //     setTimeout(() => {
-
-        // const decision = await delayAcceptStatusV2Promise(
-        //     mainFields,
-        //     formProps,
-        //     acceptButtonConfig,
-        //     rejectButtonConfig
-        // );
-
-    // }, 100);
-
-    })  
 </script>
 <div id="@QTViewIdHelper.Form(dept, quotationId)">
 </div>
