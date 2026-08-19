@@ -187,19 +187,215 @@
   
      ]});
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)", ["Fill Task"]);
-    delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
+    // delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
 
-    setTimeout(() => {
-        var picJson = PIC_JSON || "{}";
-        var picMap = parsePicMap(picJson);
-        var picVal = picMap["@dept"] || "";
-        var sectionId = `#qt-sec_@(dept)_@(quotationId)`;
-        if (!picVal) {
-            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
-        } else {
-            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
-        }
-    }, _delayRenderDecisionButton);
+     delayAcceptStatusV2Promise(
+            mainFields,
+            thisObject,
+            ...itemsDelay
+        )
+            .then(async function (decisionContext) {
+
+                /*
+                 * decisionContext hiện có:
+                 *
+                 * decisionContext.status
+                 * decisionContext.buttons
+                 * decisionContext.primaryButton
+                 * decisionContext.actionHost
+                 *
+                 * decisionContext.enable()
+                 * decisionContext.disable()
+                 * decisionContext.setDisabled(...)
+                 */
+                var picJson =
+                    PIC_JSON || "{}";
+
+                var picMap =
+                    parsePicMap(picJson);
+
+                var picVal =
+                    picMap["@dept"] || "";
+
+                var $section =
+                    $(`#qt-sec_@(dept)_@(quotationId)`);
+
+
+                if (!picVal) {
+
+                    $section
+                        .find(
+                            ".dept-upperbody, " +
+                            ".dept-body, " +
+                            ".dept-lowerbody, " +
+                            ".dept-footer"
+                        )
+                        .hide();
+
+                }
+                else {
+
+                    $section
+                        .find(
+                            ".dept-upperbody, " +
+                            ".dept-body, " +
+                            ".dept-lowerbody, " +
+                            ".dept-footer"
+                        )
+                        .show();
+                }
+
+
+                /*
+                 * =========================================================
+                 * DECISION
+                 * =========================================================
+                 */
+
+                console.log(
+                    "LMKT decision context:",
+                    decisionContext
+                );
+
+
+                /*
+                 * Nếu muốn enable tất cả decision button
+                 */
+                decisionContext.enable();
+
+
+                /*
+                 * Nếu chỉ muốn primary button:
+                 *
+                 * decisionContext.primaryButton?.enable();
+                 *
+                 * decisionContext.primaryButton?.disable();
+                 */
+
+
+                /*
+                 * Status object
+                 */
+                console.log(
+                    "Status:",
+                    decisionContext.status
+                );
+
+
+                /*
+                 * =========================================================
+                 * CUSTOM ROUTE
+                 * =========================================================
+                 */
+
+                var workflowResult =
+                    await loadSelectedWorkflow({
+
+                        moduleCode: "qt",
+
+                        id: @(quotationId),
+
+                        guid: "@quotationGuid",
+
+                        reload: false
+                    });
+
+
+                console.log(
+                    "Workflow result:",
+                    workflowResult
+                );
+
+
+                var customRouteObjects =
+                    workflowResult?.customRouteObjects || [];
+
+
+                console.log(
+                    "LMKT custom routes:",
+                    customRouteObjects
+                );
+
+
+                /*
+                 * Chỉ lấy route của LMKT
+                 */
+                var lmktRoutes =
+                    customRouteObjects.filter(
+                        function (item) {
+                            return item.dept === "@dept";
+                        }
+                    );
+
+
+                /*
+                 * Enable toàn bộ custom route LMKT
+                 */
+                lmktRoutes.forEach(
+                    function (item) {
+                        item.enable();
+                    }
+                );
+
+
+                /*
+                 * Nếu cần disable:
+                 *
+                 * lmktRoutes.forEach(function (item) {
+                 *     item.disable();
+                 * });
+                 */
+
+
+                /*
+                 * Ví dụ tìm route cụ thể
+                 */
+                var approveRoute =
+                    lmktRoutes.find(
+                        function (item) {
+
+                            return (
+                                item.route?.actionCode === "Approve" ||
+                                item.route?.displayStatus === "Approve"
+                            );
+                        }
+                    );
+                // $(approveRoute).dxButton("instance").option("disabled", false);
+                // if (approveRoute) {
+
+                //     console.log(
+                //         "Approve route:",
+                //         approveRoute
+                //     );
+
+                //      approveRoute.enable();
+
+                //     // approveRoute.disable();
+
+                //     // approveRoute.button.instance
+                //     //     ?.option("disabled", false);
+                // }
+
+            })
+            .catch(function (error) {
+
+                console.error(
+                    "@dept decision initialization failed:",
+                    error
+                );
+
+            });
+    // setTimeout(() => {
+    //     var picJson = PIC_JSON || "{}";
+    //     var picMap = parsePicMap(picJson);
+    //     var picVal = picMap["@dept"] || "";
+    //     var sectionId = `#qt-sec_@(dept)_@(quotationId)`;
+    //     if (!picVal) {
+    //         $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+    //     } else {
+    //         $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+    //     }
+    // }, _delayRenderDecisionButton);
 
     })
 </script>

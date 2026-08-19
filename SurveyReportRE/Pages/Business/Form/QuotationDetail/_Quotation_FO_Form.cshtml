@@ -26,8 +26,8 @@
         thisObject.prefix = `@prefix`;
 
 
-        var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
-        var panelStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
+        // var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
+        // var panelStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
         var clientStatusId = `Client_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
         // var declinedButtonId = `DC_@QTViewIdHelper.Decision(dept, quotationId)`;
         // var declinedStatusId = `DC_Status_@QTViewIdHelper.Decision(dept, quotationId)`;
@@ -74,7 +74,7 @@
 
      var acceptDecisionV2 = {
         buttonId: null,
-        statusId: panelStatusId,
+        statusId: clientStatusId,
         text: "Accept",
         icon: "check",
         type: "success",

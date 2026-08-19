@@ -1739,7 +1739,7 @@
                    const html = `
     <div class="launcher-wrap">
 
-        <div class="dx-toolbar dx-widget dx-visibility-change-handler dx-collection dx-popup-title dx-has-close-button launcher-title">Select action</div>
+        <div class="launcher-title">Select action</div>
 
         <div class="launcher-grid">
 
@@ -3618,11 +3618,19 @@
        .user-settings-header h2,
        .account-setting-heading strong,
        .user-role-code,
-       .launcher-title,
        .launcher-text,
        .card-title {
            font-size: var(--management-font-title) !important;
        }
+
+        .launcher-title{
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 10px 0 35px;
+            letter-spacing: 0.5px;
+        }
 
        .user-menu-heading div > span,
        .user-settings-header p,
