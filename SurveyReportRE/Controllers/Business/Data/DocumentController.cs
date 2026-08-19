@@ -14,6 +14,10 @@ using Newtonsoft.Json;
 using static ERPCore.Models.Models.Parsing.JsonHandle;
 using ERPCore.Models.Migration.Config;
 using ERPCore.Models.Request;
+using Syncfusion.XlsIO.Implementation.XmlSerialization;
+using Syncfusion.XlsIO.Implementation;
+using System.Xml;
+using ERPCore.ControllerUtil;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -77,8 +81,8 @@ public class DocumentController : BaseControllerApi<Document>
 
     [HttpPost]
     [AllowAnonymous]
-    //public async Task<IActionResult> TestCallBackUrl([FromBody] ConvertResult convertResult)
-    public async Task<IActionResult> CallbackFileHandle([FromBody] ConvertResult convertResult)
+    //public async Task<IActionResult> TestCallBackUrl([FromBody] DigisignCallbackResult convertResult)
+    public async Task<IActionResult> CallbackFileHandle([FromBody] DigisignCallbackResult convertResult)
     {
         try
         {
@@ -99,8 +103,8 @@ public class DocumentController : BaseControllerApi<Document>
 
     [HttpPost]
     [AllowAnonymous]
-    //public async Task<IActionResult> TestCallBackUrl([FromBody] ConvertResult convertResult)
-    public async Task<IActionResult> CallBackFileDigisign([FromBody] ConvertResult convertResult)
+    //public async Task<IActionResult> TestCallBackUrl([FromBody] DigisignCallbackResult convertResult)
+    public async Task<IActionResult> CallBackFileDigisign([FromBody] DigisignCallbackResult convertResult)
     {
         try
         {
@@ -162,7 +166,7 @@ public class DocumentController : BaseControllerApi<Document>
                     newDocument = await _BaseRepository.InsertData(newDocument);
 
                     newQuotation.DocumentId = newDocument.Id;
-                    await _quotationRepository.UpdateData(newQuotation, quotation, ["QuotationStatus", "WorkflowStatus", "StatusId"], "Id");
+                    await _quotationRepository.UpdateData(newQuotation, quotation, ["DocumentId", "WorkflowStatus", "StatusId"], "Id");
                 }
             }
             //Update status instance to complete 
@@ -473,9 +477,9 @@ public class DocumentController : BaseControllerApi<Document>
     }
     #region Digisign
 
-    [HttpGet]
+    [HttpPost]
     [AllowAnonymous]
-    public async Task<IActionResult> CallBackGetFile(string fileName)
+    public async Task<IActionResult> CallBackGetFile([FromBody]  DigisignCallbackResult fileName) // Old version from Retool - 2026-08-19
     {
 
         try
@@ -485,7 +489,7 @@ public class DocumentController : BaseControllerApi<Document>
                 return StatusCode(500, "Directory not exist!");
             }
             string fullPath = path.Value + "\\CallBack\\" + fileName;
-            var mimeTypes = Util.GetMimeType(fileName);
+            var mimeTypes = Util.GetMimeType(fileName.FileName);
             var fileStream = System.IO.File.OpenRead(path.Value + "\\CallBack\\" + fileName);
             return File(fileStream, mimeTypes, Path.GetFileName(fullPath));
 
@@ -496,9 +500,104 @@ public class DocumentController : BaseControllerApi<Document>
             return StatusCode(500, ex.Message);
         }
     }
+
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> SignByKeywordWithCKSHSM(long? id)
+    {
+        try
+        {
+            // Xử lý ký demo
+            ControllerUtil.SignByKeywordWithCKSHSM(_BaseRepository, id);
+
+            return Ok(new
+            {
+                Message = "Sign success and callback completed"
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> SignManualByLocationWithCKSHSMCompany(long? id)
+    {
+        ControllerUtil.SignManualByLocationWithCKSHSMCompany();
+        return Ok();
+    }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> makeSign(long? id)
+    {
+        ControllerUtil.makeSign();
+        return Ok();
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> DigiSign(long? id)
     {
+        //Sign by keyword 
+
+        //SyncfusionSigns / SignByKeywordWithCKSHSM
+        //SyncfusionSigns / SignManualByLocationWithCKSHSM
+        //SyncfusionSigns / SignByKeywordWithCKSCongCongStream
+        //SyncfusionSigns / SignManualByLocationWithCKSCongCong
+        //SyncfusionSigns / SignManualByLocationWithSyncfusion
+
+        //const fd = new FormData();
+        //fd.append('file', new Blob([pdfBuffer], { type: 'application/pdf' }), 'ItDemo Sign.pdf');
+        //fd.append('userNameSign', 'trung.vt');
+        //fd.append('keyword', 'KEYWORK A');
+        //fd.append('pageSign', '1');
+
+        //Sign by coordinate
+
+        //        MakeDigiSigns / sign
+        //MakeDigiSigns / SignManualByLocationWithCKSHSMCompany
+        //MakeDigiSigns / MakeSignManualWithRectangleCSign
+        //MakeDigiSigns / MakeSignWithHash256File
+        //MakeDigiSigns / CheckHealthUrl
+
+
+        //        const payload = {
+        //                fileSignPdfWithBytes: pdfBase64,
+        //                agreementUUID: '4BC3CA84-49E4-4191-A026-8FF67C45B30B',
+        //                passCode: '43227474',
+        //                pageNo: 1,
+        //                coordinate: '100,500,250,650',
+        //                base64SignatureImg: companyStampBase64,
+        //                iSecrect: false
+        //            };
+
+        //    const res = await fetch(`${NODE_API_URL}/ api / MakeDigiSigns / SignManualByLocationWithCKSHSMCompany`, {
+        //method: 'POST',
+        //                headers: { 'Content-Type': 'application/json' },
+        //                body: JSON.stringify(payload)
+        //            });
+
+        //Public sign
+        //PublicSigns / makeSign
+
+        //        const xmlBody = `<? xml version = "1.0" encoding = "utf-8" ?>
+        //< PublicSignRequest xmlns = "http://tempuri.org/" >
+        //   < userName > VO TOAN TRUNG IT </ userName >
+        //   < passWord > abc123 </ passWord >
+        //   < dataBase64 >${ pdfBase64}</ dataBase64 >
+        //   < imageSignBase64 >${ defaultStampBase64}</ imageSignBase64 >
+        //   < locationKey > KEYWORK A </ locationKey >
+        //   < pageIndex > 1 </ pageIndex >
+        //</ PublicSignRequest >`;
+        //        const res = await fetch(`${ NODE_API_URL}/ api / PublicSigns / makeSign`, {
+        //        method: 'POST',
+        //                headers:
+        //            {
+        //                'Content-Type': 'application/xml',
+        //                    'Accept': 'application/xml'
+        //                },
+        //                body: xmlBody
+        //            });
+
+
 
         return Ok();
         //string URL = _BaseRepository._baseConfiguration.GetSection("UrlConfig:DigiSignHost").Value;

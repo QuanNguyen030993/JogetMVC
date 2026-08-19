@@ -28,6 +28,8 @@ using ERPCore.Models.Config;
 using ERPCore.Storage;
 using System;
 using System.Net.Http.Headers;
+using ERPCore.Models.Models.Parsing;
+using Microsoft.AspNetCore.Authorization;
 
 public class WorkflowTransitionSubmitRequest : SubmitRequest
 {
@@ -114,7 +116,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     public async Task<IActionResult> QuotationSubmitNextStep([FromBody] WorkflowTransitionSubmitRequest submitRequest)
     {
 
-                if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
+        if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
         
         Quotation quotation = new Quotation();
         quotation = await _quotationRepository.GetSingleObject(s => s.Id == submitRequest.QuotationId);
@@ -141,7 +143,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         }
 
         submitRequest.InstanceWorkflow.CurrentStep = submitRequest.StepsWorkflow.TNodeId;
-        //await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");    //comment in 
+        await _BaseRepository.UpdateData(submitRequest.InstanceWorkflow, JsonConvert.SerializeObject(submitRequest.InstanceWorkflow), submitRequest.InstanceWorkflow?.Id, "Id");    //comment in 
         quotation.StageDept = submitRequest.StepsWorkflow.ToNodeId;
         quotation.WorkflowStatus = submitRequest.StepsWorkflow.StatusName;
         quotation.StatusId = submitRequest.StepsWorkflow.StatusId;
@@ -252,20 +254,20 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                     //await HandleLockFile();
                     break;
                 case WorkflowCommand.CallAPI:
-                    byte[]? fileData = await ControllerUtil.DigiSign(quotation.DocumentId,_documentRepository);
+                    Task.Factory.StartNew(async () => { await ControllerUtil.DigiSign(_documentRepository, quotation.DocumentId ?? 0); });
                     break;
                 default:
                     // do nothing
                     break;
             }
         }
-        //await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id"); // comment in 
+        await _quotationRepository.UpdateData(quotation, JsonConvert.SerializeObject(quotation), quotation?.Id, "Id"); // comment in 
 
 
 
 
 
-        //await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings); // comment in 
+        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings); // comment in 
 
 
 
@@ -942,15 +944,6 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
         TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(policyIssuance.TurnAroundTimeAttributes);
         TurnAroundItem tatObject = Util.TurnAroundTimePicker(result, submitRequest.StepsWorkflow.FromNodeId);  
-        //submitRequest.StepsWorkflow.FromNodeId switch
-        //{
-        //    "FO" => result.FO,
-        //    "TS" => result.TS,
-        //    "UW" => result.UW,
-        //    "LMKT" => result.LMKT,
-        //    "PM" => result.PM,
-        //    _ => null
-        //};
         if (tatObject != null) tatObject.CompleteDate = DateTime.Now;
         policyIssuance.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
 
@@ -972,16 +965,6 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
         PICAttributes picAttributes = JsonConvert.DeserializeObject<PICAttributes>(policyIssuance.PIC);
         string accountName = Util.PICPicker(picAttributes, submitRequest.StepsWorkflow.ToNodeId);
-        //string accountName = submitRequest.StepsWorkflow.ToNodeId switch
-        //{
-        //    "FO" => picAttributes.FO,
-        //    "TS" => picAttributes.TS,
-        //    "UW" => picAttributes.UW,
-        //    "LMKT" => picAttributes.LMKT,
-        //    "PM" => picAttributes.PM,
-        //    _ => null
-        //};
-
         ControllerHelper.SignalRResponse(
             _usersSessionRepository,
             "R_ItemSubmitted",
@@ -2065,8 +2048,64 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         await _turnAroundTimeDeptProcessingRepository.InsertData(deptProcessing);
 
     }
-   
 
+    #region Callback API
+    [HttpPost]
+    [AllowAnonymous]
+    public async Task<IActionResult> CallbackSignature([FromBody] DigisignCallbackResult fileName)
+    {
+        Document document = new Document();
+        //document = JsonConvert.DeserializeObject<Document>(JsonConvert.SerializeObject(fileName.Metadata)); // Dispose maybe
+        //Determine instance record
+
+
+        //if (document != null)
+        //{
+            document = await _documentRepository.GetSingleObject(s => s.FileName == fileName.FileName);
+            Document newDocument = new Document();
+            JsonConvert.PopulateObject(JsonConvert.SerializeObject(document), newDocument);
+            newDocument.Id = 0;
+
+            Quotation quotation = new Quotation();
+            quotation = await _quotationRepository.GetSingleObject(s => s.Guid == newDocument.RecordGuid);
+            //quotation = await _quotationRepository.GetSingleObject(s => s.Guid == Guid.Parse(fileName.JobId));
+            string subDir = Path.Combine(nameof(Quotation), quotation.QuotationCode);
+            string fullPath = Path.Combine(_blobStorageSettings.CurrentValue.Path, subDir, _blobStorageSettings.CurrentValue.Sign);
+            if (!Directory.Exists(fullPath))
+                Directory.CreateDirectory(fullPath);
+            var mimeTypes = Util.GetMimeType(fileName.FileName);
+            //dynamic object 
+
+            if (quotation != null)
+            {
+                List<EnumData> enumDatas = await _enumDataRepository.EnumData("OverallStatus");
+                EnumData completeSigning = enumDatas.FirstOrDefault(f => f.Code == "DGSC");
+                string approveDept = "LMKT";
+                PICAttributes pICAttributes = new PICAttributes();
+                pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
+                string accountApproveName = Util.PICPicker(pICAttributes, approveDept);
+                TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
+                TurnAroundItem tatObject = Util.TurnAroundTimePicker(result, approveDept);
+                result.LMKT.CompleteDate = DateTime.Now;
+                tatObject.CompleteDate = result?.LMKT?.CompleteDate;
+                newDocument.FileName = newDocument.FileName + "(Approved)";
+                newDocument.SubDirectory = Path.Combine(subDir, _blobStorageSettings.CurrentValue.Sign);
+                System.IO.File.WriteAllBytes(Path.Combine(fullPath, newDocument.FileName), Convert.FromBase64String(fileName.FileBase64));
+                //Quotation newQuotation = new Quotation();
+                //newQuotation.WorkflowStatus = completeSigning.Name;
+                //newQuotation.StatusId = completeSigning.Id;
+                newDocument = await _documentRepository.InsertData(newDocument);
+
+                quotation.DocumentId = newDocument.Id;
+                quotation.WorkflowStatus = completeSigning.Value;
+                quotation.StatusId = completeSigning.Id;
+                await _quotationRepository.UpdateData(quotation, quotation, ["DocumentId", "WorkflowStatus", "StatusId"], "Id");
+                await TATLog(quotation, tatObject, "LMKT");
+            }
+        //}
+        return Ok();
+    }
+    #endregion
     public class TransferFileConfig
     {
         public string? SourceDepartment { get; set; }

@@ -32,6 +32,7 @@ using ERPCore.Models.Config;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Net.Http.Headers;
 using ERPCore.Models.Migration.Business.Data;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ERPCore.ControllerUtil
 {
@@ -133,37 +134,7 @@ namespace ERPCore.ControllerUtil
             PICHOD = getBranchId.First().HODFollowRequest;
             PICAttributes PICMain = new PICAttributes();
             PICMain = JsonConvert.DeserializeObject<PICAttributes>(objectIn?.PIC?.Value ?? "");
-            //TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(objectIn.TurnAroundTimeAttributes);
-            //TurnAroundItem tatObject = stepsWorkflow.ToNodeId switch
-            //{
-            //    "FO" => result.FO,
-            //    "TS" => result.TS,
-            //    "UW" => result.UW,
-            //    "LMKT" => result.LMKT,
-            //    "PM" => result.PM,
-            //    _ => null
-            //};
-            //tatObject.CompleteDate = DateTime.Now;
-            //switch (stepsWorkflow.FromNodeId)
-            //{
-            //    case "FO":
-            //        result.FO = tatObject;
-            //        break;
-            //    case "TS":
-            //        result.TS = tatObject;
-            //        break;
-            //    case "UW":
-            //        result.UW = tatObject;
-            //        break;
-            //    case "LMKT":
-            //        result.LMKT = tatObject;
-            //        break;
-            //    case "PM":
-            //        result.PM = tatObject;
-            //        break;
-            //}
-            //objectIn.TurnAroundTimeAttributes = JsonConvert.SerializeObject(result);
-
+           
 
 
             return (PICMain, PICLeader, PICHOD);
@@ -908,93 +879,182 @@ namespace ERPCore.ControllerUtil
 
             return builderStr.ConnectionString;
         }
-        public static async Task<byte[]?> DigiSign(long? id, IBaseRepository<Document> baseRepository)
+
+        public static async Task<DigisignCallbackResult?> SignByKeywordWithCKSHSM(IBaseRepository<Document> baseRepository, long?  documentId)
         {
             var uRLConfig = baseRepository._baseConfiguration.GetSection("URLConfig").Get<URLConfig>();
             var blobSettings = baseRepository._baseConfiguration.GetSection("BlobStorage").Get<BlobStorageSettings>();
-            string URL = uRLConfig.DigiSignHost;
-            //Change lại thành hàm của chính link host cho source này từ 
-            //TestCallBackUrl  -> CallbackFileHandle
-            string callURL = uRLConfig.DigisignStorageHost;
-            string endpoint = $"{URL}/api/convert";
-            string keyApi = baseRepository._baseConfiguration.GetSection("DigiSignServer:Key").Value;
-            try
+            // Chờ 5 giây
+            await Task.Delay(TimeSpan.FromSeconds(10));
+            //
+            
+            var attachment = await baseRepository.GetObjectByIdAsync(documentId ?? 0 );
+
+            // Ví dụ: đường dẫn vật lý file
+            // Bạn sửa lại theo cấu trúc thật của hệ thống
+            string filePath = Path.Combine(
+                blobSettings.Path,
+                attachment.SubDirectory ?? "", attachment.FileName
+            );
+
+
+            // Callback sang API khác
+            using var client = new HttpClient();
+
+            string callbackUrl = uRLConfig.GetStreamHost;
+
+            byte[]? fileBytes = File.ReadAllBytes(filePath);
+
+            var callbackResult = new DigisignCallbackResult
             {
-                if (string.IsNullOrWhiteSpace(endpoint))
-                    throw new Exception("Config UrlConfig:DigiSignHost is empty.");
-
-                // Ví dụ: lấy thông tin file theo id từ DB
-                // Bạn thay Attachment bằng model thực tế của bạn
-                var attachment = await baseRepository.GetObjectByIdAsync(id ?? 0);
-                if (attachment == null)
-                    throw new Exception($"Attachment id={id} not found.");
-
-                // Ví dụ: đường dẫn vật lý file
-                // Bạn sửa lại theo cấu trúc thật của hệ thống
-                string filePath = Path.Combine(
-                    blobSettings.Path,
-                    attachment.SubDirectory ?? ""
-                );
-
-                if (!System.IO.File.Exists(filePath))
-                    throw new Exception($"File not found: {filePath}");
-
-                await using var fileStream = System.IO.File.OpenRead(filePath);
-
-                using var multipart = new MultipartFormDataContent();
-
-                var fileContent = new StreamContent(fileStream);
-                fileContent.Headers.ContentType = new MediaTypeHeaderValue(Util.GetMimeType(filePath));
-
-                // "file" phải đúng tên field mà API bên convert yêu cầu
-                multipart.Add(fileContent, "file", Path.GetFileName(filePath));
-
-                // Các field form-data khác
-                multipart.Add(new StringContent("pdf"), "outputFormat");
-                multipart.Add(new StringContent(callURL), "callbackUrl");
-                multipart.Add(new StringContent(JsonConvert.SerializeObject(new { Document = new Document() { Id = id ?? 0 } })), "metadata");
-
-                var client = new HttpClient();
-                client.Timeout = TimeSpan.FromMinutes(10);
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
-                client.DefaultRequestHeaders.Add("X-API-KEY", keyApi);
-
-
-                var response = await client.PostAsync(endpoint, multipart);
-                var responseBytes = await response.Content.ReadAsByteArrayAsync();
-                var responseText = await response.Content.ReadAsStringAsync();
-
-                if (!response.IsSuccessStatusCode)
+                JobId = Guid.NewGuid().ToString(),
+                Status = "SUCCESS",
+                FileName = Path.GetFileName(filePath),
+                ContentType = "application/pdf",
+                FileBase64 = Convert.ToBase64String(fileBytes),
+                Metadata = new
                 {
-                    throw new Exception("Signing server returned error.");
-                }
+                    DocumentId = attachment.Id,
+                    attachment.FileName
+                },
+                ConvertedAt = DateTime.UtcNow
+            };
 
-                // Nếu server convert trả thẳng file đã convert về
-                var outputFileName = Path.GetFileNameWithoutExtension(filePath) + ".pdf";
+            var response = await client.PostAsJsonAsync(
+            callbackUrl,
+            callbackResult);
 
-                string getStreamHost = uRLConfig.GetStreamHost + $"?fileName={outputFileName}";
-                var responseGet = await client.GetAsync(getStreamHost);
-                var responseBytesGet = await responseGet.Content.ReadAsByteArrayAsync();
-                var responseTextGet = await responseGet.Content.ReadAsStringAsync();
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new Exception("Signing server returned error.");
-                }
-
-                return responseBytesGet;
-                //return File(responseBytesGet, "application/pdf", outputFileName);
-
-                // Nếu bạn chỉ muốn lưu xuống disk rồi return ok thì dùng đoạn này thay thế:
-                // var outputPath = Path.Combine(Path.GetDirectoryName(filePath)!, outputFileName);
-                // await System.IO.File.WriteAllBytesAsync(outputPath, responseBytes);
-                // return Ok(new { message = "Signing success", outputPath });
-            }
-            catch (Exception ex)
+            if (!response.IsSuccessStatusCode)
             {
-                throw new Exception("Signing failed");
-              
+                return new DigisignCallbackResult
+                {
+                JobId = "11ad617b-5a8b-4fa4-9548-3f70ce4a1138",
+                Status = "FAILED",
+                Error = $"File not found: {filePath}"
+                };
+
             }
+            else
+            {
+                return new DigisignCallbackResult
+                {
+                JobId = "11ad617b-5a8b-4fa4-9548-3f70ce4a1138",
+                Status = "SUCCESS",
+                FileName = Path.GetFileName(filePath),
+                ContentType = "application/pdf",
+                FileBase64 = Convert.ToBase64String(fileBytes),
+                Metadata = new
+                {
+                DocumentId = attachment.Id,
+                attachment.FileName
+                },
+                ConvertedAt = DateTime.UtcNow
+                };
+            }
+
+        }
+
+        public static async Task SignManualByLocationWithCKSHSMCompany()
+        {
+
+        }
+        public static async Task makeSign()
+        {
+
+        }
+
+        public static async Task<byte[]?> DigiSign(IBaseRepository<Document> baseRepository , long? id )
+        {
+
+            DigisignCallbackResult result = await SignByKeywordWithCKSHSM(baseRepository, id);
+            return Convert.FromBase64String(result.FileBase64).ToArray();
+
+            //Golive change
+            //var uRLConfig = baseRepository._baseConfiguration.GetSection("URLConfig").Get<URLConfig>();
+            //var blobSettings = baseRepository._baseConfiguration.GetSection("BlobStorage").Get<BlobStorageSettings>();
+            //string URL = uRLConfig.DigiSignHost;
+            ////Change lại thành hàm của chính link host cho source này từ 
+            ////TestCallBackUrl  -> CallbackFileHandle
+            //string callURL = uRLConfig.DigisignStorageHost;
+            //string endpoint = $"{URL}/api/convert";
+            //string keyApi = baseRepository._baseConfiguration.GetSection("DigiSignServer:Key").Value;
+            //try
+            //{
+            //    if (string.IsNullOrWhiteSpace(endpoint))
+            //        throw new Exception("Config UrlConfig:DigiSignHost is empty.");
+
+            //    // Ví dụ: lấy thông tin file theo id từ DB
+            //    // Bạn thay Attachment bằng model thực tế của bạn
+            //    var attachment = await baseRepository.GetObjectByIdAsync(id ?? 0);
+            //    if (attachment == null)
+            //        throw new Exception($"Attachment id={id} not found.");
+
+            //    // Ví dụ: đường dẫn vật lý file
+            //    // Bạn sửa lại theo cấu trúc thật của hệ thống
+            //    string filePath = Path.Combine(
+            //        blobSettings.Path,
+            //        attachment.SubDirectory ?? "", attachment.FileName
+            //    );
+
+            //    if (!System.IO.File.Exists(filePath))
+            //        throw new Exception($"File not found: {filePath}");
+
+            //    await using var fileStream = System.IO.File.OpenRead(filePath);
+
+            //    using var multipart = new MultipartFormDataContent();
+
+            //    var fileContent = new StreamContent(fileStream);
+            //    fileContent.Headers.ContentType = new MediaTypeHeaderValue(Util.GetMimeType(filePath));
+
+            //    // "file" phải đúng tên field mà API bên convert yêu cầu
+            //    multipart.Add(fileContent, "file", Path.GetFileName(filePath));
+
+            //    // Các field form-data khác
+            //    multipart.Add(new StringContent("pdf"), "outputFormat");
+            //    multipart.Add(new StringContent(callURL), "callbackUrl");
+            //    multipart.Add(new StringContent(JsonConvert.SerializeObject(new { Document = new Document() { Id = id ?? 0 } })), "metadata");
+
+            //    var client = new HttpClient();
+            //    client.Timeout = TimeSpan.FromMinutes(10);
+            //    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
+            //    client.DefaultRequestHeaders.Add("X-API-KEY", keyApi);
+
+
+            //    var response = await client.PostAsync(endpoint, multipart);
+            //    var responseBytes = await response.Content.ReadAsByteArrayAsync();
+            //    var responseText = await response.Content.ReadAsStringAsync();
+
+            //    if (!response.IsSuccessStatusCode)
+            //    {
+            //        throw new Exception("Signing server returned error.");
+            //    }
+
+            //    // Nếu server convert trả thẳng file đã convert về
+            //    var outputFileName = Path.GetFileNameWithoutExtension(filePath) + ".pdf";
+
+            //    string getStreamHost = uRLConfig.GetStreamHost + $"?fileName={outputFileName}";
+            //    var responseGet = await client.GetAsync(getStreamHost);
+            //    var responseBytesGet = await responseGet.Content.ReadAsByteArrayAsync();
+            //    var responseTextGet = await responseGet.Content.ReadAsStringAsync();
+
+            //    if (!response.IsSuccessStatusCode)
+            //    {
+            //        throw new Exception("Signing server returned error.");
+            //    }
+
+            //    return responseBytesGet;
+            //    //return File(responseBytesGet, "application/pdf", outputFileName);
+
+            //    // Nếu bạn chỉ muốn lưu xuống disk rồi return ok thì dùng đoạn này thay thế:
+            //    // var outputPath = Path.Combine(Path.GetDirectoryName(filePath)!, outputFileName);
+            //    // await System.IO.File.WriteAllBytesAsync(outputPath, responseBytes);
+            //    // return Ok(new { message = "Signing success", outputPath });
+            //}
+            //catch (Exception ex)
+            //{
+            //    throw new Exception("Signing failed");
+
+            //}
         }
 
     }

@@ -22,6 +22,7 @@
         thisObject.ModelName =  "Quotation";
         thisObject.formId = `@QTViewIdHelper.Form(dept, quotationId)`;
         thisObject.dept = `@dept`;
+        thisObject.subDeptComponent = `Client`;
         thisObject.prefix = `@prefix`;
 
 
@@ -72,7 +73,7 @@
 
 
      var acceptDecisionV2 = {
-        buttonId: acceptButtonId,
+        buttonId: null,
         statusId: panelStatusId,
         text: "Accept",
         icon: "check",
@@ -86,6 +87,8 @@
         skipAcceptedMainFields: false,
         statusButtonDisabled: true
     };
+    var itemsDelay = [acceptDecisionV2];
+
     var mainFields = [
 
 
@@ -157,11 +160,27 @@
                 { itemType: "group", name:"resAttachment", caption: "RES Attachment", colCount: 1, items:  attachmentByCase(thatRes) },
                 {
                         itemType: "group",
-                        name: "decision@(dept)Group",
-                        cssClass: "workflow-decision-group-client qt-decision-group-@(dept)",
+                        name: "decisionClientGroup",
+                        cssClass: "workflow-decision-group qt-decision-group-@(dept)",
+
+                        // elementAttr: {
+                        //     id:
+                        //         "qt-decision-group-@(dept)-@(quotationId)",
+
+                        //     "data-form-group-name":
+                        //         "decision@(dept)Group",
+
+                        //     "data-route-dept":
+                        //         "@dept", 
+                        //         "data-decision-group-key": "clientConfirm",
+                        //     "data-decision-placement": "form"
+                        // },
+
+
+                        cssClass: "workflow-decision-group-client qt-decision-group-client",
                         elementAttr: {
                             id: "qt-decision-group-@(dept)-@(quotationId)",
-                            "data-form-group-name": "decision@(dept)Group",
+                            "data-form-group-name": "decisionClientGroup",
                             "data-route-dept": "@dept",
                             "data-decision-group-key": "clientConfirm",
                             "data-decision-placement": "form"
@@ -169,96 +188,292 @@
                         caption: "Client Confirm",
                         colCount: 2,
                         items: [
-                        {
-                                dataField: "decision",
+                            workflowDecisionField(
+                                thisObject,
+                                ...itemsDelay
+                            )
+                        ]
+                    //     items: [
+                    //     {
+                    //             dataField: "decision",
 
-                                label: {
-                                    text: "Decision"
-                                },
-                                itemType: "simple",
-                                template: function (data, itemElement) {
-                                    // $(`<div id="${submitBranchId}" class="lmkt-submitbranch-decision-host"></div>`)
-                                    //     .appendTo(itemElement);
+                    //             label: {
+                    //                 text: "Decision"
+                    //             },
+                    //             itemType: "simple",
+                    //             template: function (data, itemElement) {
+                    //                 // $(`<div id="${submitBranchId}" class="lmkt-submitbranch-decision-host"></div>`)
+                    //                 //     .appendTo(itemElement);
 
-                                    $(`#${clientStatusId}`).appendTo(itemElement);
-                                    $.each(items, function (itemIndex, item) {
-                                        $(`<div id="${item.id}">`).dxButton({ text: item.text, visible: false}).appendTo(itemElement);
-                                    });
-                                }
-                        }
-                    ]
+                    //                 $(`#${clientStatusId}`).appendTo(itemElement);
+                    //                 $.each(items, function (itemIndex, item) {
+                    //                     $(`<div id="${item.id}">`).dxButton({ text: item.text, visible: false}).appendTo(itemElement);
+                    //                 });
+                    //             }
+                    //     }
+                    // ]
                 }
                ];
 
     // var itemsDelay = [null, null, declinedButtonId, declinedStatusId];
-    var itemsDelay = [acceptDecisionV2];
 
       var items = [
             { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)", text: "Client Accept", value: true },
             // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
             { id: "DC_@QTViewIdHelper.Decision(dept, quotationId)", text: "Client Deny", value: false }
         ];
-    function getClientDecisionStatus(actionStatus) {
-        if (!actionStatus) return "";
-        try {
-            var status = typeof actionStatus === "string"
-                ? JSON.parse(actionStatus)
-                : actionStatus;
-            return status?.ClientDecision || "";
-        } catch (err) {
-            console.warn("Unable to read ClientDecision from actionStatus", err);
-            return "";
-        }
-    }
 
-    function setClientDecisionStatus(decision) {
-        var form = $("#@QTViewIdHelper.Form(dept, quotationId)").dxForm("instance");
-        if (!form) return;
+        //Comment out 2026-08-19
+    // function getClientDecisionStatus(actionStatus) {
+    //     if (!actionStatus) return "";
+    //     try {
+    //         var status = typeof actionStatus === "string"
+    //             ? JSON.parse(actionStatus)
+    //             : actionStatus;
+    //         return status?.ClientDecision || "";
+    //     } catch (err) {
+    //         console.warn("Unable to read ClientDecision from actionStatus", err);
+    //         return "";
+    //     }
+    // }
+     //Comment out 2026-08-19
+    // function setClientDecisionStatus(decision) {
+    //     var form = $("#@QTViewIdHelper.Form(dept, quotationId)").dxForm("instance");
+    //     if (!form) return;
 
-        var formData = form.option("formData") || {};
-        var status = {};
-        try {
-            status = formData.actionStatus
-                ? (typeof formData.actionStatus === "string" ? JSON.parse(formData.actionStatus) : formData.actionStatus)
-                : {};
-        } catch (err) {
-            console.warn("Unable to update ClientDecision in actionStatus", err);
-        }
+    //     var formData = form.option("formData") || {};
+    //     var status = {};
+    //     try {
+    //         status = formData.actionStatus
+    //             ? (typeof formData.actionStatus === "string" ? JSON.parse(formData.actionStatus) : formData.actionStatus)
+    //             : {};
+    //     } catch (err) {
+    //         console.warn("Unable to update ClientDecision in actionStatus", err);
+    //     }
 
-        status = status && typeof status === "object" ? status : {};
-        if (decision) {
-            status.ClientDecision = decision;
-        } else {
-            delete status.ClientDecision;
-        }
-        form.updateData("actionStatus", JSON.stringify(status));
-    }
+    //     status = status && typeof status === "object" ? status : {};
+    //     if (decision) {
+    //         status.ClientDecision = decision;
+    //     } else {
+    //         delete status.ClientDecision;
+    //     }
+    //     form.updateData("actionStatus", JSON.stringify(status));
+    // }
 
 
     window.QuotationPage.state.formFO = $("#@QTViewIdHelper.Form(dept, quotationId)").dxForm({
-    dataSource: makeBasicDataSource(that, true),
-    onContentReady: function (e) {
-        var formData = e.component.option("formData") || {};
-        var storedDecision = getClientDecisionStatus(formData.actionStatus);
-        if ((formData.clientDecision || "") !== storedDecision) {
-            e.component.updateData("clientDecision", storedDecision || null);
-        }
-    }, items: mainFields
+    dataSource: makeBasicDataSource(that, true)
+    //,
+    // onContentReady: function (e) {
+    //     var formData = e.component.option("formData") || {};
+    //     var storedDecision = getClientDecisionStatus(formData.actionStatus);
+    //     if ((formData.clientDecision || "") !== storedDecision) {
+    //         e.component.updateData("clientDecision", storedDecision || null);
+    //     }
+    // }
+    , items: mainFields
     });
 
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
     // delayAcceptStatusV2([], thisObject, ...itemsDelay);
-    setTimeout(() => {
-        var picJson = PIC_JSON || "{}";
-        var picMap = parsePicMap(picJson);
-        var picVal = picMap["@dept"] || "";
-        var sectionId = `#qt-sec_@(dept)_@(quotationId)`;
-        if (!picVal) {
-            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
-        } else {
-            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
-        }
-    }, 100);
+    delayAcceptStatusV2Promise(
+            null,
+            thisObject,
+            ...itemsDelay
+        )
+            .then(async function (decisionContext) {
+
+                /*
+                 * decisionContext hiện có:
+                 *
+                 * decisionContext.status
+                 * decisionContext.buttons
+                 * decisionContext.primaryButton
+                 * decisionContext.actionHost
+                 *
+                 * decisionContext.enable()
+                 * decisionContext.disable()
+                 * decisionContext.setDisabled(...)
+                 */
+                var picJson =
+                    PIC_JSON || "{}";
+
+                var picMap =
+                    parsePicMap(picJson);
+
+                var picVal =
+                    picMap["@dept"] || "";
+
+                var $section =
+                    $(`#qt-sec_@(dept)_@(quotationId)`);
+
+
+                if (!picVal) {
+
+                    $section
+                        .find(
+                            ".dept-upperbody, " +
+                            ".dept-body, " +
+                            ".dept-lowerbody, " +
+                            ".dept-footer"
+                        )
+                        .hide();
+
+                }
+                else {
+
+                    $section
+                        .find(
+                            ".dept-upperbody, " +
+                            ".dept-body, " +
+                            ".dept-lowerbody, " +
+                            ".dept-footer"
+                        )
+                        .show();
+                }
+
+
+                /*
+                 * =========================================================
+                 * DECISION
+                 * =========================================================
+                 */
+
+                console.log(
+                    "LMKT decision context:",
+                    decisionContext
+                );
+
+
+                /*
+                 * Nếu muốn enable tất cả decision button
+                 */
+                decisionContext.enable();
+
+
+                /*
+                 * Nếu chỉ muốn primary button:
+                 *
+                 * decisionContext.primaryButton?.enable();
+                 *
+                 * decisionContext.primaryButton?.disable();
+                 */
+
+
+                /*
+                 * Status object
+                 */
+                console.log(
+                    "Status:",
+                    decisionContext.status
+                );
+
+
+                /*
+                 * =========================================================
+                 * CUSTOM ROUTE
+                 * =========================================================
+                 */
+
+                var workflowResult =
+                    await loadSelectedWorkflow({
+
+                        moduleCode: "qt",
+
+                        id: @(quotationId),
+
+                        guid: "@quotationGuid",
+
+                        reload: false
+                    });
+
+
+                console.log(
+                    "Workflow result:",
+                    workflowResult
+                );
+
+
+                var customRouteObjects =
+                    workflowResult?.customRouteObjects || [];
+
+
+                console.log(
+                    "LMKT custom routes:",
+                    customRouteObjects
+                );
+
+
+                /*
+                 * Chỉ lấy route của LMKT
+                 */
+                var lmktRoutes =
+                    customRouteObjects.filter(
+                        function (item) {
+                            return item.dept === "@dept";
+                        }
+                    );
+
+
+                /*
+                 * Enable toàn bộ custom route LMKT
+                 */
+                lmktRoutes.forEach(
+                    function (item) {
+                        item.enable();
+                    }
+                );
+
+
+                /*
+                 * Nếu cần disable:
+                 *
+                 * lmktRoutes.forEach(function (item) {
+                 *     item.disable();
+                 * });
+                 */
+
+
+                /*
+                 * Ví dụ tìm route cụ thể
+                 */
+                
+                // $(approveRoute).dxButton("instance").option("disabled", false);
+                // if (approveRoute) {
+
+                //     console.log(
+                //         "Approve route:",
+                //         approveRoute
+                //     );
+
+                //      approveRoute.enable();
+
+                //     // approveRoute.disable();
+
+                //     // approveRoute.button.instance
+                //     //     ?.option("disabled", false);
+                // }
+
+            })
+            .catch(function (error) {
+
+                console.error(
+                    "LMKT decision initialization failed:",
+                    error
+                );
+
+            });
+    // setTimeout(() => {
+    //     var picJson = PIC_JSON || "{}";
+    //     var picMap = parsePicMap(picJson);
+    //     var picVal = picMap["@dept"] || "";
+    //     var sectionId = `#qt-sec_@(dept)_@(quotationId)`;
+    //     if (!picVal) {
+    //         $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+    //     } else {
+    //         $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+    //     }
+    // }, 100);
 
     });
 </script>

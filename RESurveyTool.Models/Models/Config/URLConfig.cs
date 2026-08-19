@@ -15,6 +15,7 @@ namespace ERPCore.Models.Config
         public string REHost { get; set; } = "";
         public string LibreOfficeHost { get; set; } = "";
         public string DigiSignHost { get; set; } = "";
+        public string QuotationSignEndpoint { get; set; } = "";
         public string CallbackHost { get; set; } = "";
         public string GetStreamHost { get; set; } = "";
         public string DigisignStorageHost { get; set; } = "";

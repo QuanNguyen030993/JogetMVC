@@ -2298,6 +2298,7 @@
                 if (k.includes("complete")) return { css: "complete", text: raw };
                 if (k === "dispose") return { css: "dispose", text: raw };
                 if (k === "archive") return { css: "archive", text: raw };
+                if (k === "signed") return { css: "signed", text: raw };
                 if (k === "?" || k === "unknown") return { css: "unknown", text: "?" };
                 return { css: "unknown", text: s || "?" };
             }
@@ -5401,8 +5402,8 @@
                 const isSharePoint = subDirectory.toLowerCase().includes("sharepoint");
 
                 const storageIcon = isSharePoint
-                    ? `<i class="fa-solid fa-cloud"></i>`
-                    : `<i class="fa-solid fa-database"></i>`;
+                    ? `<div class="att-icon-behind"><i class="fa-solid fa-cloud"></i></div>`
+                    : `<div class="att-icon-behind"><i class="fa-solid fa-database"></i></div>`;
 
 
                 if (!(options && options.showFillListSelect)) {
@@ -5413,7 +5414,7 @@
                     });
                 }
 
-                $("<div>")
+                var $icon = $("<div>")
                     .addClass("att-ico")
                     .text(getIconByExt(ext))
                     .appendTo($item);
@@ -5428,7 +5429,7 @@
                     .attr("title", fileName)
                     .text(`${fileName}`)
                     .appendTo($meta);
-                $(storageIcon).appendTo($divFileName);
+                $(storageIcon).appendTo($icon);
 
 
                 $("<div>")
@@ -6364,7 +6365,7 @@
                         var allGroups = Array.from(section.querySelectorAll(".workflow-decision-group"));
                         allGroups.forEach(function (group) {
                             if (group.dataset.decisionPlacement === "form") {
-                                rememberDecisionGroupPosition(root, section, dock, group);
+                                //rememberDecisionGroupPosition(root, section, dock, group);
                                 // restoreDecisionGroupPosition(group);
                             }
                         });
@@ -8851,13 +8852,22 @@
 
         var decisionGroupName =
             `decision${delayObject.dept}Group.${decisionFieldName}`;
-
+          
         var decisionRegistryKey =
             `${formProps.formId}:` +
             `${String(delayObject.dept || "")
                 .trim()
                 .toUpperCase()}`;
-
+    if (delayObject.subDeptComponent)
+              {
+                  decisionGroupName =
+              `decision${delayObject.subDeptComponent}Group.${decisionFieldName}`;
+              decisionRegistryKey =
+            `${formProps.formId}:` +
+            `${String(delayObject.subDeptComponent || "")
+                .trim()
+                .toUpperCase()}`;
+              }
         window.WorkflowDecisionRegistry =
             window.WorkflowDecisionRegistry || {};
 
@@ -9093,10 +9103,6 @@
             }
 
             if (statusText) return { text: statusText, title: "" };
-            if (dept == "LMKT")
-            {
-                debugger
-            }
             var acceptDate = tatObject?.[dept]?.AcceptDate || "No status";
             if (acceptDate) {
                 return {
@@ -9282,7 +9288,6 @@
 
             function updateDelayAcceptStatus(statusId, buttonId, acceptDate, defaultStatus = null) {
                 setTimeout(() => {
-                    debugger
                     if (!statusId || !acceptDate) 
                     {
                         console.log("Cannot load status from " + statusId, statusId);
@@ -9618,7 +9623,6 @@
             }
 
                 function renderDecisionDeferredV2(formProps, groupName, mainField, ...params) {
-
         // setTimeout(function () {
                  const formDataClone = structuredClone(formProps);
 
@@ -9634,7 +9638,7 @@
                     setTimeout(() => {
                         var form = $(`#${formDataClone.formId}`).dxForm("instance");
                         if (!form) return;
-                       
+                        
                         var formItems = form.option("formData") || {};
                         if (formItems)
                         {
@@ -9708,6 +9712,8 @@
                             "onLoading",
                             finalDecisionStatus.title || finalDecisionStatus.text
                         );
+                      
+
                       if (latestTatObject?.[formDataClone.dept]?.AcceptDate)
                       {
                               var acceptButtonId = getDelayAcceptButtonId(params[0]);
@@ -9763,20 +9769,24 @@
 
                                       //        }
                                       // }
+                          
                                   }
                                   else{
                                       $(`#${acceptButtonId}`).css("background-color", window.DecisionColors.accepted);
                                       if (formDataClone.dept == "UW")
                                       {
                                       }
-                                      updateDelayAcceptStatus(
-                                          panelStatusId,
-                                          acceptButtonId,
-                                          latestTatObject[formDataClone.dept]?.AcceptDate
+                                          updateDelayAcceptStatus(
+                                              panelStatusId,
+                                              acceptButtonId,
+                                              latestTatObject[formDataClone.dept]?.AcceptDate
 
-                                      );
+                                          );
                                       disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
                                   }
+                              }
+                              else { // If not passing accept Id button
+
                               }
                            
                       } // if TAT Accept and Button Accept
@@ -9806,17 +9816,17 @@
                           }
                       }
 
-                      if (formDataClone.dept == "LMKT") { //  another logic
+                      // if (formDataClone.dept == "LMKT") { //  another logic
                           
-                              // var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
-                              // debugger
-                              //  updateDelayAcceptStatus(
-                              //     commonStatusId,
-                              //     commonAcceptButtonId,
-                              //     latestTatObject[formItems.stageDept]?.CompleteDate, storedStatus
-                              // );
+                      //         // var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
+                      //         // debugger
+                      //         //  updateDelayAcceptStatus(
+                      //         //     commonStatusId,
+                      //         //     commonAcceptButtonId,
+                      //         //     latestTatObject[formItems.stageDept]?.CompleteDate, storedStatus
+                      //         // );
               
-                          }
+                      //     }
                       if (formItems.stageDept == "Client" && formDataClone.dept == "FO") { //  another logic
                           var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
                               if (storedStatus != "Accepted")
@@ -9828,6 +9838,19 @@
                                   );
                               }
                       }
+
+                           if (latestFormItems.actionStatus)
+                               {
+                                   var customStatus = tryParseJSON(latestFormItems.actionStatus, "Custom parsing problem")
+                                   updateDelayAcceptStatus(
+                                       commonStatusId,
+                                       acceptButtonId,
+                                       latestTatObject[formDataClone.dept]?.AcceptDate,
+                                       customStatus[formDataClone.dept]
+                                   );
+                                   disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
+                               }
+
     }, _delayUnlockForm);
 
 
@@ -10401,6 +10424,7 @@
                 const [deptIndex, deptItem]
                 of deptCodes.entries()
             ) {
+                
                 const normalizedDept =
                     normalizeDept(deptItem);
 
@@ -10424,11 +10448,22 @@
                         const routeData =
                             String(route?.data || "");
 
-                        const groupMatch =
+                        var groupMatch =
                             !routeData ||
                             routeData.includes(
                                 `decision${deptItem}Group`
                             );
+
+                            if (deptItem == "FO")
+                            {
+                                 groupMatch =
+                                !routeData ||
+                                routeData.includes(
+                                    `decisionClientGroup`
+                                );
+                                debugger
+                            }
+                           
 
                         return isDeptMatch && groupMatch;
                     });
@@ -10444,7 +10479,7 @@
                     if (formStages?.pace) {
                         await formStages.pace(routeIndex);
                     }
-
+                    debugger
                     const routeDept =
                         getRouteDept(
                             route,
