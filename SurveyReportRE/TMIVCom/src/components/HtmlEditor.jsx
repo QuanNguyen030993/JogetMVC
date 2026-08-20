@@ -24,6 +24,8 @@ const HtmlEditor = forwardRef(({
     const [showSource, setShowSource] = useState(false);
     const [sourceHtml, setSourceHtml] = useState(value ?? "");
     const [isFocused, setIsFocused] = useState(false);
+    const [textColor, setTextColor] = useState("#000000");
+    const [highlightColor, setHighlightColor] = useState("#ffff00");
 
     const handleFocusIn = (e) => {
         setIsFocused(true);
@@ -899,27 +901,48 @@ useEffect(() => {
 
     <div className="tmiv-toolbar-separator" />
 
-    <input
-        type="color"
+    <label
+        className="tmiv-tool-item tmiv-color-tool"
         title="Text Color"
-        onChange={e =>
-            command(
-                "foreColor",
-                e.target.value
-            )
-        }
-    />
+        aria-label="Text Color"
+    >
+        <span className="tmiv-color-letter">A</span>
+        <span
+            className="tmiv-color-indicator"
+            style={{ backgroundColor: textColor }}
+        />
+        <input
+            className="tmiv-color-input"
+            type="color"
+            value={textColor}
+            onChange={e => {
+                setTextColor(e.target.value);
+                command("foreColor", e.target.value);
+            }}
+        />
+    </label>
 
-    <input
-        type="color"
+    <label
+        className="tmiv-tool-item tmiv-color-tool tmiv-highlight-tool"
         title="Background Color"
-        onChange={e =>
-            command(
-                "hiliteColor",
-                e.target.value
-            )
-        }
-    />
+        aria-label="Background Color"
+    >
+        <span
+            className="tmiv-highlight-icon"
+            style={{ backgroundColor: highlightColor }}
+        >
+            A
+        </span>
+        <input
+            className="tmiv-color-input"
+            type="color"
+            value={highlightColor}
+            onChange={e => {
+                setHighlightColor(e.target.value);
+                command("hiliteColor", e.target.value);
+            }}
+        />
+    </label>
 
     <div className="tmiv-toolbar-separator" />
 
@@ -1035,7 +1058,7 @@ useEffect(() => {
             ⟳
         </div>
 
-        <div className="tmiv-tool-item">
+        <div className="tmiv-tool-item tmiv-rotation-tool">
             <input
                 type="number"
                 value={rotationDegrees}
@@ -1102,27 +1125,6 @@ useEffect(() => {
     </div>
 
     <div className="tmiv-toolbar-separator" />
-
-    <div
-        className="tmiv-tool-item"
-        onClick={() => {
-
-            const text =
-                window
-                    .getSelection()
-                    ?.toString() || "";
-
-            document.execCommand(
-                "insertHTML",
-                false,
-                `<pre><code>${text}</code></pre>`
-            );
-
-            change();
-        }}
-    >
-        {"</>"}
-    </div>
 
     <div
         className="tmiv-tool-item"

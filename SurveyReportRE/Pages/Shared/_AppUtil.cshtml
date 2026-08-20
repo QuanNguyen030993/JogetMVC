@@ -3266,11 +3266,11 @@
             }
 
             function updateBeacon(sectionMeasurements, activeIndex, markerScrollTop) {
-                if (!$beacon.length || !sectionMeasurements.length) return;
+                if (!$beacon.length || !sectionMeasurements.length) return false;
 
                 var current = sectionMeasurements[activeIndex];
                 var currentY = getNodeCenterY(current.entry.node);
-                if (currentY == null) return;
+                if (currentY == null) return false;
 
                 var next = sectionMeasurements[activeIndex + 1];
                 var nextY = next ? getNodeCenterY(next.entry.node) : currentY;
@@ -3284,6 +3284,7 @@
                     : 0;
 
                 $beacon.css("top", `${currentY + (nextY - currentY) * progress}px`);
+                return true;
             }
 
             function updateActivePart(activeEntry, markerY) {
@@ -3330,7 +3331,14 @@
                 var atBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 2;
                 if (atBottom) activeIndex = entries.length - 1;
                 var activeEntry = entries[activeIndex];
-                updateBeacon(sectionMeasurements, activeIndex, markerScrollTop);
+                var beaconPositioned = updateBeacon(
+                    sectionMeasurements,
+                    activeIndex,
+                    markerScrollTop
+                );
+                if (beaconPositioned) {
+                    $treeStack.attr("data-dept-tree-ready", "true");
+                }
                 updateActivePart(activeEntry, markerY);
                 entries.forEach(function (entry) {
                     var sectionRect = entry.section.getBoundingClientRect();
@@ -3382,12 +3390,25 @@
                 $nodes
                     .not(node)
                     .removeClass("fan-open")
-                    .find(".dept-axis-trigger")
+                    .find(".dept-circle")
                     .attr("aria-expanded", "false");
-                $(node).toggleClass("fan-open", Boolean(shouldOpen));
-                $(node)
-                    .find(".dept-axis-trigger")
+                $nodes
+                    .not(node)
+                    .find(".dept-subnodes")
+                    .attr("aria-hidden", "true")
+                    .find(".dept-subnode")
+                    .attr("tabindex", "-1");
+
+                var $node = $(node);
+                $node.toggleClass("fan-open", Boolean(shouldOpen));
+                $node
+                    .find(".dept-circle")
                     .attr("aria-expanded", String(Boolean(shouldOpen)));
+                $node
+                    .find(".dept-subnodes")
+                    .attr("aria-hidden", String(!shouldOpen))
+                    .find(".dept-subnode")
+                    .attr("tabindex", shouldOpen ? "0" : "-1");
             }
 
             function closeDeptFansFromOutside(event) {
@@ -3395,8 +3416,13 @@
                     && $(event.target).closest(".dept-subnodes").length) return;
                 $nodes
                     .removeClass("fan-open")
-                    .find(".dept-axis-trigger")
+                    .find(".dept-circle")
                     .attr("aria-expanded", "false");
+                $nodes
+                    .find(".dept-subnodes")
+                    .attr("aria-hidden", "true")
+                    .find(".dept-subnode")
+                    .attr("tabindex", "-1");
             }
 
             $container
@@ -3404,13 +3430,11 @@
                 .on("scroll.deptTreeSpy", requestUpdate);
             $nodes
                 .off(".deptTreeParts")
-                .on("click.deptTreeParts", ".dept-axis-trigger", function (event) {
+                .on("click.deptTreeParts", ".dept-circle", function (event) {
                     event.preventDefault();
                     event.stopPropagation();
                     var node = $(this).closest(".dept-node")[0];
                     setOpenDeptFan(node, !node.classList.contains("fan-open"));
-                })
-                .on("click.deptTreeParts", ".dept-circle", function () {
                     this.focus();
                 })
                 .on("click.deptTreeParts", ".dept-subnode", function (event) {
@@ -3462,6 +3486,7 @@
                 });
             }
 
+            $treeStack.removeAttr("data-dept-tree-ready");
             requestUpdate();
             setDeptTreePartOrder(treeStack, [
                 "upperbody",
@@ -3469,8 +3494,6 @@
                 "lowerbody",
                 "footer"
             ]);
-            $treeStack.attr("data-dept-tree-ready", "true");
-
             return {
                 refresh: requestUpdate,
                 destroy: function () {
@@ -3485,8 +3508,13 @@
                         .removeClass("scroll-active fan-open")
                         .removeAttr("aria-current data-active-part");
                     $nodes
-                        .find(".dept-axis-trigger")
+                        .find(".dept-circle")
                         .attr("aria-expanded", "false");
+                    $nodes
+                        .find(".dept-subnodes")
+                        .attr("aria-hidden", "true")
+                        .find(".dept-subnode")
+                        .attr("tabindex", "-1");
                     getEntries().forEach(function (entry) {
                         $(entry.header).removeClass("dept-header-floated");
                     });

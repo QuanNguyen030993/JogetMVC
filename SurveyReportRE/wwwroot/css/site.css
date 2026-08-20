@@ -16571,7 +16571,7 @@ input.dx-hidden {
 .dx-form-group-with-caption > .dx-form-group-content {
     padding-top: 5px;
     margin-top: 6px;
-    border-top: 1px solid #ddd;
+    /*border-top: 1px solid #ddd;*/
     padding-bottom: 10px;
 }
 
@@ -33625,9 +33625,16 @@ textarea {
         0 0 0 4px rgba(37, 99, 235, .18),
         0 0 14px 5px rgba(37, 99, 235, .62);
     transform: translate(-50%, -50%);
-    transition: top .08s linear;
+    opacity: 0;
+    visibility: hidden;
+    transition: top .08s linear, opacity .12s ease;
     pointer-events: none;
     z-index: 1;
+}
+
+.dept-tree .treeStack[data-dept-tree-ready="true"] > .dept-scroll-beacon {
+    opacity: 1;
+    visibility: visible;
 }
 
 .dept-tree .dept-scroll-beacon::after {
@@ -33650,8 +33657,7 @@ textarea {
     }
 }
 
-/* The main axis keeps its original size. Clicking a vertical segment fans its
-   four section shortcuts out beside the axis on a compact arc. */
+/* Clicking a department node fans its section shortcuts out on a compact arc. */
 .dept-tree .treeStack {
         position: relative;
         display: flex;
@@ -33677,9 +33683,7 @@ textarea {
     position: absolute;
     left: 50%;
     right: auto;
-    /* The node gap is 22px: place the fan origin at the midpoint of the
-       vertical segment between this department and the following one. */
-    top: calc(100% + 11px);
+    top: 50%;
     width: var(--node);
     height: var(--node);
     display: block;
@@ -33687,46 +33691,6 @@ textarea {
     visibility: visible;
     pointer-events: none;
     z-index: 5;
-}
-
-.dept-node .dept-axis-trigger {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 20px;
-    height: 22px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    transform: translate(-50%, -50%);
-    pointer-events: auto;
-    cursor: pointer;
-    z-index: 6;
-}
-
-.dept-node .dept-axis-trigger::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 0;
-    width: 2px;
-    height: 100%;
-    border-radius: 999px;
-    background: var(--line);
-    transform: translateX(-50%);
-    transition: width .15s ease, background-color .15s ease, box-shadow .15s ease;
-}
-
-.dept-node .dept-axis-trigger:hover::before,
-.dept-node .dept-axis-trigger:focus-visible::before,
-.dept-node.fan-open .dept-axis-trigger::before {
-    width: 4px;
-    background: #60a5fa;
-    box-shadow: 0 0 8px rgba(37, 99, 235, .48);
-}
-
-.dept-node .dept-axis-trigger:focus-visible {
-    outline: none;
 }
 
 .dept-node .dept-subnodes::before {
@@ -33780,38 +33744,41 @@ textarea {
     display: block;
 }
 
-.dept-node .dept-subnode:nth-child(2) {
-    --fan-x: -39px;
-    --fan-y: -32px;
+.dept-node .dept-subnode:nth-child(1) {
+    --fan-x: -40px;
+    --fan-y: -33px;
 }
 
-.dept-node .dept-subnode:nth-child(3) {
+.dept-node .dept-subnode:nth-child(2) {
     --fan-x: -57px;
     --fan-y: -11px;
 }
 
-.dept-node .dept-subnode:nth-child(4) {
+.dept-node .dept-subnode:nth-child(3) {
     --fan-x: -57px;
     --fan-y: 11px;
 }
 
-.dept-node .dept-subnode:nth-child(5) {
-    --fan-x: -39px;
-    --fan-y: 32px;
+.dept-node .dept-subnode:nth-child(4) {
+    --fan-x: -40px;
+    --fan-y: 33px;
 }
 
 /* When Route is hidden, spread the remaining three shortcuts across the
    complete fan instead of leaving them crowded in its upper half. */
-.dept-node:not(.status) .dept-subnode:nth-child(2) {
-    --fan-y: -32px;
+.dept-node:not(.status) .dept-subnode:nth-child(1) {
+    --fan-x: -44px;
+    --fan-y: -30px;
 }
 
-.dept-node:not(.status) .dept-subnode:nth-child(3) {
+.dept-node:not(.status) .dept-subnode:nth-child(2) {
+    --fan-x: -58px;
     --fan-y: 0px;
 }
 
-.dept-node:not(.status) .dept-subnode:nth-child(4) {
-    --fan-y: 32px;
+.dept-node:not(.status) .dept-subnode:nth-child(3) {
+    --fan-x: -44px;
+    --fan-y: 30px;
 }
 
 .dept-node .dept-subnode::after {

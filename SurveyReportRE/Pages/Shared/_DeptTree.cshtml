@@ -42,7 +42,6 @@
         @for (var deptIndex = 0; deptIndex < deptCodes.Length; deptIndex++)
         {
             var deptCode = deptCodes[deptIndex];
-            var hasAxisDetails = deptIndex < deptCodes.Length - 1;
             <div class="@($"{Model.Prefix}")-dept-tree dept-node"
                  data-key="@deptCode"
                  data-target="#@($"{Model.Prefix}-sec_{deptCode}_{Model.Id}")">
@@ -52,31 +51,31 @@
                     <span class="co-text">-</span>
                 </div>
 
-                @if (hasAxisDetails)
-                {
-                    <div class="dept-subnodes" aria-label="@deptCode section parts">
+                <div class="dept-subnodes"
+                     role="menu"
+                     aria-hidden="true"
+                     aria-label="@deptCode section parts">
+                    @for (var partIndex = 0; partIndex < sectionParts.Length; partIndex++)
+                    {
+                        var part = sectionParts[partIndex];
                         <button type="button"
-                                class="dept-axis-trigger"
-                                aria-expanded="false"
-                                aria-label="@($"Open {deptCode} section shortcuts")"></button>
-                        @for (var partIndex = 0; partIndex < sectionParts.Length; partIndex++)
-                        {
-                            var part = sectionParts[partIndex];
-                            <button type="button"
-                                    class="dept-subnode"
-                                    style="--sub-index:@partIndex"
-                                    data-section-part="@part.Key"
-                                    data-feature-slot="@($"{deptCode}:{part.Key}")"
-                                    data-tooltip="@part.Label"
-                                    aria-label="@($"Scroll to {deptCode} {part.Label}")"></button>
-                        }
-                    </div>
-                }
+                                class="dept-subnode"
+                                role="menuitem"
+                                tabindex="-1"
+                                style="--sub-index:@partIndex"
+                                data-section-part="@part.Key"
+                                data-feature-slot="@($"{deptCode}:{part.Key}")"
+                                data-tooltip="@part.Label"
+                                aria-label="@($"Scroll to {deptCode} {part.Label}")"></button>
+                    }
+                </div>
 
                 <div class="dept-circle"
                      role="button"
                      tabindex="0"
-                     aria-label="Open @deptCode section">
+                     aria-haspopup="menu"
+                     aria-expanded="false"
+                     aria-label="Open @deptCode section shortcuts">
                     @deptCode
                 </div>
             </div>
