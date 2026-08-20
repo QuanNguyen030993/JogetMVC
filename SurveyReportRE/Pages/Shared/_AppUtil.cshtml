@@ -625,7 +625,6 @@
                             type: 'default',
                             text: "Complete",
                             onClick() {
-
                                if ($("#quotationRequestForm").dxForm("instance").validate().isValid)
                                {
                                             makeMiniLoadingPanel("Initiate Quotation", "Please wait...");
@@ -671,7 +670,6 @@
 
                                     quotationData.StartingDept = "FO";
 
-                                    debugger
                                     var attributesData = new Object();
                                     attributesData.Attributes = new Object();
                                     // var uploader = $(`#${window.IdManager.attachmentControlHost(sectionName, id)}`).dxFileUploader("instance");
@@ -832,10 +830,10 @@
                                     return;
                                 }
 
-                                var routeForm = $("#policyIssuanceFromQuotationOptions").dxForm("instance");
-                                var routeValidation = routeForm ? routeForm.validate() : { isValid: false };
-                                if (!routeValidation.isValid) return;
-                                var skipTS = routeForm.option("formData").skipTS;
+                                // var routeForm = $("#policyIssuanceFromQuotationOptions").dxForm("instance");
+                                // var routeValidation = routeForm ? routeForm.validate() : { isValid: false };
+                                // if (!routeValidation.isValid) return;
+                                // var skipTS = routeForm.option("formData").skipTS;
 
                                      makeMiniLoadingPanel("Initiate Policy Issuance", "Please wait...");
                                         var result = new Object();
@@ -857,7 +855,7 @@
 
                                       policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
                                           policyIssuance.TurnAroundTimeAttributes = JSON.stringify({
-                                                FO: { AcceptDate: new Date(), "CompleteDate": new Date() }
+                                                FO: { AcceptDate: new Date(), CompleteDate: new Date(), ReceiveDate:  new Date() }
                                                 , TS: { AcceptDate: "", CompleteDate: "" }
                                                 , UW: { AcceptDate: "", CompleteDate: "" }
                                                 , LMKT: { AcceptDate: "", CompleteDate: "" }
@@ -868,7 +866,7 @@
                                       policyIssuance.QuotationId = item.id;
                                       policyIssuance.ActionStatus = JSON.stringify({
                                           EntryMode: "FromQuotation",
-                                          SkipTS: skipTS,
+                                          SkipTS: pics?.TS ? true : false,
                                           FO: "Draft"
                                       });
 
@@ -4528,6 +4526,8 @@
                 });
             }
 
+
+
             function loadAndApplyQuotationScreenConditions(currentNodeCode, quotationId) {
                 applyQuotationScreenConditions(quotationId, []);
                 if (!currentNodeCode || !quotationId) return $.Deferred().resolve([]).promise();
@@ -4546,6 +4546,47 @@
                     })
                     .fail(() => applyQuotationScreenConditions(quotationId, []));
             }
+
+            function loadAndApplyPolicyIssuanceScreenConditions(currentNodeCode, policyIssuanceId) {
+                applyPolicyIssuanceScreenConditions(policyIssuanceId, []);
+                if (!currentNodeCode || !policyIssuanceId) return $.Deferred().resolve([]).promise();
+
+                const params = new URLSearchParams();
+                params.set("refKey", currentNodeCode);
+                params.set("refField", "Code");
+                return ajaxGet(`/api/WorkflowInstanceNode/GetAll?${params.toString()}`, null)
+                    .then(result => {
+                        const node = Array.isArray(result) ? result[0] : result;
+                        const conditions = parseWorkflowNodeScreenConditions(node);
+                        applyPolicyIssuanceScreenConditions(policyIssuanceId, conditions);
+                        // Some nested partial controls complete rendering after the workflow request.
+                        setTimeout(() => applyPolicyIssuanceScreenConditions(policyIssuanceId, conditions), 100);
+                        return conditions;
+                    })
+                    .fail(() => applyPolicyIssuanceScreenConditions(policyIssuanceId, []));
+            }
+
+
+             function applyPolicyIssuanceScreenConditions(policyIssuanceId, screenConditions) {
+                const $sections = $("[data-policyIssuance-screen-section]").filter(function () {
+                    return String($(this).attr("data-policyIssuance-id")) === String(policyIssuanceId);
+                });
+
+                // Screen-controlled sections are hidden unless the reached node explicitly shows them.
+                $sections.hide();
+                (Array.isArray(screenConditions) ? screenConditions : []).forEach(rule => {
+                    const sectionId = String(rule?.sectionId || "").trim();
+                    if (!sectionId) return;
+
+                    const $target = $sections.filter(function () {
+                        return $(this).attr("data-policyIssuance-screen-section") === sectionId;
+                    });
+                    String(rule?.mode || "Hide").toLowerCase() === "show"
+                        ? $target.show()
+                        : $target.hide();
+                });
+            }
+
 
                 // ====== reload + refresh UI ======
             async function reloadNotifications(take = 30) {
@@ -5086,7 +5127,6 @@
             const renderTime = Date.now();
             const editorOptionsIn = cloneReusableOptions(editorOptions);
             const controlId = `${editorOptionsIn.data.SectionName}`;
-            debugger
             const data =  editorOptionsIn.data;
             editorOptionsIn.controlId = controlId;
             options = options || {};
@@ -5206,7 +5246,6 @@
                         renderBrowserLoading(result);
                     },
                     uploadFile: function (file) {
-                        debugger
                         file.guid = editorOptionsIn.guid;
                         return uploadFileAjax(file,data ,{
                             url: "/api/Attachment/AsyncUploadFile",
@@ -5278,6 +5317,7 @@
                     // LEGACY ROLLBACK: this uploader was forced to SharePoint.
                     uploadUrl: editorOptionsIn.id == 0 ? "/api/Document/AsyncUploadFile" : "/api/Document/AsyncUploadFileSharePoint",
                     //uploadUrl: "/api/Document/AsyncUploadFile",
+                    showUploader: isRenderUploader,
                     data: {
                         ModuleName: editorOptionsIn.ModelName,
                         code: editorOptionsIn.ModelName, // subfolder Sharepoint

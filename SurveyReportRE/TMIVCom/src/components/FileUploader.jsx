@@ -59,6 +59,7 @@ const FileUploader = forwardRef(({
     multiple = true,
     titleName = "Upload Attachments",
     disabled = false,
+    showUploader = true,
     controllerName = "Document",
     uploadUrl = "/api/Attachment/AsyncUploadFile",
     onUploaded,
@@ -390,7 +391,7 @@ const FileUploader = forwardRef(({
             ? Math.min(uploadedCount + 1, uploadTotal)
             : uploadedCount;
 
-    return (
+    return (showUploader && (
         <div
             className="tmivcom-fileuploader-container"
             style={{ width: "100%" }}
@@ -546,6 +547,7 @@ const FileUploader = forwardRef(({
                 ...
             </div> */}
         </div>
+    )
     );
 });
 
