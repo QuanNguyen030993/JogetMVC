@@ -190,9 +190,9 @@ const FileUploader = forwardRef(({
                     throw new Error(`Upload failed for ${file.name}`);
                 }
                 if (response.ok) {
-                                const result = await response.json();
-                                setFilesList(result || []);
-                                onChange?.(result || []);
+                    const result = await response.json();
+                    setFilesList(result || []);
+                    onChange?.(result || []);
                 }
                 const completedFiles = i + 1;
                 setUploadedCount(completedFiles);
@@ -207,11 +207,8 @@ const FileUploader = forwardRef(({
                 `Uploaded ${totalFiles} attachment${totalFiles > 1 ? "s" : ""} successfully! ✅`,
                 "success"
             );
-            const result = {
-                total: totalFiles
-            }
+
             // fetchAttachments();
-         
             onUploaded?.(files);
         } catch (error) {
             console.error("Upload error:", error);
@@ -367,42 +364,27 @@ const FileUploader = forwardRef(({
         }
     };
 
-    // useImperativeHandle(ref, () => ({
-    //     option(name, nextValue) {
-    //         if (name === "value") {
-    //             if (arguments.length === 1 || nextValue === undefined) {
-    //                 return filesList;
-    //             }
-
-    //             setFilesList(nextValue || []);
-    //         }
-    //     },
-
-    //     value() {
-    //         return filesList;
-    //     },
-
-    //     refresh() {
-    //         // fetchAttachments();
-    //     }
-    // }));
     useImperativeHandle(ref, () => ({
-        option(name) {
+        option(name, nextValue) {
             if (name === "value") {
                 console.log("access to fileList", filesList);
-                return filesList;
+                if (nextValue.length === 1 || nextValue === undefined) {
+                    return filesList;
+                }
+
+                setFilesList(nextValue || []);
             }
-            // if (name === "files") {
-            //     return uploadedFilesRef.current;
-            // }
         },
+
         value() {
             return filesList;
         },
-        // files() {
-        //     return uploadedFilesRef.current;
-        // }
+
+        refresh() {
+            // fetchAttachments();
+        }
     }));
+
     const currentFileNumber =
         isUploading && uploadTotal > 0
             ? Math.min(uploadedCount + 1, uploadTotal)

@@ -628,7 +628,6 @@
 
                                if ($("#quotationRequestForm").dxForm("instance").validate().isValid)
                                {
-                                   debugger
                                             makeMiniLoadingPanel("Initiate Quotation", "Please wait...");
                                         var result = new Object();
                                             result.payload = new Object();
@@ -672,11 +671,12 @@
 
                                     quotationData.StartingDept = "FO";
 
-
+                                    debugger
                                     var attributesData = new Object();
                                     attributesData.Attributes = new Object();
                                     // var uploader = $(`#${window.IdManager.attachmentControlHost(sectionName, id)}`).dxFileUploader("instance");
-                                    var uploader = $(`[id^='fileUpload_']`).fileuploader("instance");
+                                    var uploader = $(`#fileUpload_qt-body_FO__default_0_0`).dxFileUploader("instance");
+                                    // var uploader = $(`[id^='fileUpload_']`)[0];
 
 
                                     var formData = new FormData();
@@ -688,7 +688,7 @@
                                         formData.append("Files", files[i]);
                                         }
                                     }
-
+                                        formData.append("Data", "datahere");
                                     result.payload.progressvalue = 50;
                                     renderBrowserLoading(result);
                                     $.ajax({
@@ -4947,25 +4947,26 @@
                         });
               }
               else {
-                          const attachmentHostIds = window.IdManager.attachmentHostIds(editorOptions.controlId, renderTime);
-                          const $preview = $(`#${attachmentHostIds.preview}`);
-                          const data = $(`#${attachmentHostIds.uploader}`).fileuploader("option", "value") || [];
-                                renderAttachmentListLazy(data, $preview, {
-                                    batchSize: 6,
-                                    delay: 16,
-                                    showFillListSelect: editorOptions.showFillListSelect,
-                                    sectionId: editorOptions.sectionId,
-                                    policyIssuanceId: editorOptions.policyIssuanceId,
-                                    sectionIdQt: editorOptions.sectionIdQt,
-                                    cloneId: editorOptions.cloneId,
-                                    editorOptions: editorOptions,
-                                    renderTime: renderTime,
-                                    controllerName: controllerName,
-                                    uploaderAllow: editorOptions.uploaderAllow,
-                                    onDeleted: function () {
-                                         loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime, true);
-                                    }
-                                });
+                    //No case in
+                          // const attachmentHostIds = window.IdManager.attachmentHostIds(editorOptions.controlId, renderTime);
+                          // const $preview = $(`#${attachmentHostIds.preview}`);
+                          // const data = $(`#${attachmentHostIds.uploader}`).fileuploader("option", "value") || [];
+                          //       renderAttachmentListLazy(data, $preview, {
+                          //           batchSize: 6,
+                          //           delay: 16,
+                          //           showFillListSelect: editorOptions.showFillListSelect,
+                          //           sectionId: editorOptions.sectionId,
+                          //           policyIssuanceId: editorOptions.policyIssuanceId,
+                          //           sectionIdQt: editorOptions.sectionIdQt,
+                          //           cloneId: editorOptions.cloneId,
+                          //           editorOptions: editorOptions,
+                          //           renderTime: renderTime,
+                          //           controllerName: controllerName,
+                          //           uploaderAllow: editorOptions.uploaderAllow,
+                          //           onDeleted: function () {
+                          //                loadDxFileUploaderAttachments(sectionName, controllerName, editorOptions, renderTime, true);
+                          //           }
+                          //       });
                 }
             }
             function cloneReusableOptions(value, seen) {
@@ -5085,6 +5086,7 @@
             const renderTime = Date.now();
             const editorOptionsIn = cloneReusableOptions(editorOptions);
             const controlId = `${editorOptionsIn.data.SectionName}`;
+            debugger
             const data =  editorOptionsIn.data;
             editorOptionsIn.controlId = controlId;
             options = options || {};
@@ -5107,8 +5109,8 @@
             // const ids = getDxFileUploaderIds(editorOptionsIn);
             // var uploaderAllow = editorOptionsIn.uploaderAllow == null ? true : editorOptionsIn.uploaderAllow;
             // editorOptionsIn.uploaderAllow = uploaderAllow;
-
-            const attachmentHostIds = window.IdManager.attachmentHostIds(controlId, renderTime);
+           const attachmentHostIds = window.IdManager.attachmentHostIds(controlId, editorOptionsIn.id == 0 ? 0 : renderTime);
+            // const attachmentHostIds = window.IdManager.attachmentHostIds(controlId, editorOptionsIn.id == 0 ? 0 : renderTime);
             const previewBaseId = window.IdManager.attachmentPreviewBase(controlId);
             const uploaderBaseId = window.IdManager.attachmentControlBase(controlId);
             $container.find(`[id^='${previewBaseId}_'], [id^='${uploaderBaseId}_']`).remove();
@@ -5116,171 +5118,185 @@
             const dropZoneId = `attachmentDropZone_${controlId}_${renderTime}`;
             const $preview = $(`<div id="${attachmentHostIds.preview}" class="att-preview"></div>`)
                 .appendTo($container);
-            // const $dropZone = $(`
-            //         <div id="${dropZoneId}"
-            //              class="attachment-drop-zone${uploaderAllow ? "" : " is-disabled "}"
-            //              role="button"
-            //              tabindex="${uploaderAllow ? "0" : "-1"}"
-            //              aria-disabled="${uploaderAllow ? "false" : "true"}">
-            //             <span class="dx-icon dx-icon-upload attachment-drop-zone__icon" aria-hidden="true"></span>
-            //             <span class="attachment-drop-zone__content">
-            //                 <strong>
-            //                     <span class="attachment-drop-zone__compact-label">Choose files or drag them here</span>
-            //                     <span class="attachment-drop-zone__drop-label">Release to upload</span>
-            //                 </strong>
-            //                 <span class="attachment-drop-zone__hint">Maximum ${configuredMaxFileSizeMB} MB per file</span>
-            //             </span>
-            //         </div>`)
-            //         .toggle(!!isRenderUploader)
-            //         .appendTo($container);
+           
             const $uploader = $(`<div id="${attachmentHostIds.uploader}"></div>`)
                  .appendTo($container)
-                $uploader.fileuploader({
-                guid: editorOptionsIn.guid,
-                controllerName: "Document",
-                titleName: "Select or drag files to upload",
-                // LEGACY ROLLBACK: this uploader was forced to SharePoint.
-                uploadUrl: editorOptionsIn.id == 0 ? "/api/Document/AsyncUploadFile" : "/api/Document/AsyncUploadFileSharePoint",
-                //uploadUrl: "/api/Document/AsyncUploadFile",
-                data: {
-                    ModuleName: editorOptionsIn.ModelName,
-                    code: editorOptionsIn.ModelName, // subfolder Sharepoint
-                    SectionName: editorOptionsIn.controlId
-                },
-                specificFolder: "Workflow",
-                disabled: !uploaderAllow,
-                onUploaded: function (args) {
-                    loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn, renderTime, true)
-                    // Callback bên ngoài truyền vào
-                    if (typeof editorOptionsIn.onUploaded === "function") {
-                    editorOptionsIn.onUploaded(args);
+          
+
+          
+             if (editorOptionsIn.id == 0)
+             // if (isRenderUploader)
+             {
+                  // const $dropZone = $(`
+                  //   <div id="${dropZoneId}"
+                  //        class="attachment-drop-zone${uploaderAllow ? "" : " is-disabled "}"
+                  //        role="button"
+                  //        tabindex="${uploaderAllow ? "0" : "-1"}"
+                  //        aria-disabled="${uploaderAllow ? "false" : "true"}">
+                  //       <span class="dx-icon dx-icon-upload attachment-drop-zone__icon" aria-hidden="true"></span>
+                  //       <span class="attachment-drop-zone__content">
+                  //           <strong>
+                  //               <span class="attachment-drop-zone__compact-label">Choose files or drag them here</span>
+                  //               <span class="attachment-drop-zone__drop-label">Release to upload</span>
+                  //           </strong>
+                  //           <span class="attachment-drop-zone__hint">Maximum ${configuredMaxFileSizeMB} MB per file</span>
+                  //       </span>
+                  //   </div>`)
+                  //   .toggle(!!isRenderUploader)
+                  //   .appendTo($container);
+               $uploader
+                .dxFileUploader({
+                    disabled: !uploaderAllow,
+                    multiple: true,
+                    accept: options.accept || "*/*",
+                    maxFileSize: configuredMaxFileSize,
+                    invalidMaxFileSizeMessage: `File exceeds the ${configuredMaxFileSizeMB} MB upload limit.`,
+                    selectButtonText: editorOptionsIn.titleName || `Upload Attachments`,
+                    dropZone: `#${dropZoneId}`,
+                    dialogTrigger: `#${dropZoneId}`,
+                    labelText: "",
+                    uploadMode: editorOptionsIn.uploadMode ? editorOptionsIn.uploadMode : "instantly",
+                    uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
+                    showFileList: editorOptionsIn.uploadMode != "instantly" ? true : false,
+                    uploadHeaders: {
+                        //Only use for static string
+                    },
+                    onInitialized: function (e) {
+                        //updateDxFileUploaderHeaders(editorOptionsIn);
+                    },
+                    onUploadStarted: function (e) {
+                             // $dropZone.removeClass("is-dragging").addClass("is-uploading");
+                             // makeMiniLoadingPanel(`Uploading file ${e.file.name}`, "Please wait...");
+                             makeMiniLoadingPanel(`Uploading file`, "Please wait...");
+                
+                        // showUploaderLoader(editorOptionsIn.uploaderId, "File loading...");
+                    },
+                    onValueChanged: function(e){
+                        // $dropZone.removeClass("is-dragging");
+                        const oversizedFile = (e.value || []).find(file => file.size > configuredMaxFileSize);
+                        if (oversizedFile) {
+                            const message = `${oversizedFile.name} exceeds the ${configuredMaxFileSizeMB} MB upload limit.`;
+                            if (typeof appNotifyWarning === "function") {
+                                appNotifyWarning(message, false);
+                            } else {
+                                DevExpress.ui.notify(message, "warning", 3000);
+                            }
+                            e.component.reset();
+                            return;
+                        }
+                        if (editorOptionsIn.uploadMode != "instantly")
+                        loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn, renderTime)
+                          var form = $("#quotationRequestForm").dxForm("instance");
+                            if (!form) return;
+                            var currentQty = form.option("formData.quotationQuantity") || 0;
+                            form.updateData(
+                            "quotationQuantity",
+                            e.value.length
+                            );
+                    },
+                    onProgress: function(e) {
+                        // e.bytesLoaded: số byte đã upload
+                        // e.bytesTotal: tổng size file
+                        const percent = Math.round((e.bytesLoaded / e.bytesTotal) * 100);
+
+                        var result = {};
+                        result.payload = {};
+                        result.payload.progressvalue = percent;
+
+                        renderBrowserLoading(result);
+                    },
+                    uploadFile: function (file) {
+                        debugger
+                        file.guid = editorOptionsIn.guid;
+                        return uploadFileAjax(file,data ,{
+                            url: "/api/Attachment/AsyncUploadFile",
+                                ...editorOptionsIn
+                        });
+
+                    },
+                    onUploaded: function (e) {
+                            // $dropZone.removeClass("is-dragging is-uploading");
+                            var result = new Object();
+                                 result.payload = new Object();
+                                 result.payload.progressvalue = 100;
+                                 renderBrowserLoading(result);
+                        // hideUploaderLoader(editorOptionsIn.uploaderId);
+                        loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn, renderTime, true)
+                        
+                      
+                    },
+                    onUploadError: function (e) {
+                        // $dropZone.removeClass("is-dragging is-uploading");
+                        const fileName = e.file?.name ? ` ${e.file.name}` : "";
+                        if (typeof appNotifyWarning === "function") {
+                            appNotifyWarning(`Unable to upload${fileName}. Please try again.`, false);
+                        }
+                    },
+                    onDropZoneEnter: function () {
+                        // if (uploaderAllow) $dropZone.addClass("is-dragging");
+                    },
+                    onDropZoneLeave: function () {
+                        // $dropZone.removeClass("is-dragging");
+                    },
+
+                    // onContentReady: function (e) {
+                    //     if (!e.component.option("showFileList")) {
+                    //         $(e.element)
+                    //             .find(".dx-fileuploader-input-container")
+                    //             .remove();
+                    //     }
+                    // }
+
+                    onContentReady: function (e) {
+
+                        if (!e.component.option("showFileList")) {
+
+                            const $el = $(e.element);
+
+                            // ✅ Ẩn UI uploader
+                            $el.find(".dx-fileuploader-input-container").css({
+                                opacity: 0,
+                                height: 0,
+                                overflow: "hidden"
+                            });
+                        }
                     }
-                },
-                onDeleted: function (file) {
-                    console.log("SharePoint file deleted", file);
-                }
-            });
 
 
-             if (isRenderUploader)
-               // $uploader
-               //  .dxFileUploader({
-               //      disabled: !uploaderAllow,
-               //      multiple: true,
-               //      accept: options.accept || "*/*",
-               //      maxFileSize: configuredMaxFileSize,
-               //      invalidMaxFileSizeMessage: `File exceeds the ${configuredMaxFileSizeMB} MB upload limit.`,
-               //      selectButtonText: editorOptionsIn.titleName || `Upload Attachments`,
-               //      dropZone: `#${dropZoneId}`,
-               //      dialogTrigger: `#${dropZoneId}`,
-               //      labelText: "",
-               //      uploadMode: editorOptionsIn.uploadMode ? editorOptionsIn.uploadMode : "instantly",
-               //      uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
-               //      showFileList: false,//editorOptionsIn.uploadMode != "instantly" ? true : false,
-               //      uploadHeaders: {
-               //          //Only use for static string
-               //      },
-               //      onInitialized: function (e) {
-               //          //updateDxFileUploaderHeaders(editorOptionsIn);
-               //      },
-               //      onUploadStarted: function (e) {
-               //               $dropZone.removeClass("is-dragging").addClass("is-uploading");
-               //               // makeMiniLoadingPanel(`Uploading file ${e.file.name}`, "Please wait...");
-               //               makeMiniLoadingPanel(`Uploading file`, "Please wait...");
-               //          // showUploaderLoader(editorOptionsIn.uploaderId, "File loading...");
-               //      },
-               //      onValueChanged: function(e){
-               //          $dropZone.removeClass("is-dragging");
-               //          const oversizedFile = (e.value || []).find(file => file.size > configuredMaxFileSize);
-               //          if (oversizedFile) {
-               //              const message = `${oversizedFile.name} exceeds the ${configuredMaxFileSizeMB} MB upload limit.`;
-               //              if (typeof appNotifyWarning === "function") {
-               //                  appNotifyWarning(message, false);
-               //              } else {
-               //                  DevExpress.ui.notify(message, "warning", 3000);
-               //              }
-               //              e.component.reset();
-               //              return;
-               //          }
-               //          if (editorOptionsIn.uploadMode != "instantly")
-               //          loadDxFileUploaderAttachments(editorOptionsIn.controlId, controllerName, editorOptionsIn, renderTime)
-               //      },
-               //      onProgress: function(e) {
-               //          // e.bytesLoaded: số byte đã upload
-               //          // e.bytesTotal: tổng size file
-               //          const percent = Math.round((e.bytesLoaded / e.bytesTotal) * 100);
-
-               //          var result = {};
-               //          result.payload = {};
-               //          result.payload.progressvalue = percent;
-
-               //          renderBrowserLoading(result);
-               //      },
-               //      uploadFile: function (file) {
-               //          file.guid = editorOptionsIn.guid;
-               //          return uploadFileAjax(file,data ,{
-               //              url: "/api/Attachment/AsyncUploadFile",
-               //                  ...editorOptionsIn
-               //          });
-
-               //      },
-               //      onUploaded: function (e) {
-               //              $dropZone.removeClass("is-dragging is-uploading");
-               //              var result = new Object();
-               //                   result.payload = new Object();
-               //                   result.payload.progressvalue = 100;
-               //                   renderBrowserLoading(result);
-               //          // hideUploaderLoader(editorOptionsIn.uploaderId);
-               //          loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn, renderTime, true)
-
-
-               //      },
-               //      onUploadError: function (e) {
-               //          $dropZone.removeClass("is-dragging is-uploading");
-               //          const fileName = e.file?.name ? ` ${e.file.name}` : "";
-               //          if (typeof appNotifyWarning === "function") {
-               //              appNotifyWarning(`Unable to upload${fileName}. Please try again.`, false);
-               //          }
-               //      },
-               //      onDropZoneEnter: function () {
-               //          if (uploaderAllow) $dropZone.addClass("is-dragging");
-               //      },
-               //      onDropZoneLeave: function () {
-               //          $dropZone.removeClass("is-dragging");
-               //      },
-
-               //      // onContentReady: function (e) {
-               //      //     if (!e.component.option("showFileList")) {
-               //      //         $(e.element)
-               //      //             .find(".dx-fileuploader-input-container")
-               //      //             .remove();
-               //      //     }
-               //      // }
-
-               //      onContentReady: function (e) {
-
-               //          if (!e.component.option("showFileList")) {
-
-               //              const $el = $(e.element);
-
-               //              // ✅ Ẩn UI uploader
-               //              $el.find(".dx-fileuploader-input-container").css({
-               //                  opacity: 0,
-               //                  height: 0,
-               //                  overflow: "hidden"
-               //              });
-               //          }
-               //      }
-
-
-               //  });
+                });
               // $dropZone.on("keydown", function (event) {
               //     if (event.key !== "Enter" && event.key !== " ") return;
               //     event.preventDefault();
               //     $dropZone.trigger("click");
               // });
-
-
+              }
+              else {
+                        $uploader.fileuploader({
+                    guid: editorOptionsIn.guid,
+                    controllerName: "Document",
+                    titleName: "Select or drag files to upload",
+                    // LEGACY ROLLBACK: this uploader was forced to SharePoint.
+                    uploadUrl: editorOptionsIn.id == 0 ? "/api/Document/AsyncUploadFile" : "/api/Document/AsyncUploadFileSharePoint",
+                    //uploadUrl: "/api/Document/AsyncUploadFile",
+                    data: {
+                        ModuleName: editorOptionsIn.ModelName,
+                        code: editorOptionsIn.ModelName, // subfolder Sharepoint
+                        SectionName: editorOptionsIn.controlId
+                    },
+                    specificFolder: "Workflow",
+                    disabled: !uploaderAllow,
+                    onUploaded: function (args) {
+                        loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn, renderTime, true)
+                        // Callback bên ngoài truyền vào
+                        if (typeof editorOptionsIn.onUploaded === "function") {
+                        editorOptionsIn.onUploaded(args);
+                        }
+                    },
+                    onDeleted: function (file) {
+                        console.log("SharePoint file deleted", file);
+                    }
+                });
+               }   
 
               loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn,renderTime);
         }

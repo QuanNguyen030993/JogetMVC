@@ -482,8 +482,12 @@ namespace JogetMVC.Model
         //    return result;
         //}
 
-       
+
         #endregion
+
+        public static string Id(string name, string prefix, long quotationId) => $"{prefix}-{name}_{quotationId}";
+        public static string Cd(string name, string prefix) => $"{prefix}-{name}";
+        public static string AttachmentAttributes(string name, string prefix, string dept, string type, long quotationId) => $"{Cd(name, prefix)}_{dept}__{type}_{quotationId}";
     }
 
     /// <summary>

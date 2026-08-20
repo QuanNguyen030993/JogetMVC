@@ -1009,39 +1009,259 @@ $.fn.previewoffice = function(arg1, arg2, arg3) {
 //     return this;
 // };
 
+// $.fn.fileuploader = function(arg1, arg2, arg3) {
+//     if (typeof arg1 === "string") {
+//         if (arg1 === "option") {
+//             if (arguments.length === 2 && this.length === 1) {
+//                 const instance = roots.get(this[0]);
+//                 return instance?.ref?.current?.option?.(arg2) ?? instance?.options?.[arg2];
+//             }
+
+//             this.each(function() {
+//                 const instance = roots.get(this);
+//                 if (!instance) return;
+
+//                 if (instance.ref?.current) {
+//                     instance.ref.current.option?.(arg2, arg3);
+//                 } else {
+//                     instance.options[arg2] = arg3;
+//                     const Component = controls[instance.name];
+//                     instance.root.render(
+//                         <Component ref={instance.ref} {...instance.options}/>
+//                     );
+//                 }
+//             });
+//             return this;
+//         }
+//     }
+
+//     if (typeof arg1 === "object" || typeof arg1 === "undefined") {
+//         return this.each(function() {
+//             mount(this, "FileUploader", arg1 || {});
+//         });
+//     }
+
+//     return this;
+// };
 $.fn.fileuploader = function(arg1, arg2, arg3) {
-    if (typeof arg1 === "string") {
-        if (arg1 === "option") {
-            if (arguments.length === 2 && this.length === 1) {
-                const instance = roots.get(this[0]);
-                return instance?.ref?.current?.option?.(arg2) ?? instance?.options?.[arg2];
-            }
-
-            this.each(function() {
-                const instance = roots.get(this);
-                if (!instance) return;
-
-                if (instance.ref?.current) {
-                    instance.ref.current.option?.(arg2, arg3);
-                } else {
-                    instance.options[arg2] = arg3;
-                    const Component = controls[instance.name];
-                    instance.root.render(
-                        <Component ref={instance.ref} {...instance.options}/>
-                    );
-                }
-            });
-            return this;
-        }
-    }
-
-    if (typeof arg1 === "object" || typeof arg1 === "undefined") {
-        return this.each(function() {
-            mount(this, "FileUploader", arg1 || {});
-        });
-    }
-
-    return this;
+   const getInstance = (el) => {
+       return roots.get(el);
+   };
+   const getControl = (el) => {
+       const instance = getInstance(el);
+       return instance?.ref?.current || null;
+   };
+   /*
+    * COMMAND MODE
+    */
+   if (typeof arg1 === "string") {
+       /*
+        * $("#id").fileuploader("option", "value")
+        * $("#id").fileuploader("option", "value", value)
+        */
+       if (arg1 === "option") {
+           // GET
+           if (arguments.length === 2) {
+               if (this.length === 0) {
+                   return null;
+               }
+               if (this.length === 1) {
+                   const el = this[0];
+                   const instance =
+                       getInstance(el);
+                   if (!instance) {
+                       return null;
+                   }
+                   const control =
+                       getControl(el);
+                   if (
+                       control &&
+                       typeof control.option === "function"
+                   ) {
+                       return control.option(arg2);
+                   }
+                   return instance.options?.[arg2] ?? null;
+               }
+               return this.map(function() {
+                   const instance =
+                       getInstance(this);
+                   if (!instance) {
+                       return null;
+                   }
+                   const control =
+                       getControl(this);
+                   if (
+                       control &&
+                       typeof control.option === "function"
+                   ) {
+                       return control.option(arg2);
+                   }
+                   return instance.options?.[arg2] ?? null;
+               }).get();
+           }
+           // SET
+           if (arguments.length >= 3) {
+               this.each(function() {
+                   const instance =
+                       getInstance(this);
+                   if (!instance) {
+                       return;
+                   }
+                   /*
+                    * Sync vào wrapper option luôn.
+                    */
+                   instance.options[arg2] = arg3;
+                   const control =
+                       getControl(this);
+                   if (
+                       control &&
+                       typeof control.option === "function"
+                   ) {
+                       control.option(
+                           arg2,
+                           arg3
+                       );
+                       return;
+                   }
+                   /*
+                    * Nếu React ref chưa sẵn sàng,
+                    * render lại với options mới.
+                    */
+                   const Component =
+                       controls[instance.name];
+                   instance.root.render(
+<Component
+                           ref={instance.ref}
+                           {...instance.options}
+                       />
+                   );
+               });
+               return this;
+           }
+       }
+       /*
+        * $("#id").fileuploader("value")
+        */
+       if (arg1 === "value") {
+           // GET
+           if (arguments.length === 1) {
+               if (this.length === 1) {
+                   const instance =
+                       getInstance(this[0]);
+                   if (!instance) {
+                       return [];
+                   }
+                   const control =
+                       getControl(this[0]);
+                   if (
+                       control &&
+                       typeof control.value === "function"
+                   ) {
+                       return control.value();
+                   }
+                   return instance.options?.value ?? [];
+               }
+               return this.map(function() {
+                   const instance =
+                       getInstance(this);
+                   if (!instance) {
+                       return [];
+                   }
+                   const control =
+                       getControl(this);
+                   if (
+                       control &&
+                       typeof control.value === "function"
+                   ) {
+                       return control.value();
+                   }
+                   return instance.options?.value ?? [];
+               }).get();
+           }
+           // SET
+           return this.each(function() {
+               const instance =
+                   getInstance(this);
+               if (!instance) {
+                   return;
+               }
+               instance.options.value = arg2;
+               const control =
+                   getControl(this);
+               if (
+                   control &&
+                   typeof control.value === "function"
+               ) {
+                   control.value(arg2);
+                   return;
+               }
+               if (
+                   control &&
+                   typeof control.option === "function"
+               ) {
+                   control.option(
+                       "value",
+                       arg2
+                   );
+                   return;
+               }
+               const Component =
+                   controls[instance.name];
+               instance.root.render(
+<Component
+                       ref={instance.ref}
+                       {...instance.options}
+                   />
+               );
+           });
+       }
+       /*
+        * $("#id").fileuploader("instance")
+        */
+       if (arg1 === "instance") {
+           if (this.length !== 1) {
+               return null;
+           }
+           const instance =
+               getInstance(this[0]);
+           return instance?.ref?.current || null;
+       }
+       /*
+        * $("#id").fileuploader("clear")
+        */
+       if (arg1 === "clear") {
+           return this.each(function() {
+               const instance =
+                   getInstance(this);
+               if (!instance) {
+                   return;
+               }
+               const control =
+                   getControl(this);
+               control?.clear?.();
+               instance.options.value = [];
+           });
+       }
+       return this;
+   }
+   /*
+    * INITIALIZATION
+    *
+    * $("#id").fileuploader({...})
+    */
+   if (
+       typeof arg1 === "object" ||
+       typeof arg1 === "undefined"
+   ) {
+       return this.each(function() {
+           mount(
+               this,
+               "FileUploader",
+               arg1 || {}
+           );
+       });
+   }
+   return this;
 };
 
 $.fn.tmivcommenteditorroute = function(arg1, arg2, arg3) {
@@ -1222,7 +1442,7 @@ register(
     "FileUploader",
     FileUploader
 );
-z
+
 register(
     "Notification",
     Notification

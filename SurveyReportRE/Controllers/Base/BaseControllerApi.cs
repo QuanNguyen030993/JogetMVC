@@ -856,8 +856,10 @@ namespace ERPCore.Controllers.Base
             {
                 document.Attributes = JsonConvert.SerializeObject(new
                 {
-                    SectionName = sectionName,
-                    Department = department
+                    ModuleName = folder.Contains("Quotation") ? "Quotation" : "PolicyIssuance",
+                    code = folder.Contains("Quotation") ? "Quotation" : "PolicyIssuance",
+                    SectionName = sectionName
+                    //Department = department
                 });
             }
 
@@ -895,7 +897,8 @@ namespace ERPCore.Controllers.Base
             string guid = Request.Headers["RecordGuid"];
             string sectionName = Request.Headers["SectionName"];
             string department = Request.Headers["Department"];
-            string data = Request.Headers["Data"];
+                string data = Request.Headers["Data"];
+                string dataF = Request.Form["Data"];
             IFormFile file = files.FirstOrDefault();
             if (file != null && file.Length > 0)
             {
@@ -997,6 +1000,7 @@ namespace ERPCore.Controllers.Base
             string guid = Request.Headers["RecordGuid"];
             string sectionName = Request.Headers["SectionName"];
             string department = Request.Headers["Department"];
+            string data = Request.Headers["Data"];
             if (file != null && file.Length > 0)
             {
                 var sizeValidationError = ValidateUploadFileSize(file);
@@ -1010,7 +1014,7 @@ namespace ERPCore.Controllers.Base
                         folder,
                         guid,
                         sectionName,
-                        department);
+                        department, data);
                     document.SubDirectory = ResolveDocumentSubDirectory(folder, storageTarget);
                     document = await _documentRepository.InsertData(document);
                     await StoreUploadedDocumentAsync(

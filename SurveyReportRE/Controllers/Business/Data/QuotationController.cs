@@ -31,6 +31,7 @@ using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using DocumentFormat.OpenXml.Bibliography;
 using ERPCore.Pages;
+using JogetMVC.Model;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -1074,7 +1075,9 @@ public class QuotationController : BaseControllerApi<Quotation>
             {
                 Request.Headers["Folder"] = $@"{nameof(Quotation)}\{quotation.QuotationCode}";
                 Request.Headers["RecordGuid"] = quotation.Guid.ToString();
-                Request.Headers["SectionName"] = $@"{quotationData.QuotationData.Attributes.SectionName}_{quotation.Id.ToString()}";
+                Request.Headers["SectionName"] = QTViewIdHelper.AttachmentAttributes("body","qt","FO","default", quotation.Id);//$@"{quotationData.QuotationData.Attributes.SectionName}_{quotation.Id.ToString()}";
+                Request.Headers["ModuleName"] = nameof(Quotation);
+
                 await AsyncUploadSingleFile(file);
             }
                         instanceWorkflow.RecordGuid = quotation.Guid;
