@@ -400,7 +400,8 @@ Note:
             state.selectedGuid = q.guid ?? null;
             selectedAttachmentId = q.documentId ?? null;
             state.selectedCodeNo = q.quotationCode ?? null;
-            stageDept = q.stageDept ?? null;
+            stageDept = String(q.stageDept || "").trim().toUpperCase() || null;
+            state.stageDept = stageDept;
             state.comments = [];
             state.pinNotes = [];
 
@@ -462,10 +463,10 @@ Note:
         }
 
         function loadSelectedWorkflow() {
-            showLoading("actionRight");
-            window.WorkflowLoader.load({
+            return window.WorkflowLoader.load({
                 moduleCode: "qt",
                 id: @ViewData["Id"],
+                loadingHost: `#${window.QuotationIdManager.actionBarDept(stageDept, @ViewData["Id"])}`,
                 guid: state.selectedGuid,
                 stageDept: stageDept,
                 state: state,
@@ -1651,19 +1652,42 @@ Note:
 
 
 
-            $.each(qtDeptModuleCode, function (itemIndex, item) {
-                // var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control);
-                // deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
-                // remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
-                    deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
-                if (q.stageDept == item)
-                {
-                    $(`#${QuotationIdManager.actionBarDept(item,@ViewData["Id"])}`).css({"display": "block"});
-                    var control = TinyMCEElementMaker(`.htmleditor`, item, @ViewData["Id"], control, "qt", q.guid);
-                    remarkBoxs[item] = { id: q.id, sectionName: item, controlRemark: control };
+            const ensureActiveRemarkEditor = function () {
+                if (!stageDept || !window.QuotationIdManager.validateDepartment(stageDept)) return null;
+
+                const actionBarId = window.QuotationIdManager.actionBarDept(stageDept, @ViewData["Id"]);
+                const actionBar = document.getElementById(actionBarId);
+                if (!actionBar) {
+                    console.warn("Active quotation action bar was not found.", {
+                        stageDept: stageDept,
+                        actionBarId: actionBarId
+                    });
+                    return null;
                 }
-                else {
-                    $(`#${QuotationIdManager.actionBarDept(item,@ViewData["Id"])}`).css({"display": "none"});
+
+                $(actionBar).closest(".dept-footer").show();
+                $(actionBar).css("display", "block");
+                const editorControl = TinyMCEElementMaker(
+                    ".htmleditor",
+                    stageDept,
+                    @ViewData["Id"],
+                    remarkBoxs?.[stageDept]?.controlRemark,
+                    "qt",
+                    q.guid);
+                remarkBoxs[stageDept] = {
+                    id: q.id,
+                    sectionName: stageDept,
+                    controlRemark: editorControl
+                };
+                return editorControl;
+            };
+
+            $.each(qtDeptModuleCode, function (itemIndex, item) {
+                deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
+                if (stageDept === item) {
+                    ensureActiveRemarkEditor();
+                } else {
+                    $(`#${window.QuotationIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "none" });
                 }
             });
 
@@ -1681,12 +1705,12 @@ Note:
                 assignmentLifecycle,
                 firstRender ? FormStageDelay.assignment : FormStageDelay.reloadAssignment
             );
+            ensureActiveRemarkEditor();
             // animateOverviewSections(formModuleKeyQt);
             scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" } );
             // TinyMCEElementMaker(`.htmleditor`);
 
 
-                var stageDept = q.stageDept;
                 if (workflowStatus === "Quotation confirmed" || workflowStatus === "Quotation refused") {
 
                     let icon, colorClass, text;

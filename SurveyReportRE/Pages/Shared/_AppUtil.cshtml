@@ -9980,7 +9980,6 @@
                                         }
 
     function loadSelectedWorkflow(params) {
-        showLoading();
         params = params || {};
 
         const moduleCode = String(params.moduleCode || "")
@@ -9992,6 +9991,10 @@
                 .reject(new Error("moduleCode must be 'qt' or 'pi'"))
                 .promise();
         }
+
+        const loadingClass = params.loadingClass || "actionRight";
+        const loadingHost = params.loadingHost;
+        showLoading(loadingClass, loadingHost);
 
         const id = params.id;
         const guid = params.guid;
@@ -10378,25 +10381,33 @@
                             params
                         );
                     }
-                        if (!route.isReturn && !content) {
-                            appNotifyWarning("You may leave your remark empty, system will remark default message?",  true,
+                    if (!content) {
+                        return appNotifyWarning(
+                            "You may leave your remark empty, system will remark default message?",
+                            true,
                             "Ok",
-                            "Cancel").then(function (result) {
-                            if (result.isConfirmed) {
-                                formItems.comment = `${_loginUser} ${route.displayStatus}`;
-                                return submitNextStepFn(
+                            "Cancel"
+                        ).then(function (result) {
+                            if (!result.isConfirmed) return;
+
+                            formItems.comment = `${_loginUser} ${route.displayStatus}`;
+                            return submitNextStepFn(
                                 moduleConfig.formKey,
-                                    state.nextStep,
-                                    route,
-                                    formItems,
-                                    params
-                                );
-                                }
-                                });
-                            }
-                            else {
-                                return;
-                            }
+                                state.nextStep,
+                                route,
+                                formItems,
+                                params
+                            );
+                        });
+                    }
+
+                    return submitNextStepFn(
+                        moduleConfig.formKey,
+                        state.nextStep,
+                        route,
+                        formItems,
+                        params
+                    );
                         }
                         
             });
@@ -10672,6 +10683,7 @@
 
         if (!guid) {
             state.selectedGuid = null;
+            hideLoading(loadingClass, loadingHost);
 
             return $.Deferred()
                 .resolve()
@@ -10752,8 +10764,8 @@
                                         route?.fromNodeId
                                     ) ===
                                         normalizeDept(stageDept) &&
-                                    route?.fNodeId ===
-                                        state.nextStep.currentStep
+                                    String(route?.fNodeId ?? "") ===
+                                        String(state.nextStep.currentStep ?? "")
                                 );
                             });
 
@@ -10770,8 +10782,8 @@
                                         route?.fromNodeId
                                     ) ===
                                         normalizeDept(stageDept) &&
-                                    route?.fNodeId ===
-                                        state.nextStep.currentStep
+                                    String(route?.fNodeId ?? "") ===
+                                        String(state.nextStep.currentStep ?? "")
                                 );
                             });
 
@@ -10815,8 +10827,6 @@
                                         routeIndex: routeIndex
                                     });
                                 }
-                                hideLoading("actionRight");
-
                                 await buildCustomRoutes(
                                     customRoutes
                                 );
@@ -10846,22 +10856,36 @@
                                 };
                             });
                     });
+            })
+            .always(function () {
+                hideLoading(loadingClass, loadingHost);
             });
     }
-    function getLoadingIndicator(actionRightId) {
-        const selector = $(`.${actionRightId}_loading`)[0];
-       return selector;
+    function getLoadingIndicator(actionRightId, hostSelector) {
+        const $host = hostSelector ? $(hostSelector).first() : $();
+        const selector = ($host.length
+            ? $host.find(`.${actionRightId}_loading`)
+            : $(`.${actionRightId}_loading`)).first()[0];
+        return selector;
     }
-    function showLoading(actionRightId) {
-        const selector = $(`<div class="${actionRightId}_loading">`);
-        selector.appendTo($(`.${actionRightId}`)[0]);
-        selector.dxLoadIndicator({ width: 14, height: 14, visible: false });
-       if (selector) {
-           selector.dxLoadIndicator("instance").option("visible", true);
-       }
+    function showLoading(actionRightId, hostSelector) {
+        if (!actionRightId) return;
+
+        const $host = hostSelector
+            ? $(hostSelector).first()
+            : $(`.${actionRightId}`).first();
+        if (!$host.length) return;
+
+        let $selector = $(getLoadingIndicator(actionRightId, hostSelector));
+        if (!$selector.length) {
+            $selector = $(`<div class="${actionRightId}_loading">`).appendTo($host);
+            $selector.dxLoadIndicator({ width: 14, height: 14, visible: false });
+        }
+
+        $selector.dxLoadIndicator("instance")?.option("visible", true);
     }
-    function hideLoading(actionRightId) {
-       const indicator = getLoadingIndicator(actionRightId);
+    function hideLoading(actionRightId, hostSelector) {
+       const indicator = getLoadingIndicator(actionRightId, hostSelector);
         if (indicator) {
            $(indicator).dxLoadIndicator("instance").option("visible", false);
        }

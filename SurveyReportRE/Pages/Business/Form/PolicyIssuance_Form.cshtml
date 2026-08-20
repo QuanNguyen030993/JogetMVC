@@ -529,11 +529,11 @@ Note:
                 window.PolicyIssuanceIdManager.detailStatus(q.id)
             );
         }
-            function loadSelectedWorkflow() {
-                debugger
-                 window.WorkflowLoader.load({
+        function loadSelectedWorkflow() {
+            return window.WorkflowLoader.load({
                 moduleCode: "pi",
                 id: @ViewData["Id"],
+                loadingHost: `#${window.PolicyIssuanceIdManager.actionBarDept(stageDept, @ViewData["Id"])}`,
                 guid: state.selectedGuid,
                 stageDept: stageDept,
                 state: state,
@@ -1643,7 +1643,7 @@ Note:
             $.each(piDeptModuleCode, function (itemIndex, item) {
                 deptData[item] = { ...q, id: q.id, sectionName: item, code: q.policyIssuanceCode };
                 if (stageDept === item) {
-                    // ensureActiveRemarkEditor();
+                    ensureActiveRemarkEditor();
                 }
                 else {
                     $(`#${PolicyIssuanceIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "none" });
@@ -1665,9 +1665,8 @@ Note:
                 policyAssignmentLifecycle,
                 firstRender ? FormStageDelay.assignment : FormStageDelay.reloadAssignment
             );
-            // ensureActiveRemarkEditor();
+            ensureActiveRemarkEditor();
             scrollToDept(formModuleKeyPi, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
-             var stageDept = q.stageDept;
                 if (workflowStatus === "Issued" || workflowStatus === "Canceled") {
 
                     let icon, colorClass, text;
