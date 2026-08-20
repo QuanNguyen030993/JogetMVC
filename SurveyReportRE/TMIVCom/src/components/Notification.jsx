@@ -1,5 +1,14 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, useCallback, useRef } from "react";
 import { createRoot } from "react-dom/client";
+
+const DEFAULT_DURATION = 60000;
+
+export const normalizeDuration = (value, fallback = DEFAULT_DURATION) => {
+    if (value === undefined || value === null || value === "") return fallback;
+
+    const parsedValue = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : fallback;
+};
 
 /**
  * Single Toast Item component
@@ -7,44 +16,47 @@ import { createRoot } from "react-dom/client";
 export const ToastItem = ({ toast, onClose }) => {
     const [isFadingOut, setIsFadingOut] = useState(false);
     const [progress, setProgress] = useState(100);
+    const dismissingRef = useRef(false);
     const {
         id,
         title,
         content = "",
         message = "",
         type = "info", // "success" | "warning" | "fail" | "error" | "info"
-        duration = 60000,
         onClick,
         position = "bottom-right"
     } = toast;
+    const duration = normalizeDuration(toast.duration);
 
     const htmlContent = content || message;
     const normalizedType = type === "fail" ? "error" : type;
 
-    useEffect(() => {
-        if (duration <= 0) return;
-
-        const startTime = Date.now();
-        const interval = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
-            setProgress(remaining);
-            if (elapsed >= duration) {
-                clearInterval(interval);
-                handleDismiss();
-            }
-        }, 30);
-
-        return () => clearInterval(interval);
-    }, [duration]);
-
-    const handleDismiss = (e) => {
+    const handleDismiss = useCallback((e) => {
         if (e) e.stopPropagation();
+        if (dismissingRef.current) return;
+
+        dismissingRef.current = true;
         setIsFadingOut(true);
         setTimeout(() => {
             onClose(id);
         }, 300);
-    };
+    }, [id, onClose]);
+
+    useEffect(() => {
+        if (duration <= 0) return undefined;
+
+        const startTime = Date.now();
+        const interval = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            setProgress(Math.max(0, 100 - (elapsed / duration) * 100));
+        }, 30);
+        const timeout = setTimeout(handleDismiss, duration);
+
+        return () => {
+            clearInterval(interval);
+            clearTimeout(timeout);
+        };
+    }, [duration, handleDismiss]);
 
     const handleToastClick = (e) => {
         if (onClick && typeof onClick === "function") {
@@ -209,28 +221,24 @@ const pendingQueue = [];
 export const ToastContainer = forwardRef((props, ref) => {
     const [toasts, setToasts] = useState([]);
 
-    const addToast = (toastOptions) => {
+    const addToast = useCallback((toastOptions) => {
         const id = Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-        const newToast = { id, ...toastOptions };
+        const newToast = {
+            id,
+            ...toastOptions,
+            duration: normalizeDuration(toastOptions?.duration)
+        };
         setToasts((prev) => [...prev, newToast]);
         return id;
-    };
+    }, []);
 
-    const removeToast = (id) => {
+    const removeToast = useCallback((id) => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
-    };
+    }, []);
 
-    const clearAll = () => {
+    const clearAll = useCallback(() => {
         setToasts([]);
-    };
-
-    // const handleObj = useMemo(() => ({
-    //     addToast,
-    //     removeToast,
-    //     clearAll
-    // }), []);
-
-    // useImperativeHandle(ref, () => handleObj, [handleObj]);
+    }, []);
 
     const handleObj = useMemo(
         () => ({
@@ -240,6 +248,8 @@ export const ToastContainer = forwardRef((props, ref) => {
         }),
         [addToast, removeToast, clearAll]
     );
+    useImperativeHandle(ref, () => handleObj, [handleObj]);
+
     // Register globalToastRef automatically whenever ToastContainer is mounted
     useEffect(() => {
         globalToastRef = handleObj;
@@ -300,9 +310,9 @@ export const ToastContainer = forwardRef((props, ref) => {
         }
     };
 
-    const handleClose = (id) => {
+    const handleClose = useCallback((id) => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
-    };
+    }, []);
 
     return (
         <>
@@ -323,25 +333,28 @@ export const ToastContainer = forwardRef((props, ref) => {
 
 ToastContainer.displayName = "ToastContainer";
 
-export const notify = (optionsOrTitle, type = "info", duration = 60000) => {
+export const notify = (optionsOrTitle, type = "info", duration = DEFAULT_DURATION) => {
     let opts = {};
     if (typeof optionsOrTitle === "string") {
         opts = {
             title: "",
             content: optionsOrTitle,
             type: type,
-            duration: duration,
+            duration: normalizeDuration(duration),
             position: "bottom-right"
         };
-    } else if (typeof optionsOrTitle === "object") {
-        console.log("call tại object");
+    } else if (optionsOrTitle && typeof optionsOrTitle === "object") {
         opts = {
             position: "bottom-right",
-            duration: duration,
             type: "info",
-            ...optionsOrTitle
+            ...optionsOrTitle,
+            duration: normalizeDuration(optionsOrTitle.duration, normalizeDuration(duration))
         };
+    } else {
+        return null;
     }
+
+    if (typeof document === "undefined") return null;
 
     pendingQueue.push(opts);
 
@@ -377,6 +390,8 @@ export const notify = (optionsOrTitle, type = "info", duration = 60000) => {
             }
         }, 30);
     }
+
+    return null;
 };
 
 // Bind to window immediately when imported

@@ -1467,11 +1467,15 @@ window.TMIVCom.notify = notify;
 window.TMIVCom.startTour = startTour;
 window.TMIVCom.exportTour = exportTour;
 
-if (typeof $ !== "undefined") {
-    $.tmivnotify = notify;
-    $.tmivtourguide = startTour;
-    $.tmivexporttour = exportTour;
-}
+const jqueryInstances = [window.jQuery, window.$].filter(
+    (instance, index, instances) => instance && instances.indexOf(instance) === index
+);
+
+jqueryInstances.forEach((jqueryInstance) => {
+    jqueryInstance.tmivnotify = (...args) => notify(...args);
+    jqueryInstance.tmivtourguide = (...args) => startTour(...args);
+    jqueryInstance.tmivexporttour = (...args) => exportTour(...args);
+});
 
 // Test notification demo for TMIVCom library (triggers 5 seconds after load)
 if (typeof window !== "undefined") {

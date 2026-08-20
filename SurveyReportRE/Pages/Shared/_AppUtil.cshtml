@@ -908,6 +908,7 @@
         var popup = makePopup("large", "Policy Issuance Endorsement Request");
         popup.option({
             title: "Policy Issuance - Endorsement Request",
+            closeOnOutsideClick: false,
             contentTemplate: function (container) {
                 var passingParams = {
                     UITabId: "PolicyIssuance_Endorsement_Request_Form",
@@ -5144,6 +5145,10 @@
                 || (50 * 1024 * 1024)
             );
             const configuredMaxFileSizeMB = Math.round((configuredMaxFileSize / 1024 / 1024) * 100) / 100;
+            const uploadMode = editorOptionsIn.uploadMode || "instantly";
+            const showFileList = typeof editorOptionsIn.showFileList === "boolean"
+                ? editorOptionsIn.showFileList
+                : uploadMode !== "instantly";
             // const currentOptions = getCurrentFormOptions(editorOptionsIn) || {};
             // currentOptions.guid = editorOptionsIn.guid || "";
             // const ids = getDxFileUploaderIds(editorOptionsIn);
@@ -5159,7 +5164,7 @@
             const $preview = $(`<div id="${attachmentHostIds.preview}" class="att-preview"></div>`)
                 .appendTo($container);
            
-            const $uploader = $(`<div id="${attachmentHostIds.uploader}"></div>`)
+            const $uploader = $(`<div id="${attachmentHostIds.uploader}" class="tmivcom-dx-fileuploader"></div>`)
                  .appendTo($container)
           
 
@@ -5167,23 +5172,62 @@
              if (editorOptionsIn.id == 0)
              // if (isRenderUploader)
              {
-                  // const $dropZone = $(`
-                  //   <div id="${dropZoneId}"
-                  //        class="attachment-drop-zone${uploaderAllow ? "" : " is-disabled "}"
-                  //        role="button"
-                  //        tabindex="${uploaderAllow ? "0" : "-1"}"
-                  //        aria-disabled="${uploaderAllow ? "false" : "true"}">
-                  //       <span class="dx-icon dx-icon-upload attachment-drop-zone__icon" aria-hidden="true"></span>
-                  //       <span class="attachment-drop-zone__content">
-                  //           <strong>
-                  //               <span class="attachment-drop-zone__compact-label">Choose files or drag them here</span>
-                  //               <span class="attachment-drop-zone__drop-label">Release to upload</span>
-                  //           </strong>
-                  //           <span class="attachment-drop-zone__hint">Maximum ${configuredMaxFileSizeMB} MB per file</span>
-                  //       </span>
-                  //   </div>`)
-                  //   .toggle(!!isRenderUploader)
-                  //   .appendTo($container);
+                  const normalDropZoneContent = `
+                    <strong>
+                        <span class="attachment-drop-zone__compact-label"></span>
+                        <span class="attachment-drop-zone__drop-label">Drop files here</span>
+                    </strong>
+                    <span class="attachment-drop-zone__hint">or click to browse from your computer</span>`;
+                  const $dropZone = $(`
+                    <div id="${dropZoneId}"
+                         class="attachment-drop-zone${uploaderAllow ? "" : " is-disabled"}"
+                         role="button"
+                         tabindex="${uploaderAllow ? "0" : "-1"}"
+                         aria-disabled="${uploaderAllow ? "false" : "true"}">
+                        <span class="dx-icon dx-icon-upload attachment-drop-zone__icon" aria-hidden="true"></span>
+                        <span class="attachment-drop-zone__content">${normalDropZoneContent}</span>
+                    </div>`)
+                    .toggle(!!isRenderUploader)
+                    .insertBefore($uploader);
+                  $dropZone.find(".attachment-drop-zone__compact-label")
+                    .text(editorOptionsIn.titleName || "Upload Attachments");
+
+                  let uploadTotal = 0;
+                  let uploadedCount = 0;
+
+                  function renderDropZoneUploadStatus(fileName, percent) {
+                      const currentFileNumber = uploadTotal > 0
+                          ? Math.min(uploadedCount + 1, uploadTotal)
+                          : 0;
+                      const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+                      const $content = $dropZone.find(".attachment-drop-zone__content");
+                      $content.empty().append(
+                          $("<div>", { class: "attachment-upload-status" }).append(
+                              $("<div>", { class: "attachment-upload-status__header" }).append(
+                                  $("<strong>").text(`Uploading ${currentFileNumber}/${uploadTotal} files...`),
+                                  $("<span>", { class: "attachment-upload-status__percent" }).text(`${safePercent}%`)
+                              ),
+                              $("<div>", {
+                                  class: "attachment-upload-status__filename",
+                                  title: fileName || ""
+                              }).text(fileName || ""),
+                              $("<div>", { class: "attachment-upload-progress" }).append(
+                                  $("<div>", { class: "attachment-upload-progress__bar" }).css("width", `${safePercent}%`)
+                              ),
+                              $("<div>", { class: "attachment-upload-status__completed" })
+                                  .text(`${uploadedCount} of ${uploadTotal} completed`)
+                          )
+                      );
+                  }
+
+                  function resetDropZoneStatus() {
+                      $dropZone.removeClass("is-dragging is-uploading")
+                          .find(".attachment-drop-zone__content")
+                          .html(normalDropZoneContent);
+                      $dropZone.find(".attachment-drop-zone__compact-label")
+                          .text(editorOptionsIn.titleName || "Upload Attachments");
+                  }
+
                $uploader
                 .dxFileUploader({
                     disabled: !uploaderAllow,
@@ -5195,24 +5239,31 @@
                     dropZone: `#${dropZoneId}`,
                     dialogTrigger: `#${dropZoneId}`,
                     labelText: "",
-                    uploadMode: editorOptionsIn.uploadMode ? editorOptionsIn.uploadMode : "instantly",
+                    uploadMode: uploadMode,
                     uploadUrl: options.uploadUrl || `/api/Attachment/AsyncUploadFile`,
-                    showFileList: editorOptionsIn.uploadMode != "instantly" ? true : false,
+                    showFileList: showFileList,
                     uploadHeaders: {
                         //Only use for static string
                     },
                     onInitialized: function (e) {
                         //updateDxFileUploaderHeaders(editorOptionsIn);
                     },
+                    onDisposing: function (e) {
+                        releaseDxFileUploaderPreviewUrls(e.component);
+                        $dropZone.remove();
+                    },
                     onUploadStarted: function (e) {
-                             // $dropZone.removeClass("is-dragging").addClass("is-uploading");
-                             // makeMiniLoadingPanel(`Uploading file ${e.file.name}`, "Please wait...");
-                             makeMiniLoadingPanel(`Uploading file`, "Please wait...");
+                        if (uploadTotal < 1) {
+                            uploadTotal = (e.component.option("value") || []).length || 1;
+                        }
+                        $dropZone.removeClass("is-dragging").addClass("is-uploading");
+                        renderDropZoneUploadStatus(e.file?.name, 0);
+                        makeMiniLoadingPanel(`Uploading file`, "Please wait...");
                 
                         // showUploaderLoader(editorOptionsIn.uploaderId, "File loading...");
                     },
                     onValueChanged: function(e){
-                        // $dropZone.removeClass("is-dragging");
+                        $dropZone.removeClass("is-dragging");
                         const oversizedFile = (e.value || []).find(file => file.size > configuredMaxFileSize);
                         if (oversizedFile) {
                             const message = `${oversizedFile.name} exceeds the ${configuredMaxFileSizeMB} MB upload limit.`;
@@ -5224,8 +5275,14 @@
                             e.component.reset();
                             return;
                         }
-                        if (editorOptionsIn.uploadMode != "instantly")
-                        loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn, renderTime)
+                        uploadTotal = (e.value || []).length;
+                        uploadedCount = 0;
+                        if (uploadMode !== "instantly") {
+                            loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn, renderTime);
+                            setTimeout(function () {
+                                bindDxFileUploaderFilePreviews(e.component, e.element);
+                            }, 0);
+                        }
                           var form = $("#quotationRequestForm").dxForm("instance");
                             if (!form) return;
                             var currentQty = form.option("formData.quotationQuantity") || 0;
@@ -5238,6 +5295,7 @@
                         // e.bytesLoaded: số byte đã upload
                         // e.bytesTotal: tổng size file
                         const percent = Math.round((e.bytesLoaded / e.bytesTotal) * 100);
+                        renderDropZoneUploadStatus(e.file?.name, percent);
 
                         var result = {};
                         result.payload = {};
@@ -5254,7 +5312,9 @@
 
                     },
                     onUploaded: function (e) {
-                            // $dropZone.removeClass("is-dragging is-uploading");
+                            uploadedCount++;
+                            renderDropZoneUploadStatus(e.file?.name, 100);
+                            if (uploadedCount >= uploadTotal) resetDropZoneStatus();
                             var result = new Object();
                                  result.payload = new Object();
                                  result.payload.progressvalue = 100;
@@ -5265,17 +5325,20 @@
                       
                     },
                     onUploadError: function (e) {
-                        // $dropZone.removeClass("is-dragging is-uploading");
+                        uploadedCount++;
+                        if (uploadedCount >= uploadTotal) resetDropZoneStatus();
                         const fileName = e.file?.name ? ` ${e.file.name}` : "";
                         if (typeof appNotifyWarning === "function") {
                             appNotifyWarning(`Unable to upload${fileName}. Please try again.`, false);
                         }
                     },
                     onDropZoneEnter: function () {
-                        // if (uploaderAllow) $dropZone.addClass("is-dragging");
+                        if (uploaderAllow && !$dropZone.hasClass("is-uploading")) {
+                            $dropZone.addClass("is-dragging");
+                        }
                     },
                     onDropZoneLeave: function () {
-                        // $dropZone.removeClass("is-dragging");
+                        $dropZone.removeClass("is-dragging");
                     },
 
                     // onContentReady: function (e) {
@@ -5298,16 +5361,18 @@
                                 height: 0,
                                 overflow: "hidden"
                             });
+                        } else if (e.component.option("uploadMode") === "useForm") {
+                            bindDxFileUploaderFilePreviews(e.component, e.element);
                         }
                     }
 
 
                 });
-              // $dropZone.on("keydown", function (event) {
-              //     if (event.key !== "Enter" && event.key !== " ") return;
-              //     event.preventDefault();
-              //     $dropZone.trigger("click");
-              // });
+              $dropZone.on("keydown", function (event) {
+                  if (event.key !== "Enter" && event.key !== " ") return;
+                  event.preventDefault();
+                  $dropZone.trigger("click");
+              });
               }
               else {
                         $uploader.fileuploader({
@@ -5401,11 +5466,198 @@
                 }
             }
 
+            function bindDxFileUploaderFilePreviews(component, element) {
+                if (!component || component.option("uploadMode") !== "useForm") return;
+
+                const files = component.option("value") || [];
+                const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"];
+                const iconUrls = component.__attachmentLocalIconUrls || new Map();
+                component.__attachmentLocalIconUrls = iconUrls;
+                releaseDxFileUploaderPreviewUrls(component, files);
+
+                $(element).find(".dx-fileuploader-file-container").each(function (index) {
+                    const file = files[index];
+                    const $fileContainer = $(this);
+                    if (!file) return;
+
+                    const ext = getExt(file.name);
+                    const isImage = String(file.type || "").toLowerCase().startsWith("image/")
+                        || imageExtensions.includes(String(ext || "").toLowerCase());
+                    const $icon = $("<span>")
+                        .addClass("attachment-local-file-icon")
+                        .attr("aria-hidden", "true");
+
+                    if (isImage) {
+                        let iconUrl = iconUrls.get(file);
+                        if (!iconUrl) {
+                            iconUrl = URL.createObjectURL(file);
+                            iconUrls.set(file, iconUrl);
+                        }
+                        $("<img>")
+                            .attr({ src: iconUrl, alt: "" })
+                            .appendTo($icon);
+                    } else {
+                        $icon.text(getIconByExt(ext));
+                    }
+
+                    $fileContainer.find(".attachment-local-file-icon").remove();
+                    const $fileInfo = $fileContainer.find(".dx-fileuploader-file-info").first();
+                    if ($fileInfo.length) {
+                        $icon.insertBefore($fileInfo);
+                    } else {
+                        $fileContainer.prepend($icon);
+                    }
+
+                    $fileContainer
+                        .addClass("attachment-local-preview-item")
+                        .attr({
+                            role: "button",
+                            tabindex: 0,
+                            title: `Preview ${file.name || "selected file"}`
+                        })
+                        .off("click.localAttachmentPreview keydown.localAttachmentPreview")
+                        .on("click.localAttachmentPreview", function (event) {
+                            if ($(event.target).closest(".dx-button, .dx-fileuploader-button").length) return;
+                            previewAttachment(null, getExt(file.name), file.name, "", file);
+                        })
+                        .on("keydown.localAttachmentPreview", function (event) {
+                            if ($(event.target).closest(".dx-button, .dx-fileuploader-button").length) return;
+                            if (event.key !== "Enter" && event.key !== " ") return;
+                            event.preventDefault();
+                            previewAttachment(null, getExt(file.name), file.name, "", file);
+                        });
+                });
+            }
+
+            function releaseDxFileUploaderPreviewUrls(component, retainedFiles) {
+                const iconUrls = component?.__attachmentLocalIconUrls;
+                if (!iconUrls) return;
+
+                const retained = Array.isArray(retainedFiles) ? new Set(retainedFiles) : null;
+                iconUrls.forEach(function (url, file) {
+                    if (retained && retained.has(file)) return;
+                    URL.revokeObjectURL(url);
+                    iconUrls.delete(file);
+                });
+
+                if (!retained) {
+                    component.__attachmentLocalIconUrls = null;
+                }
+            }
+
+            function getAttachmentPreviewPopup(title) {
+                let $host = $("#attachmentPreviewPopup");
+                if (!$host.length) {
+                    $host = $('<div id="attachmentPreviewPopup"></div>').appendTo(document.body);
+                }
+
+                let popup = $host.dxPopup("instance");
+                if (!popup) {
+                    $host.dxPopup({
+                        width: "80vw",
+                        height: "90vh",
+                        visible: false,
+                        showTitle: true,
+                        showCloseButton: true,
+                        dragEnabled: true,
+                        resizeEnabled: true,
+                        shading: true,
+                        closeOnOutsideClick: false,
+                        contentTemplate: function (container) {
+                            return container;
+                        }
+                    });
+                    popup = $host.dxPopup("instance");
+                }
+
+                popup.option({
+                    title: title || "File Preview",
+                    closeOnOutsideClick: false
+                });
+                return popup;
+            }
+
+            function previewLocalAttachment(file, extension, fileName) {
+                const ext = String(extension || getExt(fileName)).toLowerCase().replace(/^\./, "");
+                const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"];
+                const textExtensions = ["txt", "log", "md", "csv", "json", "xml", "yaml", "yml", "ini", "config", "sql", "js", "css", "html", "htm"];
+                const officeExtensions = ["doc", "docx", "xls", "xlsx", "xlsm", "ppt", "pptx", "odt", "ods", "odp"];
+
+                if (officeExtensions.includes(ext)) {
+                    DevExpress.ui.notify("Office preview is available after the file is uploaded", "info", 2200);
+                    return;
+                }
+
+                if (!imageExtensions.includes(ext) && ext !== "pdf" && !textExtensions.includes(ext)) {
+                    DevExpress.ui.notify("Preview is not supported for this file type", "info", 2000);
+                    return;
+                }
+
+                const popup = getAttachmentPreviewPopup("File Preview");
+                let objectUrl = null;
+                popup.option({
+                    width: "80vw",
+                    height: "90vh",
+                    title: `File Preview${fileName ? ` - ${fileName}` : ""}`,
+                    onHidden: function () {
+                        if (objectUrl) {
+                            URL.revokeObjectURL(objectUrl);
+                            objectUrl = null;
+                        }
+                    },
+                    contentTemplate: function (container) {
+                        if (textExtensions.includes(ext)) {
+                            const $text = $("<pre>")
+                                .css({
+                                    margin: 0,
+                                    padding: "16px",
+                                    minHeight: "100%",
+                                    whiteSpace: "pre-wrap",
+                                    overflowWrap: "anywhere",
+                                    overflow: "auto",
+                                    background: window.AppColors.c_0f172a,
+                                    color: window.AppColors.c_e2e8f0,
+                                    borderRadius: "6px",
+                                    fontFamily: "Consolas, 'Courier New', monospace",
+                                    fontSize: "13px"
+                                })
+                                .text("Loading...")
+                                .appendTo(container);
+                            file.text()
+                                .then(content => $text.text(content))
+                                .catch(error => $text.text(error.message || "Unable to preview text file"));
+                            return;
+                        }
+
+                        objectUrl = URL.createObjectURL(file);
+                        if (imageExtensions.includes(ext)) {
+                            popupStandardContentByScroll(
+                                $("<img>")
+                                    .attr({ src: objectUrl, alt: fileName || "Selected image" })
+                                    .css({ width: "100%", height: "auto", objectFit: "contain", borderRadius: "5px" })
+                            ).appendTo(container);
+                            return;
+                        }
+
+                        $("<iframe>")
+                            .attr({ src: objectUrl, title: fileName || "Selected PDF" })
+                            .css({ width: "100%", height: "100%", border: 0 })
+                            .appendTo(container);
+                    }
+                });
+                popup.show();
+            }
+
             function previewAttachment(id, extension, fileName,subDirectory, fileInstance) {
                 const ext = String(extension || "").toLowerCase().replace(/^\./, "");
                 const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"];
                 const officeExtensions = ["doc", "docx", "xls", "xlsx","xlsm", "ppt", "pptx", "odt", "ods", "odp"];
                 const textExtensions = ["txt", "log", "md", "csv", "json", "xml", "yaml", "yml", "ini", "config", "sql", "js", "css", "html", "htm"];
+
+                if (!id && fileInstance instanceof Blob) {
+                    previewLocalAttachment(fileInstance, ext, fileName);
+                    return;
+                }
 
                 if (imageExtensions.includes(ext)) {
                     openImagePreviewPopup(id);
@@ -8179,7 +8431,7 @@
 
 
         async function openExcelPreviewPopup(id) {
-            var popupInstance = makePopup("large", "Res");
+            var popupInstance = getAttachmentPreviewPopup("Excel Preview");
             popupInstance.option({
                 width: "90vw",
                 height: "90vh",
@@ -8299,7 +8551,7 @@
                     window.open(subDirectory, '_blank');
                 }
                 else {
-                    const popup = makePopup("large", "Res");
+                    const popup = getAttachmentPreviewPopup("File Preview");
                     popup.option({
                         width: "80vw",
                         height: "90vh",
@@ -8313,7 +8565,7 @@
             }
 
         async function openWordPreviewPopup(id) {
-            const popup = makePopup("large", "Res");
+            const popup = getAttachmentPreviewPopup("Word Preview");
 
             popup.option({
                 width: "80vw",
@@ -8365,7 +8617,7 @@
         }
 
         async function openImagePreviewPopup(id) {
-            const popup = makePopup("large", "Res");
+            const popup = getAttachmentPreviewPopup("Image Preview");
             popup.option({
                 width: "80vw",
                 height: "90vh",
@@ -8381,7 +8633,7 @@
         }
 
         async function openTextPreviewPopup(id, fileName) {
-            const popup = makePopup("large", "Res");
+            const popup = getAttachmentPreviewPopup("Text Preview");
             popup.option({
                 width: "80vw",
                 height: "90vh",
@@ -8416,7 +8668,7 @@
             popup.show();
         }
         async function openPDFPopup(id) {
-            const popup = makePopup("large", "Res");
+            const popup = getAttachmentPreviewPopup("PDF Preview");
             popup.option({
                 width: "80vw",
                 height: "90vh",
@@ -8996,12 +9248,27 @@
         /*
          * Sau khi render mới query DOM + dxButton instance.
          */
+        var decisionForm = $(`#${formProps.formId}`).dxForm("instance");
+        var decisionFormItems = decisionForm?.option("formData") || {};
+        var decisionTatObject = tryParseJSON(
+            decisionFormItems.turnAroundTimeAttributes,
+            "Decision Button TAT Problem"
+        ) || {};
+        var ruleDisabled = shouldDisableWorkflowButton({
+            dept: delayObject.dept,
+            stageDept: decisionFormItems.stageDept,
+            formItems: decisionFormItems,
+            tatObject: decisionTatObject
+        });
+
         var rendered =
             getDecisionRenderedObjects(
                 formProps,
                 decisionItems,
-                initialStatusId
+                initialStatusId,
+                { disabled: ruleDisabled }
             );
+        rendered.setDisabled(ruleDisabled);
 
         return {
             formProps: formProps,
@@ -9030,7 +9297,9 @@
 
             setDisabled: rendered.setDisabled,
 
-            getButton: rendered.getButton
+            getButton: rendered.getButton,
+
+            ruleDisabled: ruleDisabled
         };
     }
                 //Comment out 2026-08-10
@@ -9175,6 +9444,51 @@
             return { text: "No status", title: "" };
         }
 
+        function hasWorkflowButtonStatus(formItems, dept) {
+            var rawActionStatus = formItems?.actionStatus;
+            var actionStatus = rawActionStatus && typeof rawActionStatus === "object"
+                ? rawActionStatus
+                : (tryParseJSON(rawActionStatus, "Workflow Button Status Problem") || {});
+            var normalizedDept = normalizeDeptKey(dept);
+            var storedStatus = actionStatus?.[`${normalizedDept}Button`]
+                ?? actionStatus?.[normalizedDept];
+
+            if (storedStatus == null || storedStatus === false) return false;
+            if (typeof storedStatus === "string") return storedStatus.trim().length > 0;
+            if (typeof storedStatus === "object") return Object.keys(storedStatus).length > 0;
+            return true;
+        }
+
+        function shouldDisableWorkflowButton(options) {
+            options = options || {};
+            var formItems = options.formItems || {};
+            var buttonDept = normalizeDeptKey(options.dept);
+            var currentStageDept = normalizeDeptKey(options.stageDept || formItems.stageDept);
+            var currentRole = normalizeDeptKey(
+                typeof options.role !== "undefined"
+                    ? options.role
+                    : (typeof _role !== "undefined" ? _role : "")
+            );
+            var tatObject = options.tatObject;
+
+            if (!tatObject || typeof tatObject !== "object") {
+                tatObject = tryParseJSON(
+                    formItems.turnAroundTimeAttributes,
+                    "Workflow Button TAT Problem"
+                ) || {};
+            }
+
+            // Default is disabled. A button is actionable only for the current
+            // stage and the role currently being used in the form.
+            var ownsCurrentStage = !!buttonDept && buttonDept === currentStageDept;
+            var roleMatchesStage = !!currentStageDept && currentRole === currentStageDept;
+            if (!ownsCurrentStage || !roleMatchesStage) return true;
+
+            var hasAcceptDate = !!tatObject?.[buttonDept]?.AcceptDate;
+            var hasActionStatus = hasWorkflowButtonStatus(formItems, buttonDept);
+            return hasAcceptDate || hasActionStatus;
+        }
+
         function normalizeDecisionFieldButtons(params) {
             return params.reduce(function (items, item) {
                 if (Array.isArray(item)) return items.concat(normalizeDecisionFieldButtons(item));
@@ -9269,7 +9583,7 @@
 
                         var options = {
                             elementAttr: { id: buttonId },
-                            disabled: typeof config.disabled === "undefined" ? true : config.disabled,
+                            disabled: true,
                             text: config.text || (index === 0 ? "Accept" : ""),
                             icon: config.icon || (index === 0 ? "check" : undefined),
                             type: config.type || (index === 0 ? "success" : "default"),
@@ -9396,19 +9710,6 @@
                 return $(`<div id="${buttonId}"></div>`).appendTo($host);
             }
 
-            function getDelayDecisionButtonDisabled(item, route, fallbackDisabled) {
-                if (item && typeof item === "object" && typeof item.disabled !== "undefined") {
-                    return item.disabled;
-                }
-
-                if (route && typeof route.disabled !== "undefined") {
-                    return route.disabled;
-                }
-
-                return fallbackDisabled || false;
-            }
-
-       
             function ensureDelayDecisionButtonInstance(buttonId, item) {
        var $button = ensureDelayDecisionButtonElement(buttonId, item);
        // Không tìm thấy element
@@ -9431,7 +9732,7 @@
        }
        var route = item?.route || item?.findRoute;
        var options = {
-           disabled: getDelayDecisionButtonDisabled(item, route),
+           disabled: true,
            text:
                item?.text ||
                route?.displayStatus ||
@@ -9636,7 +9937,7 @@
                             buttonOptions.text = item.text || route.displayStatus || route.actionName || route.actionCode || instance.option("text");
                             buttonOptions.icon = item.icon || getTransitionButtonIcon(route, instance.option("icon") || "check");
                             buttonOptions.type = item.type || instance.option("type");
-                            buttonOptions.disabled = getDelayDecisionButtonDisabled(item, route, instance.option("disabled"));
+                            buttonOptions.disabled = true;
                         }
 
                         instance.option(buttonOptions);
@@ -9647,7 +9948,7 @@
                         return;
                     }
                         var objSnapshot = cloneReusableOptions(formProps);
-                        var defaultButtonOptions = {};
+                        var defaultButtonOptions = { disabled: true };
                         if (item && typeof item === "object"
                             && typeof item.onClick === "function"
                             && item.useDefaultDecisionClick !== true) {
@@ -9666,9 +9967,6 @@
                             if (item.text) defaultButtonOptions.text = item.text;
                             if (item.icon) defaultButtonOptions.icon = item.icon;
                             if (item.type) defaultButtonOptions.type = item.type;
-                            if (typeof item.disabled !== "undefined") {
-                                defaultButtonOptions.disabled = item.disabled;
-                            }
                         }
                         instance.value.option(defaultButtonOptions);
                         applyTransitionButtonClass(`#${buttonId}`, item, item?.buttonClass);
@@ -9720,8 +10018,8 @@
 
 
                        var latestFormItems = form.option("formData") || {};
-                       var latestTatObject = tryParseJSON(latestFormItems.turnAroundTimeAttributes, "TAT Load Button Problem");
-                        var customStatus = tryParseJSON(latestFormItems.actionStatus || "", "Custom parsing problem")
+                       var latestTatObject = tryParseJSON(latestFormItems.turnAroundTimeAttributes, "TAT Load Button Problem") || {};
+                        var customStatus = tryParseJSON(latestFormItems.actionStatus || "", "Custom parsing problem") || {};
                        // Legacy callers (UW/LMKT) pass buttonId/statusId pairs.
                        // Status element ids must not be initialized or disabled as buttons.
                            var usesLegacyStringPairs = params.length > 0 && params.every(item => typeof item === "string");
@@ -9842,7 +10140,17 @@
                                   );
                                   disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
                           }
-                      
+
+                          setDecisionButtonsDisabled(
+                              buttonItems.map(item => getDelayAcceptButtonId(item)),
+                              shouldDisableWorkflowButton({
+                                  dept: formDataClone.dept,
+                                  stageDept: latestFormItems.stageDept,
+                                  formItems: latestFormItems,
+                                  tatObject: latestTatObject
+                              })
+                          );
+
     }, _delayUnlockForm);
 
 
@@ -9926,39 +10234,23 @@
             }
             return PIC_MAP[deptKey] || null;
         }
-         function disableAllDecisionButton(items, latestFormItems){
-             $.each(items, function(itemIndex, item){
-                 setTimeout(() => {
-                     try
-                     {  
-                         if (item.includes("make-option"))
-                         {
-                             $(`#${item}`).dxButton("instance").option("disabled", latestFormItems.stageDept == "TS" ? false : true);
-                         }
-                         else
-                            {
-                            $(`#${item}`).dxButton("instance").option("disabled", true);
-                        }
-                     }
-                     catch {
-                         console.log("error while try parse dxForm");
-                     }
-                 },1);
+         function setDecisionButtonsDisabled(items, disabled) {
+             $.each(items, function(itemIndex, item) {
+                 if (!item) return;
+                 try {
+                     $(`#${item}`).dxButton("instance")?.option("disabled", !!disabled);
+                 } catch (error) {
+                     console.warn("Unable to update decision button state.", item, error);
+                 }
              });
          }
 
-          function enableAllDecisionButton(items){
-             $.each(items, function(itemIndex, item){
-                 setTimeout(() => {
-                     try
-                     {
-                         $(`#${item}`).dxButton("instance").option("disabled", false);
-                     }
-                     catch {
-                         console.log("error while try parse dxForm");
-                     }
-                 },1);
-             });
+         function disableAllDecisionButton(items) {
+             setDecisionButtonsDisabled(items, true);
+         }
+
+          function enableAllDecisionButton(items) {
+             setDecisionButtonsDisabled(items, false);
          }
          function getAttachmentPreviewItems(name, prefix, dept, type, quotationId){
              return $(window.IdManager.attachmentPreviewItemsSelector(name, prefix, dept, type, quotationId));
@@ -10329,8 +10621,15 @@
                 </div>`
             ).appendTo($host);
 
+            const buttonFormItems = getFormItems(stageDept);
+            const buttonDisabled = shouldDisableWorkflowButton({
+                dept: stageDept,
+                stageDept: buttonFormItems.stageDept || stageDept,
+                formItems: buttonFormItems
+            });
+
             $button.dxButton({
-                disabled: false,
+                disabled: buttonDisabled,
                 className: "submit-btn-visible",
                 text:
                     route?.displayStatus ||
@@ -10584,19 +10883,12 @@
                             )
                             : {};
 
-                    var disabled = true;
-                    if (routeDept != "FO")
-                        disabled = !!latestTatObject?.[
-                            routeDept
-                        ]?.AcceptDate;
-
-                        params.onLoaded = function(result) {
-                                    if (formItems.stageDept === "Client") {
-                                        $('[data-custom-route-button="true"]').each(function() {
-                                            $(this).dxButton("instance")?.option("disabled", true);
-                                        });
-                                    }
-                                     };
+                    var disabled = shouldDisableWorkflowButton({
+                        dept: routeDept,
+                        stageDept: formItems.stageDept || stageDept,
+                        formItems: formItems,
+                        tatObject: latestTatObject
+                    });
 
 
                     $customButton.dxButton({
@@ -10890,8 +11182,13 @@
            $(indicator).dxLoadIndicator("instance").option("visible", false);
        }
     }
-    function getDecisionRenderedObjects(formProps, decisionItems, legacyStatusId) {
+    function getDecisionRenderedObjects(formProps, decisionItems, legacyStatusId, buttonRule) {
         decisionItems = normalizeDecisionFieldButtons(decisionItems || []);
+        buttonRule = buttonRule || {};
+
+        function isRuleLocked() {
+            return buttonRule.disabled === true;
+        }
 
         var statusId = getDecisionFieldStatusId(
             formProps,
@@ -10935,7 +11232,7 @@
                     instance: instance,
 
                     enable: function () {
-                        instance?.option("disabled", false);
+                        instance?.option("disabled", isRuleLocked());
                         return this;
                     },
 
@@ -10945,7 +11242,7 @@
                     },
 
                     setDisabled: function (disabled) {
-                        instance?.option("disabled", !!disabled);
+                        instance?.option("disabled", isRuleLocked() || !!disabled);
                         return this;
                     },
 

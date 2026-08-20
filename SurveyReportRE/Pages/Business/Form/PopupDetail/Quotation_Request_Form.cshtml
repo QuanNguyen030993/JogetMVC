@@ -121,7 +121,8 @@
                          that.titleName = "Upload Quotation";
                          that.uploaderAllow = true;
                          that.uploadMode = "useForm";
-                        that.onUploaded = function (files) {
+                         that.showFileList = true;
+                         that.onUploaded = function (files) {
                             var form = $("#quotationRequestForm").dxForm("instance");
                             if (!form) return;
                             var currentQty = form.option("formData.quotationQuantity") || 0;
