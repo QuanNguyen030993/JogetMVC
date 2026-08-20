@@ -400,7 +400,11 @@
     max-height: 800px;
 }
 
-
+.tmiv-html-editor-route {
+    overflow: auto;
+    min-height: 200px;
+    max-height: 800px;
+}
 
 .tmiv-html-toolbar {
     height: 42px;

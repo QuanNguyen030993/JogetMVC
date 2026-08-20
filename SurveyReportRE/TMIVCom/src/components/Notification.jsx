@@ -7,14 +7,13 @@ import { createRoot } from "react-dom/client";
 export const ToastItem = ({ toast, onClose }) => {
     const [isFadingOut, setIsFadingOut] = useState(false);
     const [progress, setProgress] = useState(100);
-
     const {
         id,
         title,
         content = "",
         message = "",
         type = "info", // "success" | "warning" | "fail" | "error" | "info"
-        duration = 4000,
+        duration = 60000,
         onClick,
         position = "bottom-right"
     } = toast;
@@ -225,14 +224,22 @@ export const ToastContainer = forwardRef((props, ref) => {
         setToasts([]);
     };
 
-    const handleObj = useMemo(() => ({
-        addToast,
-        removeToast,
-        clearAll
-    }), []);
+    // const handleObj = useMemo(() => ({
+    //     addToast,
+    //     removeToast,
+    //     clearAll
+    // }), []);
 
-    useImperativeHandle(ref, () => handleObj, [handleObj]);
+    // useImperativeHandle(ref, () => handleObj, [handleObj]);
 
+    const handleObj = useMemo(
+        () => ({
+            addToast,
+            removeToast,
+            clearAll
+        }),
+        [addToast, removeToast, clearAll]
+    );
     // Register globalToastRef automatically whenever ToastContainer is mounted
     useEffect(() => {
         globalToastRef = handleObj;
@@ -316,7 +323,7 @@ export const ToastContainer = forwardRef((props, ref) => {
 
 ToastContainer.displayName = "ToastContainer";
 
-export const notify = (optionsOrTitle, type = "info", duration = 4000) => {
+export const notify = (optionsOrTitle, type = "info", duration = 60000) => {
     let opts = {};
     if (typeof optionsOrTitle === "string") {
         opts = {
@@ -327,9 +334,10 @@ export const notify = (optionsOrTitle, type = "info", duration = 4000) => {
             position: "bottom-right"
         };
     } else if (typeof optionsOrTitle === "object") {
+        console.log("call tại object");
         opts = {
             position: "bottom-right",
-            duration: 4000,
+            duration: duration,
             type: "info",
             ...optionsOrTitle
         };

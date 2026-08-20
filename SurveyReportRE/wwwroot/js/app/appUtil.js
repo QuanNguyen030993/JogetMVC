@@ -3913,19 +3913,6 @@ function updateNotification(count) {
 
 
 
-function showTMIVComPopupNotification(title, body) {
-        $.tmivnotify({
-            title: title || "Notification",
-            content: body || "",
-            type: "info",
-            position: "bottom-right",
-            duration: 6000
-        });
-        return;
-
-    const plainBody = $("<div>").html(body || "").text();
-    //appNotifyInfo([title, plainBody].filter(Boolean).join(" - "));
-}
 
 function showPopupNotification(title, body) {
     

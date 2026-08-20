@@ -628,6 +628,7 @@
 
                                if ($("#quotationRequestForm").dxForm("instance").validate().isValid)
                                {
+                                   debugger
                                             makeMiniLoadingPanel("Initiate Quotation", "Please wait...");
                                         var result = new Object();
                                             result.payload = new Object();
@@ -646,7 +647,7 @@
                                     quotationData.Quotation.RequestedDate = submitSummaryData.createDate;
                                     quotationData.Quotation.PIC = { FO: makeRequestAccount, TS: "", UW: "", LKMT: "" };
                                     quotationData.Quotation.TurnAroundTimeAttributes = {
-                                                FO: { AcceptDate: new Date(), CompleteDate: new Date() }
+                                                FO: { AcceptDate: new Date(), CompleteDate: new Date(),ReceiveDate:  new Date() }
                                                 , TS: { AcceptDate: "", CompleteDate: "" }
                                                 , UW: { AcceptDate: "", CompleteDate: "" }
                                                 , LMKT: { AcceptDate: "", CompleteDate: "" }
@@ -674,7 +675,8 @@
 
                                     var attributesData = new Object();
                                     attributesData.Attributes = new Object();
-                                    var uploader = $(`#${window.IdManager.attachmentControlHost(sectionName, id)}`).dxFileUploader("instance");
+                                    // var uploader = $(`#${window.IdManager.attachmentControlHost(sectionName, id)}`).dxFileUploader("instance");
+                                    var uploader = $(`[id^='fileUpload_']`).fileuploader("instance");
 
 
                                     var formData = new FormData();
@@ -4104,7 +4106,7 @@
                     ? ""
                     : "Only the Leader PIC in the same section can assign.",
                 searchEnabled: true,
-                maxDisplayedTags: hideIfMuliple ? 1 : 100,
+                maxDisplayedTags: 1,//hideIfMuliple ? 1 : 100,
                 showMultiTagOnly: hideIfMuliple,
                 onMultiTagPreparing: function (e) {
                     if (hideIfMuliple) {
@@ -4690,6 +4692,7 @@
                 const sectionPermission = attList_Host?.closest(".dept-section").data("attachmentCanEdit");
                 if (sectionPermission !== undefined) {
                     options.uploaderAllow = !!sectionPermission;
+                    if (options.id == 0) options.uploaderAllow = true;
                 }
                 const batchSize = options.batchSize || 8;
                 const delay = options.delay || 0;
@@ -5137,7 +5140,7 @@
                 controllerName: "Document",
                 titleName: "Select or drag files to upload",
                 // LEGACY ROLLBACK: this uploader was forced to SharePoint.
-                uploadUrl: "/api/Document/AsyncUploadFileSharePoint",
+                uploadUrl: editorOptionsIn.id == 0 ? "/api/Document/AsyncUploadFile" : "/api/Document/AsyncUploadFileSharePoint",
                 //uploadUrl: "/api/Document/AsyncUploadFile",
                 data: {
                     ModuleName: editorOptionsIn.ModelName,
@@ -5145,9 +5148,13 @@
                     SectionName: editorOptionsIn.controlId
                 },
                 specificFolder: "Workflow",
-                disabled: true,
-                onUploaded: function () {
+                disabled: !uploaderAllow,
+                onUploaded: function (args) {
                     loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn, renderTime, true)
+                    // Callback bên ngoài truyền vào
+                    if (typeof editorOptionsIn.onUploaded === "function") {
+                    editorOptionsIn.onUploaded(args);
+                    }
                 },
                 onDeleted: function (file) {
                     console.log("SharePoint file deleted", file);
@@ -8822,8 +8829,6 @@
                     }, 0);
                     waitForDecisionRouteStage(formProps.formId).then(function () {
                         setTimeout(() => {
-
-                          
                             renderDecisionDeferredV2(
                                 formProps,
                                 decisionGroupName,
@@ -9621,10 +9626,7 @@
             }
 
                 function renderDecisionDeferredV2(formProps, groupName, mainField, ...params) {
-        // setTimeout(function () {
-                 const formDataClone = structuredClone(formProps);
-
-                    // var commonAcceptButtonId = getDelayAcceptButtonId(params[0]);
+                 const formDataClone = structuredClone(formProps); // Form view cshtml invoke by 1 function as loop
                     var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
                     var commonStatusId = getDecisionFieldStatusId(
                         formProps,
@@ -9632,7 +9634,6 @@
                         params[1] || params[3]
                     );
                     
-                    // setDecisionCommonStatus(commonStatusId, commonAcceptButtonId, "loading");
                     setTimeout(() => {
                         var form = $(`#${formDataClone.formId}`).dxForm("instance");
                         if (!form) return;
@@ -9649,7 +9650,6 @@
                             formItems.pic ?? formItems.pIC ?? formItems.PIC,
                             "PIC Load Problem"
                         ) || {};
-                        //var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
                         var pic = picObject[formDataClone.dept];
                         if (!pic) {
                             console.log("No pic for "+ formDataClone.dept);
@@ -9668,50 +9668,50 @@
                         var customStatus = tryParseJSON(latestFormItems.actionStatus || "", "Custom parsing problem")
                        // Legacy callers (UW/LMKT) pass buttonId/statusId pairs.
                        // Status element ids must not be initialized or disabled as buttons.
-                       var usesLegacyStringPairs = params.length > 0 && params.every(item => typeof item === "string");
-                       var buttonItems = usesLegacyStringPairs
-                           ? params.filter((item, index) => index % 2 === 0 && item)
-                           : params.filter(item => getDelayAcceptButtonId(item));
-                       var renderedStoredStatus = false;
-                       buttonItems.forEach(item => {
-                           if (renderDelayAcceptStoredStatusButton(formDataClone.formId, formDataClone.dept, item, latestFormItems, latestTatObject)) {
-                               renderedStoredStatus = true;
-                               return;
-                           }
+                           var usesLegacyStringPairs = params.length > 0 && params.every(item => typeof item === "string");
+                           var buttonItems = usesLegacyStringPairs
+                               ? params.filter((item, index) => index % 2 === 0 && item)
+                               : params.filter(item => getDelayAcceptButtonId(item));
+                           var renderedStoredStatus = false;
+                           buttonItems.forEach(item => {
+                               if (renderDelayAcceptStoredStatusButton(formDataClone.formId, formDataClone.dept, item, latestFormItems, latestTatObject)) {
+                                   renderedStoredStatus = true;
+                                   return;
+                               }
 
-                           if (item && typeof item === "object" && typeof item.loadRouteButtons === "function" && !isRouteDecisionButton(item) && !item.useDefaultDecisionClick && !item.createButton) {
-                               item.loadRouteButtons({
-                                   formId: formDataClone.formId,
-                                   dept: formDataClone.dept,
-                                   formItems: latestFormItems,
-                                   tatObject: latestTatObject,
-                                   config: item
-                               });
-                               return;
-                           }
-                           applyDelayDecisionButton(formDataClone, item);
+                               if (item && typeof item === "object" && typeof item.loadRouteButtons === "function" && !isRouteDecisionButton(item) && !item.useDefaultDecisionClick && !item.createButton) {
+                                   item.loadRouteButtons({
+                                       formId: formDataClone.formId,
+                                       dept: formDataClone.dept,
+                                       formItems: latestFormItems,
+                                       tatObject: latestTatObject,
+                                       config: item
+                                   });
+                                   return;
+                               }
+                               applyDelayDecisionButton(formDataClone, item);
 
-                           if (item && typeof item === "object" && typeof item.loadRouteButtons === "function") {
-                               item.loadRouteButtons({
-                                   formId: formDataClone.formId,
-                                   dept: formDataClone.dept,
-                                   formItems: latestFormItems,
-                                   tatObject: latestTatObject,
-                                   config: item
-                               });
-                           }
-                       });
-                      var finalDecisionStatus = getDecisionCommonStatus(
-                                latestFormItems,
-                                formDataClone.dept,
-                                latestTatObject
-                        );
+                               if (item && typeof item === "object" && typeof item.loadRouteButtons === "function") {
+                                   item.loadRouteButtons({
+                                       formId: formDataClone.formId,
+                                       dept: formDataClone.dept,
+                                       formItems: latestFormItems,
+                                       tatObject: latestTatObject,
+                                       config: item
+                                   });
+                               }
+                           });
+                          var finalDecisionStatus = getDecisionCommonStatus(
+                                    latestFormItems,
+                                    formDataClone.dept,
+                                    latestTatObject
+                            );
+                          
                           setDecisionCommonStatus(
-                            commonStatusId,
-                            "onLoading",
-                            finalDecisionStatus.title || finalDecisionStatus.text
-                        );
-                      
+                                commonStatusId,
+                                "onLoading",
+                                finalDecisionStatus.title || finalDecisionStatus.text
+                            );
 
                       if (latestTatObject?.[formDataClone.dept]?.AcceptDate)
                       {
@@ -9742,47 +9742,51 @@
                                );
                       } // if TAT Accept and Button Accept
                       else {
-                          if (params.length > 0)
-                          {
-                               updateDelayAcceptStatus(
-                                   commonStatusId,
-                                   latestTatObject[formDataClone.dept]?.AcceptDate
-                               );
-                          }
-                      }
-                      if (formItems.stageDept == "Client" ||  formDataClone.dept == "FO") { //  another logic
-                          if (formItems.stageDept == "Client")
-                          {
-                            var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
-                              if (storedStatus != "Accepted")
+                              if (params.length > 0)
                               {
-                                      updateDelayAcceptStatus(
-                                      commonStatusId,
-                                      latestTatObject[formDataClone.dept]?.CompleteDate, storedStatus
-                                  );
-                                  return;
-                              } 
+                                   updateDelayAcceptStatus(
+                                       commonStatusId,
+                                       latestTatObject[formDataClone.dept]?.AcceptDate
+                                   );
+                              }
                           }
+                         if (formDataClone.dept == "FO"){
 
-                          if (formDataClone.dept == "FO"){
+                             if (formItems.stageDept == "Client") { //  another logic
+                                 
+                                      var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
+                                      if (storedStatus != "Accepted")
+                                         {
+                                              updateDelayAcceptStatus(
+                                              commonStatusId,
+                                              latestTatObject[formDataClone.dept]?.CompleteDate, storedStatus
+                                          );
+                                          console.log(buttonItems);
+                                          disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
+                                          return;
+                                      }
+                                  
+                              }
+                              else {
                                   updateDelayAcceptStatus(
                                   commonStatusId,
                                   null);
                                   return;
+                              }
+                                
                           }
-                      }
+                   
 
-                      if (latestFormItems.actionStatus) // trend to priority this field
-                      {
-                             
+                          if (latestFormItems.actionStatus) // trend to priority this field
+                          {
                                   updateDelayAcceptStatus(
                                   commonStatusId,
                                   latestTatObject[formDataClone.dept]?.AcceptDate,
                                   customStatus[formDataClone.dept]
-                              );
-                              disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
-                      }
-
+                                  );
+                                  disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
+                          }
+                      
     }, _delayUnlockForm);
 
 
@@ -10498,6 +10502,8 @@
                         )
                             .appendTo($routeHost);
 
+                            console.log(customButtonId);
+
                     const formItems =
                         getFormItems(routeDept);
 
@@ -10511,13 +10517,19 @@
                             )
                             : {};
 
-                    var disabled = false;
+                    var disabled = true;
                     if (routeDept != "FO")
                         disabled = !!latestTatObject?.[
                             routeDept
                         ]?.AcceptDate;
 
-
+                        params.onLoaded = function(result) {
+                                    if (formItems.stageDept === "Client") {
+                                        $('[data-custom-route-button="true"]').each(function() {
+                                            $(this).dxButton("instance")?.option("disabled", true);
+                                        });
+                                    }
+                                     };
 
 
                     $customButton.dxButton({
@@ -10765,6 +10777,7 @@
                                         state: state,
                                         params: params
                                     });
+                                    
                                 }
 
                                 return {
@@ -10947,6 +10960,23 @@
             }
         };
     }
+
+
+    function showTMIVComPopupNotification(title, body) {
+        $.tmivnotify({
+            title: title || "Notification",
+            content: body || "",
+            type: "info",
+            position: "bottom-right",
+            duration: _notifyDurationOnShow
+        });
+        return;
+
+        const plainBody = $("<div>").html(body || "").text();
+        //appNotifyInfo([title, plainBody].filter(Boolean).join(" - "));
+    }
+
+
     window.WorkflowLoader =
         window.WorkflowLoader || {};
 

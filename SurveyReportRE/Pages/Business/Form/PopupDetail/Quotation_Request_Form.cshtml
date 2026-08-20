@@ -120,6 +120,17 @@
                          that.sectionName = "@(dept)";
                          that.titleName = "Upload Quotation";
                          that.uploaderAllow = true;
+
+                        that.onUploaded = function (files) {
+                            var form = $("#quotationRequestForm").dxForm("instance");
+                            if (!form) return;
+                            var currentQty = form.option("formData.quotationQuantity") || 0;
+                            form.updateData(
+                            "quotationQuantity",
+                            files.length
+                            );
+                        };
+
                          that.data = { SectionName: `${sectionId}_${that.moduleName}_0`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept, 0))" }; //{"SectionName":"default_FO_410"}
 
      var clientQuery = `OnSystem`;
