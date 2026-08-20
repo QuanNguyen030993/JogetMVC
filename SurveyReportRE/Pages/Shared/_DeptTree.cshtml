@@ -44,6 +44,7 @@
             var deptCode = deptCodes[deptIndex];
             <div class="@($"{Model.Prefix}")-dept-tree dept-node"
                  data-key="@deptCode"
+                 data-has-assignee="false"
                  data-target="#@($"{Model.Prefix}-sec_{deptCode}_{Model.Id}")">
 
                 <div class="dept-callout" data-pic-for="@deptCode">
@@ -75,6 +76,7 @@
                      tabindex="0"
                      aria-haspopup="menu"
                      aria-expanded="false"
+                     aria-disabled="true"
                      aria-label="Open @deptCode section shortcuts">
                     @deptCode
                 </div>

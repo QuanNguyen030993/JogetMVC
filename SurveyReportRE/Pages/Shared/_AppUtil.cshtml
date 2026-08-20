@@ -3163,6 +3163,40 @@
         window.setDeptTreePartOrder = setDeptTreePartOrder;
         window.reverseDeptTreePartOrder = reverseDeptTreePartOrder;
 
+        function syncDeptNodeAssignmentMenu(dept, hasAssignee, scope) {
+            var normalizedDept = String(dept || "").trim().toUpperCase();
+            if (!normalizedDept) return;
+
+            var $scope = scope ? $(scope) : $(document);
+            var $matchingNodes = $scope.find(".dept-node[data-key]").filter(function () {
+                return String($(this).attr("data-key") || "").trim().toUpperCase() === normalizedDept;
+            });
+
+            $matchingNodes.each(function () {
+                var $node = $(this);
+                var enabled = Boolean(hasAssignee);
+                $node
+                    .attr("data-has-assignee", String(enabled))
+                    .toggleClass("fan-open", enabled && $node.hasClass("fan-open"));
+                $node.find(".dept-circle")
+                    .attr({
+                        "aria-disabled": String(!enabled),
+                        "aria-expanded": enabled
+                            ? String($node.hasClass("fan-open"))
+                            : "false"
+                    });
+
+                if (!enabled) {
+                    $node.find(".dept-subnodes")
+                        .attr("aria-hidden", "true")
+                        .find(".dept-subnode")
+                        .attr("tabindex", "-1");
+                }
+            });
+        }
+
+        window.syncDeptNodeAssignmentMenu = syncDeptNodeAssignmentMenu;
+
         function bindDeptTreeScrollSpy(module, recordId, options) {
             var settings = $.extend({
                 headerOffset: 18,
@@ -3387,6 +3421,7 @@
             }
 
             function setOpenDeptFan(node, shouldOpen) {
+                if (!node || $(node).attr("data-has-assignee") !== "true") return;
                 $nodes
                     .not(node)
                     .removeClass("fan-open")
@@ -3434,6 +3469,7 @@
                     event.preventDefault();
                     event.stopPropagation();
                     var node = $(this).closest(".dept-node")[0];
+                    if ($(node).attr("data-has-assignee") !== "true") return;
                     setOpenDeptFan(node, !node.classList.contains("fan-open"));
                     this.focus();
                 })
@@ -4049,6 +4085,9 @@
             if ($el.length === 0) return;
 
             const $assignWrapper = $el.closest(".dept-form-header__assign");
+            const $assignmentOverviewRoot = $el.closest(
+                "[id^='qt-overviewRoot_'], [id^='pi-overviewRoot_']"
+            );
             const departmentName = String(settings.groupName || "").trim().toUpperCase();
             let $assignmentStatus = $();
 
@@ -4067,11 +4106,17 @@
             }
 
             const syncAssignmentStatus = function (values) {
-                if (!$assignmentStatus.length) return;
                 const needsAssignee = !Array.isArray(values) || values.length === 0;
-                $assignmentStatus
-                    .toggleClass("is-visible", needsAssignee)
-                    .attr("aria-hidden", needsAssignee ? "false" : "true");
+                syncDeptNodeAssignmentMenu(
+                    departmentName,
+                    !needsAssignee,
+                    $assignmentOverviewRoot.length ? $assignmentOverviewRoot : null
+                );
+                if ($assignmentStatus.length) {
+                    $assignmentStatus
+                        .toggleClass("is-visible", needsAssignee)
+                        .attr("aria-hidden", needsAssignee ? "false" : "true");
+                }
             };
             syncAssignmentStatus(selectedValues);
 
@@ -9089,6 +9134,14 @@
                         const $co = $(this).find(".dept-callout");
                         if (!$co.length) return;
                         const pic = picMap[dept] || "";
+                        const $overviewRoot = $(this).closest(
+                            "[id^='qt-overviewRoot_'], [id^='pi-overviewRoot_']"
+                        );
+                        syncDeptNodeAssignmentMenu(
+                            dept,
+                            !!String(pic).trim(),
+                            $overviewRoot.length ? $overviewRoot : $(this).parent()
+                        );
                         $co.attr("data-pic-account", pic);
                         if (!pic) {
                             $co.find(".co-text").text("-");

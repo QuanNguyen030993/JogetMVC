@@ -33693,6 +33693,18 @@ textarea {
     z-index: 5;
 }
 
+.dept-node[data-has-assignee="false"] .dept-subnodes {
+    display: none;
+}
+
+.dept-node[data-has-assignee="false"] .dept-circle {
+    cursor: default;
+}
+
+.dept-node[data-has-assignee="false"]:hover .dept-circle {
+    transform: none;
+}
+
 .dept-node .dept-subnodes::before {
     content: "";
     position: absolute;
