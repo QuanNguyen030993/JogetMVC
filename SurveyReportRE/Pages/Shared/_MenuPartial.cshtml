@@ -18,6 +18,7 @@
                 $("#accountLabel").text(_loginUser);
                 $("#accountAvatarInitial").text((_loginUser || "U").charAt(0).toUpperCase());
                  _role = result.userRoles.RoleName;
+                 window.syncHomeRoleSwitcher?.(_role);
                  //Debug
                  _roleAppName = result.userRoles.RoleAppName;
                  _branch = result.userRoles.Branch;

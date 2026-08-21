@@ -686,6 +686,13 @@
 
             <!--Login Info-->
             <div class="management-header-actions">
+                <div id="homeRoleSwitcher"
+                     class="home-role-switcher"
+                     title="Switch workflow role for this session"
+                     aria-label="Switch workflow role for this session">
+                    <i class="fa fa-user-shield" aria-hidden="true"></i>
+                    <div id="homeRoleSelect"></div>
+                </div>
                 <div id="btnNew"></div>
                 <button id="userGuideLauncher"
                         class="ug-guide-launcher"
@@ -886,6 +893,66 @@
 
         _isSuperUser = @Html.Raw(ViewData["IsSuperUser"]);
         _isDebugMode = `@Html.Raw(ViewData["IsDebugMode"])`;
+
+        (function initializeHomeRoleSwitcher() {
+            const canSwitchRole = String(_isDebugMode).toLowerCase() === "true"
+                || String(_isSuperUser).toLowerCase() === "true";
+            const $switcher = $("#homeRoleSwitcher").toggleClass("is-visible", canSwitchRole);
+            const $select = $("#homeRoleSelect");
+            const roles = Array.isArray(window.qtDeptModuleCode)
+                ? window.qtDeptModuleCode.slice()
+                : ["FO", "TS", "UW", "LMKT", "PM"];
+            let syncingRole = false;
+
+            function notifyOpenWorkflowViews(role) {
+                $("[id^='qt-overviewRoot_'], [id^='pi-overviewRoot_']").each(function () {
+                    const match = String(this.id || "").match(/^(qt|pi)-overviewRoot_(.+)$/);
+                    if (!match) return;
+                    $(document).trigger("overviewMaintenanceRoleChanged", [{
+                        moduleCode: match[1],
+                        recordId: match[2],
+                        role: role,
+                        source: "home"
+                    }]);
+                });
+            }
+
+            window.syncHomeRoleSwitcher = function (role) {
+                const normalizedRole = String(role || "").trim().toUpperCase();
+                const instance = $select.hasClass("dx-selectbox")
+                    ? $select.dxSelectBox("instance")
+                    : null;
+                if (!instance || !roles.includes(normalizedRole)) return;
+                syncingRole = true;
+                instance.option("value", normalizedRole);
+                syncingRole = false;
+            };
+
+            if (!canSwitchRole || !$select.length) return;
+
+            $select.dxSelectBox({
+                dataSource: roles,
+                value: roles.includes(String(_role || "").trim().toUpperCase())
+                    ? String(_role).trim().toUpperCase()
+                    : null,
+                placeholder: "Role",
+                stylingMode: "outlined",
+                width: 76,
+                searchEnabled: false,
+                showClearButton: false,
+                onValueChanged: function (e) {
+                    if (syncingRole || !e.value) return;
+                    _role = e.value;
+                    window._role = e.value;
+                    notifyOpenWorkflowViews(e.value);
+                    DevExpress.ui.notify("Role switched: " + e.value, "info", 1200);
+                }
+            });
+
+            window.syncHomeRoleSwitcher(_role);
+            $switcher.attr("aria-hidden", "false");
+        })();
+
         var _notifyEnv = `@Html.Raw(ViewData["NotifyEnv"])`;
         if (_notifyEnv == "true") {
             $("#environmentLabel").addClass("is-visible");
@@ -1159,6 +1226,7 @@
             data: JSON.stringify({ role: selectedUserRole })
         }).done(function (response) {
             _role = response.data.role;
+            window.syncHomeRoleSwitcher?.(_role);
             $("#accountRoleBadge").text(response.data.role);
             $("#roleLabel").text(`Workflow group ${response.data.role}`);
             setUserSettingsModalVisible(false);
@@ -3020,6 +3088,15 @@
            line-height: var(--management-header-height) !important;
        }
 
+       .management-topbar .logo-mini {
+           width: var(--management-header-height) !important;
+           height: var(--management-header-height) !important;
+           margin: 0 !important;
+           background-position: center !important;
+           background-size: var(--management-header-control-height) var(--management-header-control-height) !important;
+           flex: 0 0 var(--management-header-height);
+       }
+
        .management-topbar .logo-lg {
            width: fit-content;
            font-size: 12px !important;
@@ -3468,6 +3545,45 @@
            flex: 0 0 auto;
        }
 
+       .home-role-switcher {
+           display: none;
+           height: var(--management-header-control-height);
+           align-items: center;
+           gap: 4px;
+           padding: 0 4px;
+           border: 1px solid rgba(148, 163, 184, .55);
+           border-radius: 8px;
+           background: rgba(255, 255, 255, .92);
+           box-sizing: border-box;
+       }
+
+       .home-role-switcher.is-visible {
+           display: inline-flex;
+       }
+
+       .home-role-switcher > .fa {
+           color: #475569;
+           font-size: 11px;
+       }
+
+       .home-role-switcher #homeRoleSelect,
+       .home-role-switcher #homeRoleSelect .dx-texteditor {
+           height: 24px !important;
+           min-height: 24px !important;
+       }
+
+       .home-role-switcher #homeRoleSelect .dx-texteditor {
+           border: 0 !important;
+           background: transparent !important;
+       }
+
+       .home-role-switcher #homeRoleSelect .dx-texteditor-input {
+           min-height: 22px !important;
+           padding: 2px 20px 2px 3px !important;
+           font-size: 11px !important;
+           font-weight: 700;
+       }
+
        .management-header-actions #btnNew {
            z-index: 1000;
            margin: 0;
@@ -3489,16 +3605,26 @@
        }
 
        .management-header-actions .square-btn,
-       .management-header-actions #notificationBtn {
+       .management-header-actions #notificationBtn,
+       .management-header-actions #userGuideLauncher,
+       .management-header-actions #tmivTourGuideLauncher {
            width: var(--management-header-control-height) !important;
            height: var(--management-header-control-height) !important;
            min-width: var(--management-header-control-height);
+           min-height: var(--management-header-control-height);
            padding: 4px !important;
            margin: 0 !important;
            border-width: 1px !important;
            border-radius: 8px !important;
            box-shadow: none;
            box-sizing: border-box;
+           align-items: center;
+           justify-content: center;
+       }
+
+       .management-header-actions #userGuideLauncher,
+       .management-header-actions #tmivTourGuideLauncher {
+           display: inline-flex;
        }
 
        .management-header-actions #notificationBtn svg {
