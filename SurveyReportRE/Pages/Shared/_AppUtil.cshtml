@@ -1965,6 +1965,37 @@
 
                                         var routeEditorOptions = null;
 
+                                        function normalizeCommentDepartment(value) {
+                                            return String(value || "").trim().toUpperCase();
+                                        }
+
+                                        function getRouteCommentStageDept() {
+                                            var idManager = moduleKey === "pi"
+                                                ? window.PolicyIssuanceIdManager
+                                                : window.QuotationIdManager;
+                                            var workflowFormId = idManager?.form?.(dept, id);
+                                            var workflowForm = workflowFormId
+                                                ? $(`#${workflowFormId}`).dxForm("instance")
+                                                : null;
+                                            var workflowFormData = workflowForm?.option("formData") || {};
+                                            var workflowPage = moduleKey === "pi"
+                                                ? window.PolicyIssuancePage
+                                                : window.QuotationPage;
+
+                                            return normalizeCommentDepartment(
+                                                workflowFormData.stageDept
+                                                || workflowPage?.state?.stageDept
+                                            );
+                                        }
+
+                                        function shouldDisableRouteComment() {
+                                            var sectionDept = normalizeCommentDepartment(dept);
+                                            var currentStageDept = getRouteCommentStageDept();
+                                            return !sectionDept
+                                                || !currentStageDept
+                                                || sectionDept !== currentStageDept;
+                                        }
+
 
                                         routeEditorOptions = {
                                             items: initialComments,
@@ -1980,6 +2011,7 @@
                                             author: _displayName,
                                             createdBy: _loginUser,
                                             showComposer: true,
+                                            disableComment: shouldDisableRouteComment(),
                                             emptyText: "No comments.",
                                             headerTitle: "",
                                             // routeLabel: "Route to:",
@@ -2020,6 +2052,7 @@
 
                                         function renderRouteEditorItems(comments) {
                                             routeEditorOptions.items = comments || [];
+                                            routeEditorOptions.disableComment = shouldDisableRouteComment();
                                             $(itemElement).tmivcommenteditorroute(routeEditorOptions);
                                             // $(itemElement).tmivhtmleditorcommentbox(routeEditorOptions);
                                         }
@@ -2059,7 +2092,7 @@
                                             onChange: function (value) {
                                                 parentForm.updateData(updateField, value);
                                             },
-                                            disableComment: true,
+                                            disableComment: shouldDisableRouteComment(),
                                             onSubmit: function (newComment) {
                                                 var commentText = newComment.Content || newComment.text || "";
                                                 var commentData = {
