@@ -89,5 +89,7 @@ public class PolicyIssuance : BaseModel
     public long? StatusId { get; set; }
     public EnumData? StatusEnum { get; set; }
     public string? ActionStatus { get; set; }
+    public string? LineCode { get; set; } = "";
+    public string? ProductCode { get; set; } = "";
 
 }

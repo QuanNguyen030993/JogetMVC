@@ -61,6 +61,9 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IBaseRepository<NotificationTemplate> _notificationTemplateRepository;
     private readonly IBaseRepository<MailQueue> _mailQueueRepository;
     private readonly IBaseRepository<UsersSession> _usersSessionRepository;
+    private readonly IBaseRepository<TurnAroundTimeSession> _turnAroundTimeSessionRepository;
+    private readonly IBaseRepository<TurnAroundTimeDeptProcessing> _turnAroundTimeDeptProcessingRepository;
+    private readonly IBaseRepository<CommentLog> _policyIssuanceCommentLogRepository;
     private readonly IBaseRepository<SLA> _slaRepository;
     private readonly ILogger<PolicyIssuance> _logger;
     private readonly IConfigurationSection path;
@@ -116,6 +119,9 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _mailQueueRepository = new BaseRepository<MailQueue>(configuration, _httpContextAccessor);
         _slaRepository = new BaseRepository<SLA>(configuration, _httpContextAccessor);
         _usersSessionRepository = new BaseRepository<UsersSession>(configuration, _httpContextAccessor);
+        _turnAroundTimeSessionRepository = new BaseRepository<TurnAroundTimeSession>(configuration, _httpContextAccessor);
+        _policyIssuanceCommentLogRepository = new BaseRepository<CommentLog>(configuration, _httpContextAccessor);
+        _turnAroundTimeDeptProcessingRepository = new BaseRepository<TurnAroundTimeDeptProcessing>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
@@ -239,9 +245,9 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
             SignalRResult result = new SignalRResult
             {
-                status = "Preparing quotation creation...",
+                status = "Preparing policy issuances creation...",
                 tabName = "PolicyIssuance Creation",
-                subTabContent = "Preparing quotation data...",
+                subTabContent = "Preparing policy issuances data...",
                 data = quotationData,
                 progressvalue = 0,
                 type = "inprogress"
@@ -288,9 +294,9 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
                 result = new SignalRResult
                 {
-                    status = "Creating quotations...",
+                    status = "Creating policy issuances...",
                     data = quotation,
-                    tabName = "Quotation Creation",
+                    tabName = "Policy Issuance Creation",
                     subTabContent = "Creating the requested quotation records...",
                     progressvalue = 75,//quotationComplete,
                     type = "inprogress"
@@ -315,9 +321,9 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
             result = new SignalRResult
             {
-                status = "PolicyIssuance creation completed.",
+                status = "Policy Issuance creation completed.",
                 data = quotationData,
-                tabName = "PolicyIssuance Creation",
+                tabName = "Policy Issuance Creation",
                 subTabContent = "The quotation records were created successfully.",
                 progressvalue = 100,
                 type = "complete"
@@ -437,15 +443,14 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                 JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(PolicyIssuanceData)),
                 siteEnums,
                  null,
-                 true,
                  useAllRegionsForInitialNotification
                 );
 
                 result = new SignalRResult
                 {
-                    status = "Creating quotations...",
-                    data = PolicyIssuanceData,
-                    tabName = "Quotation Creation",
+                    status = "Creating policy issuances...",
+                    data = PolicyIssuance,
+                    tabName = "Policy Issuance Creation",
                     subTabContent = "Creating the requested quotation records...",
                     progressvalue = 75,//quotationComplete,
                     type = "inprogress"
@@ -977,16 +982,178 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         return Ok();
     }
 
+    //[NonAction]
+    //public async Task NotificationHandle(
+    //     WorkflowDefinition workflowDefinition,
+    //     dynamic quotation,
+    //     dynamic quotationData,
+    //    List<EnumData> siteEnums,
+    //    IFormFile file = null,
+    //    bool enableLeadershipFallback = false,
+    //    bool useAllRegions = false
+    //    )
+    //{
+    //    StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.IsStart == true);
+    //    InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+    //    instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
+    //    //instanceWorkflow.CurrentStep = "2";
+    //    if (stepsWorkflow != null)
+
+    //    {
+    //        var (resolvedNodeId, resolvedDeptCode) = Util.ResolveWorkflowJumps(
+    //            workflowDefinition.WorkflowNodes,
+    //            stepsWorkflow.TNodeId ?? "",
+    //            Newtonsoft.Json.Linq.JObject.FromObject((object)quotation)
+    //        );
+    //        if (!string.IsNullOrWhiteSpace(resolvedNodeId))
+    //        {
+    //            stepsWorkflow.TNodeId = resolvedNodeId;
+    //            stepsWorkflow.ToNodeId = resolvedDeptCode;
+    //        }
+
+    //        string destinationDepartment = stepsWorkflow.ToNodeId?.Trim() ?? "";
+    //        if (string.IsNullOrWhiteSpace(destinationDepartment))
+    //        {
+    //            throw new InvalidOperationException(
+    //                $"Policy issuance workflow '{workflowDefinition.WorkflowCode}' has no destination department on its start step.");
+    //        }
+    //        quotation.StageDept = destinationDepartment;
+
+    //        (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig, siteEnums);
+    //        quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
+    //        quotation.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
+    //        quotation.StatusId = stepsWorkflow.StatusId;
+    //        picS.PICMain.LMKT = picS.PICHOD.FO;
+    //        quotation.PIC = JsonConvert.SerializeObject(picS.PICMain);
+    //        EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
+
+    //        quotation.WorkflowStatus = enumData?.Value ?? "";
+    //        quotation = await _BaseRepository.InsertData(JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(quotation)));
+    //        quotation.QuotationId = await ControllerUtil.ResolvePolicyIssuanceCloneIdAsync(
+    //            _quotationRepository,
+    //            JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(quotation)));
+    //        PolicyIssuanceDetails policyIssuanceDetails = new PolicyIssuanceDetails();
+    //        policyIssuanceDetails.PolicyIssuanceId = quotation.Id;
+    //        policyIssuanceDetails = await _policyIssuanceDetailsRepository.InsertData(policyIssuanceDetails);
+    //        //if (file != null)
+    //        //{
+    //        //    Request.Headers["Folder"] = $@"{nameof(Quotation)}\{quotation.PolicyIssuanceCode}";
+    //        //    Request.Headers["RecordGuid"] = quotation.Guid.ToString();
+    //        //    Request.Headers["SectionName"] = $@"{quotationData.QuotationData.Attributes.SectionName}_{quotation.Id.ToString()}";
+    //        //    await AsyncUploadSingleFile(file);
+    //        //}
+    //                    instanceWorkflow.RecordGuid = quotation.Guid;
+
+    //        instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
+    //        instanceWorkflow.CurrentStepId = new Guid();
+    //        instanceWorkflow.IsCancelled = false;
+    //        instanceWorkflow.IsCompleted = false;
+    //        instanceWorkflow = await _instanceWorkflowRepository.InsertData(instanceWorkflow);
+
+
+
+
+    //        SubmitRequest submitRequest = new SubmitRequest();
+    //        submitRequest.StepsWorkflow = stepsWorkflow;
+    //        submitRequest.Comment = $"{quotation.PolicyIssuanceCode} created!";
+    //        submitRequest.InstanceWorkflow = instanceWorkflow;
+
+
+
+
+    //        await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+
+    //        //loop multiple account tai day
+    //        var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
+    //        long? initialNotificationTypeId = await NotificationTypeResolver.ResolveIdAsync(
+    //            _enumDataRepository,
+    //            NotificationTypeKeys.Initial);
+    //        NotificationTemplate notificationTitle = await ResolveRouteTransitionNotificationTitleAsyncV2(
+    //            workflowDefinition,
+    //            stepsWorkflow,
+    //            JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(quotation)));
+    //        string[] notificationRecipients;
+    //        if (enableLeadershipFallback)
+    //        {
+    //            IEnumerable<SiteConfig> notificationSites = useAllRegions
+    //                ? _businessConfig.CurrentValue.Sites.Values
+    //                : Enumerable.Empty<SiteConfig>();
+    //            IEnumerable<PICSysHandleAttributes> leaderPics = useAllRegions
+    //                ? notificationSites.Select(site => site.LeaderFollowRequest)
+    //                : new[] { picS.PICLeader };
+    //            IEnumerable<PICAttributes> hodPics = useAllRegions
+    //                ? notificationSites.Select(site => site.HODFollowRequest)
+    //                : new[] { picS.PICHOD };
+    //            notificationRecipients = await ControllerUtil.ResolveInitialNotificationRecipientsAsync(
+    //                _usersRepository,
+    //                picS.PICMain,
+    //                leaderPics,
+    //                hodPics,
+    //                stepsWorkflow.ToNodeId);
+    //            if (notificationRecipients.Length == 0)
+    //            {
+    //                //_logger.LogWarning(
+    //                //    "No PIC, valid Leader PIC, or valid HOD PIC was found for new PolicyIssuance {PolicyIssuanceId}, department {Department}.",
+    //                //    quotation.Id,
+    //                //    stepsWorkflow.ToNodeId);
+    //            }
+    //        }
+    //        else
+    //        {
+    //            string picsStr = picS.PICMain.GetType()
+    //                .GetProperty(stepsWorkflow?.ToNodeId ?? "")
+    //                ?.GetValue(picS.PICMain)
+    //                ?.ToString() ?? "";
+    //            notificationRecipients = picsStr
+    //                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+    //                .ToArray();
+    //        }
+
+    //        if (!string.IsNullOrEmpty(notificationTitle.Title))
+    //        {
+    //            foreach (string memberName in notificationRecipients)
+    //            {
+
+    //                NotificationRequest notification = new NotificationRequest();
+    //                Notification Notification = new Notification();
+    //                Notification.Title = notificationTitle.Title;
+    //                Notification.Message = notificationTitle.Content;
+    //                Notification.IsRead = false;
+    //                Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
+    //                Notification.System = "WM";
+    //                Notification.RecordGuid = quotation.Guid;
+    //                Notification.Type = notificationTitle.TypeId;
+
+    //                Notification.ReceivedBy = memberName;
+    //                notification.Notification = Notification;
+    //                notification.connectionId = memberName;
+    //                notification.tabPublicUrl = ControllerUtil.NotificationURLObjectMaking(quotation);
+    //                PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+    //                string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+    //                Notification.Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(quotation));
+
+    //                await _notificationRepository.InsertData(Notification);
+    //                await ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
+    //                new
+    //                {
+    //                    title = Notification.Title,
+    //                    message = Notification.Message
+    //                }
+    //                , memberName, DOMAIN_NAME);
+
+    //            }
+    //        }
+    //    }
+    //}
     [NonAction]
     public async Task NotificationHandle(
-         WorkflowDefinition workflowDefinition,
-         dynamic quotation,
-         dynamic quotationData,
-        List<EnumData> siteEnums,
-        IFormFile file = null,
-        bool enableLeadershipFallback = false,
-        bool useAllRegions = false
-        )
+     WorkflowDefinition workflowDefinition,
+     dynamic policyIssuance,
+     dynamic policyIssuanceData,
+     List<EnumData> siteEnums,
+    IFormFile file = null,
+    bool useAllRegions = false
+    )
     {
         StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.IsStart == true);
         InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
@@ -995,49 +1162,45 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         if (stepsWorkflow != null)
 
         {
-            var (resolvedNodeId, resolvedDeptCode) = Util.ResolveWorkflowJumps(
-                workflowDefinition.WorkflowNodes,
-                stepsWorkflow.TNodeId ?? "",
-                Newtonsoft.Json.Linq.JObject.FromObject((object)quotation)
-            );
-            if (!string.IsNullOrWhiteSpace(resolvedNodeId))
-            {
-                stepsWorkflow.TNodeId = resolvedNodeId;
-                stepsWorkflow.ToNodeId = resolvedDeptCode;
-            }
+            (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(policyIssuance, stepsWorkflow, _businessConfig, siteEnums);
+            policyIssuance.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
+            policyIssuance.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
+            policyIssuance.StatusId = stepsWorkflow.StatusId;
+            picS.PICMain.LMKT = picS.PICHOD.FO;
+            policyIssuance.PIC = JsonConvert.SerializeObject(picS.PICMain);
+            EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
 
+            policyIssuance.WorkflowStatus = enumData?.Value ?? "";
             string destinationDepartment = stepsWorkflow.ToNodeId?.Trim() ?? "";
             if (string.IsNullOrWhiteSpace(destinationDepartment))
             {
                 throw new InvalidOperationException(
                     $"Policy issuance workflow '{workflowDefinition.WorkflowCode}' has no destination department on its start step.");
             }
-            quotation.StageDept = destinationDepartment;
+            policyIssuance.StageDept = destinationDepartment;
 
-            (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig, siteEnums);
-            quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
-            quotation.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
-            quotation.StatusId = stepsWorkflow.StatusId;
-            picS.PICMain.LMKT = picS.PICHOD.FO;
-            quotation.PIC = JsonConvert.SerializeObject(picS.PICMain);
-            EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
 
-            quotation.WorkflowStatus = enumData?.Value ?? "";
-            quotation = await _BaseRepository.InsertData(JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(quotation)));
-            quotation.QuotationId = await ControllerUtil.ResolvePolicyIssuanceCloneIdAsync(
-                _quotationRepository,
-                JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(quotation)));
-            PolicyIssuanceDetails policyIssuanceDetails = new PolicyIssuanceDetails();
-            policyIssuanceDetails.PolicyIssuanceId = quotation.Id;
-            policyIssuanceDetails = await _policyIssuanceDetailsRepository.InsertData(policyIssuanceDetails);
-            //if (file != null)
+            policyIssuance = await _BaseRepository.InsertData(JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(policyIssuance)));
+
+
+            TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(policyIssuance.TurnAroundTimeAttributes);
+            //TurnAroundItem tatObject = Util.TurnAroundTimePicker(result, stepsWorkflow.FromNodeId);
+            TurnAroundItem tatObject = Util.TurnAroundTimePicker(result, "FO");
+
+
+            instanceWorkflow.RecordGuid = policyIssuance.Guid;
+
+            //Problem
+            //var (resolvedNodeId, resolvedDeptCode) = Util.ResolveWorkflowJumps(
+            //    workflowDefinition.WorkflowNodes,
+            //    stepsWorkflow.TNodeId ?? "",
+            //    Newtonsoft.Json.Linq.JObject.FromObject((object)policyIssuance)
+            //);
+            //if (!string.IsNullOrEmpty(resolvedNodeId))
             //{
-            //    Request.Headers["Folder"] = $@"{nameof(Quotation)}\{quotation.PolicyIssuanceCode}";
-            //    Request.Headers["RecordGuid"] = quotation.Guid.ToString();
-            //    Request.Headers["SectionName"] = $@"{quotationData.QuotationData.Attributes.SectionName}_{quotation.Id.ToString()}";
-            //    await AsyncUploadSingleFile(file);
+            //    stepsWorkflow.TNodeId = resolvedNodeId;
+            //    stepsWorkflow.ToNodeId = resolvedDeptCode;
             //}
-                        instanceWorkflow.RecordGuid = quotation.Guid;
 
             instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
             instanceWorkflow.CurrentStepId = new Guid();
@@ -1050,13 +1213,79 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
             SubmitRequest submitRequest = new SubmitRequest();
             submitRequest.StepsWorkflow = stepsWorkflow;
-            submitRequest.Comment = $"{quotation.PolicyIssuanceCode} created!";
+            submitRequest.Comment = $"{policyIssuance.PolicyIssuanceCode} created!";
             submitRequest.InstanceWorkflow = instanceWorkflow;
 
 
 
 
-            await ControllerUtil.LogAction(_quotationCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, quotation, submitRequest, _blobStorageSettings);
+            await ControllerUtil.LogAction(_policyIssuanceCommentLogRepository, _httpContextAccessor, configuration, DOMAIN_NAME, policyIssuance, submitRequest, _blobStorageSettings);
+            TurnAroundTimeSession activeSession = new TurnAroundTimeSession();
+            activeSession = await _turnAroundTimeSessionRepository
+            .GetSingleObject(s => s.RecordGuid == instanceWorkflow.RecordGuid);
+
+            if (tatObject != null)
+            {
+                if (activeSession == null)
+                {
+                    // Đếm số phiên đã có để tính SessionNo tiếp theo
+                    var allSessions = await _turnAroundTimeSessionRepository
+                        .GetListObject(s => s.RecordGuid == instanceWorkflow.RecordGuid);
+
+                    int nextSessionNo = (allSessions?.Count ?? 0) + 1;
+
+                    activeSession = new TurnAroundTimeSession
+                    {
+                        SessionNo = nextSessionNo,
+                        SessionTypeId = policyIssuance.RequestTypeId,   // truyền từ client: New=1 / Renew=2 / Amend=3
+                        SessionStartDate = tatObject?.AcceptDate ?? DateTime.Now,
+                        SessionEndDate = tatObject?.CompleteDate ?? DateTime.Now,
+                        TotalDays = 0,
+                        RecordGuid = policyIssuance.Guid
+                    };
+                    await _turnAroundTimeSessionRepository.InsertData(activeSession);
+                    // Sau insert, activeSession.Id đã được gán bởi EF/repository
+                }
+                else
+                {
+                    // Đếm số phiên đã có để tính SessionNo tiếp theo
+                    var allSessions = await _turnAroundTimeSessionRepository
+                        .GetListObject(s => s.RecordGuid == instanceWorkflow.RecordGuid);
+
+                    if (activeSession != null)
+                    {
+                        activeSession.SessionNo = activeSession.SessionNo;
+                        activeSession.SessionTypeId = policyIssuance.RequestTypeId;   // truyền từ client: New=1 / Renew=2 / Amend=3
+                        activeSession.SessionStartDate = activeSession.SessionStartDate;
+                        activeSession.SessionEndDate = tatObject.CompleteDate;
+                        activeSession.TotalDays = 0;
+                        activeSession.RecordGuid = policyIssuance.Guid;
+                        await _turnAroundTimeSessionRepository.UpdateData(activeSession, JsonConvert.SerializeObject(activeSession), activeSession.Id, "Id");
+                    }
+
+                    // Sau insert, activeSession.Id đã được gán bởi EF/repository
+                }
+
+                // Bước 2 — Tìm hoặc tạo DeptProcessing cho phòng ban đang submit
+                TurnAroundTimeDeptProcessing deptProcessing = new TurnAroundTimeDeptProcessing();
+
+                DateTime acceptDate = tatObject.AcceptDate ?? DateTime.Now;
+                DateTime completeDate = tatObject.CompleteDate ?? DateTime.Now;
+                int processingDays = (completeDate.Date - acceptDate.Date).Days;  // đơn vị ngày
+
+                // Chưa có → tạo mới
+                deptProcessing = new TurnAroundTimeDeptProcessing
+                {
+                    TurnAroundTimeSessionId = activeSession.Id,
+                    Department = stepsWorkflow?.FromNodeId,
+                    AcceptDate = acceptDate,
+                    CompleteDate = completeDate,
+                    ProcessingDays = processingDays
+                };
+                await _turnAroundTimeDeptProcessingRepository.InsertData(deptProcessing);
+            }
+
+
 
             //loop multiple account tai day
             var NotificationController = new NotificationController(_notificationRepository, configuration, _httpContextAccessor, _hubContext);
@@ -1066,77 +1295,78 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             NotificationTemplate notificationTitle = await ResolveRouteTransitionNotificationTitleAsyncV2(
                 workflowDefinition,
                 stepsWorkflow,
-                JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(quotation)));
-            string[] notificationRecipients;
-            if (enableLeadershipFallback)
+                JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(policyIssuance)));
+            string foRoutingCode = Convert.ToString(policyIssuance.LineCode)
+                ?? Convert.ToString(policyIssuance.ProductCode)
+                ?? string.Empty;
+            IEnumerable<SiteConfig> notificationSites = useAllRegions
+                ? _businessConfig.CurrentValue.Sites.Values
+                : Enumerable.Empty<SiteConfig>();
+            IEnumerable<PICSysHandleAttributes> leaderPics = useAllRegions
+                ? notificationSites.Select(site => site.LeaderFollowRequest)
+                : new[] { picS.PICLeader };
+            IEnumerable<PICAttributes> hodPics = useAllRegions
+                ? notificationSites.Select(site => site.HODFollowRequest)
+                : new[] { picS.PICHOD };
+            string[] notificationRecipients = await ControllerUtil.ResolveInitialNotificationRecipientsAsync(
+                _usersRepository,
+                picS.PICMain,
+                leaderPics,
+                hodPics,
+                stepsWorkflow.ToNodeId,
+                foRoutingCode);
+            if (notificationRecipients.Length == 0)
             {
-                IEnumerable<SiteConfig> notificationSites = useAllRegions
-                    ? _businessConfig.CurrentValue.Sites.Values
-                    : Enumerable.Empty<SiteConfig>();
-                IEnumerable<PICSysHandleAttributes> leaderPics = useAllRegions
-                    ? notificationSites.Select(site => site.LeaderFollowRequest)
-                    : new[] { picS.PICLeader };
-                IEnumerable<PICAttributes> hodPics = useAllRegions
-                    ? notificationSites.Select(site => site.HODFollowRequest)
-                    : new[] { picS.PICHOD };
-                notificationRecipients = await ControllerUtil.ResolveInitialNotificationRecipientsAsync(
-                    _usersRepository,
-                    picS.PICMain,
-                    leaderPics,
-                    hodPics,
-                    stepsWorkflow.ToNodeId);
-                if (notificationRecipients.Length == 0)
-                {
-                    //_logger.LogWarning(
-                    //    "No PIC, valid Leader PIC, or valid HOD PIC was found for new PolicyIssuance {PolicyIssuanceId}, department {Department}.",
-                    //    quotation.Id,
-                    //    stepsWorkflow.ToNodeId);
-                }
+                //_logger.LogWarning(
+                //    "No PIC, valid Leader PIC, or valid HOD PIC was found for new PolicyIssuance {PolicyIssuanceId}, department {Department}.",
+                //    policyIssuance.Id,
+                //    stepsWorkflow.ToNodeId);
             }
-            else
+
+            foreach (string memberName in notificationRecipients)
             {
-                string picsStr = picS.PICMain.GetType()
-                    .GetProperty(stepsWorkflow?.ToNodeId ?? "")
-                    ?.GetValue(picS.PICMain)
-                    ?.ToString() ?? "";
-                notificationRecipients = picsStr
-                    .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                    .ToArray();
-            }
-           
-            if (!string.IsNullOrEmpty(notificationTitle.Title))
-            {
-                foreach (string memberName in notificationRecipients)
+
+                //dynamic transferObject = new
+                //{
+                //    DOMAIN_NAME,
+                //    Title = Util.ReplaceDynamicProperties(notificationTitle.Title, policyIssuance),
+                //    Subject = Util.ReplaceDynamicProperties(notificationTitle.Content, policyIssuance),
+                //    Guid = policyIssuance.Guid,
+                //    ReceivedBy = memberName,
+                //    Id = policyIssuance.Id,
+                //    Code = policyIssuance.PolicyIssuanceCode,
+                //    ModuleName = nameof(PolicyIssuance),
+                //    PolicyIssuanceId = policyIssuance.Id,
+                //    CopyFromGuid = policyIssuance.Guid
+                //};
+
+
+                NotificationRequest notification = new NotificationRequest();
+                Notification Notification = new Notification();
+                Notification = ControllerUtil.BuildNotification(
+                    policyIssuance,
+                    notificationTitle.TypeId,
+                    memberName,
+                    notificationTitle,
+                    nameof(NotificationHandle)
+                    );
+
+
+                notification.Notification = Notification;
+                notification.connectionId = memberName;
+                notification.tabPublicUrl = Util.URLObjectMaking(policyIssuance);
+                PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
+                string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
+                //Notification.Url = JsonConvert.SerializeObject(Util.URLObjectMaking(policyIssuance));
+
+                await _notificationRepository.InsertData(Notification);
+                await ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
+                new
                 {
-
-                    NotificationRequest notification = new NotificationRequest();
-                    Notification Notification = new Notification();
-                    Notification.Title = notificationTitle.Title;
-                    Notification.Message = notificationTitle.Content;
-                    Notification.IsRead = false;
-                    Notification.Resource = $"{memberName}_{stepsWorkflow.ToNodeId}";
-                    Notification.System = "WM";
-                    Notification.RecordGuid = quotation.Guid;
-                    Notification.Type = notificationTitle.TypeId;
-
-                    Notification.ReceivedBy = memberName;
-                    notification.Notification = Notification;
-                    notification.connectionId = memberName;
-                    notification.tabPublicUrl = ControllerUtil.NotificationURLObjectMaking(quotation);
-                    PropertyInfo prop = notification.tabPublicUrl.GetType().GetProperty("url");
-                    string giaTri = (string)prop.GetValue(notification.tabPublicUrl, null); // Lấy giá trị
-                    Notification.Url = JsonConvert.SerializeObject(ControllerUtil.NotificationURLObjectMaking(quotation));
-
-                    await _notificationRepository.InsertData(Notification);
-                    await ControllerHelper.SignalRResponse(_usersSessionRepository, "R_NotificationReceive",
-                    new
-                    {
-                        title = Notification.Title,
-                        message = Notification.Message
-                    }
-                    , memberName, DOMAIN_NAME);
-
+                    title = Notification.Title,
+                    message = Notification.Message
                 }
+                , memberName, DOMAIN_NAME);
             }
         }
     }

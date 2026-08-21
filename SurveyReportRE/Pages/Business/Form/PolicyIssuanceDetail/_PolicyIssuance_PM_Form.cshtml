@@ -67,16 +67,16 @@
      var sectionId = "@ViewData["Cd"]";
     var sectionIdQt = "qt-body_@(dept)_";
 
-    var that2 = new Object();
-    that2.ModelName = "PolicyIssuance";
-    that2.moduleName = "supportingDoc";
-    that2.editorType = "dxFileUploader"
-    that2.id = @(cloneId);
-    that2.guid = "@(cloneQuotationGuid)";
-    that2.sectionName = "@(dept)";
-    that2.titleName = "Upload Supporting Document";
-    that2.uploaderAllow = _role == "@dept";
-    that2.data = { SectionName: window.IdManager.attachmentSectionKey(sectionIdQt, that2.moduleName, @(cloneId)), Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
+    // var that2 = new Object();
+    // that2.ModelName = "PolicyIssuance";
+    // that2.moduleName = "supportingDoc";
+    // that2.editorType = "dxFileUploader"
+    // that2.id = @(cloneId);
+    // that2.guid = "@(cloneQuotationGuid)";
+    // that2.sectionName = "@(dept)";
+    // that2.titleName = "Upload Supporting Document";
+    // that2.uploaderAllow = _role == "@dept";
+    // that2.data = { SectionName: window.IdManager.attachmentSectionKey(sectionIdQt, that2.moduleName, @(cloneId)), Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
 
     var that3 = new Object();
     that3.ModelName = "PolicyIssuance";
@@ -96,7 +96,7 @@
 
 
 
-    var mainFields =       [ {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefaultPi(null,that2,that3)  },
+    var mainFields =       [ {itemType: "group", caption: "Attachment",colCount: 1, items: attachmentDefaultPi(null,null,that3)  },
                          {itemType: "group",caption: "Checklist",colCount:1,items: [
                     {
                         itemType: "simple",

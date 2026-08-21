@@ -43,6 +43,7 @@ namespace ERPCore.Models.Models.Parsing
 
         public class TurnAroundItem
         {
+            public DateTime? ReceiveDate { get; set; }
             public DateTime? AcceptDate { get; set; }
             public DateTime? CompleteDate { get; set; }
         }

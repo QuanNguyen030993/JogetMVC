@@ -369,17 +369,42 @@ namespace ERPCore.ControllerUtil
             [CallerMemberName] string callerName = "")
         {
             Notification notification = new Notification();
-            dynamic transferObjectIn = new
+            dynamic transferObjectIn;
+            transferObjectIn = new
             {
                 Title = Util.ReplaceDynamicProperties(notificationTemplate.Title, transferObject),
                 Message = Util.ReplaceDynamicProperties(notificationTemplate.Content, transferObject),
                 Guid = transferObject.Guid,
                 ReceivedBy = member,
                 ModuleName = transferObject.GetType().Name,
-                QuotationId = transferObject.Id,
-                CopyFromGuid = transferObject.Guid
+                CopyFromGuid = transferObject.CopyFromGuid ?? Guid.Empty
             };
-
+            if (transferObject is Quotation)
+            {
+                transferObjectIn = new
+                {
+                    Title = Util.ReplaceDynamicProperties(notificationTemplate.Title, transferObject),
+                    Message = Util.ReplaceDynamicProperties(notificationTemplate.Content, transferObject),
+                    Guid = transferObject.Guid,
+                    ReceivedBy = member,
+                    ModuleName = transferObject.GetType().Name,
+                    CopyFromGuid = transferObject.CopyFromGuid ?? Guid.Empty
+                };
+            }
+            if (transferObject is PolicyIssuance)
+            {
+                transferObjectIn = new
+                {
+                    Id = transferObject.Id,
+                    Title = Util.ReplaceDynamicProperties(notificationTemplate.Title, transferObject),
+                    Message = Util.ReplaceDynamicProperties(notificationTemplate.Content, transferObject),
+                    Guid = transferObject.Guid,
+                    ReceivedBy = member,
+                    ModuleName = transferObject.GetType().Name,
+                    QuotationId = transferObject.QuotationId,
+                    CopyFromGuid = transferObject.CopyFromGuid ?? Guid.Empty
+                };
+            }
 
             notification = new Notification();
             notification.Title = Util.ReplaceDynamicProperties(transferObjectIn.Title, transferObject);
@@ -429,9 +454,9 @@ namespace ERPCore.ControllerUtil
             {
                 return new
                 {
-                    url = $"/Business/Form/{moduleName}_Form/{id}/{recordGuid}",
-                    caption = $"form_{moduleName}_Form_{id}",
-                    name = $"{moduleName} {code}".Trim(),
+                    url = $"/Business/Form/{nameof(PolicyIssuance)}_Form/{id}/{recordGuid}",
+                    caption = $"form_{nameof(PolicyIssuance)}_Form_{id}",
+                    name = $"{nameof(PolicyIssuance)} {code}".Trim(),
                     data = ""
                 };
             }

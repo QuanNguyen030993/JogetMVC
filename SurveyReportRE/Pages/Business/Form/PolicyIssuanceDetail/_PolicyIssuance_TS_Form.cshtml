@@ -74,16 +74,16 @@
     // that.uploaderAllow = _role == "@dept";
     // that.data = { SectionName: `${sectionIdQt}_${that.moduleName}_@(cloneId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
 
-    var that2 = new Object();
-    that2.ModelName = "PolicyIssuance";
-    that2.moduleName = "supportingDoc";
-    that2.editorType = "dxFileUploader"
-    that2.id = @(cloneId);
-    that2.guid = "@(cloneQuotationGuid)";
-    that2.sectionName = "@(dept)";
-    that2.titleName = "Upload Supporting Document";
-    that2.uploaderAllow = _role == "@dept";
-    that2.data = { SectionName: window.IdManager.attachmentSectionKey(sectionIdQt, that2.moduleName, @(cloneId)), Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
+    // var that2 = new Object();
+    // that2.ModelName = "PolicyIssuance";
+    // that2.moduleName = "supportingDoc";
+    // that2.editorType = "dxFileUploader"
+    // that2.id = @(cloneId);
+    // that2.guid = "@(cloneQuotationGuid)";
+    // that2.sectionName = "@(dept)";
+    // that2.titleName = "Upload Supporting Document";
+    // that2.uploaderAllow = _role == "@dept";
+    // that2.data = { SectionName: window.IdManager.attachmentSectionKey(sectionIdQt, that2.moduleName, @(cloneId)), Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
 
     var that3 = new Object();
     that3.ModelName = "PolicyIssuance";
@@ -135,7 +135,7 @@
                    dataType: "boolean"
                  },
                  {
-                   caption: "Value",
+                   caption: "Attachment",
                    cellTemplate: function (container, options) {
                      const data = options.data;
 
@@ -175,12 +175,12 @@
                          that.sectionName = "@(dept)";
                          that.titleName = "Upload Document";
                          that.baseOnAttributes = "FieldName";
-                        var sectionId = "@(ViewData["Cd"])";
+                         var sectionId = "@(ViewData["Cd"])";
                          that.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, data.field, @(policyIssuanceId)), Department: "@(dept)", FieldName: `${data.field}_@(policyIssuanceId)` }; //{"SectionName":"default_FO_410"}
                          editor = $("<div>");
                          createEditor(that, editor, $(`<div>`), that);
                          break;
-                       default:
+                        default:
                          editor = "";
                      }
 
@@ -190,10 +190,11 @@
                ]
              });
            }
-         }, { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefaultPi(that,that2,that3) },
-    {itemType: "group",caption: "Source Of Business",colCount:2,items: [
-    {dataField: "policyPackage", label: { text: "Package Of Policy" } ,editorType: "dxSelectBox",visible:true, editorOptions: makeSelectBoxEditorOptions(_enums.PolicyPackage),displayExpr: "value"},
-    {dataField: "languageOfPolicy", label: { text: "Language Of Policy" },editorType: "dxSelectBox",visible:true, editorOptions: makeSelectBoxEditorOptions(_enums.LanguageOfPolicy),displayExpr: "value"}
+         },
+         { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefaultPi(null,null,that3) }, //hiding for the backup requiment 2026-06-21
+            { itemType: "group",caption: "Source Of Business",colCount:2,items: [
+            { dataField: "policyPackage", label: { text: "Package Of Policy" } ,editorType: "dxSelectBox",visible:true, editorOptions: makeSelectBoxEditorOptions(_enums.PolicyPackage),displayExpr: "value"},
+            { dataField: "languageOfPolicy", label: { text: "Language Of Policy" },editorType: "dxSelectBox",visible:true, editorOptions: makeSelectBoxEditorOptions(_enums.LanguageOfPolicy),displayExpr: "value"}
         ]}
      ]}]
      ;
@@ -238,10 +239,6 @@
             workflowDecisionField(thisObject, ...itemsDelay)
         ]}
 
-       
-        
-    
-
     // 🔷 1. Proposal & UW Input
    
 
@@ -253,13 +250,11 @@
           const quotationGuid = "@(quotationGuid)";
           const fetch1 = $.ajax({ url: `/api/Document/GetByKey?recordGuid=${cloneQuotationGuid}`, method: "GET" });
           const fetch2 = $.ajax({ url: `/api/Document/GetByKey?recordGuid=${quotationGuid}`, method: "GET" });
-
           $.when(fetch1, fetch2, detailsDataSource.load()).done(function (r1, r2, rDetails) {
               const docs = [...(r1[0] || []), ...(r2[0] || [])];
               const detailData = rDetails[0] || [];
-              if (!detailData || detailData.length === 0) return;
-
-              const dbRow = detailData[0];
+              // if (!detailData || detailData.length === 0) return;
+              // const dbRow = detailData[0];
 
               // Map files uploaded for each checklist item type
               const fileTypesWithFiles = {};
@@ -271,9 +266,10 @@
                   // if (attrs.FieldName && attrs.FieldName !== "default") {
                   //     fileTypesWithFiles[attrs.FieldName] = true;
                   // }
-
                     if (attrs.FieldName && attrs.FieldName !== "default") {
-                           fileTypesWithFiles[attrs.FieldName] = true;
+                           // fileTypesWithFiles[attrs.FieldName] = true;
+                           const fieldName = attrs.FieldName.split("_")[0];
+                           fileTypesWithFiles[fieldName] = true;
                        }
 
                        if (attrs.TSSectionName) {
@@ -289,13 +285,34 @@
               try {
                   piAttributes = JSON.parse(parentFormData.attributes || parentFormData.Attributes || "{}");
               } catch (e) {}
-
+              // dataSourceGrid.forEach(item => {
+              //     debugger
+              //     // bind checkbox: checked if database says true, OR if saved in PolicyIssuance Attributes, OR if a file of this type is uploaded
+              //     item.checked = (dbRow[item.field] ?? false) || (piAttributes[item.field] === true) || (fileTypesWithFiles[item.field] === true);
+              //     item.ownId = dbRow.id;
+              //     // bind value (cho text/textarea/radio/select)
+              //     item.value = dbRow[item.field];
+              // });
               dataSourceGrid.forEach(item => {
-                  // bind checkbox: checked if database says true, OR if saved in PolicyIssuance Attributes, OR if a file of this type is uploaded
-                  item.checked = (dbRow[item.field] ?? false) || (piAttributes[item.field] === true) || (fileTypesWithFiles[item.field] === true);
-                  item.ownId = dbRow.id;
-                  // bind value (cho text/textarea/radio/select)
-                  item.value = dbRow[item.field];
+                const matchedDoc = docs.find(doc => {
+                    let attrs = {};
+
+                    try {
+                        attrs = JSON.parse(doc.attributes || doc.Attributes || "{}");
+                    } catch (e) {}
+
+                    const fieldName = (attrs.FieldName || "").replace(/_\d+$/, "");
+
+                    return fieldName === item.field
+                        || attrs.TSSectionName === item.field;
+                });
+
+                item.checked =
+                    !!matchedDoc ||
+                    piAttributes[item.field] === true;
+
+                // item.ownId = dbRow.id;
+                // item.value = dbRow[item.field];
               });
 
               // refresh grid
@@ -307,18 +324,188 @@
           });
 
 
-    delayAcceptStatusV2(mainFields,thisObject, ...itemsDelay); 
-    setTimeout(() => {
-        var picJson = PIC_JSON || "{}";
-        var picMap = parsePicMap(picJson);
-        var picVal = picMap["@dept"] || "";
-        var sectionId = `#pi-sec_@(dept)_@(policyIssuanceId)`;
-        if (!picVal) {
-            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
-        } else {
-            $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
-        }
-    }, 100);
+    // delayAcceptStatusV2(mainFields,thisObject, ...itemsDelay);
+     delayAcceptStatusV2Promise(
+        mainFields,
+        thisObject,
+        ...itemsDelay
+    )
+        .then(async function (decisionContext) {
+
+            /*
+             * decisionContext hiện có:
+             *
+             * decisionContext.status
+             * decisionContext.buttons
+             * decisionContext.primaryButton
+             * decisionContext.actionHost
+             *
+             * decisionContext.enable()
+             * decisionContext.disable()
+             * decisionContext.setDisabled(...)
+             */
+            var picJson =
+                PIC_JSON || "{}";
+
+            var picMap =
+                parsePicMap(picJson);
+
+            var picVal =
+                picMap["@dept"] || "";
+
+            var $section =
+                $(`#pi-sec_@(dept)_@(policyIssuanceId)`);
+
+
+            if (!picVal) {
+
+                $section
+                    .find(
+                        ".dept-upperbody, " +
+                        ".dept-body, " +
+                        ".dept-lowerbody, " +
+                        ".dept-footer"
+                    )
+                    .hide();
+
+            }
+            else {
+
+                $section
+                    .find(
+                        ".dept-upperbody, " +
+                        ".dept-body, " +
+                        ".dept-lowerbody, " +
+                        ".dept-footer"
+                    )
+                    .show();
+            }
+
+
+            /*
+             * =========================================================
+             * DECISION
+             * =========================================================
+             */
+
+
+            /*
+             * Nếu muốn enable tất cả decision button
+             */
+            decisionContext.enable();
+
+
+            /*
+             * Nếu chỉ muốn primary button:
+             *
+             * decisionContext.primaryButton?.enable();
+             *
+             * decisionContext.primaryButton?.disable();
+             */
+
+
+            /*
+             * Status object
+             */
+
+
+
+            /*
+             * =========================================================
+             * CUSTOM ROUTE
+             * =========================================================
+             */
+
+            var workflowResult =
+                await loadSelectedWorkflow({
+
+                    moduleCode: "pi",
+
+                    id: @(policyIssuanceId),
+
+                    guid: "@quotationGuid",
+
+                    reload: false
+                });
+
+
+
+            var customRouteObjects =
+                workflowResult?.customRouteObjects || [];
+
+
+
+
+            /*
+             * Chỉ lấy route của LMKT
+             */
+            var lmktRoutes =
+                customRouteObjects.filter(
+                    function (item) {
+                        return item.dept === "@dept";
+                    }
+                );
+
+
+            /*
+             * Enable toàn bộ custom route LMKT
+             */
+            lmktRoutes.forEach(
+                function (item) {
+                    item.enable();
+                }
+            );
+
+
+            /*
+             * Nếu cần disable:
+             *
+             * lmktRoutes.forEach(function (item) {
+             *     item.disable();
+             * });
+             */
+
+
+            /*
+             * Ví dụ tìm route cụ thể
+             */
+          
+            // $(approveRoute).dxButton("instance").option("disabled", false);
+            // if (approveRoute) {
+
+            //     console.log(
+            //         "Approve route:",
+            //         approveRoute
+            //     );
+
+            //      approveRoute.enable();
+
+            //     // approveRoute.disable();
+
+            //     // approveRoute.button.instance
+            //     //     ?.option("disabled", false);
+            // }
+
+        })
+        .catch(function (error) {
+
+            console.error(
+                "@dept decision initialization failed:",
+                error
+            );
+
+        });
+    // setTimeout(() => {
+    //     var picJson = PIC_JSON || "{}";
+    //     var picMap = parsePicMap(picJson);
+    //     var picVal = picMap["@dept"] || "";
+    //     var sectionId = `#pi-sec_@(dept)_@(policyIssuanceId)`;
+    //     if (!picVal) {
+    //         $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+    //     } else {
+    //         $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+    //     }
+    // }, 100);
 
     })
 </script>

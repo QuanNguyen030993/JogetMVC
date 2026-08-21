@@ -1611,7 +1611,6 @@
                      var store = dataSource.store();
                         $(`#${moduleKey}-btnChatSend_${dept}_${id}`).dxButton({
                          onClick: function (e) {
-
                                 var commentDataForm = $(`#${moduleKey}-commentPanelControl_${dept}_${id}`).dxForm("instance").option("formData");
                               const commentText = commentDataForm.content?.trim();
                               if (!commentText) {
@@ -1861,6 +1860,7 @@
                 }
 
                 function renderFormComment(idForm, dept, moduleKey, id, guid ) {
+
                     var control = new Object();
               $(`#${idForm}`).dxForm({
                width: "100%",
@@ -1991,7 +1991,7 @@
                                         function shouldDisableRouteComment() {
                                             var sectionDept = normalizeCommentDepartment(dept);
                                             var currentStageDept = getRouteCommentStageDept();
-                                            return !sectionDept
+                                            return !sectionDept && (_role == dept)
                                                 || !currentStageDept
                                                 || sectionDept !== currentStageDept;
                                         }
@@ -2005,7 +2005,7 @@
                                             selectedDepartment: "",
                                             recordGuid: guid,
                                             fromDepartment: _role,
-                                            submitUrl: `api/Notification/CommentNotify?sendTo=quan.nh&typeRequest=${typeRequest}&id=${id}`,
+                                            submitUrl: `api/Notification/CommentNotify?sendTo=quan.nh&typeRequest=${typeRequest}&id=${id}`, // TODO:
                                             // currentDepartment: dept,
                                             type: "Discussion",
                                             author: _displayName,
@@ -9377,7 +9377,10 @@
             dept: delayObject.dept,
             stageDept: decisionFormItems.stageDept,
             formItems: decisionFormItems,
-            tatObject: decisionTatObject
+            tatObject: decisionTatObject,
+            type: "early-decision",
+            items:  $(`#${formProps.formId}`)
+
         });
 
         var rendered =
@@ -9602,10 +9605,35 @@
             var ownsCurrentStage = !!buttonDept && buttonDept === currentStageDept;
             var roleMatchesStage = !!currentStageDept && currentRole === currentStageDept;
             if (!ownsCurrentStage || !roleMatchesStage) return true;
-
-            var hasAcceptDate = !!tatObject?.[buttonDept]?.AcceptDate;
-            var hasActionStatus = hasWorkflowButtonStatus(formItems, buttonDept);
-            return hasAcceptDate || hasActionStatus;
+            //decision / route / custom
+           if (options.type == "late-decision" || options.type == "early-decision")
+            {
+                 console.log(options.type, options.items);
+                 var hasAcceptDate = _role == "FO" ? true : !!tatObject?.[buttonDept]?.AcceptDate;
+                 if ( _role == "FO")
+                     return !hasAcceptDate ;
+                 else
+                     return hasAcceptDate; //|| hasActionStatus;
+            } 
+            if (options.type == "route")
+            {
+                console.log("route", options.items);
+                 var hasAcceptDate = _role == "FO" ? true : !!tatObject?.[buttonDept]?.AcceptDate;
+                 // var hasActionStatus = hasWorkflowButtonStatus(formItems, buttonDept);
+                 if ( _role == "FO")
+                     return !hasAcceptDate ;
+                 else
+                     return !hasAcceptDate; //|| hasActionStatus;
+            }
+            if (options.type == "custom", options.items)
+            {
+                 console.log("custom");
+                 var hasAcceptDate = _role == "FO" ? true : !!tatObject?.[buttonDept]?.AcceptDate;
+                 if ( _role == "FO")
+                     return !hasAcceptDate ;
+                 else
+                     return hasAcceptDate; //|| hasActionStatus;
+            }
         }
 
         function normalizeDecisionFieldButtons(params) {
@@ -10259,14 +10287,15 @@
                                   );
                                   disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
                           }
-
                           setDecisionButtonsDisabled(
                               buttonItems.map(item => getDelayAcceptButtonId(item)),
                               shouldDisableWorkflowButton({
                                   dept: formDataClone.dept,
                                   stageDept: latestFormItems.stageDept,
                                   formItems: latestFormItems,
-                                  tatObject: latestTatObject
+                                  tatObject: latestTatObject,
+                                  type: "late-decision",
+                                  items: buttonItems.map(item => getDelayAcceptButtonId(item))
                               })
                           );
 
@@ -10402,9 +10431,10 @@
                 .reject(new Error("moduleCode must be 'qt' or 'pi'"))
                 .promise();
         }
-
-        const loadingClass = params.loadingClass || "actionRight";
-        const loadingHost = params.loadingHost;
+        console.log(params);
+        const loadingClass = "actionRight";
+        // const loadingHost = params.loadingHost;
+        const loadingHost = $(`[aria-action-right='${params.stageDept}']`);
         showLoading(loadingClass, loadingHost);
 
         const id = params.id;
@@ -10744,7 +10774,9 @@
             const buttonDisabled = shouldDisableWorkflowButton({
                 dept: stageDept,
                 stageDept: buttonFormItems.stageDept || stageDept,
-                formItems: buttonFormItems
+                formItems: buttonFormItems,
+                type: "route",
+                items: $button
             });
 
             $button.dxButton({
@@ -11006,7 +11038,9 @@
                         dept: routeDept,
                         stageDept: formItems.stageDept || stageDept,
                         formItems: formItems,
-                        tatObject: latestTatObject
+                        tatObject: latestTatObject,
+                        type: "custom",
+                        items: $customButton
                     });
 
 
