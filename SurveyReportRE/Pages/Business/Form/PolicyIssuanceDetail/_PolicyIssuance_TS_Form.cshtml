@@ -13,6 +13,34 @@
         padding-left: 18px;
         padding-right: 18px;
     }
+
+    .pi-ts-signback-group .pi-ts-signback-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid var(--theme-border, #dbe3ef);
+        border-radius: 8px;
+        background: var(--theme-surface, #fff);
+        box-sizing: border-box;
+    }
+
+    .pi-ts-signback-group .pi-ts-signback-copy {
+        min-width: 0;
+    }
+
+    .pi-ts-signback-group .pi-ts-signback-copy strong,
+    .pi-ts-signback-group .pi-ts-signback-copy span {
+        display: block;
+    }
+
+    .pi-ts-signback-group .pi-ts-signback-copy span {
+        margin-top: 2px;
+        color: var(--theme-muted, #64748b);
+        font-size: 11px;
+    }
 </style>
 <script type="text/javascript">
     $(function() {
@@ -173,8 +201,9 @@
                          that.id = @(policyIssuanceId);
                          that.guid ="@(quotationGuid)";
                          that.sectionName = "@(dept)";
-                         that.titleName = "Upload Document";
+                         that.titleName = "Add file";
                          that.baseOnAttributes = "FieldName";
+                         that.compactAttachment = true;
                          var sectionId = "@(ViewData["Cd"])";
                          that.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, data.field, @(policyIssuanceId)), Department: "@(dept)", FieldName: `${data.field}_@(policyIssuanceId)` }; //{"SectionName":"default_FO_410"}
                          editor = $("<div>");
@@ -195,7 +224,37 @@
             { itemType: "group",caption: "Source Of Business",colCount:2,items: [
             { dataField: "policyPackage", label: { text: "Package Of Policy" } ,editorType: "dxSelectBox",visible:true, editorOptions: makeSelectBoxEditorOptions(_enums.PolicyPackage),displayExpr: "value"},
             { dataField: "languageOfPolicy", label: { text: "Language Of Policy" },editorType: "dxSelectBox",visible:true, editorOptions: makeSelectBoxEditorOptions(_enums.LanguageOfPolicy),displayExpr: "value"}
-        ]}
+        ]},
+        {
+            itemType: "group",
+            name: "signBackGroup",
+            cssClass: "pi-ts-signback-group",
+            elementAttr: { id: "pi-signBackGroup_@(policyIssuanceId)" },
+            caption: "Sign back",
+            colCount: 1,
+            items: [{
+                itemType: "simple",
+                label: { visible: false },
+                template: function () {
+                    const $buttonHost = $("<div id='piReminderButton_@(policyIssuanceId)' class='ts-reminder-button-host'></div>");
+                    const $row = $("<div class='pi-ts-signback-row'></div>").append(
+                        $("<div class='pi-ts-signback-copy'></div>").append(
+                            $("<strong></strong>").text("Signed-back reminder"),
+                            $("<span></span>").text("Schedule follow-up dates after the policy is sent for signing.")
+                        ),
+                        $buttonHost
+                    );
+
+                    setTimeout(function () {
+                        if (typeof window["initializeTsReminderButton_@(policyIssuanceId)"] === "function") {
+                            window["initializeTsReminderButton_@(policyIssuanceId)"]();
+                        }
+                    }, 0);
+
+                    return $row;
+                }
+            }]
+        }
      ]}]
      ;
    

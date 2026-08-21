@@ -3500,7 +3500,8 @@
                 .off(".deptTreeParts")
                 .on("click.deptTreeParts", ".dept-circle", function (event) {
                     event.preventDefault();
-                    event.stopPropagation();
+                    // Keep bubbling to the department node. The form-level node
+                    // click handler owns focus highlighting and anchor scrolling.
                     this.focus();
                 })
                 .on("dblclick.deptTreeParts", ".dept-circle", function (event) {
@@ -3856,8 +3857,14 @@
                 const currentPic = getDefaultPicByDept(dept, dataForm);
                 const $section = $(`#${moduleKey}-sec_${dept}_${dataForm.id}`);
                 $section
-                    .find(".dept-upperbody, .dept-body, .dept-lowerbody")
+                    .find(".dept-upperbody, .dept-body")
                     .toggle(!!currentPic);
+                // Comments are part of the workflow history and must remain
+                // visible even before a department member is assigned. The
+                // comment editor's disableComment rule controls write access.
+                $section
+                    .find(".dept-lowerbody")
+                    .show();
                 $section
                     .find(".dept-footer")
                     .toggle(!!currentPic || getActiveStage() === dept);
@@ -3897,9 +3904,12 @@
 
                                     }
                                     else {
-                                            $section
-                            .find(".dept-upperbody, .dept-body, .dept-lowerbody")
+                        $section
+                            .find(".dept-upperbody, .dept-body")
                             .toggle(accounts.length > 0);
+                        $section
+                            .find(".dept-lowerbody")
+                            .show();
                         $section
                             .find(".dept-footer")
                             .toggle(accounts.length > 0 || getActiveStage() === dept);
@@ -4856,6 +4866,7 @@
                 attList_Host.empty();
 
                 if (!list || list.length === 0) {
+                    if (options.compactAttachment) return;
                     attList_Host.html("<div style='opacity:.7;padding:6px 2px;'>No attachments</div>");
                     return;
                 }
@@ -5080,6 +5091,7 @@
                                 batchSize: 6,
                                 delay: 16,
                                 showFillListSelect: editorOptions.showFillListSelect,
+                                compactAttachment: editorOptions.compactAttachment === true,
                                 sectionId: editorOptions.sectionId,
                                 policyIssuanceId: editorOptions.policyIssuanceId,
                                 sectionIdQt: editorOptions.sectionIdQt,
@@ -5238,6 +5250,7 @@
             function renderDxFileUploader(editorOptions, $container, options, isRenderUploader = true, uploaderAllow = true)  {
             const renderTime = Date.now();
             const editorOptionsIn = cloneReusableOptions(editorOptions);
+            const compactAttachment = editorOptionsIn.compactAttachment === true;
             const controlId = `${editorOptionsIn.data.SectionName}`;
             const data =  editorOptionsIn.data;
             editorOptionsIn.controlId = controlId;
@@ -5272,10 +5285,15 @@
             $container.find(`[id^='${previewBaseId}_'], [id^='${uploaderBaseId}_']`).remove();
             // const $preview =  $(`<div id="${previewId}" style="display:flex;flex-wrap:wrap;gap:25px;top:10px"></div>`)
             const dropZoneId = `attachmentDropZone_${controlId}_${renderTime}`;
-            const $preview = $(`<div id="${attachmentHostIds.preview}" class="att-preview"></div>`)
+            $container.toggleClass("attachment-mini-host", compactAttachment);
+            const $preview = $(`<div id="${attachmentHostIds.preview}" class="att-preview${compactAttachment ? " att-preview--mini" : ""}"></div>`)
                 .appendTo($container);
            
-            const $uploader = $(`<div id="${attachmentHostIds.uploader}" class="tmivcom-dx-fileuploader"></div>`)
+            const $uploader = $(`<div id="${attachmentHostIds.uploader}" class="tmivcom-dx-fileuploader${compactAttachment ? " tmivcom-fileuploader--mini-host" : ""}"></div>`)
+                 .attr(compactAttachment ? {
+                     title: editorOptionsIn.titleName || "Add attachment",
+                     "aria-label": editorOptionsIn.titleName || "Add attachment"
+                 } : {})
                  .appendTo($container)
           
 
@@ -5291,13 +5309,17 @@
                     <span class="attachment-drop-zone__hint">or click to browse from your computer</span>`;
                   const $dropZone = $(`
                     <div id="${dropZoneId}"
-                         class="attachment-drop-zone${uploaderAllow ? "" : " is-disabled"}"
+                         class="attachment-drop-zone${compactAttachment ? " attachment-drop-zone--mini" : ""}${uploaderAllow ? "" : " is-disabled"}"
                          role="button"
                          tabindex="${uploaderAllow ? "0" : "-1"}"
                          aria-disabled="${uploaderAllow ? "false" : "true"}">
-                        <span class="dx-icon dx-icon-upload attachment-drop-zone__icon" aria-hidden="true"></span>
+                        <span class="dx-icon ${compactAttachment ? "dx-icon-add" : "dx-icon-upload"} attachment-drop-zone__icon" aria-hidden="true"></span>
                         <span class="attachment-drop-zone__content">${normalDropZoneContent}</span>
                     </div>`)
+                    .attr({
+                        title: compactAttachment ? (editorOptionsIn.titleName || "Add attachment") : "",
+                        "aria-label": compactAttachment ? (editorOptionsIn.titleName || "Add attachment") : "Upload attachments"
+                    })
                     .toggle(!!isRenderUploader)
                     .insertBefore($uploader);
                   $dropZone.find(".attachment-drop-zone__compact-label")
@@ -5796,11 +5818,11 @@
                 const size = x.size || x.fileSize || x.FileSize || 0;
                 const downloadUrl = x.downloadUrl || x.DownloadUrl || x.url;
                 const id = x.id || x.Id || x.attachmentId;
-                const author = x.author || x.author || x.author;
-                const date = x.date || x.date || x.date;
-                const subDirectory = x.subDirectory || x.subDirectory || x.subDirectory;
+                const author = x.author || x.Author || "";
+                const date = x.date || x.Date || x.createdDate || x.CreatedDate;
+                const subDirectory = x.subDirectory || x.SubDirectory || "";
                       const $wrapper = $("<div>")
-                            .addClass("att-item-wrapper")
+                            .addClass(`att-item-wrapper${options?.compactAttachment ? " att-item-wrapper--mini" : ""}`)
                             .css({
                                 display: "flex",
                                 flexDirection: "left",
@@ -5812,8 +5834,16 @@
                                 transition: "opacity .18s ease, transform .18s ease"
                             });
                 const $item = $("<div>")
-                    .addClass("att-item");
+                    .addClass(`att-item${options?.compactAttachment ? " att-item--mini" : ""}`);
                     $item.appendTo($wrapper);
+
+                if (options?.compactAttachment) {
+                    $item.attr({
+                        tabindex: 0,
+                        role: "button",
+                        "aria-label": `Preview ${fileName}`
+                    });
+                }
 
                         $item.attr('aria-fileName', fileName);
                         $item.attr('aria-ext',ext);
@@ -5832,7 +5862,7 @@
                     : `<div class="att-icon-behind"><i class="fa-solid fa-database"></i></div>`;
 
 
-                if (!(options && options.showFillListSelect)) {
+                if (!(options && options.showFillListSelect) && !options?.compactAttachment) {
                     $item.css({
                         opacity: 0,
                         transform: "translateY(8px)",
@@ -5868,6 +5898,7 @@
                     if (x.recordGuid)
                 $("<div>").dxButton({
                     icon: "email",
+                    text: options?.compactAttachment ? "Copy" : undefined,
                     hint: "Copy file",
                         stylingMode: "contained",
                     onClick: async function (ev) {
@@ -5879,6 +5910,7 @@
                     if (x.recordGuid)
                 $("<div>").dxButton({
                     icon: "download",
+                    text: options?.compactAttachment ? "Download" : undefined,
                     hint: "Download",
                     stylingMode: "contained",
                     onClick: function (ev) {
@@ -5893,6 +5925,7 @@
                     if (x.recordGuid)
                 $("<div>").dxButton({
                     icon: "trash",
+                    text: options?.compactAttachment ? "Delete" : undefined,
                     hint: "Delete",
                     stylingMode: "outlined",
                     visible: options?.uploaderAllow !== false,
@@ -5900,7 +5933,7 @@
                     onClick: async function (ev) {
                         ev.event?.stopPropagation?.();
 
-                        const liveSectionPermission = $(ev.element)
+                        const liveSectionPermission = $item
                             .closest(".dept-section")
                             .data("attachmentCanEdit");
                         if (liveSectionPermission === false) {
@@ -5931,6 +5964,95 @@
                     }
                 }).appendTo($actions);
 
+                if (options?.compactAttachment) {
+                    const fileType = ext ? ext.toUpperCase() : "FILE";
+                    const detailParts = [fileType, formatBytes(size), author, date ? fmtTimeLocal(date) : ""]
+                        .filter(Boolean);
+                    const $hoverPanel = $("<div>")
+                        .addClass("attachment-mini-hover-panel")
+                        .append(
+                            $("<div>")
+                                .addClass("attachment-mini-hover-panel__name")
+                                .attr("title", fileName)
+                                .text(fileName),
+                            $("<div>")
+                                .addClass("attachment-mini-hover-panel__details")
+                                .text(detailParts.join(" • "))
+                        );
+
+                    if ($actions.children().length) {
+                        $actions
+                            .addClass("attachment-mini-hover-panel__actions")
+                            .appendTo($hoverPanel);
+                    }
+
+                    const $popoverHost = $("<div>")
+                        .addClass("attachment-mini-popover-host")
+                        .appendTo($wrapper);
+                    const popover = $popoverHost.dxPopover({
+                        target: $item.get(0),
+                        position: "bottom",
+                        width: 310,
+                        minWidth: 240,
+                        shading: false,
+                        closeOnOutsideClick: true,
+                        onShowing: function () {
+                            const liveSectionPermission = $item
+                                .closest(".dept-section")
+                                .data("attachmentCanEdit");
+                            const deleteButton = $hoverPanel
+                                .find(".attachment-delete-action")
+                                .dxButton("instance");
+                            deleteButton?.option(
+                                "visible",
+                                options?.uploaderAllow !== false && liveSectionPermission !== false
+                            );
+                        },
+                        animation: {
+                            show: { type: "fade", from: 0, to: 1, duration: 120 },
+                            hide: { type: "fade", from: 1, to: 0, duration: 100 }
+                        },
+                        contentTemplate: function () {
+                            return $hoverPanel;
+                        }
+                    }).dxPopover("instance");
+
+                    let showTimer;
+                    let hideTimer;
+                    const showHoverPanel = function () {
+                        clearTimeout(hideTimer);
+                        clearTimeout(showTimer);
+                        showTimer = setTimeout(function () {
+                            popover.show();
+                        }, 180);
+                    };
+                    const hideHoverPanel = function () {
+                        clearTimeout(showTimer);
+                        clearTimeout(hideTimer);
+                        hideTimer = setTimeout(function () {
+                            popover.hide();
+                        }, 300);
+                    };
+
+                    $item.on("mouseenter", showHoverPanel);
+                    $item.on("mouseleave", hideHoverPanel);
+                    $hoverPanel.on("mouseenter", function () {
+                        clearTimeout(hideTimer);
+                    });
+                    $hoverPanel.on("mouseleave", hideHoverPanel);
+
+                    $item.on("focusin", function () {
+                        clearTimeout(showTimer);
+                        clearTimeout(hideTimer);
+                        popover.show();
+                    });
+                    $item.on("focusout", function () {
+                        setTimeout(function () {
+                            if (!$hoverPanel.find(":focus").length) popover.hide();
+                        }, 100);
+                    });
+                }
+
                 $item.css("cursor", downloadUrl ? "pointer" : "default");
                     if (x.recordGuid)
                 $item.on("click", async function (ev) {
@@ -5938,7 +6060,9 @@
                 });
                 $(`<input type="hidden" value="${id}"></input>`).appendTo($item);
 
-                var $result = $item;
+                // Compact items keep their popover host inside the wrapper. Returning
+                // only $item would detach it from that host when the lazy list appends.
+                var $result = options?.compactAttachment ? $wrapper : $item;
                 if (options && options.showFillListSelect) {
 
                         $item.appendTo($wrapper);

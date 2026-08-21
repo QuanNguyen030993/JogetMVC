@@ -35306,3 +35306,234 @@ body.skin-re .dx-popup-wrapper.dx-rtl > .dx-overlay-content > .dx-popup-title.dx
     background: var(--form-attachment-icon-bg, #fff);
     box-sizing: border-box;
 }
+
+/* Compact attachment strip used by the Policy Issuance TS checklist. */
+.attachment-mini-host {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    overflow: hidden;
+}
+
+.attachment-mini-host > .attachment-drop-zone--mini {
+    order: 1;
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    min-height: 38px;
+    flex: 0 0 38px;
+    margin: 0;
+    padding: 0;
+    gap: 0;
+    border-radius: 8px;
+}
+
+.attachment-drop-zone--mini .attachment-drop-zone__icon {
+    width: 100%;
+    height: 100%;
+    flex-basis: 100%;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    font-size: 17px;
+    box-shadow: none;
+}
+
+.attachment-drop-zone--mini .attachment-drop-zone__content {
+    display: none;
+}
+
+.attachment-mini-host > .attachment-drop-zone--mini.is-uploading {
+    width: 170px;
+    flex-basis: 170px;
+    padding: 6px 8px;
+}
+
+.attachment-drop-zone--mini.is-uploading .attachment-drop-zone__icon {
+    display: none;
+}
+
+.attachment-drop-zone--mini.is-uploading .attachment-drop-zone__content {
+    display: block;
+    width: 100%;
+}
+
+.attachment-mini-host > .att-preview--mini {
+    order: 2;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+    min-width: 0;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.att-preview--mini > .att-item-wrapper--mini {
+    flex: 0 0 38px;
+    width: 38px !important;
+    min-width: 38px;
+}
+
+.attachment-mini-host > .tmivcom-dx-fileuploader.dx-fileuploader {
+    order: 3;
+    flex: 0 0 0;
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Existing Policy Issuance records use the TMIVCom/SharePoint uploader. */
+.attachment-mini-host > .tmivcom-fileuploader--mini-host:not(.dx-fileuploader) {
+    order: 1;
+    flex: 0 0 38px;
+    width: 38px;
+    min-width: 38px;
+    overflow: visible;
+}
+
+.tmivcom-fileuploader--mini-host .attachment-drop-zone {
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    border-radius: 8px !important;
+}
+
+.tmivcom-fileuploader--mini-host .attachment-drop-zone__icon {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 100% !important;
+    height: 100% !important;
+    flex: 0 0 100% !important;
+    border: 0 !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    font-size: 0 !important;
+    box-shadow: none !important;
+}
+
+.tmivcom-fileuploader--mini-host .attachment-drop-zone__icon::before {
+    content: "+" !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 20px !important;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.tmivcom-fileuploader--mini-host .attachment-drop-zone__content {
+    display: none !important;
+}
+
+.attachment-mini-host > .tmivcom-fileuploader--mini-host:has(.attachment-drop-zone.is-uploading) {
+    flex-basis: 170px;
+    width: 170px;
+}
+
+.tmivcom-fileuploader--mini-host .attachment-drop-zone.is-uploading {
+    width: 170px !important;
+    padding: 6px 8px !important;
+}
+
+.tmivcom-fileuploader--mini-host .attachment-drop-zone.is-uploading .attachment-drop-zone__icon {
+    display: none !important;
+}
+
+.tmivcom-fileuploader--mini-host .attachment-drop-zone.is-uploading .attachment-drop-zone__content {
+    display: block !important;
+    width: 100%;
+}
+
+.att-preview--mini .att-item--mini {
+    position: relative;
+    justify-content: center;
+    width: 38px;
+    min-width: 38px;
+    max-width: 38px;
+    height: 38px;
+    min-height: 38px;
+    gap: 0;
+    padding: 4px;
+    border-color: var(--form-attachment-border, #c7daf5);
+    border-radius: 7px;
+}
+
+.att-preview--mini .att-item--mini:hover,
+.att-preview--mini .att-item--mini:focus-visible {
+    border-color: var(--form-attachment-primary, #5b8def);
+    box-shadow: 0 0 0 2px rgba(91, 141, 239, .14);
+    outline: none;
+}
+
+.att-preview--mini .att-item--mini .att-ico {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    font-size: 15px;
+}
+
+.att-preview--mini .att-item--mini .att-meta,
+.att-preview--mini .att-item--mini .att-sub,
+.att-preview--mini .att-item--mini .att-icon-behind,
+.att-preview--mini .att-item--mini > .att-actions {
+    display: none;
+}
+
+.attachment-mini-popover-host {
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+.attachment-mini-hover-panel {
+    width: 100%;
+    min-width: 0;
+    padding: 2px;
+    box-sizing: border-box;
+}
+
+.attachment-mini-hover-panel__name {
+    overflow: hidden;
+    color: var(--theme-text, #1f2937);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.attachment-mini-hover-panel__details {
+    margin-top: 5px;
+    color: var(--theme-muted, #64748b);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.attachment-mini-hover-panel__actions.att-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--theme-border, #e5e7eb);
+}
+
+.attachment-mini-hover-panel__actions .dx-button {
+    min-height: 28px;
+    border-radius: 6px;
+}
+
+.attachment-mini-hover-panel__actions .dx-button-content {
+    padding: 4px 8px;
+}

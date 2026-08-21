@@ -110,37 +110,46 @@
          });
      }
 
-    $("#piReminderButton_@policyIssuanceId").dxButton({
-        icon: "clock",
-        hint: "Reminder schedule",
-        stylingMode: "outlined",
-        type: "normal",
-        elementAttr: {
-            "aria-label": "Open reminder schedule"
-        },
-        onClick: function () {
-            var popupInstance = makePopupWithScroll(
-                renderTsReminderGrid_@(policyIssuanceId)(),
-                "medium",
-                "Reminder schedule"
-            );
+    window["initializeTsReminderButton_@(policyIssuanceId)"] = function () {
+        var $buttonHost = $("#piReminderButton_@policyIssuanceId");
+        if (!$buttonHost.length) return false;
 
-            popupInstance.option("toolbarItems[0].options", {
-                stylingMode: "contained",
-                type: "default",
-                text: "Apply",
-                onClick: function () {
-                    var grid = $("#piReminderGrid_@policyIssuanceId").dxDataGrid("instance");
-                    grid.saveEditData().then(function () {
-                        if (grid.hasEditData()) return;
-                        popupInstance.hide();
-                        DevExpress.ui.notify("Reminder schedule saved.", "success", 1800);
-                    });
-                }
-            });
-            popupInstance.show();
-        }
-    });
+        $buttonHost.dxButton({
+            icon: "clock",
+            text: "Reminder schedule",
+            hint: "Reminder schedule",
+            stylingMode: "outlined",
+            type: "normal",
+            elementAttr: {
+                "aria-label": "Open reminder schedule"
+            },
+            onClick: function () {
+                var popupInstance = makePopupWithScroll(
+                    renderTsReminderGrid_@(policyIssuanceId)(),
+                    "medium",
+                    "Reminder schedule"
+                );
+
+                popupInstance.option("toolbarItems[0].options", {
+                    stylingMode: "contained",
+                    type: "default",
+                    text: "Apply",
+                    onClick: function () {
+                        var grid = $("#piReminderGrid_@policyIssuanceId").dxDataGrid("instance");
+                        grid.saveEditData().then(function () {
+                            if (grid.hasEditData()) return;
+                            popupInstance.hide();
+                            DevExpress.ui.notify("Reminder schedule saved.", "success", 1800);
+                        });
+                    }
+                });
+                popupInstance.show();
+            }
+        });
+
+        return true;
+    };
+    window["initializeTsReminderButton_@(policyIssuanceId)"]();
        //       var pageLayout = window.PolicyIssuancePage;
        // var stateLayout = pageLayout.state;
     $("#@PIViewIdHelper.BtnSave(dept, policyIssuanceId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:

@@ -234,17 +234,6 @@
         // after the Policy Issuance record has been loaded and bound to dxForm.
         delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
 
-        setTimeout(() => {
-            var picJson = formData?.pic || PIC_JSON || "{}";
-            var picMap = parsePicMap(picJson);
-            var picVal = picMap["@dept"] || "";
-            var sectionId = `#pi-sec_@(dept)_@(policyIssuanceId)`;
-            if (!picVal) {
-                $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
-            } else {
-                $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
-            }
-        }, 100);
     }).fail(function (xhr) {
         appErrorHandling(
             `Cannot load Policy Issuance @policyIssuanceId before rendering PM decision buttons.`,
