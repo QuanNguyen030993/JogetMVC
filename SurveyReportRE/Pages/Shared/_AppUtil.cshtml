@@ -430,6 +430,153 @@
 
 
 
+            function resolvePolicyIssuanceSkipTS(data) {
+                if (!data || typeof data !== "object") return null;
+
+                function normalizeBoolean(value) {
+                    if (typeof value === "boolean") return value;
+                    if (typeof value === "number") return value === 1;
+                    if (typeof value !== "string") return null;
+
+                    var normalized = value.trim().toLowerCase();
+                    if (["true", "1", "yes", "on"].includes(normalized)) return true;
+                    if (["false", "0", "no", "off", ""].includes(normalized)) return false;
+                    return null;
+                }
+
+                var directValue = data.skipTS;
+                if (directValue === undefined) directValue = data.SkipTS;
+                var directResult = normalizeBoolean(directValue);
+                if (directResult !== null) return directResult;
+
+                var metadataSources = [
+                    data.policyIssuanceType ?? data.PolicyIssuanceType,
+                    data.quotationType ?? data.QuotationType,
+                    data.actionStatus ?? data.ActionStatus
+                ];
+
+                for (var index = 0; index < metadataSources.length; index++) {
+                    var source = metadataSources[index];
+                    if (!source) continue;
+
+                    try {
+                        var metadata = typeof source === "string"
+                            ? JSON.parse(source)
+                            : source;
+                        var metadataValue = metadata?.SkipTS;
+                        if (metadataValue === undefined) metadataValue = metadata?.skipTS;
+                        var metadataResult = normalizeBoolean(metadataValue);
+                        if (metadataResult !== null) return metadataResult;
+                    } catch (error) {}
+                }
+
+                return null;
+            }
+
+            function mergeSkipTSIntoRequestType(rawValue, skipTsEnabled) {
+                var metadata = {};
+
+                if (rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)) {
+                    metadata = Object.assign({}, rawValue);
+                } else if (typeof rawValue === "string" && rawValue.trim()) {
+                    try {
+                        var parsedValue = JSON.parse(rawValue);
+                        if (parsedValue && typeof parsedValue === "object" && !Array.isArray(parsedValue)) {
+                            metadata = parsedValue;
+                        } else {
+                            metadata.Value = rawValue;
+                        }
+                    } catch (error) {
+                        metadata.Value = rawValue;
+                    }
+                }
+
+                metadata.SkipTS = skipTsEnabled === true;
+                return JSON.stringify(metadata);
+            }
+
+            function resolveSkipTSFromRequestType(data, typeFieldName) {
+                if (!data || typeof data !== "object" || !typeFieldName) return null;
+
+                var pascalFieldName = typeFieldName.charAt(0).toUpperCase() + typeFieldName.slice(1);
+                var requestTypeValue = data[typeFieldName];
+                if (requestTypeValue === undefined) {
+                    requestTypeValue = data[pascalFieldName];
+                }
+                if (requestTypeValue === undefined || requestTypeValue === null || requestTypeValue === "") {
+                    return null;
+                }
+
+                var scopedData = {};
+                scopedData[typeFieldName] = requestTypeValue;
+                return resolvePolicyIssuanceSkipTS(scopedData);
+            }
+
+            function makeSkipTSSwitchFormItem(typeFieldName) {
+                return {
+                    itemType: "simple",
+                    name: "skipTS",
+                    dataField: typeFieldName,
+                    label: { text: "Skip TS" },
+                    template: function (data, itemElement) {
+                        var form = data.component;
+                        var formData = form?.option("formData") || {};
+                        var currentRole = typeof _role === "undefined" ? "" : String(_role);
+
+                        return $("<div>").dxSwitch({
+                            value: resolveSkipTSFromRequestType(formData, typeFieldName) === true,
+                            switchedOnText: "Yes",
+                            switchedOffText: "No",
+                            showText: true,
+                            disabled: currentRole.trim().toUpperCase() !== "FO",
+                            onValueChanged: function (event) {
+                                var latestFormData = form?.option("formData") || {};
+                                var pascalFieldName = typeFieldName.charAt(0).toUpperCase() + typeFieldName.slice(1);
+                                var currentTypeValue = latestFormData[typeFieldName];
+                                if (currentTypeValue === undefined) {
+                                    currentTypeValue = latestFormData[pascalFieldName];
+                                }
+
+                                form?.updateData(
+                                    typeFieldName,
+                                    mergeSkipTSIntoRequestType(currentTypeValue, event.value)
+                                );
+                            }
+                        }).appendTo(itemElement);
+                    }
+                };
+            }
+
+            function loadPolicyIssuanceSkipTS(recordId, formId) {
+                window.PolicyIssuanceSkipTSPromises = window.PolicyIssuanceSkipTSPromises || {};
+                var cacheKey = String(recordId);
+                if (window.PolicyIssuanceSkipTSPromises[cacheKey]) {
+                    return window.PolicyIssuanceSkipTSPromises[cacheKey];
+                }
+
+                var form = formId ? $(`#${formId}`).dxForm("instance") : null;
+                var formResult = resolveSkipTSFromRequestType(
+                    form?.option("formData") || {},
+                    "policyIssuanceType"
+                );
+                if (formResult !== null) {
+                    window.PolicyIssuanceSkipTSPromises[cacheKey] = Promise.resolve(formResult);
+                    return window.PolicyIssuanceSkipTSPromises[cacheKey];
+                }
+
+                window.PolicyIssuanceSkipTSPromises[cacheKey] = $.ajax({
+                    url: `/api/PolicyIssuance/GetSingle/${encodeURIComponent(recordId)}`,
+                    method: "GET"
+                }).then(function (record) {
+                    return resolveSkipTSFromRequestType(record, "policyIssuanceType") === true;
+                }).catch(function (error) {
+                    console.warn("Unable to resolve Policy Issuance SkipTS; keeping Fill List in TS.", error);
+                    return false;
+                });
+
+                return window.PolicyIssuanceSkipTSPromises[cacheKey];
+            }
+
             function newQuotationForm() {
                 var id = 0;
                     var sectionName = `qt_default_FO`;
@@ -656,7 +803,10 @@
                                     quotationData.Quotation.PIC = JSON.stringify(quotationData.Quotation.PIC);
                                     quotationData.Quotation.StageAccount = submitData?.to || "";
                                     var quotationTargetDept = submitSummaryData.assignedTeamOrRole || "TS";
-                                    quotationData.Quotation.SkipTS = quotationTargetDept !== "TS";
+                                    quotationData.Quotation.QuotationType = mergeSkipTSIntoRequestType(
+                                        quotationData.Quotation.QuotationType,
+                                        quotationTargetDept !== "TS"
+                                    );
                                     quotationData.Quotation.StageDept = quotationTargetDept;
                                     quotationData.Quotation.QuotationStatus = `${quotationTargetDept} Pending`;
                                     quotationData.Quotation.WorkflowStatus = `${quotationTargetDept} Pending`;
@@ -1110,7 +1260,10 @@
                                     policyIssuanceData.PolicyIssuance.PIC = JSON.stringify(policyIssuanceData.PolicyIssuance.PIC);
                                     policyIssuanceData.PolicyIssuance.StageAccount = submitData?.to || "";
                                     var policyIssuanceTargetDept = submitSummaryData.assignedTeamOrRole || "TS";
-                                    policyIssuanceData.PolicyIssuance.SkipTS = policyIssuanceTargetDept !== "TS";
+                                    policyIssuanceData.PolicyIssuance.PolicyIssuanceType = mergeSkipTSIntoRequestType(
+                                        policyIssuanceData.PolicyIssuance.PolicyIssuanceType,
+                                        policyIssuanceTargetDept !== "TS"
+                                    );
                                     policyIssuanceData.PolicyIssuance.StageDept = policyIssuanceTargetDept;
                                     policyIssuanceData.PolicyIssuance.PolicyIssuanceStatus = `${policyIssuanceTargetDept} Pending`;
                                     policyIssuanceData.PolicyIssuance.WorkflowStatus = `${policyIssuanceTargetDept} Pending`;

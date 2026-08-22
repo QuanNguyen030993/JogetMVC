@@ -133,6 +133,7 @@
         cssClass: "workflow-ui-lock-target-fillListGroup",
         elementAttr: { "data-form-group-name": "fillListGroup" },
         caption: "Fill List",
+        visible: false,
         colCount: 1,
         items: [
      {
@@ -226,7 +227,8 @@
                ]
              });
            }
-         },
+         }
+     ]},
          { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentDefaultPi(null,null,that3) }, //hiding for the backup requiment 2026-06-21
             { itemType: "group",caption: "Source Of Business",colCount:2,items: [
             { dataField: "policyPackage", label: { text: "Package Of Policy" } ,editorType: "dxSelectBox",visible:true, editorOptions: makeSelectBoxEditorOptions(_enums.PolicyPackage),displayExpr: "value"},
@@ -262,7 +264,7 @@
                 }
             }]
         }
-     ]}]
+     ]
      ;
    
     var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
@@ -397,6 +399,13 @@
         ...itemsDelay
     )
         .then(async function (decisionContext) {
+
+            var skipTsEnabled = await loadPolicyIssuanceSkipTS(
+                @policyIssuanceId,
+                "@PIViewIdHelper.Form(dept, policyIssuanceId)"
+            );
+            var tsForm = $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm("instance");
+            tsForm?.itemOption("fillListGroup", "visible", !skipTsEnabled);
 
             /*
              * decisionContext hiện có:

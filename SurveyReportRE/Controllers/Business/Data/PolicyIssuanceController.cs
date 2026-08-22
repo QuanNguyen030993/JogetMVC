@@ -499,6 +499,19 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             if (!string.Equals(entryMode, "DirectEndorse", StringComparison.OrdinalIgnoreCase)) return false;
 
             JToken? skipToken = metadata.GetValue("SkipTS", StringComparison.OrdinalIgnoreCase);
+            if (skipToken == null && !string.IsNullOrWhiteSpace(item.PolicyIssuanceType))
+            {
+                try
+                {
+                    JObject requestTypeMetadata = JObject.Parse(item.PolicyIssuanceType);
+                    skipToken = requestTypeMetadata.GetValue("SkipTS", StringComparison.OrdinalIgnoreCase);
+                }
+                catch (JsonException)
+                {
+                    // Keep backward compatibility with legacy non-JSON PolicyIssuanceType values.
+                }
+            }
+
             if (skipToken?.Type == JTokenType.Boolean)
             {
                 skipTs = skipToken.Value<bool>();
@@ -1145,6 +1158,24 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     //        }
     //    }
     //}
+    private static bool IsSkipTsEnabled(string? policyIssuanceType)
+    {
+        if (string.IsNullOrWhiteSpace(policyIssuanceType)) return false;
+
+        try
+        {
+            JObject metadata = JObject.Parse(policyIssuanceType);
+            JToken? skipToken = metadata.GetValue("SkipTS", StringComparison.OrdinalIgnoreCase);
+            return skipToken?.Type == JTokenType.Boolean
+                ? skipToken.Value<bool>()
+                : bool.TryParse(skipToken?.ToString(), out bool parsed) && parsed;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
     [NonAction]
     public async Task NotificationHandle(
      WorkflowDefinition workflowDefinition,
@@ -1171,13 +1202,16 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
 
             policyIssuance.WorkflowStatus = enumData?.Value ?? "";
-            string destinationDepartment = stepsWorkflow.ToNodeId?.Trim() ?? "";
-            if (string.IsNullOrWhiteSpace(destinationDepartment))
+            bool skipTsEnabled = IsSkipTsEnabled(Convert.ToString(policyIssuance.PolicyIssuanceType));
+            string initialStageDept = skipTsEnabled
+                ? "FO"
+                : stepsWorkflow.ToNodeId?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(initialStageDept))
             {
                 throw new InvalidOperationException(
-                    $"Policy issuance workflow '{workflowDefinition.WorkflowCode}' has no destination department on its start step.");
+                    $"Policy issuance workflow '{workflowDefinition.WorkflowCode}' has no initial department.");
             }
-            policyIssuance.StageDept = destinationDepartment;
+            policyIssuance.StageDept = initialStageDept;
 
 
             policyIssuance = await _BaseRepository.InsertData(JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(policyIssuance)));
@@ -1202,7 +1236,14 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             //    stepsWorkflow.ToNodeId = resolvedDeptCode;
             //}
 
-            instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
+            instanceWorkflow.CurrentStep = skipTsEnabled
+                ? stepsWorkflow.FNodeId
+                : stepsWorkflow.TNodeId;
+            if (string.IsNullOrWhiteSpace(instanceWorkflow.CurrentStep))
+            {
+                throw new InvalidOperationException(
+                    $"Policy issuance workflow '{workflowDefinition.WorkflowCode}' has no initial workflow node.");
+            }
             instanceWorkflow.CurrentStepId = new Guid();
             instanceWorkflow.IsCancelled = false;
             instanceWorkflow.IsCompleted = false;
@@ -1313,7 +1354,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                 picS.PICMain,
                 leaderPics,
                 hodPics,
-                stepsWorkflow.ToNodeId,
+                initialStageDept,
                 foRoutingCode);
             if (notificationRecipients.Length == 0)
             {

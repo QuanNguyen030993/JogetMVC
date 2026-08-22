@@ -1039,6 +1039,24 @@ public class QuotationController : BaseControllerApi<Quotation>
         });
     }
 
+    private static bool IsSkipTsEnabled(string? quotationType)
+    {
+        if (string.IsNullOrWhiteSpace(quotationType)) return false;
+
+        try
+        {
+            JObject metadata = JObject.Parse(quotationType);
+            JToken? skipToken = metadata.GetValue("SkipTS", StringComparison.OrdinalIgnoreCase);
+            return skipToken?.Type == JTokenType.Boolean
+                ? skipToken.Value<bool>()
+                : bool.TryParse(skipToken?.ToString(), out bool parsed) && parsed;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
     [NonAction]
     public async Task NotificationHandle(
          WorkflowDefinition workflowDefinition,
@@ -1065,6 +1083,16 @@ public class QuotationController : BaseControllerApi<Quotation>
             EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
 
             quotation.WorkflowStatus = enumData?.Value ?? "";
+            bool skipTsEnabled = IsSkipTsEnabled(Convert.ToString(quotation.QuotationType));
+            string initialStageDept = skipTsEnabled
+                ? "FO"
+                : stepsWorkflow.ToNodeId?.Trim() ?? "";
+            if (string.IsNullOrWhiteSpace(initialStageDept))
+            {
+                throw new InvalidOperationException(
+                    $"Quotation workflow '{workflowDefinition.WorkflowCode}' has no initial department.");
+            }
+            quotation.StageDept = initialStageDept;
             quotation = await _BaseRepository.InsertData(JsonConvert.DeserializeObject<Quotation>(JsonConvert.SerializeObject(quotation)));
 
 
@@ -1094,7 +1122,14 @@ public class QuotationController : BaseControllerApi<Quotation>
             //    stepsWorkflow.ToNodeId = resolvedDeptCode;
             //}
 
-            instanceWorkflow.CurrentStep = stepsWorkflow.TNodeId;
+            instanceWorkflow.CurrentStep = skipTsEnabled
+                ? stepsWorkflow.FNodeId
+                : stepsWorkflow.TNodeId;
+            if (string.IsNullOrWhiteSpace(instanceWorkflow.CurrentStep))
+            {
+                throw new InvalidOperationException(
+                    $"Quotation workflow '{workflowDefinition.WorkflowCode}' has no initial workflow node.");
+            }
             instanceWorkflow.CurrentStepId = new Guid();
             instanceWorkflow.IsCancelled = false;
             instanceWorkflow.IsCompleted = false;
@@ -1198,7 +1233,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 picS.PICMain,
                 leaderPics,
                 hodPics,
-                stepsWorkflow.ToNodeId,
+                initialStageDept,
                 foRoutingCode);
             if (notificationRecipients.Length == 0)
             {

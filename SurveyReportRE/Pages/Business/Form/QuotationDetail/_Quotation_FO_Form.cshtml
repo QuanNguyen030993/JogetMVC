@@ -138,10 +138,11 @@
                 { dataField: "policyNo",editorType: "dxTextBox",visible:true},
                     { dataField: "requestRefNo", visible: false, label: { template: labelTpl("RequestRefNo - Refversion của request") } },
                     { dataField: "quotationCode", label: { template: labelTpl("QuotationCode - Mã quotation khi request vào xử lý (Joget)") } },
-                     { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.requestType),displayExpr: "value",
+                    { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.requestType),displayExpr: "value",
                       valueExpr: "id"
                  },
                     { dataField: "quotationType",visible: false, label:  { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
+                    makeSkipTSSwitchFormItem("quotationType"),
                     { dataField: "businessChannelName", label: { template: labelTpl("BusinessChannelName - Kênh kinh doanh (name)") } },
                     { dataField: "businessChannelDisplayName",visible: false, label: { template: labelTpl("BusinessChannelDisplayName - Tên hiển thị kênh (name of biz)") } },
                      { dataField:"reinsuranceId", editorType:"dxSelectBox", label:{text:"Reinsurance"},
