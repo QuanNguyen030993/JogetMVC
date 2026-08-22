@@ -35537,3 +35537,19 @@ body.skin-re .dx-popup-wrapper.dx-rtl > .dx-overlay-content > .dx-popup-title.dx
 .attachment-mini-hover-panel__actions .dx-button-content {
     padding: 4px 8px;
 }
+
+/* Workflow uiLock fallback for controls rendered after the initial dxForm pass. */
+.workflow-ui-lock-group[data-workflow-ui-locked="true"] .attachment-drop-zone,
+.workflow-ui-lock-group[data-workflow-ui-locked="true"] .dx-fileuploader-input-wrapper,
+.workflow-ui-lock-group[data-workflow-ui-locked="true"] .dx-texteditor,
+.workflow-ui-lock-group[data-workflow-ui-locked="true"] .dx-checkbox,
+.workflow-ui-lock-group[data-workflow-ui-locked="true"] .dx-radiogroup,
+.workflow-ui-lock-group[data-workflow-ui-locked="true"] .dx-switch,
+.workflow-ui-lock-group[data-workflow-ui-locked="true"] .dx-button {
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+}
+
+.workflow-ui-lock-group[data-workflow-ui-locked="true"] .attachment-drop-zone {
+    opacity: .6;
+}

@@ -6000,12 +6000,17 @@
                             const liveSectionPermission = $item
                                 .closest(".dept-section")
                                 .data("attachmentCanEdit");
+                            const workflowGroupLocked = $item
+                                .closest("[data-workflow-ui-locked='true']")
+                                .length > 0;
                             const deleteButton = $hoverPanel
                                 .find(".attachment-delete-action")
                                 .dxButton("instance");
                             deleteButton?.option(
                                 "visible",
-                                options?.uploaderAllow !== false && liveSectionPermission !== false
+                                options?.uploaderAllow !== false &&
+                                liveSectionPermission !== false &&
+                                !workflowGroupLocked
                             );
                         },
                         animation: {
@@ -10748,6 +10753,284 @@
             return formInstance?.option("formData") || {};
         }
 
+        function collectWorkflowUiLockRules(value, result, seen, depth) {
+            result = result || [];
+            seen = seen || new WeakSet();
+            depth = depth || 0;
+            if (value == null || depth > 7) return result;
+
+            if (typeof value === "string") {
+                const text = value.trim();
+                if (!text || (text[0] !== "{" && text[0] !== "[")) return result;
+                try {
+                    return collectWorkflowUiLockRules(JSON.parse(text), result, seen, depth + 1);
+                } catch (error) {
+                    return result;
+                }
+            }
+
+            if (typeof value !== "object") return result;
+            if (seen.has(value)) return result;
+            seen.add(value);
+
+            if (Array.isArray(value)) {
+                value.forEach(function (item) {
+                    collectWorkflowUiLockRules(item, result, seen, depth + 1);
+                });
+                return result;
+            }
+
+            if (String(value.type ?? value.Type ?? "").trim().toLowerCase() === "uilock") {
+                result.push(value);
+            }
+
+            Object.keys(value).forEach(function (key) {
+                collectWorkflowUiLockRules(value[key], result, seen, depth + 1);
+            });
+            return result;
+        }
+
+        function findWorkflowFormItem(items, targetName, parentPath) {
+            const normalizedTarget = String(targetName || "").trim().toLowerCase();
+            if (!normalizedTarget) return null;
+
+            for (const item of (Array.isArray(items) ? items : [])) {
+                if (!item) continue;
+                const itemKey = item.name || item.dataField || item.caption || "";
+                const itemPath = parentPath && itemKey
+                    ? `${parentPath}.${itemKey}`
+                    : (itemKey || parentPath || "");
+
+                if (String(item.name || "").trim().toLowerCase() === normalizedTarget) {
+                    return { item: item, path: itemPath || targetName };
+                }
+
+                const nested = findWorkflowFormItem(item.items, targetName, itemPath);
+                if (nested) return nested;
+            }
+            return null;
+        }
+
+        function restoreWorkflowUiLockedGroups() {
+            $(
+                `.workflow-ui-lock-group[data-workflow-ui-locked='true']` +
+                `[data-workflow-ui-lock-record='${id}']` +
+                `[data-workflow-ui-lock-module='${moduleCode}']`
+            ).each(function () {
+                const $group = $(this);
+                $group.find("[data-workflow-ui-lock-widget]").each(function () {
+                    const state = $(this).data("workflowUiLockOriginal");
+                    if (!state?.instance) return;
+                    try {
+                        if (state.disabled !== undefined) state.instance.option("disabled", state.disabled);
+                        if (state.readOnly !== undefined) state.instance.option("readOnly", state.readOnly);
+                        if (state.editing !== undefined) state.instance.option("editing", state.editing);
+                    } catch (error) {
+                        console.warn("Unable to restore workflow UI lock widget.", error);
+                    }
+                    $(this)
+                        .removeAttr("data-workflow-ui-lock-widget")
+                        .removeData("workflowUiLockOriginal");
+                });
+
+                $group.find("input, textarea, select").filter(function () {
+                    return !$(this).closest(".dx-widget").length;
+                }).each(function () {
+                    const state = $(this).data("workflowUiLockNativeOriginal");
+                    if (!state) return;
+                    this.disabled = state.disabled;
+                    this.readOnly = state.readOnly;
+                    $(this).removeData("workflowUiLockNativeOriginal");
+                });
+
+                $group.find("[data-workflow-ui-lock-tmiv='true']").each(function () {
+                    const $uploader = $(this);
+                    const originalDisabled = $uploader.data("workflowUiLockTmivDisabled");
+                    try {
+                        $uploader.fileuploader("option", "disabled", !!originalDisabled);
+                    } catch (error) {}
+                    $uploader
+                        .removeAttr("data-workflow-ui-lock-tmiv")
+                        .removeData("workflowUiLockTmivDisabled");
+                });
+
+                $group
+                    .removeClass("workflow-ui-lock-group")
+                    .removeAttr(
+                        "data-workflow-ui-locked data-workflow-ui-lock-mode " +
+                        "data-workflow-ui-lock-record data-workflow-ui-lock-module aria-disabled"
+                    );
+            });
+        }
+
+        function lockWorkflowWidget($element, pluginName, mode) {
+            let instance;
+            try {
+                instance = $element[pluginName]("instance");
+            } catch (error) {
+                return;
+            }
+            if (!instance || $element.attr("data-workflow-ui-lock-widget")) return;
+
+            const readOnlyPlugins = new Set([
+                "dxTextBox", "dxTextArea", "dxSelectBox", "dxDateBox",
+                "dxNumberBox", "dxTagBox", "dxDropDownBox", "dxAutocomplete"
+            ]);
+            const isGrid = pluginName === "dxDataGrid" || pluginName === "dxTreeList";
+            const original = {
+                instance: instance,
+                disabled: instance.option("disabled")
+            };
+
+            try {
+                if (isGrid) {
+                    original.editing = $.extend(true, {}, instance.option("editing") || {});
+                    instance.option("editing", $.extend(true, {}, original.editing, {
+                        allowAdding: false,
+                        allowDeleting: false,
+                        allowUpdating: false
+                    }));
+                    if (String(mode || "").toLowerCase() !== "readonly") {
+                        instance.option("disabled", true);
+                    }
+                } else if (
+                    String(mode || "").toLowerCase() === "readonly" &&
+                    readOnlyPlugins.has(pluginName)
+                ) {
+                    original.readOnly = instance.option("readOnly");
+                    instance.option("readOnly", true);
+                } else {
+                    instance.option("disabled", true);
+                }
+
+                $element
+                    .attr("data-workflow-ui-lock-widget", pluginName)
+                    .data("workflowUiLockOriginal", original);
+            } catch (error) {
+                console.warn("Unable to apply workflow UI lock widget.", pluginName, error);
+            }
+        }
+
+        function lockWorkflowFormGroup(formInstance, target, rule) {
+            const targetName = target?.name ?? target?.Name;
+            const targetItemType = target?.itemType ?? target?.ItemType ?? "group";
+            if (!formInstance || !targetName) return false;
+            if (String(targetItemType).toLowerCase() !== "group") return false;
+
+            const match = findWorkflowFormItem(formInstance.option("items") || [], targetName, "");
+            if (!match) return false;
+
+            const markerClass = `workflow-ui-lock-target-${safeKey(targetName)}`;
+            const currentClass = String(match.item.cssClass || "");
+            if (!currentClass.split(/\s+/).includes(markerClass)) {
+                try {
+                    formInstance.itemOption(
+                        match.path,
+                        "cssClass",
+                        `${currentClass} ${markerClass}`.trim()
+                    );
+                } catch (error) {
+                    console.warn("Unable to mark workflow UI lock group.", target, error);
+                }
+            }
+
+            const $form = formInstance.$element ? formInstance.$element() : $();
+            const $group = $form.find(`.${markerClass}`).first();
+            if (!$group.length) return false;
+
+            const mode = String(rule.mode ?? rule.Mode ?? "ReadOnly");
+            $group
+                .addClass("workflow-ui-lock-group")
+                .attr({
+                    "data-workflow-ui-locked": "true",
+                    "data-workflow-ui-lock-mode": mode,
+                    "data-workflow-ui-lock-record": id,
+                    "data-workflow-ui-lock-module": moduleCode,
+                    "aria-disabled": "true"
+                });
+
+            const widgetPlugins = [
+                [".dx-textbox", "dxTextBox"],
+                [".dx-textarea", "dxTextArea"],
+                [".dx-selectbox", "dxSelectBox"],
+                [".dx-datebox", "dxDateBox"],
+                [".dx-numberbox", "dxNumberBox"],
+                [".dx-tagbox", "dxTagBox"],
+                [".dx-dropdownbox", "dxDropDownBox"],
+                [".dx-autocomplete", "dxAutocomplete"],
+                [".dx-checkbox", "dxCheckBox"],
+                [".dx-radiogroup", "dxRadioGroup"],
+                [".dx-switch", "dxSwitch"],
+                [".dx-fileuploader", "dxFileUploader"],
+                [".dx-datagrid", "dxDataGrid"],
+                [".dx-treelist", "dxTreeList"],
+                [".dx-button", "dxButton"]
+            ];
+            widgetPlugins.forEach(function (entry) {
+                $group.find(entry[0]).each(function () {
+                    lockWorkflowWidget($(this), entry[1], mode);
+                });
+            });
+
+            $group.find(".tmivcom-dx-fileuploader").each(function () {
+                const $uploader = $(this);
+                if (!$uploader.attr("data-workflow-ui-lock-tmiv")) {
+                    let originalDisabled = false;
+                    try {
+                        originalDisabled = !!$uploader.fileuploader("option", "disabled");
+                    } catch (error) {}
+                    $uploader
+                        .attr("data-workflow-ui-lock-tmiv", "true")
+                        .data("workflowUiLockTmivDisabled", originalDisabled);
+                }
+                try {
+                    $uploader.fileuploader("option", "disabled", true);
+                } catch (error) {}
+            });
+
+            $group.find("input, textarea, select").filter(function () {
+                return !$(this).closest(".dx-widget").length;
+            }).each(function () {
+                const $native = $(this);
+                if (!$native.data("workflowUiLockNativeOriginal")) {
+                    $native.data("workflowUiLockNativeOriginal", {
+                        disabled: this.disabled,
+                        readOnly: this.readOnly
+                    });
+                }
+                if (
+                    String(mode).toLowerCase() === "readonly" &&
+                    (this.tagName === "TEXTAREA" || String(this.type || "").toLowerCase() === "text")
+                ) {
+                    this.readOnly = true;
+                } else {
+                    this.disabled = true;
+                }
+            });
+            return true;
+        }
+
+        function applyWorkflowUiLockRules(workflowPayload) {
+            restoreWorkflowUiLockedGroups();
+            const rules = collectWorkflowUiLockRules(workflowPayload);
+            rules.forEach(function (rule) {
+                const condition = String(rule.condition ?? rule.Condition ?? "").trim().toLowerCase();
+                if (condition === "false") return;
+
+                const department = normalizeDept(rule.department ?? rule.Department ?? stageDept);
+                if (!department) return;
+                const formId = moduleConfig.getFormId(department, id);
+                const formInstance = formId ? $(`#${formId}`).dxForm("instance") : null;
+                if (!formInstance) return;
+
+                const targets = rule.targets ?? rule.Targets;
+                (Array.isArray(targets) ? targets : []).forEach(function (target) {
+                    lockWorkflowFormGroup(formInstance, target, rule);
+                });
+            });
+            return rules;
+        }
+
         function getRemark(dept) {
             const value =
                 remarkBoxes?.[dept]
@@ -11251,6 +11534,7 @@
         }
 
         if (!guid) {
+            restoreWorkflowUiLockedGroups();
             state.selectedGuid = null;
             hideLoading(loadingClass, loadingHost);
 
@@ -11298,6 +11582,15 @@
                             Array.isArray(data)
                                 ? data
                                 : [];
+
+                        const workflowUiLockPayload = { instance: instance, routes: data };
+                        applyWorkflowUiLockRules(workflowUiLockPayload);
+                        // Some dxForm groups are injected shortly after the workflow request.
+                        [100, 350].forEach(function (delay) {
+                            setTimeout(function () {
+                                applyWorkflowUiLockRules(workflowUiLockPayload);
+                            }, delay);
+                        });
 
                         state.nextStep =
                             state.nextStep || {};

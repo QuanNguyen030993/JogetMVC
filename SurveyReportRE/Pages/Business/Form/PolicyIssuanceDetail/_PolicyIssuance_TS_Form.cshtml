@@ -127,7 +127,14 @@
     that3.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that3.moduleName, @(policyIssuanceId)), Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
 
 
-    var  mainFields = [{itemType: "group",caption: "Fill List",colCount:1,items: [
+    var  mainFields = [{
+        itemType: "group",
+        name: "fillListGroup",
+        cssClass: "workflow-ui-lock-target-fillListGroup",
+        elementAttr: { "data-form-group-name": "fillListGroup" },
+        caption: "Fill List",
+        colCount: 1,
+        items: [
      {
            itemType: "simple",
            template: function () {

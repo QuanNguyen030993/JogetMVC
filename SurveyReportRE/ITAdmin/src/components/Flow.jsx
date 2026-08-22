@@ -84,6 +84,54 @@ const transitionIconOptions = [
     { icon: 'chevrondown', value: 'chevrondown', label: 'chevrondown' },
 ];
 
+const getUiConditionGroupNames = (rule = {}) => {
+    if (Array.isArray(rule.groupNames)) {
+        return rule.groupNames.map((name) => String(name).trim()).filter(Boolean);
+    }
+
+    if (Array.isArray(rule.targets)) {
+        return rule.targets
+            .filter((target) => !target?.itemType || target.itemType === 'group')
+            .map((target) => String(target?.name || '').trim())
+            .filter(Boolean);
+    }
+
+    const legacyName = String(rule.groupName || rule.sectionId || '').trim();
+    return legacyName ? [legacyName] : [];
+};
+
+const normalizeScreenConditionRule = (rule = {}, index = 0) => {
+    const groupNames = getUiConditionGroupNames(rule);
+    return {
+        ...rule,
+        id: rule.id || `ui-lock-${Date.now()}-${index}`,
+        type: rule.type || 'uiLock',
+        trigger: rule.trigger || 'sameDepartmentReturn',
+        department: rule.department || '',
+        targetItemType: 'group',
+        groupNames,
+        targets: groupNames.map((name) => ({ itemType: 'group', name })),
+        mode: rule.mode || 'ReadOnly',
+    };
+};
+
+const parseUiLockRules = (conditionJson, storedRules = []) => {
+    if (Array.isArray(storedRules) && storedRules.length) {
+        return storedRules.map(normalizeScreenConditionRule);
+    }
+
+    try {
+        const parsed = typeof conditionJson === 'string' ? JSON.parse(conditionJson) : conditionJson;
+        if (parsed?.type === 'uiLock') return [normalizeScreenConditionRule(parsed)];
+        if (parsed?.type === 'uiLockGroup') {
+            return (parsed.children || []).map(normalizeScreenConditionRule);
+        }
+    } catch (e) {
+        // Keep malformed/manual JSON available in the raw editor.
+    }
+    return [];
+};
+
 const transitionButtonClassOptions = [
     { value: '', label: 'Default' },
     { value: 'dx-button-default', label: 'Default' },
@@ -208,7 +256,7 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
                 levelNo: node.levelNo || '',
                 allowLoop: !!node.allowLoop,
                 loopGroup: node.loopGroup || '',
-                screenConditions: parsedScreenConditions,
+                screenConditions: parsedScreenConditions.map(normalizeScreenConditionRule),
                 custom: node.custom || '',
             },
             style: createNodeStyle(node),
@@ -287,6 +335,13 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                 ? transition.conditionJson 
                 : JSON.stringify(transition.conditionJson, null, 2);
         }
+        const uiLockRules = parseUiLockRules(
+            transition.conditionJson,
+            transition.uiLockRules || transition.conditionRulesState?.uiLockRules
+        );
+        const conditionBuilderType = transition.conditionBuilderType
+            || transition.conditionRulesState?.builderType
+            || (uiLockRules.length ? 'uiLock' : 'operator');
         return {
             id: `edge-${transition.fromNodeId || transition.from || 'from'}-${transition.toNodeId || transition.to || 'to'}-${index}`,
             source: String(transition.fromNodeId || transition.from || ''),
@@ -311,6 +366,8 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                 transitionType: transition.transitionType || 'Normal',
                 conditionJson: conditionJsonStr,
                 conditionRulesState: transition.conditionRulesState || parseJsonToRulesState(transition.conditionJson),
+                conditionBuilderType,
+                uiLockRules,
                 isExitTransition: Boolean(transition.isExitTransition),
                 isReturn: isReturn,
                 statusId: transition.statusId || '',
@@ -585,6 +642,8 @@ function Flow({ id: propId }) {
                     transitionType: 'Normal',
                     conditionJson: '{}',
                     conditionRulesState: { rootOperator: 'AND', rules: [] },
+                    conditionBuilderType: 'operator',
+                    uiLockRules: [],
                     isExitTransition: false,
                     isReturn: false,
                     statusId: '',
@@ -744,7 +803,13 @@ function Flow({ id: propId }) {
                     jumpStepNo: parseInt(edge.data?.jumpStepNo) || null,
                     transitionType: edge.data?.transitionType || 'Normal',
                     conditionJson: parsedCondition,
-                    conditionRulesState: edge.data?.conditionRulesState || null,
+                    conditionBuilderType: edge.data?.conditionBuilderType || 'operator',
+                    uiLockRules: edge.data?.uiLockRules || [],
+                    conditionRulesState: {
+                        ...(edge.data?.conditionRulesState || { rootOperator: 'AND', rules: [] }),
+                        builderType: edge.data?.conditionBuilderType || 'operator',
+                        uiLockRules: edge.data?.uiLockRules || []
+                    },
                     isExitTransition: edge.data?.isExitTransition === true,
                     isReturn: edge.data?.isReturn === true,
                     statusId: edge.data?.statusId || '',
@@ -867,9 +932,9 @@ function Flow({ id: propId }) {
                         condition: (() => {
                             const conditionObj = {};
                             (node.data?.screenConditions || []).forEach(rule => {
-                                if (rule.sectionId) {
-                                    conditionObj[rule.sectionId] = rule.mode || 'Hide';
-                                }
+                                getUiConditionGroupNames(rule).forEach((groupName) => {
+                                    conditionObj[groupName] = rule.mode || 'ReadOnly';
+                                });
                             });
                             return conditionObj;
                         })(),
@@ -1440,12 +1505,19 @@ const updateSelectedEdge = useCallback(
     const [condCustomHandler, setCondCustomHandler] = useState('');
     const [condCustomArgs, setCondCustomArgs] = useState('{\n  "folder": "FO"\n}');
     const [condRootOperator, setCondRootOperator] = useState('AND');
+    const [uiLockTrigger, setUiLockTrigger] = useState('sameDepartmentReturn');
+    const [uiLockDepartment, setUiLockDepartment] = useState('');
+    const [uiLockGroupNames, setUiLockGroupNames] = useState('');
+    const [uiLockMode, setUiLockMode] = useState('ReadOnly');
 
     useEffect(() => {
         if (selectedEdge) {
             setCondRootOperator(selectedEdge.data?.conditionRulesState?.rootOperator || 'AND');
+            const sourceDepartment = nodes.find((node) => node.id === selectedEdge.source)?.data?.departmentName || '';
+            const targetDepartment = nodes.find((node) => node.id === selectedEdge.target)?.data?.departmentName || '';
+            setUiLockDepartment(targetDepartment || sourceDepartment);
         }
-    }, [selectedEdge]);
+    }, [selectedEdge, nodes]);
 
     const parseConditionValueByType = useCallback((dataType, value) => {
         if (dataType === "number") {
@@ -1503,6 +1575,84 @@ const updateSelectedEdge = useCallback(
         }, null, 2);
     }, [mapBuilderRuleToJson]);
 
+    const buildUiLockConditionJson = useCallback((rules = []) => {
+        if (!rules.length) return '{}';
+        const toJsonRule = (rule) => ({
+            type: 'uiLock',
+            trigger: rule.trigger || 'sameDepartmentReturn',
+            department: rule.department || '',
+            targets: getUiConditionGroupNames(rule).map((name) => ({ itemType: 'group', name })),
+            mode: rule.mode || 'ReadOnly',
+            condition: rule.condition || ''
+        });
+        if (rules.length === 1) return JSON.stringify(toJsonRule(rules[0]), null, 2);
+        return JSON.stringify({ type: 'uiLockGroup', children: rules.map(toJsonRule) }, null, 2);
+    }, []);
+
+    const changeConditionBuilderType = useCallback((builderType) => {
+        if (!selectedEdge) return;
+        const conditionRulesState = selectedEdge.data?.conditionRulesState || { rootOperator: 'AND', rules: [] };
+        const uiLockRules = selectedEdge.data?.uiLockRules || [];
+        updateSelectedEdge({
+            conditionBuilderType: builderType,
+            conditionRulesState: { ...conditionRulesState, builderType, uiLockRules },
+            conditionJson: builderType === 'uiLock'
+                ? buildUiLockConditionJson(uiLockRules)
+                : buildConditionJson(conditionRulesState)
+        });
+    }, [selectedEdge, buildConditionJson, buildUiLockConditionJson, updateSelectedEdge]);
+
+    const addUiLockRule = useCallback(() => {
+        if (!selectedEdge) return;
+        const groupNames = uiLockGroupNames
+            .split(/[\n,]/)
+            .map((name) => name.trim())
+            .filter(Boolean);
+        if (!groupNames.length) {
+            notify('Nhập ít nhất một dxForm group name.', 'warning');
+            return;
+        }
+        const newRule = normalizeScreenConditionRule({
+            id: `ui-lock-${Date.now()}`,
+            type: 'uiLock',
+            trigger: uiLockTrigger,
+            department: uiLockDepartment,
+            groupNames,
+            targets: groupNames.map((name) => ({ itemType: 'group', name })),
+            mode: uiLockMode
+        });
+        const nextRules = [...(selectedEdge.data?.uiLockRules || []), newRule];
+        const conditionRulesState = selectedEdge.data?.conditionRulesState || { rootOperator: 'AND', rules: [] };
+        updateSelectedEdge({
+            conditionBuilderType: 'uiLock',
+            uiLockRules: nextRules,
+            conditionRulesState: { ...conditionRulesState, builderType: 'uiLock', uiLockRules: nextRules },
+            conditionJson: buildUiLockConditionJson(nextRules)
+        });
+        setUiLockGroupNames('');
+    }, [selectedEdge, uiLockGroupNames, uiLockTrigger, uiLockDepartment, uiLockMode, buildUiLockConditionJson, updateSelectedEdge]);
+
+    const removeUiLockRule = useCallback((ruleId) => {
+        if (!selectedEdge) return;
+        const nextRules = (selectedEdge.data?.uiLockRules || []).filter((rule) => rule.id !== ruleId);
+        const conditionRulesState = selectedEdge.data?.conditionRulesState || { rootOperator: 'AND', rules: [] };
+        updateSelectedEdge({
+            uiLockRules: nextRules,
+            conditionRulesState: { ...conditionRulesState, builderType: 'uiLock', uiLockRules: nextRules },
+            conditionJson: buildUiLockConditionJson(nextRules)
+        });
+    }, [selectedEdge, buildUiLockConditionJson, updateSelectedEdge]);
+
+    const clearUiLockRules = useCallback(() => {
+        if (!selectedEdge) return;
+        const conditionRulesState = selectedEdge.data?.conditionRulesState || { rootOperator: 'AND', rules: [] };
+        updateSelectedEdge({
+            uiLockRules: [],
+            conditionRulesState: { ...conditionRulesState, builderType: 'uiLock', uiLockRules: [] },
+            conditionJson: '{}'
+        });
+    }, [selectedEdge, updateSelectedEdge]);
+
     const addConditionRule = useCallback(() => {
         if (!selectedEdge) return;
         const newRule = {
@@ -1520,23 +1670,24 @@ const updateSelectedEdge = useCallback(
         const nextRules = [...(currentState.rules || []), newRule];
         const nextState = {
             ...currentState,
+            builderType: 'operator',
             rootOperator: condRootOperator,
             rules: nextRules
         };
 
         const nextJson = buildConditionJson(nextState);
-        updateSelectedEdge('conditionRulesState', nextState);
-        updateSelectedEdge('conditionJson', nextJson);
+        updateSelectedEdge({ conditionBuilderType: 'operator', conditionRulesState: nextState, conditionJson: nextJson });
     }, [selectedEdge, condSource, condField, condDataType, condOperator, condValue, condCustomHandler, condCustomArgs, condRootOperator, buildConditionJson, updateSelectedEdge]);
 
     const clearConditionRules = useCallback(() => {
         if (!selectedEdge) return;
         const nextState = {
+            ...(selectedEdge.data?.conditionRulesState || {}),
+            builderType: 'operator',
             rootOperator: 'AND',
             rules: []
         };
-        updateSelectedEdge('conditionRulesState', nextState);
-        updateSelectedEdge('conditionJson', '{}');
+        updateSelectedEdge({ conditionBuilderType: 'operator', conditionRulesState: nextState, conditionJson: '{}' });
     }, [selectedEdge, updateSelectedEdge]);
 
     const changeRootOperator = useCallback((op) => {
@@ -1545,11 +1696,11 @@ const updateSelectedEdge = useCallback(
         const currentState = selectedEdge.data?.conditionRulesState || { rootOperator: op, rules: [] };
         const nextState = {
             ...currentState,
+            builderType: 'operator',
             rootOperator: op
         };
         const nextJson = buildConditionJson(nextState);
-        updateSelectedEdge('conditionRulesState', nextState);
-        updateSelectedEdge('conditionJson', nextJson);
+        updateSelectedEdge({ conditionBuilderType: 'operator', conditionRulesState: nextState, conditionJson: nextJson });
     }, [selectedEdge, buildConditionJson, updateSelectedEdge]);
 
     const removeConditionRule = useCallback((ruleId) => {
@@ -1558,11 +1709,11 @@ const updateSelectedEdge = useCallback(
         const nextRules = (currentState.rules || []).filter(r => r.id !== ruleId);
         const nextState = {
             ...currentState,
+            builderType: 'operator',
             rules: nextRules
         };
         const nextJson = buildConditionJson(nextState);
-        updateSelectedEdge('conditionRulesState', nextState);
-        updateSelectedEdge('conditionJson', nextJson);
+        updateSelectedEdge({ conditionBuilderType: 'operator', conditionRulesState: nextState, conditionJson: nextJson });
     }, [selectedEdge, buildConditionJson, updateSelectedEdge]);
 
     const nodeDetails = useMemo(() => {
@@ -1753,18 +1904,30 @@ const updateSelectedEdge = useCallback(
                     />
                 </label>
 
-                {/* Screen Section Conditions Section */}
+                {/* UI lock conditions for named dxForm groups */}
                 <div style={{ marginTop: '16px', borderTop: '1px solid #cbd5e1', paddingTop: '16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <span style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1e293b' }}>Điều kiện Section màn hình</span>
+                        <div>
+                            <span style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', color: '#1e293b' }}>
+                                Loại 2 · UI Condition Lock
+                            </span>
+                            <span style={{ display: 'block', marginTop: '3px', fontSize: '0.72rem', color: '#64748b' }}>
+                                Khóa các itemType: &quot;group&quot; theo ngữ cảnh workflow.
+                            </span>
+                        </div>
                         <button
                             type="button"
                             onClick={() => {
                                 const currentRules = selectedNode.data?.screenConditions || [];
                                 const newRule = {
-                                    id: `sec-${Date.now()}`,
-                                    sectionId: '',
-                                    mode: 'Hide',
+                                    id: `ui-lock-${Date.now()}`,
+                                    type: 'uiLock',
+                                    trigger: 'sameDepartmentReturn',
+                                    department: selectedNode.data?.departmentName || '',
+                                    targetItemType: 'group',
+                                    groupNames: [],
+                                    targets: [],
+                                    mode: 'ReadOnly',
                                     condition: ''
                                 };
                                 updateSelectedNode('screenConditions', [...currentRules, newRule]);
@@ -1779,7 +1942,7 @@ const updateSelectedEdge = useCallback(
                                 cursor: 'pointer'
                             }}
                         >
-                            Thêm điều kiện
+                            Thêm UI lock
                         </button>
                     </div>
 
@@ -1819,24 +1982,70 @@ const updateSelectedEdge = useCallback(
 
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px', marginRight: '16px' }}>
                                     <label style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.75rem' }}>
-                                        <span>Mã Section</span>
-                                        <input
-                                            type="text"
-                                            value={rule.sectionId || ''}
+                                        <span>Kích hoạt khi</span>
+                                        <select
+                                            value={rule.trigger || 'sameDepartmentReturn'}
                                             onChange={(e) => {
                                                 const currentRules = [...(selectedNode.data?.screenConditions || [])];
-                                                currentRules[idx] = { ...currentRules[idx], sectionId: e.target.value };
+                                                currentRules[idx] = { ...currentRules[idx], type: 'uiLock', trigger: e.target.value };
                                                 updateSelectedNode('screenConditions', currentRules);
                                             }}
-                                            placeholder="e.g. secContract"
                                             style={{ padding: '4px 6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: 'white' }}
-                                        />
+                                        >
+                                            <option value="sameDepartmentReturn">Quay lại cùng department</option>
+                                            <option value="enterDepartment">Đi vào department</option>
+                                            <option value="always">Luôn áp dụng tại node</option>
+                                        </select>
                                     </label>
 
                                     <label style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.75rem' }}>
-                                        <span>Trạng thái (Mode)</span>
+                                        <span>Department</span>
+                                        <input
+                                            type="text"
+                                            value={rule.department ?? selectedNode.data?.departmentName ?? ''}
+                                            onChange={(e) => {
+                                                const currentRules = [...(selectedNode.data?.screenConditions || [])];
+                                                currentRules[idx] = { ...currentRules[idx], department: e.target.value };
+                                                updateSelectedNode('screenConditions', currentRules);
+                                            }}
+                                            placeholder="e.g. FO"
+                                            style={{ padding: '4px 6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: 'white' }}
+                                        />
+                                    </label>
+                                </div>
+
+                                <label style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.75rem', marginBottom: '8px' }}>
+                                    <span>Tên dxForm group (mỗi dòng hoặc phân cách bằng dấu phẩy)</span>
+                                    <textarea
+                                        rows={3}
+                                        value={getUiConditionGroupNames(rule).join('\n')}
+                                        onChange={(e) => {
+                                            const groupNames = e.target.value
+                                                .split(/[\n,]/)
+                                                .map((name) => name.trim())
+                                                .filter(Boolean);
+                                            const currentRules = [...(selectedNode.data?.screenConditions || [])];
+                                            currentRules[idx] = {
+                                                ...currentRules[idx],
+                                                type: 'uiLock',
+                                                targetItemType: 'group',
+                                                groupNames,
+                                                targets: groupNames.map((name) => ({ itemType: 'group', name })),
+                                                // Keep the first target readable by the legacy section consumer.
+                                                sectionId: groupNames[0] || ''
+                                            };
+                                            updateSelectedNode('screenConditions', currentRules);
+                                        }}
+                                        placeholder={'e.g.\nrequestInfoGroup\nattachmentGroup'}
+                                        style={{ padding: '6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: 'white', resize: 'vertical' }}
+                                    />
+                                </label>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                    <label style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.75rem' }}>
+                                        <span>Lock mode</span>
                                         <select
-                                            value={rule.mode || 'Hide'}
+                                            value={rule.mode || 'ReadOnly'}
                                             onChange={(e) => {
                                                 const currentRules = [...(selectedNode.data?.screenConditions || [])];
                                                 currentRules[idx] = { ...currentRules[idx], mode: e.target.value };
@@ -1844,33 +2053,34 @@ const updateSelectedEdge = useCallback(
                                             }}
                                             style={{ padding: '4px 6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: 'white' }}
                                         >
-                                            <option value="Show">Show (Hiển thị)</option>
-                                            <option value="Hide">Hide (Ẩn)</option>
                                             <option value="ReadOnly">ReadOnly (Chỉ đọc)</option>
+                                            <option value="Disabled">Disabled (Vô hiệu hóa)</option>
+                                            <option value="Hide">Hide (Ẩn)</option>
+                                            <option value="Show">Show (Hiển thị)</option>
                                         </select>
                                     </label>
-                                </div>
 
-                                <label style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.75rem' }}>
-                                    <span>Điều kiện kích hoạt (Rule)</span>
-                                    <input
-                                        type="text"
-                                        value={rule.condition || ''}
-                                        onChange={(e) => {
-                                            const currentRules = [...(selectedNode.data?.screenConditions || [])];
-                                            currentRules[idx] = { ...currentRules[idx], condition: e.target.value };
-                                            updateSelectedNode('screenConditions', currentRules);
-                                        }}
-                                        placeholder="e.g. totalPremium > 5000"
-                                        style={{ padding: '4px 6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: 'white' }}
-                                    />
-                                </label>
+                                    <label style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.75rem' }}>
+                                        <span>Điều kiện bổ sung (không bắt buộc)</span>
+                                        <input
+                                            type="text"
+                                            value={rule.condition || ''}
+                                            onChange={(e) => {
+                                                const currentRules = [...(selectedNode.data?.screenConditions || [])];
+                                                currentRules[idx] = { ...currentRules[idx], condition: e.target.value };
+                                                updateSelectedNode('screenConditions', currentRules);
+                                            }}
+                                            placeholder="e.g. isReturned = true"
+                                            style={{ padding: '4px 6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: 'white' }}
+                                        />
+                                    </label>
+                                </div>
                             </div>
                         ))}
 
                         {(selectedNode.data?.screenConditions || []).length === 0 && (
                             <div style={{ fontSize: '0.75rem', color: '#64748b', textAlign: 'center', padding: '10px', background: '#f1f5f9', borderRadius: '6px' }}>
-                                Chưa thiết lập điều kiện Section nào.
+                                Chưa có UI lock. Các group cần khai báo thuộc tính name trong cấu hình dxForm.
                             </div>
                         )}
                     </div>
@@ -2154,9 +2364,29 @@ const updateSelectedEdge = useCallback(
                     </select>
                 </label>
 
-                {(selectedEdge.data?.transitionType === 'Condition' || selectedEdge.data?.transitionType === 'Custom') && (
-                    <div style={{ marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
-                        <h4 style={{ fontSize: '0.9rem', marginBottom: '10px', color: '#1e293b', fontWeight: 600 }}>Mini Condition Builder</h4>
+                <div style={{ marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                        <h4 style={{ fontSize: '0.95rem', margin: '0 0 10px', color: '#0f172a', fontWeight: 700 }}>
+                            Mini Condition Builder
+                        </h4>
+                        <label>
+                            <span>Loại điều kiện</span>
+                            <select
+                                value={selectedEdge.data?.conditionBuilderType || 'operator'}
+                                onChange={(e) => changeConditionBuilderType(e.target.value)}
+                            >
+                                <option value="operator">Loại 1 · Điều kiện toán tử</option>
+                                <option value="uiLock">Loại 2 · UI Condition Lock</option>
+                            </select>
+                        </label>
+
+                        {(selectedEdge.data?.conditionBuilderType || 'operator') === 'operator' ? (
+                        <>
+                        <h4 style={{ fontSize: '0.9rem', marginBottom: '4px', color: '#1e293b', fontWeight: 600 }}>
+                            Loại 1 · Operator Condition Builder
+                        </h4>
+                        <p style={{ margin: '0 0 10px', fontSize: '0.72rem', color: '#64748b' }}>
+                            Tạo điều kiện dữ liệu cho transition bằng AND/OR và toán tử so sánh.
+                        </p>
                         
                         <label>
                             <span>Root Operator</span>
@@ -2173,6 +2403,7 @@ const updateSelectedEdge = useCallback(
                             <span>Rule Source</span>
                             <select value={condSource} onChange={(e) => setCondSource(e.target.value)}>
                                 <option value="payload">payload</option>
+                                <option value="form">form</option>
                                 <option value="custom">custom</option>
                                 <option value="user">user</option>
                                 <option value="department">department</option>
@@ -2276,8 +2507,96 @@ const updateSelectedEdge = useCallback(
                                 </ul>
                             </div>
                         )}
-                    </div>
-                )}
+                        </>
+                        ) : (
+                        <>
+                            <h4 style={{ fontSize: '0.9rem', marginBottom: '4px', color: '#1e293b', fontWeight: 600 }}>
+                                Loại 2 · UI Condition Lock
+                            </h4>
+                            <p style={{ margin: '0 0 10px', fontSize: '0.72rem', color: '#64748b' }}>
+                                Khóa các group của dxForm khi transition quay lại hoặc đi vào department.
+                            </p>
+
+                            <label>
+                                <span>Kích hoạt khi</span>
+                                <select value={uiLockTrigger} onChange={(e) => setUiLockTrigger(e.target.value)}>
+                                    <option value="sameDepartmentReturn">Quay lại cùng department</option>
+                                    <option value="enterDepartment">Đi vào department</option>
+                                    <option value="always">Luôn áp dụng</option>
+                                </select>
+                            </label>
+                            <label>
+                                <span>Department</span>
+                                <input
+                                    value={uiLockDepartment}
+                                    onChange={(e) => setUiLockDepartment(e.target.value)}
+                                    placeholder="e.g. FO"
+                                />
+                            </label>
+                            <label>
+                                <span>dxForm group names</span>
+                                <textarea
+                                    rows={3}
+                                    value={uiLockGroupNames}
+                                    onChange={(e) => setUiLockGroupNames(e.target.value)}
+                                    placeholder={'Mỗi dòng hoặc phân cách bằng dấu phẩy\nrequestInfoGroup\nattachmentGroup'}
+                                />
+                            </label>
+                            <label>
+                                <span>Lock mode</span>
+                                <select value={uiLockMode} onChange={(e) => setUiLockMode(e.target.value)}>
+                                    <option value="ReadOnly">ReadOnly (Chỉ đọc)</option>
+                                    <option value="Disabled">Disabled (Vô hiệu hóa)</option>
+                                    <option value="Hide">Hide (Ẩn)</option>
+                                    <option value="Show">Show (Hiển thị)</option>
+                                </select>
+                            </label>
+
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                                <button
+                                    type="button"
+                                    onClick={addUiLockRule}
+                                    style={{ flex: 1, padding: '6px 12px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
+                                >
+                                    Add UI Lock
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={clearUiLockRules}
+                                    style={{ padding: '6px 12px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
+                                >
+                                    Clear All
+                                </button>
+                            </div>
+
+                            {(selectedEdge.data?.uiLockRules || []).length > 0 && (
+                                <div style={{ marginTop: '14px', background: '#faf5ff', padding: '10px', borderRadius: '8px', border: '1px solid #ddd6fe' }}>
+                                    <span style={{ fontWeight: 600, fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>
+                                        UI Locks đã thêm:
+                                    </span>
+                                    <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.78rem', color: '#334155' }}>
+                                        {selectedEdge.data.uiLockRules.map((rule) => (
+                                            <li key={rule.id} style={{ marginBottom: '6px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                                    <span>
+                                                        {rule.department || '(department)'} · {rule.trigger} · {getUiConditionGroupNames(rule).join(', ')} → {rule.mode}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeUiLockRule(rule.id)}
+                                                        style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '11px', padding: '0 4px' }}
+                                                    >
+                                                        Xóa
+                                                    </button>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </>
+                        )}
+                </div>
                 <label style={{ marginTop: '16px' }}>
                     <span>Condition JSON</span>
                     <textarea
@@ -2325,6 +2644,14 @@ const updateSelectedEdge = useCallback(
         clearConditionRules,
         changeRootOperator,
         removeConditionRule,
+        changeConditionBuilderType,
+        uiLockTrigger,
+        uiLockDepartment,
+        uiLockGroupNames,
+        uiLockMode,
+        addUiLockRule,
+        clearUiLockRules,
+        removeUiLockRule,
         setEdges,
         nodes
     ]);
