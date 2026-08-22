@@ -526,7 +526,8 @@ Note:
                 statusText(workflowStatus),
                 stageName,
                 statusClass(workflowStatus),
-                window.PolicyIssuanceIdManager.detailStatus(q.id)
+                window.PolicyIssuanceIdManager.detailStatus(q.id),
+                resolveSkipTSFromRequestType(q, "policyIssuanceType") === true
             );
         }
             function loadSelectedWorkflow() {

@@ -458,7 +458,8 @@ Note:
                 statusText(workflowStatus),
                 stageName,
                 statusClass(workflowStatus),
-                window.QuotationIdManager.detailStatus(q.id)
+                window.QuotationIdManager.detailStatus(q.id),
+                resolveSkipTSFromRequestType(q, "quotationType") === true
             );
         }
 

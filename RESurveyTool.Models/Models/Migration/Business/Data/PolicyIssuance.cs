@@ -91,5 +91,5 @@ public class PolicyIssuance : BaseModel
     public string? ActionStatus { get; set; }
     public string? LineCode { get; set; } = "";
     public string? ProductCode { get; set; } = "";
-
+    public string? PolicyIssuanceType { get; set; } = "";
 }

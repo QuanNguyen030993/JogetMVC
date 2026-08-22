@@ -11,6 +11,7 @@ import {
     MarkerType,
     Handle,
     Position,
+    reconnectEdge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import appsettings from '../../../host.json';
@@ -30,11 +31,15 @@ const CustomEdge = ({
     data = {},
 }) => {
     const { setEdges, getZoom } = useReactFlow();
-    const controlX = Number.isFinite(data?.controlX) ? data.controlX : (sourceX + targetX) / 2;
-    const controlY = Number.isFinite(data?.controlY) ? data.controlY : (sourceY + targetY) / 2;
-
     const isSourceHorizontal = sourcePosition === Position.Left || sourcePosition === Position.Right;
     const isTargetHorizontal = targetPosition === Position.Left || targetPosition === Position.Right;
+    const routeOffset = Number(data?.routeOffset) || 0;
+    const controlX = Number.isFinite(data?.controlX)
+        ? data.controlX
+        : (sourceX + targetX) / 2 + (isSourceHorizontal ? routeOffset : 0);
+    const controlY = Number.isFinite(data?.controlY)
+        ? data.controlY
+        : (sourceY + targetY) / 2 + (!isSourceHorizontal ? routeOffset : 0);
 
     let edgePath = '';
     let labelX = controlX;
@@ -51,6 +56,8 @@ const CustomEdge = ({
         edgePath = `M ${sourceX},${sourceY} V ${controlY} H ${targetX} V ${targetY}`;
         labelX = (sourceX + targetX) / 2;
     }
+    labelX += Number(data?.labelOffsetX) || 0;
+    labelY += Number(data?.labelOffsetY) || 0;
 
     const onCorner1MouseDown = (event) => {
         event.stopPropagation();
@@ -64,25 +71,23 @@ const CustomEdge = ({
 
         const handleMouseMove = (moveEvent) => {
             if (isSourceHorizontal) {
-                // Horizontal first segment -> vertical resize (ns-resize) adjusting controlY
-                const dy = moveEvent.clientY - startMouseY;
-                const nextControlY = startControlY + dy / zoom;
-                setEdges((currentEdges) =>
-                    currentEdges.map((edge) => {
-                        if (edge.id === id) {
-                            return { ...edge, data: { ...edge.data, controlY: nextControlY } };
-                        }
-                        return edge;
-                    })
-                );
-            } else {
-                // Vertical first segment -> horizontal resize (ew-resize) adjusting controlX
                 const dx = moveEvent.clientX - startMouseX;
                 const nextControlX = startControlX + dx / zoom;
                 setEdges((currentEdges) =>
                     currentEdges.map((edge) => {
                         if (edge.id === id) {
                             return { ...edge, data: { ...edge.data, controlX: nextControlX } };
+                        }
+                        return edge;
+                    })
+                );
+            } else {
+                const dy = moveEvent.clientY - startMouseY;
+                const nextControlY = startControlY + dy / zoom;
+                setEdges((currentEdges) =>
+                    currentEdges.map((edge) => {
+                        if (edge.id === id) {
+                            return { ...edge, data: { ...edge.data, controlY: nextControlY } };
                         }
                         return edge;
                     })
@@ -154,25 +159,23 @@ const CustomEdge = ({
 
         const handleMouseMove = (moveEvent) => {
             if (isTargetHorizontal) {
-                // Horizontal last segment -> vertical resize (ns-resize) adjusting controlY
-                const dy = moveEvent.clientY - startMouseY;
-                const nextControlY = startControlY + dy / zoom;
-                setEdges((currentEdges) =>
-                    currentEdges.map((edge) => {
-                        if (edge.id === id) {
-                            return { ...edge, data: { ...edge.data, controlY: nextControlY } };
-                        }
-                        return edge;
-                    })
-                );
-            } else {
-                // Vertical last segment -> horizontal resize (ew-resize) adjusting controlX
                 const dx = moveEvent.clientX - startMouseX;
                 const nextControlX = startControlX + dx / zoom;
                 setEdges((currentEdges) =>
                     currentEdges.map((edge) => {
                         if (edge.id === id) {
                             return { ...edge, data: { ...edge.data, controlX: nextControlX } };
+                        }
+                        return edge;
+                    })
+                );
+            } else {
+                const dy = moveEvent.clientY - startMouseY;
+                const nextControlY = startControlY + dy / zoom;
+                setEdges((currentEdges) =>
+                    currentEdges.map((edge) => {
+                        if (edge.id === id) {
+                            return { ...edge, data: { ...edge.data, controlY: nextControlY } };
                         }
                         return edge;
                     })
@@ -185,6 +188,32 @@ const CustomEdge = ({
             window.removeEventListener('mouseup', handleMouseUp);
         };
 
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+    };
+
+    const onLabelMouseDown = (event) => {
+        if (isReadOnly) return;
+        event.stopPropagation();
+        event.preventDefault();
+        const startMouseX = event.clientX;
+        const startMouseY = event.clientY;
+        const startOffsetX = Number(data?.labelOffsetX) || 0;
+        const startOffsetY = Number(data?.labelOffsetY) || 0;
+        const zoom = getZoom();
+        const handleMouseMove = (moveEvent) => {
+            const labelOffsetX = startOffsetX + (moveEvent.clientX - startMouseX) / zoom;
+            const labelOffsetY = startOffsetY + (moveEvent.clientY - startMouseY) / zoom;
+            setEdges((currentEdges) => currentEdges.map((edge) => (
+                edge.id === id
+                    ? { ...edge, data: { ...edge.data, labelOffsetX, labelOffsetY } }
+                    : edge
+            )));
+        };
+        const handleMouseUp = () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
         window.addEventListener('mousemove', handleMouseMove);
         window.addEventListener('mouseup', handleMouseUp);
     };
@@ -207,7 +236,7 @@ const CustomEdge = ({
                 markerEnd={markerEnd}
             />
             {/* Corner 1: Dynamic start axis adjust */}
-            {!isReadOnly && (
+            {!isReadOnly && selected && (
                 <circle
                     cx={isSourceHorizontal ? controlX : sourceX}
                     cy={isSourceHorizontal ? sourceY : controlY}
@@ -215,12 +244,12 @@ const CustomEdge = ({
                     fill={selected ? '#2563eb' : '#94a3b8'}
                     stroke="#fff"
                     strokeWidth={1.5}
-                    style={{ cursor: isSourceHorizontal ? 'ns-resize' : 'ew-resize', pointerEvents: 'all', opacity: selected ? 1.0 : 0.6 }}
+                    style={{ cursor: isSourceHorizontal ? 'ew-resize' : 'ns-resize', pointerEvents: 'all', opacity: 1 }}
                     onMouseDown={onCorner1MouseDown}
                 />
             )}
             {/* Corner 2: Both axes adjust (Midpoint handle) */}
-            {!isReadOnly && (
+            {!isReadOnly && selected && (
                 <circle
                     cx={controlX}
                     cy={controlY}
@@ -228,12 +257,12 @@ const CustomEdge = ({
                     fill={selected ? '#d97706' : '#d1d5db'}
                     stroke="#fff"
                     strokeWidth={2}
-                    style={{ cursor: 'move', pointerEvents: 'all', opacity: selected ? 1.0 : 0.6 }}
+                    style={{ cursor: 'move', pointerEvents: 'all', opacity: 1 }}
                     onMouseDown={onCorner2MouseDown}
                 />
             )}
             {/* Corner 3: Dynamic end axis adjust */}
-            {!isReadOnly && (
+            {!isReadOnly && selected && (
                 <circle
                     cx={isTargetHorizontal ? controlX : targetX}
                     cy={isTargetHorizontal ? targetY : controlY}
@@ -241,7 +270,7 @@ const CustomEdge = ({
                     fill={selected ? '#10b981' : '#64748b'}
                     stroke="#fff"
                     strokeWidth={1.5}
-                    style={{ cursor: isTargetHorizontal ? 'ns-resize' : 'ew-resize', pointerEvents: 'all', opacity: selected ? 1.0 : 0.6 }}
+                    style={{ cursor: isTargetHorizontal ? 'ew-resize' : 'ns-resize', pointerEvents: 'all', opacity: 1 }}
                     onMouseDown={onCorner3MouseDown}
                 />
             )}
@@ -262,9 +291,12 @@ const CustomEdge = ({
                             boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                             fontSize: '11px',
                             color: '#334155',
-                            whiteSpace: 'nowrap'
+                            whiteSpace: 'nowrap',
+                            cursor: isReadOnly ? 'default' : 'move'
                         }}
                         className="nodrag nopan transition-label-container"
+                        onMouseDown={onLabelMouseDown}
+                        title={isReadOnly ? undefined : 'Kéo để dời panel trạng thái'}
                     >
                         {label && <span style={{ fontWeight: '500' }}>{label}</span>}
                         {data?.notificationTemplateId && String(data.notificationTemplateId).trim() !== '' && (
@@ -439,6 +471,7 @@ const WorkflowNode = ({ data, selected }) => {
 
     return (
         <div
+            className="workflow-node"
             style={{
                 ...style,
                 padding: '10px 15px',
@@ -460,44 +493,44 @@ const WorkflowNode = ({ data, selected }) => {
             {!isReadOnly && (
                 <>
                     {/* Top handles */}
-                    <Handle type="source" position={Position.Top} id="top-src-1" style={{ left: '15%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="source" position={Position.Top} id="top-src-2" style={{ left: '25%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="source" position={Position.Top} id="top-src-3" style={{ left: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="source" position={Position.Top} id="top-src" style={{ left: '48%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Top} id="top-tgt" style={{ left: '52%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Top} id="top-tgt-1" style={{ left: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Top} id="top-tgt-2" style={{ left: '75%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Top} id="top-tgt-3" style={{ left: '85%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Top} id="top-src-1" style={{ left: '12%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Top} id="top-src-2" style={{ left: '37%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Top} id="top-src-3" style={{ left: '62%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Top} id="top-src" style={{ left: '87%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Top} id="top-tgt" style={{ left: '18%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Top} id="top-tgt-1" style={{ left: '43%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Top} id="top-tgt-2" style={{ left: '68%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Top} id="top-tgt-3" style={{ left: '93%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
 
                     {/* Bottom handles */}
-                    <Handle type="source" position={Position.Bottom} id="bottom-src-1" style={{ left: '15%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="source" position={Position.Bottom} id="bottom-src-2" style={{ left: '25%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="source" position={Position.Bottom} id="bottom-src-3" style={{ left: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="source" position={Position.Bottom} id="bottom-src" style={{ left: '48%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Bottom} id="bottom-tgt" style={{ left: '52%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Bottom} id="bottom-tgt-1" style={{ left: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Bottom} id="bottom-tgt-2" style={{ left: '75%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Bottom} id="bottom-tgt-3" style={{ left: '85%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Bottom} id="bottom-src-1" style={{ left: '12%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Bottom} id="bottom-src-2" style={{ left: '37%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Bottom} id="bottom-src-3" style={{ left: '62%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Bottom} id="bottom-src" style={{ left: '87%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Bottom} id="bottom-tgt" style={{ left: '18%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Bottom} id="bottom-tgt-1" style={{ left: '43%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Bottom} id="bottom-tgt-2" style={{ left: '68%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Bottom} id="bottom-tgt-3" style={{ left: '93%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
 
                     {/* Left handles */}
-                    <Handle type="source" position={Position.Left} id="left-src-1" style={{ top: '15%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="source" position={Position.Left} id="left-src-2" style={{ top: '25%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="source" position={Position.Left} id="left-src-3" style={{ top: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="source" position={Position.Left} id="left-src" style={{ top: '48%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Left} id="left-tgt" style={{ top: '52%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Left} id="left-tgt-1" style={{ top: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Left} id="left-tgt-2" style={{ top: '75%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Left} id="left-tgt-3" style={{ top: '85%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Left} id="left-src-1" style={{ top: '12%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Left} id="left-src-2" style={{ top: '37%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Left} id="left-src-3" style={{ top: '62%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Left} id="left-src" style={{ top: '87%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Left} id="left-tgt" style={{ top: '18%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Left} id="left-tgt-1" style={{ top: '43%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Left} id="left-tgt-2" style={{ top: '68%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Left} id="left-tgt-3" style={{ top: '93%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
 
                     {/* Right handles */}
-                    <Handle type="source" position={Position.Right} id="right-src-1" style={{ top: '15%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="source" position={Position.Right} id="right-src-2" style={{ top: '25%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="source" position={Position.Right} id="right-src-3" style={{ top: '35%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="source" position={Position.Right} id="right-src" style={{ top: '48%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Right} id="right-tgt" style={{ top: '52%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Right} id="right-tgt-1" style={{ top: '65%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Right} id="right-tgt-2" style={{ top: '75%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
-                    <Handle type="target" position={Position.Right} id="right-tgt-3" style={{ top: '85%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Right} id="right-src-1" style={{ top: '12%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Right} id="right-src-2" style={{ top: '37%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Right} id="right-src-3" style={{ top: '62%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="source" position={Position.Right} id="right-src" style={{ top: '87%', background: '#3b82f6', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Right} id="right-tgt" style={{ top: '18%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Right} id="right-tgt-1" style={{ top: '43%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Right} id="right-tgt-2" style={{ top: '68%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
+                    <Handle type="target" position={Position.Right} id="right-tgt-3" style={{ top: '93%', background: '#10b981', width: '8px', height: '8px', border: '1px solid white' }} />
                 </>
             )}
         </div>
@@ -520,6 +553,7 @@ export default function Diagram({
     edges,
     onNodesChange,
     onEdgesChange,
+    setEdges,
     onConnect,
     selectedNode,
     setSelectedNode,
@@ -559,12 +593,24 @@ export default function Diagram({
     }, [nodes, readOnly]);
 
     const displayEdges = React.useMemo(() => {
+        const parallelGroups = new Map();
+        edges.forEach((edge) => {
+            const key = [String(edge.source), String(edge.target || 'EXIT')].sort().join('::');
+            if (!parallelGroups.has(key)) parallelGroups.set(key, []);
+            parallelGroups.get(key).push(edge.id);
+        });
+
         return edges.map((edge) => {
             const sourceNode = nodes.find((n) => n.id === edge.source);
             const targetNode = nodes.find((n) => n.id === edge.target);
 
             let sourceHandle = edge.sourceHandle;
             let targetHandle = edge.targetHandle;
+            const parallelKey = [String(edge.source), String(edge.target || 'EXIT')].sort().join('::');
+            const parallelIds = parallelGroups.get(parallelKey) || [edge.id];
+            const parallelIndex = parallelIds.indexOf(edge.id);
+            const parallelCount = parallelIds.length;
+            const routeOffset = (parallelIndex - (parallelCount - 1) / 2) * 36;
 
             // Clean "null" values or missing handles dynamically based on layout
             if (!sourceHandle || sourceHandle === 'null') {
@@ -595,6 +641,13 @@ export default function Diagram({
                 }
             }
 
+            // Spread parallel transitions over separate handle slots and route coordinates.
+            if (parallelCount > 1) {
+                const slot = (parallelIndex % 3) + 1;
+                if (/-(src|tgt)$/.test(sourceHandle)) sourceHandle = `${sourceHandle}-${slot}`;
+                if (/-(src|tgt)$/.test(targetHandle)) targetHandle = `${targetHandle}-${slot}`;
+            }
+
             const mailTpl = mailTemplates.find(t => String(t.id || t.Id) === String(edge.data?.mailTemplateId));
             const notiTpl = notificationsList.find(t => String(t.id || t.Id) === String(edge.data?.notificationTemplateId));
 
@@ -604,6 +657,9 @@ export default function Diagram({
                 targetHandle,
                 data: {
                     ...edge.data,
+                    routeOffset,
+                    parallelIndex,
+                    parallelCount,
                     readOnly: readOnly ? true : edge.data?.readOnly,
                     resolvedMailTemplate: mailTpl ? {
                         name: mailTpl.templateName || mailTpl.TemplateName || 'Mail Template',
@@ -619,6 +675,15 @@ export default function Diagram({
             };
         });
     }, [edges, nodes, readOnly, mailTemplates, notificationsList]);
+
+    const onReconnect = React.useCallback((oldEdge, connection) => {
+        // Endpoint dragging is for choosing another contact point on the same node body.
+        if (connection.source !== oldEdge.source || connection.target !== oldEdge.target) return;
+        setEdges((currentEdges) => reconnectEdge(oldEdge, connection, currentEdges, {
+            shouldReplaceId: false
+        }));
+        setSelectedEdge({ ...oldEdge, ...connection, id: oldEdge.id });
+    }, [setEdges, setSelectedEdge]);
 
     return (
         <div
@@ -641,6 +706,22 @@ export default function Diagram({
                     width: 100%;
                     height: 100%;
                     min-height: 700px;
+                }
+                .workflow-node .react-flow__handle {
+                    opacity: 0;
+                    pointer-events: none;
+                    scale: 0.65;
+                    transition: opacity 120ms ease, scale 120ms ease;
+                }
+                .react-flow__node:hover .workflow-node .react-flow__handle,
+                .react-flow__node.selected .workflow-node .react-flow__handle,
+                .react-flow__node.dragging .workflow-node .react-flow__handle {
+                    opacity: 1;
+                    pointer-events: all;
+                    scale: 1;
+                }
+                .transition-label-container:not(.readonly) {
+                    cursor: move;
                 }
                 .info-panel {
                     background: white;
@@ -747,6 +828,9 @@ export default function Diagram({
                 onNodesChange={readOnly ? undefined : onNodesChange}
                 onEdgesChange={readOnly ? undefined : onEdgesChange}
                 onConnect={readOnly ? undefined : onConnect}
+                onReconnect={readOnly ? undefined : onReconnect}
+                edgesReconnectable={!readOnly}
+                reconnectRadius={20}
                 connectionMode="loose"
                 onNodeClick={readOnly ? undefined : (_, node) => {
                     setSelectedNode(node);

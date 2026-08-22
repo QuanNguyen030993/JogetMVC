@@ -509,6 +509,18 @@ public class QuotationController : BaseControllerApi<Quotation>
             tableRQConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(Quotation) + "RequestCode");
             string requestNo = ControllerUtil.GenerateNumberSeq(tableRQConfig, _formatCodeNoRepository, nameof(Quotation));
             quotationData.QuotationData = JsonConvert.DeserializeObject<QuotationData>(Request.Form["QuotationData"]);
+            if (quotationData.QuotationData?.Quotation == null)
+            {
+                return BadRequest(new { message = "Quotation payload is required." });
+            }
+
+            // Routing rule is enforced by the API. A client-provided StageDept
+            // must not move a Skip TS quotation away from the FO start node.
+            if (IsSkipTsEnabled(quotationData.QuotationData.Quotation.QuotationType))
+            {
+                quotationData.QuotationData.Quotation.StageDept = "FO";
+            }
+
             if (files.Count > 0)
             {
                 int filesCount = files.Count;

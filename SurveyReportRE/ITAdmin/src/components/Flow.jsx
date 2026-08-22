@@ -42,13 +42,6 @@ const nodeTemplates = [
         description: 'Standard workflow action',
     },
     {
-        type: 'jump',
-        label: 'Jump Node (Có ĐK)',
-        subtitle: 'Bước nhảy có điều kiện',
-        nodeType: 'jump',
-        description: 'Conditional Skip / Jump step',
-    },
-    {
         type: 'department',
         label: 'Department Node',
         subtitle: 'Assigned team',
@@ -219,18 +212,33 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
         const hasPosition = Number.isFinite(rawX) && Number.isFinite(rawY);
 
         let parsedScreenConditions = [];
+        let parsedNodeData = {};
         if (Array.isArray(node.screenConditions)) {
             parsedScreenConditions = node.screenConditions;
-        } else if (node.data) {
+        }
+        if (node.data) {
             try {
                 const parsed = typeof node.data === 'string' ? JSON.parse(node.data) : node.data;
-                if (Array.isArray(parsed.screenConditions)) {
+                parsedNodeData = parsed || {};
+                if (!parsedScreenConditions.length && Array.isArray(parsed.screenConditions)) {
                     parsedScreenConditions = parsed.screenConditions;
-                } else if (parsed.rawNode && Array.isArray(parsed.rawNode.screenConditions)) {
+                } else if (!parsedScreenConditions.length && parsed.rawNode && Array.isArray(parsed.rawNode.screenConditions)) {
                     parsedScreenConditions = parsed.rawNode.screenConditions;
                 }
             } catch (e) {}
         }
+        const rawNodeData = parsedNodeData.rawNode || {};
+        const jumpStepNo = node.jumpStepNo ?? parsedNodeData.jumpStepNo ?? rawNodeData.jumpStepNo ?? '';
+        const jumpCondition = node.jumpCondition ?? parsedNodeData.jumpCondition ?? rawNodeData.jumpCondition ?? '';
+        const jumpTargetNodeId = node.jumpTargetNodeId ?? parsedNodeData.jumpTargetNodeId ?? rawNodeData.jumpTargetNodeId ?? '';
+        const jumpDefinitionsSource = node.jumpDefinitions ?? parsedNodeData.jumpDefinitions ?? rawNodeData.jumpDefinitions ?? [];
+        const jumpDefinitions = Array.isArray(jumpDefinitionsSource)
+            ? jumpDefinitionsSource.map((definition, definitionIndex) => ({
+                id: definition.id || `jump-definition-${index}-${definitionIndex}`,
+                conditionName: definition.conditionName || definition.name || '',
+                transitionId: definition.transitionId || definition.jumpTransitionId || ''
+            }))
+            : [];
 
         return {
             id,
@@ -256,6 +264,11 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
                 levelNo: node.levelNo || '',
                 allowLoop: !!node.allowLoop,
                 loopGroup: node.loopGroup || '',
+                jumpEnabled: node.jumpEnabled === true || parsedNodeData.jumpEnabled === true || rawNodeData.jumpEnabled === true || Boolean(jumpStepNo || jumpCondition),
+                jumpStepNo,
+                jumpCondition,
+                jumpTargetNodeId,
+                jumpDefinitions,
                 screenConditions: parsedScreenConditions.map(normalizeScreenConditionRule),
                 custom: node.custom || '',
             },
@@ -327,6 +340,12 @@ const parseJsonToRulesState = (jsonStr) => {
 const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) =>
     workflowTransitions.map((transition, index) => {
         const isReturn = transition.isReturn === true || String(transition.isReturn) === 'true' || transition.flowType === 'Return';
+        const legacyExitTransition = transition.isExitTransition === true || String(transition.isExitTransition).toLowerCase() === 'true';
+        const transitionType = legacyExitTransition
+            ? 'Exit'
+            : (transition.transitionType || transition.flowType || 'Normal');
+        const isJump = String(transitionType).toLowerCase() === 'jump';
+        const isExit = String(transitionType).toLowerCase() === 'exit';
         const hasCommand = transition.command && transition.command !== 'None' && transition.command !== '0';
         
         let conditionJsonStr = '{}';
@@ -343,32 +362,36 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
             || transition.conditionRulesState?.builderType
             || (uiLockRules.length ? 'uiLock' : 'operator');
         return {
-            id: `edge-${transition.fromNodeId || transition.from || 'from'}-${transition.toNodeId || transition.to || 'to'}-${index}`,
+            id: String(transition.id || `edge-${transition.fromNodeId || transition.from || 'from'}-${transition.toNodeId || transition.to || 'to'}-${index}`),
             source: String(transition.fromNodeId || transition.from || ''),
             target: String(transition.toNodeId || transition.to || ''),
+            sourceHandle: transition.sourceHandle || null,
+            targetHandle: transition.targetHandle || null,
             animated: !hasCommand,
             type: 'custom',
             label: formatTransitionLabel(transition.actionName || transition.actionCode, transition.statusName || transition.statusId, transition.command),
-            style: isReturn
+            style: isJump
+                ? { stroke: '#7c3aed', strokeWidth: 3, strokeDasharray: '8 5' }
+                : (isExit || isReturn)
                 ? { stroke: '#dc2626', strokeWidth: 3 }
                 : { stroke: '#2563eb', strokeWidth: 2 },
             markerEnd: {
                 type: MarkerType.ArrowClosed,
                 width: 16,
                 height: 16,
-                color: isReturn ? '#dc2626' : '#2563eb',
+                color: isJump ? '#7c3aed' : ((isExit || isReturn) ? '#dc2626' : '#2563eb'),
             },
             data: {
                 actionName: transition.actionName || '',
                 actionCode: transition.actionCode || '',
                 stepNo: transition.stepNo || '',
-                jumpStepNo: transition.jumpStepNo || '',
-                transitionType: transition.transitionType || 'Normal',
+                legacyJumpStepNo: transition.jumpStepNo || '',
+                transitionType,
                 conditionJson: conditionJsonStr,
                 conditionRulesState: transition.conditionRulesState || parseJsonToRulesState(transition.conditionJson),
                 conditionBuilderType,
                 uiLockRules,
-                isExitTransition: Boolean(transition.isExitTransition),
+                isExitTransition: isExit,
                 isReturn: isReturn,
                 statusId: transition.statusId || '',
                 statusName: transition.statusName || '',
@@ -412,6 +435,8 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                 })(),
                 controlX: Number.isFinite(transition.controlX) ? transition.controlX * scaleX : null,
                 controlY: Number.isFinite(transition.controlY) ? transition.controlY * scaleY : null,
+                labelOffsetX: Number.isFinite(transition.labelOffsetX) ? transition.labelOffsetX * scaleX : 0,
+                labelOffsetY: Number.isFinite(transition.labelOffsetY) ? transition.labelOffsetY * scaleY : 0,
             },
         };
     });
@@ -512,6 +537,7 @@ function Flow({ id: propId }) {
         { dataField: 'stepRole', caption: 'Step Role', width: 100 },
         { dataField: 'departmentName', caption: 'Department', width: 130 },
         { dataField: 'levelNo', caption: 'Level No', width: 90 },
+        { dataField: 'jumpTransitions', caption: 'Condition → Jump ID', width: 220 },
         { dataField: 'position', caption: 'Position (X, Y)', width: 120 }
     ], []);
 
@@ -521,14 +547,12 @@ function Flow({ id: propId }) {
         { dataField: 'actionName', caption: 'Action Name', width: 140 },
         { dataField: 'actionCode', caption: 'Action Code', width: 120 },
         { dataField: 'stepNo', caption: 'Step No', width: 90 },
-        { dataField: 'jumpStepNo', caption: 'Jump Point', width: 100 },
         { dataField: 'transitionType', caption: 'Flow Type', width: 110 },
         { dataField: 'isReturn', caption: 'Is Return', width: 90 },
         { dataField: 'isLoop', caption: 'Is Loop', width: 90 },
         { dataField: 'loopGroup', caption: 'Loop Group', width: 110 },
         { dataField: 'loopExitMode', caption: 'Loop Exit Mode', width: 130 },
         { dataField: 'maxLoopCount', caption: 'Max Loop Count', width: 120 },
-        { dataField: 'isExitTransition', caption: 'Exit Trans', width: 100 },
         { dataField: 'userDecisionLabel', caption: 'User Decision Label', width: 150 },
         { dataField: 'statusName', caption: 'Status', width: 130 },
         { dataField: 'icon', caption: 'Icon', width: 100 },
@@ -557,6 +581,9 @@ function Flow({ id: propId }) {
                 stepRole: node.data?.stepRole || '',
                 departmentName: node.data?.departmentName || '',
                 levelNo: node.data?.levelNo || '',
+                jumpTransitions: (node.data?.jumpDefinitions || [])
+                    .map((definition) => `${definition.conditionName || '?'} → ${definition.transitionId || '?'}`)
+                    .join(' | '),
                 posX: origX,
                 posY: origY,
                 position: `${origX}, ${origY}`
@@ -573,14 +600,12 @@ function Flow({ id: propId }) {
                 actionName: edge.data?.actionName || '',
                 actionCode: edge.data?.actionCode || '',
                 stepNo: edge.data?.stepNo || '',
-                jumpStepNo: edge.data?.jumpStepNo || '',
                 transitionType: edge.data?.transitionType || 'Normal',
                 isReturn: edge.data?.isReturn ? 'Yes' : 'No',
                 isLoop: edge.data?.isLoop ? 'Yes' : 'No',
                 loopGroup: edge.data?.loopGroup || '',
                 loopExitMode: edge.data?.loopExitMode || 'None',
                 maxLoopCount: edge.data?.maxLoopCount || '',
-                isExitTransition: edge.data?.isExitTransition ? 'Yes' : 'No',
                 userDecisionLabel: edge.data?.userDecisionLabel || '',
                 statusId: edge.data?.statusId || '',
                 statusName: edge.data?.statusName || '',
@@ -638,7 +663,6 @@ function Flow({ id: propId }) {
                     actionName: '',
                     actionCode: '',
                     stepNo: '',
-                    jumpStepNo: '',
                     transitionType: 'Normal',
                     conditionJson: '{}',
                     conditionRulesState: { rootOperator: 'AND', rules: [] },
@@ -701,12 +725,41 @@ function Flow({ id: propId }) {
                 setWorkflowDefinition(parsedPayload.workflowDefinition || null);
                 setLanesList(parsedPayload.lanes || []);
 
-                const nextNodes = Array.isArray(parsedPayload.workflowNodes)
+                const mappedNodes = Array.isArray(parsedPayload.workflowNodes)
                     ? mapWorkflowNodes(parsedPayload.workflowNodes, scaleX, scaleY)
                     : [];
-                const nextEdges = Array.isArray(parsedPayload.workflowTransitions)
+                const mappedEdges = Array.isArray(parsedPayload.workflowTransitions)
                     ? mapWorkflowEdges(parsedPayload.workflowTransitions, scaleX, scaleY)
                     : [];
+                // One-time compatibility migration: old JumpStepNo edges become stable Jump transition IDs.
+                const nextEdges = mappedEdges.map((edge) => {
+                    if (!edge.data?.legacyJumpStepNo || edge.data?.transitionType === 'Jump') return edge;
+                    return {
+                        ...edge,
+                        style: { stroke: '#7c3aed', strokeWidth: 3, strokeDasharray: '8 5' },
+                        markerEnd: { ...edge.markerEnd, color: '#7c3aed' },
+                        data: { ...edge.data, transitionType: 'Jump' }
+                    };
+                });
+                const nextNodes = mappedNodes.map((node) => {
+                    const legacyJumpEdge = nextEdges.find((edge) => edge.source === node.id && edge.data?.legacyJumpStepNo);
+                    const firstJumpEdge = nextEdges.find((edge) => edge.source === node.id && edge.data?.transitionType === 'Jump');
+                    if (!legacyJumpEdge && !firstJumpEdge) return node;
+                    const jumpDefinitions = node.data?.jumpDefinitions?.length
+                        ? node.data.jumpDefinitions
+                        : (node.data?.jumpCondition && firstJumpEdge
+                            ? [{ id: `jump-definition-${node.id}`, conditionName: node.data.jumpCondition, transitionId: firstJumpEdge.id }]
+                            : []);
+                    return {
+                        ...node,
+                        data: {
+                            ...node.data,
+                            jumpEnabled: true,
+                            jumpStepNo: node.data?.jumpStepNo || legacyJumpEdge?.data?.legacyJumpStepNo || '',
+                            jumpDefinitions
+                        }
+                    };
+                });
 
                 setNodes(nextNodes.length ? layoutNodes(nextNodes, nextEdges) : []);
                 setEdges(nextEdges);
@@ -758,6 +811,8 @@ function Flow({ id: propId }) {
                     levelNo: node.data.levelNo || '',
                     allowLoop: !!node.data.allowLoop,
                     loopGroup: node.data.loopGroup || '',
+                    jumpEnabled: !!node.data.jumpEnabled,
+                    jumpDefinitions: node.data.jumpDefinitions || [],
                     shape: node.data.shape || 'rectangle',
                     styleColor: node.data.styleColor || 'blue',
                     posX: originalX,
@@ -795,12 +850,14 @@ function Flow({ id: propId }) {
                 }
 
                 return {
+                    id: edge.id,
                     fromNodeId: edge.source,
                     toNodeId: edge.target,
+                    sourceHandle: edge.sourceHandle || null,
+                    targetHandle: edge.targetHandle || null,
                     actionName: edge.data?.actionName || edge.label || 'Transition',
                     actionCode: edge.data?.actionCode || '',
                     stepNo: parseInt(edge.data?.stepNo) || null,
-                    jumpStepNo: parseInt(edge.data?.jumpStepNo) || null,
                     transitionType: edge.data?.transitionType || 'Normal',
                     conditionJson: parsedCondition,
                     conditionBuilderType: edge.data?.conditionBuilderType || 'operator',
@@ -810,7 +867,7 @@ function Flow({ id: propId }) {
                         builderType: edge.data?.conditionBuilderType || 'operator',
                         uiLockRules: edge.data?.uiLockRules || []
                     },
-                    isExitTransition: edge.data?.isExitTransition === true,
+                    isExitTransition: edge.data?.transitionType === 'Exit',
                     isReturn: edge.data?.isReturn === true,
                     statusId: edge.data?.statusId || '',
                     statusName: edge.data?.statusName || '',
@@ -828,8 +885,10 @@ function Flow({ id: propId }) {
                         notificationTemplateId: edge.data?.notificationTemplateId || null,
                         custom: edge.data?.custom || ''
                     },
-                    controlX: edge.data?.controlX ? Math.round(edge.data.controlX / scaleX) : null,
-                    controlY: edge.data?.controlY ? Math.round(edge.data.controlY / scaleY) : null,
+                    controlX: Number.isFinite(edge.data?.controlX) ? Math.round(edge.data.controlX / scaleX) : null,
+                    controlY: Number.isFinite(edge.data?.controlY) ? Math.round(edge.data.controlY / scaleY) : null,
+                    labelOffsetX: Number.isFinite(edge.data?.labelOffsetX) ? Math.round(edge.data.labelOffsetX / scaleX) : null,
+                    labelOffsetY: Number.isFinite(edge.data?.labelOffsetY) ? Math.round(edge.data.labelOffsetY / scaleY) : null,
                     sortOrder: index + 1
                 };
             });
@@ -924,11 +983,28 @@ function Flow({ id: propId }) {
                             stepRole: node.data?.stepRole,
                             departmentName: node.data?.departmentName,
                             levelNo: node.data?.levelNo,
+                            jumpEnabled: !!node.data?.jumpEnabled,
+                            jumpDefinitions: node.data?.jumpDefinitions || [],
                             x: origX,
                             y: origY,
                             screenConditions: node.data?.screenConditions || []
                         },
                         screenConditions: node.data?.screenConditions || [],
+                        jumpEnabled: !!node.data?.jumpEnabled,
+                        jumpDefinitions: node.data?.jumpDefinitions || [],
+                        jumpTransitionMap: Object.fromEntries(
+                            (node.data?.jumpDefinitions || [])
+                                .filter((definition) => definition.conditionName && definition.transitionId)
+                                .map((definition) => [definition.conditionName, definition.transitionId])
+                        ),
+                        jump: node.data?.jumpEnabled ? {
+                            definitions: node.data?.jumpDefinitions || [],
+                            transitionMap: Object.fromEntries(
+                                (node.data?.jumpDefinitions || [])
+                                    .filter((definition) => definition.conditionName && definition.transitionId)
+                                    .map((definition) => [definition.conditionName, definition.transitionId])
+                            )
+                        } : null,
                         condition: (() => {
                             const conditionObj = {};
                             (node.data?.screenConditions || []).forEach(rule => {
@@ -961,7 +1037,7 @@ function Flow({ id: propId }) {
                 const toNode = edge.target ? (nodeMap[edge.target] || {}) : null;
                 const incomingEdgesCount = edges.filter((e) => e.target === fromNode.id).length;
                 const isStart = fromNode.data?.nodeType === 'start' || incomingEdgesCount === 0;
-                const isEnd = edge.data?.isExitTransition === true || !edge.target;
+                const isEnd = edge.data?.transitionType === 'Exit' || !edge.target;
                 const isReturn = edge.data?.isReturn === true || false; 
 
                 let uiMode = "Start";
@@ -973,6 +1049,7 @@ function Flow({ id: propId }) {
                 let stepType = 2; // Normal
                 if (isEnd) stepType = 9; // End
                 else if (edge.data?.isLoop === true || edge.data?.isLoop === 'Yes') stepType = 3; // Loop
+                else if (edge.data?.transitionType === 'Jump') stepType = 4; // Conditional jump / bypass
 
                 let conditionData = {};
                 if (edge.data?.conditionJson) {
@@ -993,10 +1070,27 @@ function Flow({ id: propId }) {
                     notificationTemplateId: edge.data?.notificationTemplateId || null,
                     custom: edge.data?.custom || null
                 };
+                if (edge.data?.transitionType === 'Jump' || fromNode.data?.jumpEnabled) {
+                    const jumpDefinitions = fromNode.data?.jumpDefinitions || [];
+                    stepData.nodeJump = {
+                        enabled: !!fromNode.data?.jumpEnabled,
+                        transitionId: edge.id,
+                        targetNodeId: edge.target || null,
+                        conditionNames: jumpDefinitions
+                            .filter((definition) => definition.transitionId === edge.id)
+                            .map((definition) => definition.conditionName)
+                            .filter(Boolean),
+                        transitionMap: Object.fromEntries(
+                            jumpDefinitions
+                                .filter((definition) => definition.conditionName && definition.transitionId)
+                                .map((definition) => [definition.conditionName, definition.transitionId])
+                        )
+                    };
+                }
                 return {
                     sortOrder: index + 1,
                     stepNo: edge.data?.stepNo?.toString() || null,
-                    jumpStepNo: edge.data?.jumpStepNo?.toString() || null,
+                    jumpStepNo: null,
                     workflowDefinitionId: workflowDefinitionId,
 
                     stepType: stepType,
@@ -1205,6 +1299,11 @@ function Flow({ id: propId }) {
                     levelNo: 1,
                     allowLoop: false,
                     loopGroup: '',
+                    jumpEnabled: false,
+                    jumpStepNo: '',
+                    jumpCondition: '',
+                    jumpTargetNodeId: '',
+                    jumpDefinitions: [],
                 },
                 style: createNodeStyle({ nodeType: 'task' }),
             };
@@ -1285,9 +1384,6 @@ function Flow({ id: propId }) {
                 } else if (template.type === 'custom') {
                     shape = 'diamond';
                     styleColor = 'orange';
-                } else if (template.type === 'jump') {
-                    shape = 'rectangle';
-                    styleColor = 'lightOrange';
                 }
 
                 newNode = {
@@ -1310,6 +1406,11 @@ function Flow({ id: propId }) {
                         levelNo: 1,
                         allowLoop: false,
                         loopGroup: '',
+                        jumpEnabled: false,
+                        jumpStepNo: '',
+                        jumpCondition: '',
+                        jumpTargetNodeId: '',
+                        jumpDefinitions: [],
                     },
                     style: createNodeStyle({ nodeType: template.nodeType, styleColor: styleColor }),
                 };
@@ -1337,6 +1438,11 @@ function Flow({ id: propId }) {
                             levelNo: 1,
                             allowLoop: false,
                             loopGroup: '',
+                            jumpEnabled: false,
+                            jumpStepNo: '',
+                            jumpCondition: '',
+                            jumpTargetNodeId: '',
+                            jumpDefinitions: [],
                         },
                         style: createNodeStyle({ nodeType: 'department', styleColor: 'green' }),
                     };
@@ -1441,6 +1547,8 @@ const updateSelectedEdge = useCallback(
                const isReturn =
                    nextData.isReturn === true ||
                    String(nextData.isReturn) === 'true';
+               const isJump = String(nextData.transitionType || '').toLowerCase() === 'jump';
+               const isExit = String(nextData.transitionType || '').toLowerCase() === 'exit';
                const hasCommand =
                    nextData.command &&
                    nextData.command !== 'None' &&
@@ -1454,7 +1562,13 @@ const updateSelectedEdge = useCallback(
                    ),
                    data: nextData,
                    animated: !hasCommand,
-                   style: isReturn
+                   style: isJump
+                       ? {
+                             stroke: '#7c3aed',
+                             strokeWidth: 3,
+                             strokeDasharray: '8 5',
+                         }
+                       : (isExit || isReturn)
                        ? {
                              stroke: '#dc2626',
                              strokeWidth: 3,
@@ -1467,7 +1581,7 @@ const updateSelectedEdge = useCallback(
                        type: MarkerType.ArrowClosed,
                        width: 16,
                        height: 16,
-                       color: isReturn ? '#dc2626' : '#2563eb',
+                       color: isJump ? '#7c3aed' : ((isExit || isReturn) ? '#dc2626' : '#2563eb'),
                    },
                };
                return updatedEdge;
@@ -1720,6 +1834,9 @@ const updateSelectedEdge = useCallback(
         if (!selectedNode) {
             return null;
         }
+        const outgoingJumpEdges = edges.filter((edge) => (
+            edge.source === selectedNode.id && edge.data?.transitionType === 'Jump'
+        ));
 
         return (
             <div className="flow-form-card">
@@ -1796,32 +1913,95 @@ const updateSelectedEdge = useCallback(
                         <option value="complete">Complete (Circle)</option>
                         <option value="end">End (Circle)</option>
                         <option value="custom">Custom</option>
-                        <option value="jump">Jump (Bước nhảy có ĐK)</option>
                     </select>
                 </label>
-                {selectedNode.data.nodeType === 'jump' && (
-                    <div style={{ marginTop: '14px', padding: '12px', background: '#fffbeb', borderRadius: '8px', border: '1px dashed #f59e0b' }}>
-                        <h4 style={{ fontSize: '0.85rem', color: '#b45309', fontWeight: 600, marginBottom: '8px' }}>Jump Node Configuration</h4>
-                        
-                        <label>
-                            <span>Target Node ID / Dept (Điểm nhảy đến)</span>
-                            <input
-                                value={selectedNode.data.jumpTargetNodeId || ''}
-                                placeholder="Ví dụ: NODE_123 hoặc TS"
-                                onChange={(event) => updateSelectedNode('jumpTargetNodeId', event.target.value)}
-                            />
-                        </label>
-                        
-                        <label style={{ marginTop: '10px' }}>
-                            <span>Skip Condition (Điều kiện nhảy)</span>
-                            <input
-                                value={selectedNode.data.jumpCondition || ''}
-                                placeholder="Ví dụ: payload.skipTS === true"
-                                onChange={(event) => updateSelectedNode('jumpCondition', event.target.value)}
-                            />
-                        </label>
-                    </div>
-                )}
+                <div style={{ marginTop: '14px', padding: '12px', background: '#fffbeb', borderRadius: '8px', border: '1px dashed #f59e0b' }}>
+                    <label className="flow-checkbox" style={{ marginBottom: selectedNode.data.jumpEnabled ? '10px' : 0 }}>
+                        <input
+                            type="checkbox"
+                            checked={selectedNode.data.jumpEnabled === true}
+                            onChange={(event) => updateSelectedNode('jumpEnabled', event.target.checked)}
+                        />
+                        <span style={{ fontWeight: 600, color: '#b45309' }}>Node data có điều kiện Jump / Bypass</span>
+                    </label>
+                    {selectedNode.data.jumpEnabled && (
+                        <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                            <strong style={{ fontSize: '0.78rem', color: '#92400e' }}>Condition Name → Jump Transition ID</strong>
+                            <button
+                                type="button"
+                                disabled={!outgoingJumpEdges.length}
+                                onClick={() => {
+                                    const definitions = selectedNode.data?.jumpDefinitions || [];
+                                    updateSelectedNode('jumpDefinitions', [...definitions, {
+                                        id: `jump-definition-${Date.now()}`,
+                                        conditionName: '',
+                                        transitionId: outgoingJumpEdges[0]?.id || ''
+                                    }]);
+                                }}
+                                style={{ padding: '4px 8px', border: 'none', borderRadius: '6px', background: outgoingJumpEdges.length ? '#d97706' : '#cbd5e1', color: '#fff', cursor: outgoingJumpEdges.length ? 'pointer' : 'not-allowed' }}
+                            >
+                                Thêm mapping
+                            </button>
+                        </div>
+
+                        {!outgoingJumpEdges.length && (
+                            <div style={{ padding: '8px', borderRadius: '6px', background: '#fff7ed', color: '#9a3412', fontSize: '0.74rem' }}>
+                                Tạo transition từ node này và chọn type Jump trước.
+                            </div>
+                        )}
+
+                        {(selectedNode.data?.jumpDefinitions || []).map((definition, definitionIndex) => (
+                            <div key={definition.id || definitionIndex} style={{ position: 'relative', padding: '9px', marginBottom: '8px', background: '#fff', border: '1px solid #fde68a', borderRadius: '7px' }}>
+                                <button
+                                    type="button"
+                                    title="Xóa mapping"
+                                    onClick={() => updateSelectedNode(
+                                        'jumpDefinitions',
+                                        (selectedNode.data?.jumpDefinitions || []).filter((_, index) => index !== definitionIndex)
+                                    )}
+                                    style={{ position: 'absolute', top: '4px', right: '5px', border: 'none', background: 'transparent', color: '#dc2626', cursor: 'pointer' }}
+                                >
+                                    ✕
+                                </button>
+                                <label style={{ marginRight: '18px' }}>
+                                    <span>Condition Name</span>
+                                    <input
+                                        value={definition.conditionName || ''}
+                                        placeholder="Ví dụ: bypassTS"
+                                        onChange={(event) => {
+                                            const definitions = [...(selectedNode.data?.jumpDefinitions || [])];
+                                            definitions[definitionIndex] = { ...definitions[definitionIndex], conditionName: event.target.value };
+                                            updateSelectedNode('jumpDefinitions', definitions);
+                                        }}
+                                    />
+                                </label>
+                                <label style={{ marginTop: '7px' }}>
+                                    <span>Jump Transition ID</span>
+                                    <select
+                                        value={definition.transitionId || ''}
+                                        onChange={(event) => {
+                                            const definitions = [...(selectedNode.data?.jumpDefinitions || [])];
+                                            definitions[definitionIndex] = { ...definitions[definitionIndex], transitionId: event.target.value };
+                                            updateSelectedNode('jumpDefinitions', definitions);
+                                        }}
+                                    >
+                                        <option value="">-- Chọn Jump transition --</option>
+                                        {outgoingJumpEdges.map((edge) => (
+                                            <option key={edge.id} value={edge.id}>
+                                                {edge.id} · {edge.data?.actionName || edge.target || 'Jump'}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+                            </div>
+                        ))}
+                        <p style={{ margin: '8px 0 0', fontSize: '0.72rem', color: '#92400e' }}>
+                            Runtime đọc condition name trong data và lấy đúng transition ID từ jumpTransitionMap.
+                        </p>
+                        </div>
+                    )}
+                </div>
                 {selectedNode.data.nodeType === 'custom' && (
                     <label>
                         <span>Vị trí Binding (Custom Key)</span>
@@ -2110,7 +2290,7 @@ const updateSelectedEdge = useCallback(
                 </div>
             </div>
         );
-    }, [selectedNode, updateSelectedNode, lanesList, setNodes, setEdges]);
+    }, [selectedNode, updateSelectedNode, lanesList, setNodes, setEdges, edges]);
 
     const edgeDetails = useMemo(() => {
         if (!selectedEdge) {
@@ -2210,24 +2390,66 @@ const updateSelectedEdge = useCallback(
                     />
                 </label>
                 <label>
-                    <span>Jump step no</span>
-                    <input
-                        value={selectedEdge.data?.jumpStepNo || ''}
-                        onChange={(event) => updateSelectedEdge('jumpStepNo', event.target.value)}
-                    />
-                </label>
-                <label>
                     <span>Transition type</span>
                     <select
                         value={selectedEdge.data?.transitionType || 'Normal'}
-                        onChange={(event) => updateSelectedEdge('transitionType', event.target.value)}
+                        onChange={(event) => {
+                            const transitionType = event.target.value;
+                            updateSelectedEdge('transitionType', transitionType);
+                            if (transitionType === 'Jump') {
+                                setNodes((currentNodes) => currentNodes.map((node) => (
+                                    node.id === selectedEdge.source
+                                        ? { ...node, data: { ...node.data, jumpEnabled: true } }
+                                        : node
+                                )));
+                            } else {
+                                setNodes((currentNodes) => currentNodes.map((node) => (
+                                    node.id === selectedEdge.source
+                                        ? {
+                                            ...node,
+                                            data: {
+                                                ...node.data,
+                                                jumpDefinitions: (node.data?.jumpDefinitions || [])
+                                                    .filter((definition) => definition.transitionId !== selectedEdge.id)
+                                            }
+                                        }
+                                        : node
+                                )));
+                            }
+                        }}
                     >
                         <option value="Normal">Normal</option>
                         <option value="Loop">Loop</option>
+                        <option value="Jump">Jump / Bypass</option>
+                        <option value="Exit">Exit</option>
                         <option value="Condition">Condition</option>
                         <option value="Custom">Custom</option>
                     </select>
                 </label>
+                {selectedEdge.data?.transitionType === 'Jump' && (
+                    <div style={{ padding: '8px 10px', borderRadius: '8px', background: '#f5f3ff', border: '1px dashed #8b5cf6', color: '#6d28d9', fontSize: '0.76rem' }}>
+                        Khai báo Condition Name → Jump Transition ID tại node nguồn. ID của transition này: <strong>{selectedEdge.id}</strong>
+                    </div>
+                )}
+                <div style={{ padding: '8px 10px', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0', fontSize: '0.74rem', color: '#475569' }}>
+                    Chọn transition để kéo 2 đầu tiếp xúc dọc viền node, chỉnh 3 điểm bẻ góc hoặc kéo panel Action/Status sang vị trí khác.
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '7px' }}>
+                        <button
+                            type="button"
+                            onClick={() => updateSelectedEdge({ controlX: null, controlY: null })}
+                            style={{ flex: 1, padding: '5px 7px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', cursor: 'pointer' }}
+                        >
+                            Auto route
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => updateSelectedEdge({ labelOffsetX: 0, labelOffsetY: 0 })}
+                            style={{ flex: 1, padding: '5px 7px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', cursor: 'pointer' }}
+                        >
+                            Reset label
+                        </button>
+                    </div>
+                </div>
                 {selectedEdge.data?.transitionType === 'Custom' && (
                     <label>
                         <span>Vị trí Binding (Custom Key)</span>
@@ -2281,14 +2503,6 @@ const updateSelectedEdge = useCallback(
                 </option>
                     ))}
                 </select>
-                </label>
-                <label className="flow-checkbox">
-                    <input
-                        type="checkbox"
-                        checked={Boolean(selectedEdge.data?.isExitTransition)}
-                        onChange={(event) => updateSelectedEdge('isExitTransition', event.target.checked)}
-                    />
-                    <span>Exit transition</span>
                 </label>
                 <label className="flow-checkbox">
                     <input
@@ -2610,6 +2824,14 @@ const updateSelectedEdge = useCallback(
                         type="button"
                         onClick={() => {
                             setEdges((currentEdges) => currentEdges.filter(e => e.id !== selectedEdge.id));
+                            setNodes((currentNodes) => currentNodes.map((node) => ({
+                                ...node,
+                                data: {
+                                    ...node.data,
+                                    jumpDefinitions: (node.data?.jumpDefinitions || [])
+                                        .filter((definition) => definition.transitionId !== selectedEdge.id)
+                                }
+                            })));
                             setSelectedEdge(null);
                         }}
                         style={{
@@ -2823,6 +3045,7 @@ const updateSelectedEdge = useCallback(
                     edges={edges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
+                    setEdges={setEdges}
                     onConnect={onConnect}
                     selectedNode={selectedNode}
                     setSelectedNode={setSelectedNode}

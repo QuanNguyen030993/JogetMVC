@@ -9358,40 +9358,51 @@
             });
         }
 
-            function revealOverviewPaneStatus(target, statusTextValue, ownerText, statusCssClass, detailStatusId) {
+            function revealOverviewPaneStatus(target, statusTextValue, ownerText, statusCssClass, detailStatusId, skipTsValue) {
                 const $target = target?.jquery ? target : $(target);
                 if (!$target.length) return;
 
                 const revealToken = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
                 const safeStatusClass = String(statusCssClass || "unknown").replace(/[^a-z0-9_-]/gi, "");
                 const statusText = String(statusTextValue || "Unknown").trim();
-                const owner = String(ownerText || "").trim();
+                const owner = String(ownerText || "(Unassigned)").trim();
+                const skipTsEnabled = skipTsValue === true;
                 const $content = $("<span>").addClass("overview-status-content");
 
                 const $state = $("<span>")
                     .addClass(`overview-status-state statusTagInForm ${safeStatusClass}`)
-                    .text(statusText)
+                    .text(`Status: ${statusText}`)
                     .appendTo($content);
                 if (detailStatusId) $state.attr("id", detailStatusId);
 
-                if (owner) {
+                if (skipTsEnabled) {
                     $("<span>")
                         .addClass("overview-status-separator")
                         .attr("aria-hidden", "true")
                         .text("—")
                         .appendTo($content);
                     $("<span>")
-                        .addClass("overview-status-owner")
-                        .text(owner)
+                        .addClass("overview-status-skip is-enabled")
+                        .text("Skip TS")
                         .appendTo($content);
                 }
+
+                $("<span>")
+                    .addClass("overview-status-separator")
+                    .attr("aria-hidden", "true")
+                    .text("—")
+                    .appendTo($content);
+                $("<span>")
+                    .addClass("overview-status-owner")
+                    .text(`Account: ${owner}`)
+                    .appendTo($content);
 
                 $target
                     .data("overviewStatusRevealToken", revealToken)
                     .removeClass("is-ready")
                     .attr({
                         "aria-busy": "true",
-                        title: owner ? `${statusText} — ${owner}` : statusText
+                        title: `Status: ${statusText}${skipTsEnabled ? " — Skip TS" : ""} — Account: ${owner}`
                     })
                     .empty()
                     .append($content);
