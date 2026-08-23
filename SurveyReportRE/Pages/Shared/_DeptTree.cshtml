@@ -5,8 +5,8 @@
     var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
     var quotationId = Convert.ToInt64(ViewData["Id"]);
     var deptCodes = moduleCode == "qt"
-        ? new[] { "FO", "TS", "UW", "LMKT", "PM" }
-        : new[] { "FO", "TS", "PM" };
+        ? DepartmentModuleCodes.Quotation
+        : DepartmentModuleCodes.PolicyIssuance;
     var deptTreeId = moduleCode == "qt"
         ? QTViewIdHelper.DeptTree(quotationId)
         : PIViewIdHelper.DeptTree(quotationId);
@@ -242,20 +242,9 @@
         var quotationId = @quotationId;
         var formPrefix = "@Model.Prefix";
 
-        /*
-         * Danh sách đầy đủ.
-         *
-         * QT:
-         * FO, TS, UW, LMKT, PM
-         *
-         * PI:
-         * FO, TS, PM
-         */
-        const fallbackDept = ["FO", "TS", "UW", "LMKT", "PM"];
-
         const activeDeptCodes = moduleCode === "qt"
-        ? fallbackDept
-        : ["FO", "TS", "PM"];
+            ? qtDeptModuleCode
+            : piDeptModuleCode;
 
         if (!window.DeptTreeIdleClock) {
 
@@ -449,8 +438,8 @@
 
                         const depts =
                             moduleCode === "qt"
-                                ? ["FO", "TS", "UW", "LMKT", "PM"]
-                                : ["FO", "TS", "PM"];
+                                ? qtDeptModuleCode
+                                : piDeptModuleCode;
 
 
                         /*

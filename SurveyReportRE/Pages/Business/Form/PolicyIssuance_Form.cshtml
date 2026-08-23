@@ -234,7 +234,7 @@ Note:
         const policyIssuanceViewInstanceKey = `${formModuleKeyPi}:${policyIssuanceViewInstanceId}`;
         const policyIssuanceOverviewRootId = `${formModuleKeyPi}-overviewRoot_${policyIssuanceViewInstanceId}`;
         enableDxFormGroupToggle(`#${policyIssuanceOverviewRootId}`);
-     const QtRoles = piDeptModuleCode;
+     const PiRoles = piDeptModuleCode;
         $(`#${formModuleKeyPi}-loginRoleLabel`).text(state.currentUserRole);
 
         $(document)
@@ -649,7 +649,6 @@ Note:
               //                                   })
               //                                   .first();
               //                               if (!$decisionGroup.length) {
-              //                                   const fallbackDept = ["FO", "TS", "PM"]
               //                                       .find(function (dept) {
               //                                           return isSimilarRouteGroup(routeKeys, dept);
               //                                       });
@@ -1082,7 +1081,7 @@ Note:
                 || String(window._isSuperUser).toLowerCase() === "true";
             if (canSwitchMaintenanceRole && $roleSelect.length && !$roleSelect.hasClass("dx-selectbox")) {
                 $roleSelect.dxSelectBox({
-                    dataSource: QtRoles,
+                    dataSource: PiRoles,
                     value: state.currentUserRole,
                     stylingMode: "outlined",
                     width: "100%",
@@ -1100,7 +1099,7 @@ Note:
         function updateHints() {
             // $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
-            QtRoles.forEach(k => {
+            PiRoles.forEach(k => {
                 const canEdit = (state.currentUserRole === k);
                 const icon = canEdit
                 ? `<span class="lock editable" title="Editable" aria-label="Editable">

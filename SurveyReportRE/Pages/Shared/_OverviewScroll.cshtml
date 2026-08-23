@@ -5,14 +5,15 @@
     string Id(string name) => $"{Model.Prefix}-{name}_{Model.Id}";
     string Cd(string name) => $"{Model.Prefix}-{name}_";
     var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
-    string[] qtDeptModuleCode = new string[] { "FO", "TS", "UW", "LMKT", "PM" };
-    string[] piDeptModuleCode = new string[] { "FO", "TS", "PM" };
+    string[] deptModuleCodes = moduleCode == "qt"
+        ? DepartmentModuleCodes.Quotation
+        : DepartmentModuleCodes.PolicyIssuance;
 }
 
 <div id="@ViewIdHelper.OverViewScroll(Model.Prefix,Model.Id)" class="overview-scroll">
     @if (moduleCode == "qt")
     {
-        @foreach (string item in qtDeptModuleCode)
+        @foreach (string item in deptModuleCodes)
         {
 
             <section id="@Id($"sec_{item}")" class="dept-section">
@@ -91,7 +92,7 @@
     }
     @if (moduleCode == "pi")
     {
-        @foreach (string item in piDeptModuleCode)
+        @foreach (string item in deptModuleCodes)
         {
             <section id="@Id($"sec_{item}")" class="dept-section">
                 <!-- 1. Header -->

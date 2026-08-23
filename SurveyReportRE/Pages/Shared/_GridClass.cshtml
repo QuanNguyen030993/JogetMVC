@@ -1839,14 +1839,16 @@
                     // };
                       // phần này phục vụ search/filter
                     col.calculateCellValue = function (rowData) {
-                        return buildPicCategorySearchText(rowData ? rowData[col.dataField] : "{}");
+                        return buildPicCategorySearchText(
+                            rowData ? rowData[col.dataField] : "{}",
+                            qtDeptModuleCode);
                     };
 
                     // phần này phục vụ render đẹp
                     col.cellTemplate = function (container, options) {
                         $(container)
-                            .attr("title", buildPicCategorySearchText(options.data[col.dataField]))
-                            .append(renderPicInline(options.data[col.dataField]));
+                            .attr("title", buildPicCategorySearchText(options.data[col.dataField], qtDeptModuleCode))
+                            .append(renderPicInline(options.data[col.dataField], qtDeptModuleCode));
                     };
                     // Nếu muốn filter row theo contains chắc hơn
                     // col.calculateFilterExpression = function (filterValue, selectedFilterOperation) {
@@ -2287,14 +2289,16 @@
                     // };
                       // phần này phục vụ search/filter
                     col.calculateCellValue = function (rowData) {
-                        return buildPicCategorySearchText(rowData ? rowData[col.dataField] : "{}");
+                        return buildPicCategorySearchText(
+                            rowData ? rowData[col.dataField] : "{}",
+                            piDeptModuleCode);
                     };
 
                     // phần này phục vụ render đẹp
                     col.cellTemplate = function (container, options) {
                         $(container)
-                            .attr("title", buildPicCategorySearchText(options.data[col.dataField]))
-                            .append(renderPicInline(options.data[col.dataField]));
+                            .attr("title", buildPicCategorySearchText(options.data[col.dataField], piDeptModuleCode))
+                            .append(renderPicInline(options.data[col.dataField], piDeptModuleCode));
                     };
                     // Nếu muốn filter row theo contains chắc hơn
                     // col.calculateFilterExpression = function (filterValue, selectedFilterOperation) {

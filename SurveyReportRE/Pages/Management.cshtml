@@ -899,9 +899,7 @@
                 || String(_isSuperUser).toLowerCase() === "true";
             const $switcher = $("#homeRoleSwitcher").toggleClass("is-visible", canSwitchRole);
             const $select = $("#homeRoleSelect");
-            const roles = Array.isArray(window.qtDeptModuleCode)
-                ? window.qtDeptModuleCode.slice()
-                : ["FO", "TS", "UW", "LMKT", "PM"];
+            const roles = qtDeptModuleCode.slice();
             let syncingRole = false;
 
             function notifyOpenWorkflowViews(role) {
@@ -999,13 +997,15 @@
                 //    }, 1000);
             }
 
-    const fallbackRoleOptions = [
-        { code: "FO", description: "Front Office - tiếp nhận yêu cầu và phối hợp với khách hàng." },
-        { code: "TS", description: "Technical Services - chuẩn bị và rà soát nội dung kỹ thuật." },
-        { code: "PM", description: "Product Management - quản lý sản phẩm và điều khoản." },
-        { code: "UW", description: "Underwriting - đánh giá rủi ro và quyết định nhận bảo hiểm." },
-        { code: "LMKT", description: "Local Marketing - điều phối kinh doanh và phát hành đơn." }
-    ];
+    const fallbackRoleDescriptions = {
+        FO: "Front Office - tiếp nhận yêu cầu và phối hợp với khách hàng.",
+        TS: "Technical Services - chuẩn bị và rà soát nội dung kỹ thuật.",
+        PM: "Product Management - quản lý sản phẩm và điều khoản.",
+        UW: "Underwriting - đánh giá rủi ro và quyết định nhận bảo hiểm.",
+        LMKT: "Local Marketing - điều phối kinh doanh và phát hành đơn."
+    };
+    const fallbackRoleOptions = [...new Set([...qtDeptModuleCode, ...piDeptModuleCode])]
+        .map(code => ({ code, description: fallbackRoleDescriptions[code] || code }));
     let selectedUserRole = "";
     let userRoleOptions = fallbackRoleOptions;
     const chromeNotificationStoragePrefix = "tmiv.chromeNotifications.enabled:";
