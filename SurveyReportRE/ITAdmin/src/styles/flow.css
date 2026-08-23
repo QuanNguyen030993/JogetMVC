@@ -20,40 +20,163 @@
 
 .flow-layout {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "tools"
+    "diagram"
+    "configure"
+    "settings";
   gap: 14px;
-  height: 700px;
+  height: auto;
+  align-items: start;
+}
+
+.flow-diagram-tools {
+  grid-area: tools;
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(0, 2fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.flow-diagram-tools .flow-sidebar-card {
+  min-width: 0;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.flow-diagram-tools h3 {
+  margin-bottom: 3px;
+  font-size: 0.8rem;
+}
+
+.flow-diagram-tools p {
+  display: none;
+}
+
+.flow-instance-actions {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.flow-instance-actions input,
+.flow-instance-actions .flow-action-btn {
+  min-height: 30px;
+  padding: 5px 8px !important;
+  font-size: 10px !important;
+}
+
+.flow-node-palette {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.35fr) minmax(0, 1.65fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.flow-node-palette .flow-tool-heading p {
+  margin-bottom: 0;
+}
+
+.flow-node-palette .flow-palette-list {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+}
+
+.flow-node-palette .flow-palette-item {
+  flex: 0 0 120px;
+  min-height: 30px;
+  height: auto;
+  gap: 1px;
+  padding: 5px 8px;
+  border-radius: 8px;
+}
+
+.flow-node-palette .flow-palette-item strong,
+.flow-node-palette .flow-palette-item span {
+  font-size: 10px;
 }
 
 .flow-sidebar {
+  grid-area: settings;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  position: static;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+.workflow-settings-card {
+  grid-column: 1 / -1;
+}
+
+.workflow-settings-actions {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(145px, auto));
+  align-items: end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.workflow-id-field {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  position: sticky;
-  top: 20px;
-  height: fit-content;
-  max-height: calc(100vh - 140px);
-  overflow-y: auto;
+  gap: 6px;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.workflow-settings-actions .flow-action-btn {
+  width: auto;
+  min-height: 36px;
+  white-space: nowrap;
 }
 
 .flow-properties-panel {
+  grid-area: configure;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  position: sticky;
-  top: 20px;
-  height: calc(100vh - 140px);
-  max-height: calc(100vh - 140px);
+  position: static;
+  height: auto;
+  max-height: none;
 }
 
 .flow-properties-scroll-container {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: 100%;
-  max-height: 100%;
-  overflow-y: auto;
-  padding-right: 6px;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
+}
+
+.flow-panel-heading {
+  padding: 14px 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.flow-panel-heading h3 {
+  margin: 0 0 4px;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.flow-panel-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.82rem;
 }
 
 .flow-sidebar-card,
@@ -125,11 +248,42 @@
 }
 
 .flow-canvas-panel {
+  grid-area: diagram;
   min-height: 700px;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid #e2e8f0;
   box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06);
+}
+
+@media (max-width: 1050px) {
+  .flow-diagram-tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workflow-settings-actions {
+    grid-template-columns: minmax(220px, 1fr) repeat(2, minmax(145px, 1fr));
+  }
+
+  .workflow-settings-actions .workflow-id-field {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 680px) {
+  .flow-instance-actions,
+  .flow-node-palette {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .flow-sidebar,
+  .workflow-settings-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .workflow-settings-actions .workflow-id-field {
+    grid-column: auto;
+  }
 }
 
 .workflow-canvas {

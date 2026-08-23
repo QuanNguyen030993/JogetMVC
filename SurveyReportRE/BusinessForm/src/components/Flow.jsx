@@ -156,18 +156,37 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
         const hasPosition = Number.isFinite(rawX) && Number.isFinite(rawY);
 
         let parsedScreenConditions = [];
+        let parsedNodeData = {};
         if (Array.isArray(node.screenConditions)) {
             parsedScreenConditions = node.screenConditions;
-        } else if (node.data) {
+        }
+        if (node.data) {
             try {
                 const parsed = typeof node.data === 'string' ? JSON.parse(node.data) : node.data;
-                if (Array.isArray(parsed.screenConditions)) {
+                parsedNodeData = parsed || {};
+                if (!parsedScreenConditions.length && Array.isArray(parsed.screenConditions)) {
                     parsedScreenConditions = parsed.screenConditions;
-                } else if (parsed.rawNode && Array.isArray(parsed.rawNode.screenConditions)) {
+                } else if (!parsedScreenConditions.length && parsed.rawNode && Array.isArray(parsed.rawNode.screenConditions)) {
                     parsedScreenConditions = parsed.rawNode.screenConditions;
                 }
             } catch (e) {}
         }
+        const rawNodeData = parsedNodeData.rawNode || {};
+        const jumpDefinitionsSource = node.jumpDefinitions ?? parsedNodeData.jumpDefinitions ?? rawNodeData.jumpDefinitions;
+        const jumpTransitionMap = node.jumpTransitionMap ?? parsedNodeData.jumpTransitionMap ?? parsedNodeData.jump?.transitionMap ?? {};
+        const jumpDefinitions = Array.isArray(jumpDefinitionsSource)
+            ? jumpDefinitionsSource.map((definition, definitionIndex) => ({
+                id: definition.id || `jump-definition-${index}-${definitionIndex}`,
+                conditionName: definition.conditionName || definition.propertyKey || definition.name || '',
+                propertyKey: definition.propertyKey || definition.conditionName || definition.name || '',
+                transitionId: String(definition.transitionId || definition.jumpTransitionId || ''),
+            }))
+            : Object.entries(jumpTransitionMap || {}).map(([propertyKey, transitionId], definitionIndex) => ({
+                id: `jump-definition-${index}-${definitionIndex}`,
+                conditionName: propertyKey,
+                propertyKey,
+                transitionId: String(transitionId || ''),
+            }));
 
         return {
             id,
@@ -193,6 +212,8 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
                 levelNo: node.levelNo || '',
                 allowLoop: !!node.allowLoop,
                 loopGroup: node.loopGroup || '',
+                jumpEnabled: node.jumpEnabled === true || parsedNodeData.jumpEnabled === true || rawNodeData.jumpEnabled === true || jumpDefinitions.length > 0,
+                jumpDefinitions,
                 screenConditions: parsedScreenConditions,
                 custom: node.custom || '',
             },
@@ -264,6 +285,12 @@ const parseJsonToRulesState = (jsonStr) => {
 const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) =>
     workflowTransitions.map((transition, index) => {
         const isReturn = transition.isReturn === true || String(transition.isReturn) === 'true' || transition.flowType === 'Return';
+        const legacyExitTransition = transition.isExitTransition === true || String(transition.isExitTransition).toLowerCase() === 'true';
+        const transitionType = legacyExitTransition
+            ? 'Exit'
+            : (transition.transitionType || transition.flowType || 'Normal');
+        const isJump = String(transitionType).toLowerCase() === 'jump';
+        const isExit = String(transitionType).toLowerCase() === 'exit';
         const hasCommand = transition.command && transition.command !== 'None' && transition.command !== '0';
         
         let conditionJsonStr = '{}';
@@ -274,30 +301,34 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
         }
 
         return {
-            id: `edge-${transition.fromNodeId || transition.from || 'from'}-${transition.toNodeId || transition.to || 'to'}-${index}`,
+            id: String(transition.id || `edge-${transition.fromNodeId || transition.from || 'from'}-${transition.toNodeId || transition.to || 'to'}-${index}`),
             source: String(transition.fromNodeId || transition.from || ''),
             target: String(transition.toNodeId || transition.to || ''),
+            sourceHandle: transition.sourceHandle || null,
+            targetHandle: transition.targetHandle || null,
             animated: !hasCommand,
             type: 'custom',
             label: formatTransitionLabel(transition.actionName || transition.actionCode, transition.statusName || transition.statusId, transition.command),
-            style: isReturn
+            style: isJump
+                ? { stroke: '#7c3aed', strokeWidth: 3, strokeDasharray: '8 5' }
+                : (isExit || isReturn)
                 ? { stroke: '#dc2626', strokeWidth: 3 }
                 : { stroke: '#2563eb', strokeWidth: 2 },
             markerEnd: {
                 type: MarkerType.ArrowClosed,
                 width: 16,
                 height: 16,
-                color: isReturn ? '#dc2626' : '#2563eb',
+                color: isJump ? '#7c3aed' : ((isExit || isReturn) ? '#dc2626' : '#2563eb'),
             },
             data: {
                 actionName: transition.actionName || '',
                 actionCode: transition.actionCode || '',
                 stepNo: transition.stepNo || '',
                 jumpStepNo: transition.jumpStepNo || '',
-                transitionType: transition.transitionType || 'Normal',
+                transitionType,
                 conditionJson: conditionJsonStr,
                 conditionRulesState: transition.conditionRulesState || parseJsonToRulesState(transition.conditionJson),
-                isExitTransition: Boolean(transition.isExitTransition),
+                isExitTransition: isExit,
                 isReturn: isReturn,
                 statusId: transition.statusId || '',
                 statusName: transition.statusName || '',
@@ -361,8 +392,103 @@ const normalizeTransitionScript = (value) => {
     return typeof script === 'string' ? script : '';
 };
 
+const getPropertyPathValue = (source, propertyKey) => {
+    if (!source || typeof source !== 'object' || !propertyKey) return undefined;
+    if (Object.prototype.hasOwnProperty.call(source, propertyKey)) return source[propertyKey];
+    return String(propertyKey)
+        .split('.')
+        .filter(Boolean)
+        .reduce((value, segment) => (
+            value && typeof value === 'object' ? value[segment] : undefined
+        ), source);
+};
 
-function Flow({ id: propId, guid: propGuid }) {
+const isSatisfiedJumpValue = (value) => {
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        return normalized !== '' && !['false', '0', 'null', 'undefined', 'no', 'off'].includes(normalized);
+    }
+    return Boolean(value);
+};
+
+const getRuntimePropertyValue = (runtimeProperties, propertyKey) => {
+    const sources = [
+        runtimeProperties,
+        runtimeProperties?.data,
+        runtimeProperties?.properties,
+        runtimeProperties?.formData,
+        runtimeProperties?.value && typeof runtimeProperties.value === 'object' ? runtimeProperties.value : null,
+    ];
+    for (const source of sources) {
+        const value = getPropertyPathValue(source, propertyKey);
+        if (value !== undefined) return value;
+    }
+
+    if (String(propertyKey).trim().toLowerCase() === 'skipts') {
+        const requestTypeFields = ['quotationType', 'QuotationType', 'policyIssuanceType', 'PolicyIssuanceType'];
+        for (const source of sources) {
+            if (!source || typeof source !== 'object') continue;
+            for (const fieldName of requestTypeFields) {
+                const rawMetadata = source[fieldName];
+                if (rawMetadata == null || rawMetadata === '') continue;
+                try {
+                    const metadata = typeof rawMetadata === 'string' ? JSON.parse(rawMetadata) : rawMetadata;
+                    const value = metadata?.SkipTS ?? metadata?.skipTS;
+                    if (value !== undefined) return value;
+                } catch (error) {
+                    // Ignore malformed legacy metadata and continue checking other runtime sources.
+                }
+            }
+        }
+    }
+    return undefined;
+};
+
+const filterRuntimeTransitions = (nodes, edges, runtimeProperties) => {
+    const definitionsByNode = new Map(
+        nodes
+            .filter((node) => Array.isArray(node.data?.jumpDefinitions) && node.data.jumpDefinitions.length)
+            .map((node) => [String(node.id), node.data.jumpDefinitions]),
+    );
+
+    const selectedJumpIdsByNode = new Map();
+    definitionsByNode.forEach((definitions, nodeId) => {
+        const availableJumpIds = new Set(
+            edges
+                .filter((edge) => String(edge.source) === nodeId && String(edge.data?.transitionType).toLowerCase() === 'jump')
+                .map((edge) => String(edge.id)),
+        );
+        const selectedIds = new Set(
+            definitions
+                .filter((definition) => {
+                    const propertyKey = definition.propertyKey || definition.conditionName;
+                    return propertyKey && isSatisfiedJumpValue(getRuntimePropertyValue(runtimeProperties, propertyKey));
+                })
+                .map((definition) => String(definition.transitionId || ''))
+                .filter((transitionId) => availableJumpIds.has(transitionId)),
+        );
+        selectedJumpIdsByNode.set(nodeId, selectedIds);
+    });
+
+    return edges
+        .filter((edge) => {
+            const nodeId = String(edge.source);
+            if (!definitionsByNode.has(nodeId)) return true;
+            const isJump = String(edge.data?.transitionType).toLowerCase() === 'jump';
+            const selectedJumpIds = selectedJumpIdsByNode.get(nodeId);
+            return selectedJumpIds?.size
+                ? isJump && selectedJumpIds.has(String(edge.id))
+                : !isJump;
+        })
+        .sort((left, right) => {
+            const leftJump = String(left.data?.transitionType).toLowerCase() === 'jump';
+            const rightJump = String(right.data?.transitionType).toLowerCase() === 'jump';
+            return Number(rightJump) - Number(leftJump);
+        });
+};
+
+
+function Flow({ id: propId, guid: propGuid, ...jqueryProperties }) {
    
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -379,6 +505,7 @@ function Flow({ id: propId, guid: propGuid }) {
     const [layoutConfig, setLayoutConfig] = useState(null);
     const [workflowDefinition, setWorkflowDefinition] = useState(null);
     const [lanesList, setLanesList] = useState([]);
+    const visibleEdges = filterRuntimeTransitions(nodes, edges, jqueryProperties);
     const focusNode = useCallback(
         (nodeId) => {
             window.requestAnimationFrame(() => {
@@ -722,7 +849,7 @@ function Flow({ id: propId, guid: propGuid }) {
             <div className="">
                 <Diagram
                     nodes={nodes}
-                    edges={edges}
+                    edges={visibleEdges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}

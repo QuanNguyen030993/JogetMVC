@@ -235,7 +235,8 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
         const jumpDefinitions = Array.isArray(jumpDefinitionsSource)
             ? jumpDefinitionsSource.map((definition, definitionIndex) => ({
                 id: definition.id || `jump-definition-${index}-${definitionIndex}`,
-                conditionName: definition.conditionName || definition.name || '',
+                conditionName: definition.conditionName || definition.propertyKey || definition.name || '',
+                propertyKey: definition.propertyKey || definition.conditionName || definition.name || '',
                 transitionId: definition.transitionId || definition.jumpTransitionId || ''
             }))
             : [];
@@ -994,15 +995,15 @@ function Flow({ id: propId }) {
                         jumpDefinitions: node.data?.jumpDefinitions || [],
                         jumpTransitionMap: Object.fromEntries(
                             (node.data?.jumpDefinitions || [])
-                                .filter((definition) => definition.conditionName && definition.transitionId)
-                                .map((definition) => [definition.conditionName, definition.transitionId])
+                                .filter((definition) => (definition.propertyKey || definition.conditionName) && definition.transitionId)
+                                .map((definition) => [definition.propertyKey || definition.conditionName, definition.transitionId])
                         ),
                         jump: node.data?.jumpEnabled ? {
                             definitions: node.data?.jumpDefinitions || [],
                             transitionMap: Object.fromEntries(
                                 (node.data?.jumpDefinitions || [])
-                                    .filter((definition) => definition.conditionName && definition.transitionId)
-                                    .map((definition) => [definition.conditionName, definition.transitionId])
+                                    .filter((definition) => (definition.propertyKey || definition.conditionName) && definition.transitionId)
+                                    .map((definition) => [definition.propertyKey || definition.conditionName, definition.transitionId])
                             )
                         } : null,
                         condition: (() => {
@@ -1078,12 +1079,12 @@ function Flow({ id: propId }) {
                         targetNodeId: edge.target || null,
                         conditionNames: jumpDefinitions
                             .filter((definition) => definition.transitionId === edge.id)
-                            .map((definition) => definition.conditionName)
+                            .map((definition) => definition.propertyKey || definition.conditionName)
                             .filter(Boolean),
                         transitionMap: Object.fromEntries(
                             jumpDefinitions
-                                .filter((definition) => definition.conditionName && definition.transitionId)
-                                .map((definition) => [definition.conditionName, definition.transitionId])
+                                .filter((definition) => (definition.propertyKey || definition.conditionName) && definition.transitionId)
+                                .map((definition) => [definition.propertyKey || definition.conditionName, definition.transitionId])
                         )
                     };
                 }
@@ -1927,7 +1928,7 @@ const updateSelectedEdge = useCallback(
                     {selectedNode.data.jumpEnabled && (
                         <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-                            <strong style={{ fontSize: '0.78rem', color: '#92400e' }}>Condition Name → Jump Transition ID</strong>
+                            <strong style={{ fontSize: '0.78rem', color: '#92400e' }}>jQuery Property Key → Jump Transition ID</strong>
                             <button
                                 type="button"
                                 disabled={!outgoingJumpEdges.length}
@@ -1936,6 +1937,7 @@ const updateSelectedEdge = useCallback(
                                     updateSelectedNode('jumpDefinitions', [...definitions, {
                                         id: `jump-definition-${Date.now()}`,
                                         conditionName: '',
+                                        propertyKey: '',
                                         transitionId: outgoingJumpEdges[0]?.id || ''
                                     }]);
                                 }}
@@ -1965,13 +1967,17 @@ const updateSelectedEdge = useCallback(
                                     ✕
                                 </button>
                                 <label style={{ marginRight: '18px' }}>
-                                    <span>Condition Name</span>
+                                    <span>Condition Name / jQuery Property Key</span>
                                     <input
-                                        value={definition.conditionName || ''}
-                                        placeholder="Ví dụ: bypassTS"
+                                        value={definition.propertyKey || definition.conditionName || ''}
+                                        placeholder="Ví dụ: bypassTS hoặc formData.bypassTS"
                                         onChange={(event) => {
                                             const definitions = [...(selectedNode.data?.jumpDefinitions || [])];
-                                            definitions[definitionIndex] = { ...definitions[definitionIndex], conditionName: event.target.value };
+                                            definitions[definitionIndex] = {
+                                                ...definitions[definitionIndex],
+                                                conditionName: event.target.value,
+                                                propertyKey: event.target.value
+                                            };
                                             updateSelectedNode('jumpDefinitions', definitions);
                                         }}
                                     />
@@ -1997,7 +2003,7 @@ const updateSelectedEdge = useCallback(
                             </div>
                         ))}
                         <p style={{ margin: '8px 0 0', fontSize: '0.72rem', color: '#92400e' }}>
-                            Runtime đọc condition name trong data và lấy đúng transition ID từ jumpTransitionMap.
+                            jQuery truyền property key có giá trị thỏa sẽ chỉ hiển thị Jump route tương ứng; Normal route của node sẽ bị ẩn.
                         </p>
                         </div>
                     )}
@@ -2881,11 +2887,72 @@ const updateSelectedEdge = useCallback(
     return (
         <div className={`flow-shell${isPaletteDragging ? ' palette-dragging' : ''}`}>
             <div className="flow-layout">
+                <div className="flow-diagram-tools">
+                    <div className="flow-sidebar-card flow-instance-lookup" style={{ borderLeft: '4px solid #f59e0b', background: '#fffbeb' }}>
+                        <h3>Tra cứu Instance</h3>
+                        <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '4px 0 8px 0' }}>Nhập Record GUID để định vị bước hiện tại của hồ sơ trên sơ đồ.</p>
+                        <div className="flow-instance-actions">
+                            <input
+                                type="text"
+                                placeholder="Nhập Record GUID..."
+                                value={searchRecordGuid}
+                                onChange={(event) => setSearchRecordGuid(event.target.value)}
+                                style={{ padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.82rem' }}
+                            />
+                            <button
+                                type="button"
+                                className="flow-action-btn"
+                                onClick={traceInstanceWorkflow}
+                                disabled={loading || !searchRecordGuid}
+                                style={{ background: '#f59e0b', color: 'white', margin: 0 }}
+                            >
+                                Kiểm tra (Trace)
+                            </button>
+                            {tracedStep && (
+                                <button
+                                    type="button"
+                                    className="flow-action-btn secondary"
+                                    onClick={() => setTracedStep(null)}
+                                    style={{ margin: 0, padding: '4px 8px' }}
+                                >
+                                    Xóa Trace
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flow-sidebar-card flow-node-palette">
+                        <div className="flow-tool-heading">
+                            <h3>Node palette</h3>
+                            <p>Drag a node to the canvas to build workflow steps.</p>
+                        </div>
+                        <div className="flow-palette-list">
+                            {nodeTemplates.map((template) => (
+                                <div
+                                    key={template.type}
+                                    className="flow-palette-item"
+                                    draggable
+                                    onDragStart={(event) => {
+                                        setIsPaletteDragging(true);
+                                        event.dataTransfer.setData('application/reactflow', template.type);
+                                        event.dataTransfer.setData('text/plain', template.type);
+                                        event.dataTransfer.effectAllowed = 'copyMove';
+                                    }}
+                                    onDragEnd={endPaletteDrag}
+                                >
+                                    <strong>{template.label}</strong>
+                                    <span>{template.subtitle}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
                 <aside className="flow-sidebar">
-                    <div className="flow-sidebar-card">
+                    <div className="flow-sidebar-card workflow-settings-card">
                         <h3>Workflow settings</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-                            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.85rem', color: '#475569' }}>
+                        <div className="workflow-settings-actions">
+                            <label className="workflow-id-field">
                                 <span>Workflow ID</span>
                                 <input
                                     type="text"
@@ -2922,41 +2989,6 @@ const updateSelectedEdge = useCallback(
                             >
                                 Build Workflow (API)
                             </button>
-                        </div>
-                    </div>
-
-                    <div className="flow-sidebar-card" style={{ borderLeft: '4px solid #f59e0b', background: '#fffbeb' }}>
-                        <h3>Tra cứu Instance</h3>
-                        <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '4px 0 8px 0' }}>Nhập Record GUID để định vị bước hiện tại của hồ sơ trên sơ đồ.</p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <input
-                                type="text"
-                                placeholder="Nhập Record GUID..."
-                                value={searchRecordGuid}
-                                onChange={(event) => setSearchRecordGuid(event.target.value)}
-                                style={{ padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.82rem' }}
-                            />
-                            <div style={{ display: 'flex', gap: '6px' }}>
-                                <button
-                                    type="button"
-                                    className="flow-action-btn"
-                                    onClick={traceInstanceWorkflow}
-                                    disabled={loading || !searchRecordGuid}
-                                    style={{ background: '#f59e0b', color: 'white', margin: 0, flex: 1 }}
-                                >
-                                    Kiểm tra (Trace)
-                                </button>
-                                {tracedStep && (
-                                    <button
-                                        type="button"
-                                        className="flow-action-btn secondary"
-                                        onClick={() => setTracedStep(null)}
-                                        style={{ margin: 0, padding: '4px 8px' }}
-                                    >
-                                        Xóa Trace
-                                    </button>
-                                )}
-                            </div>
                         </div>
                     </div>
 
@@ -3006,30 +3038,6 @@ const updateSelectedEdge = useCallback(
                     )}
 
                     <div className="flow-sidebar-card">
-                        <h3>Node palette</h3>
-                        <p>Drag a node to the canvas to build workflow steps.</p>
-                        <div className="flow-palette-list">
-                            {nodeTemplates.map((template) => (
-                                <div
-                                    key={template.type}
-                                    className="flow-palette-item"
-                                    draggable
-                                    onDragStart={(event) => {
-                                        setIsPaletteDragging(true);
-                                        event.dataTransfer.setData('application/reactflow', template.type);
-                                        event.dataTransfer.setData('text/plain', template.type);
-                                        event.dataTransfer.effectAllowed = 'copyMove';
-                                    }}
-                                    onDragEnd={endPaletteDrag}
-                                >
-                                    <strong>{template.label}</strong>
-                                    <span>{template.subtitle}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="flow-sidebar-card">
                         <h3>Quick actions</h3>
                         <button type="button" className="flow-action-btn" onClick={() => setNodes((currentNodes) => layoutNodes(currentNodes, edges, true))}>
                             Auto layout
@@ -3075,13 +3083,17 @@ const updateSelectedEdge = useCallback(
                 />
 
                 <aside className="flow-properties-panel">
+                    <div className="flow-panel-heading">
+                        <h3>Configure workflow</h3>
+                        <p>Select a node or transition on the diagram to edit its configuration.</p>
+                    </div>
                     <div className="flow-properties-scroll-container">
                         {error && <div className="flow-error">{error}</div>}
                         {nodeDetails}
                         {edgeDetails}
                         {!selectedNode && !selectedEdge && (
                             <div className="flow-empty-state">
-                                <h3>Configure workflow</h3>
+                                <h3>No item selected</h3>
                                 <p>Select a node or connect two nodes to edit transition attributes such as action name, step no and condition JSON.</p>
                             </div>
                         )}

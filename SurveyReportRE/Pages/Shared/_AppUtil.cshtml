@@ -10917,6 +10917,123 @@
             return formInstance?.option("formData") || {};
         }
 
+        function parseWorkflowRouteData(route) {
+            var routeData = route?.data ?? route?.Data;
+            if (routeData && typeof routeData === "object") return routeData;
+            if (typeof routeData !== "string" || !routeData.trim()) return {};
+
+            try {
+                return JSON.parse(routeData) || {};
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function collectWorkflowRuntimeData() {
+            var sources = [params.formData, params.data, getFormItems(stageDept)];
+            deptCodes.forEach(function (dept) {
+                sources.push(getFormItems(dept));
+            });
+
+            return sources.filter(function (source) {
+                return source && typeof source === "object";
+            });
+        }
+
+        function isWorkflowConditionEnabled(propertyKey, runtimeSources) {
+            var normalizedKey = String(propertyKey || "").trim().toLowerCase();
+            if (!normalizedKey) return false;
+
+            if (normalizedKey === "skipts") {
+                return runtimeSources.some(function (source) {
+                    return resolvePolicyIssuanceSkipTS(source) === true;
+                });
+            }
+
+            return runtimeSources.some(function (source) {
+                var matchingKey = Object.keys(source).find(function (key) {
+                    return String(key).trim().toLowerCase() === normalizedKey;
+                });
+                if (!matchingKey) return false;
+
+                var value = source[matchingKey];
+                if (typeof value === "string") {
+                    var normalizedValue = value.trim().toLowerCase();
+                    return normalizedValue !== "" &&
+                        !["false", "0", "null", "undefined", "no", "off"].includes(normalizedValue);
+                }
+                return Boolean(value);
+            });
+        }
+
+        function selectRuntimeRoutes(routes) {
+            var candidates = Array.isArray(routes) ? routes : [];
+            var runtimeSources = collectWorkflowRuntimeData();
+            var hasJumpConfiguration = false;
+            var activeJumpRoutes = candidates.filter(function (route) {
+                var routeData = parseWorkflowRouteData(route);
+                var nodeJump = routeData?.nodeJump ?? routeData?.NodeJump ?? {};
+                var jumpDefinitions =
+                    routeData?.jumpDefinitions ?? routeData?.JumpDefinitions ??
+                    nodeJump?.definitions ?? nodeJump?.Definitions ??
+                    route?.jumpDefinitions ?? route?.JumpDefinitions ?? [];
+
+                var transitionMap = nodeJump.transitionMap ?? nodeJump.TransitionMap ?? {};
+                var conditionNames = nodeJump.conditionNames ?? nodeJump.ConditionNames ?? [];
+                var transitionId = String(
+                    nodeJump.transitionId ?? nodeJump.TransitionId ??
+                    routeData?.transitionId ?? routeData?.TransitionId ??
+                    route?.transitionId ?? route?.TransitionId ?? route?.routeId ?? route?.id ?? ""
+                );
+                var configuredConditions = [];
+
+                if (Array.isArray(conditionNames)) {
+                    configuredConditions = configuredConditions.concat(conditionNames);
+                }
+                if (transitionMap && typeof transitionMap === "object") {
+                    Object.keys(transitionMap).forEach(function (conditionName) {
+                        if (String(transitionMap[conditionName] ?? "") === transitionId) {
+                            configuredConditions.push(conditionName);
+                        }
+                    });
+                }
+                if (Array.isArray(jumpDefinitions)) {
+                    jumpDefinitions.forEach(function (definition) {
+                        var definitionTransitionId = String(
+                            definition?.transitionId ?? definition?.TransitionId ?? definition?.jumpTransitionId ?? ""
+                        );
+                        if (definitionTransitionId !== transitionId) return;
+
+                        configuredConditions.push(
+                            definition?.propertyKey ?? definition?.PropertyKey ??
+                            definition?.conditionName ?? definition?.ConditionName ?? definition?.name ?? ""
+                        );
+                    });
+                }
+
+                if (Object.keys(transitionMap || {}).length || jumpDefinitions.length || configuredConditions.length) {
+                    hasJumpConfiguration = true;
+                }
+
+                var isJumpRoute = String(route?.flowType ?? route?.FlowType ?? "")
+                    .trim()
+                    .toLowerCase() === "jump";
+
+                return isJumpRoute && configuredConditions.some(function (conditionName) {
+                    return isWorkflowConditionEnabled(conditionName, runtimeSources);
+                });
+            });
+
+            if (activeJumpRoutes.length) return activeJumpRoutes;
+            if (!hasJumpConfiguration) return candidates;
+
+            return candidates.filter(function (route) {
+                return String(route?.flowType ?? route?.FlowType ?? "")
+                    .trim()
+                    .toLowerCase() !== "jump";
+            });
+        }
+
         function collectWorkflowUiLockRules(value, result, seen, depth) {
             result = result || [];
             seen = seen || new WeakSet();
@@ -11778,7 +11895,7 @@
                             });
 
                         const normalRoutes =
-                            data.filter(function (route) {
+                            selectRuntimeRoutes(data.filter(function (route) {
                                 return (
                                     !route?.isReturn &&
                                     String(
@@ -11793,7 +11910,7 @@
                                     String(route?.fNodeId ?? "") ===
                                         String(state.nextStep.currentStep ?? "")
                                 );
-                            });
+                            }));
 
                         const returnRoutes =
                             data.filter(function (route) {

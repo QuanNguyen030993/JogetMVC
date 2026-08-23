@@ -2,6 +2,8 @@ import Flow from "../components/Flow.jsx"
 import WorkloadChart from "../components/WorkloadChart.jsx";
 import TATChart from "../components/TATChart.jsx";
 import React from "react";
+import '../../../ITAdmin/src/styles/com.all.css';
+import '../../../ITAdmin/src/styles/flow.css';
 
 import { createRoot } from "react-dom/client";
 // import {CustomGrid} from "./CustomGrid.jsx";
@@ -42,55 +44,38 @@ function mount(element, name, options){
 
 const $ = window.jQuery;
 
-$.fn.flow = function(arg1, arg2, arg3) {
-    return this.each(function(){
-            mount(
-                this,
-                "Flow",
-                options
-            );
-
-        });
-    // xử lý tương tự customform hoặc htmleditor
-};
-
-
 function createJQueryPlugin(pluginName, componentName) {
     $.fn[pluginName] = function(arg1, arg2, arg3) {
         if (typeof arg1 === "string") {
             if (arg1 === "option") {
-                if (arg2 === "value") {
-                    if (arguments.length >= 3) {
-                        this.each(function() {
-                            const instance = roots.get(this);
-                            if (!instance) return;
-                            if (instance.ref?.current) {
-                                instance.ref.current.option("value", arg3);
-                            } else {
-                                instance.options.value = arg3;
-                                const Component = controls[instance.name];
-                                instance.root.render(
-                                    <Component ref={instance.ref} {...instance.options}/>
-                                );
-                            }
-                        });
-                        return this;
-                    }
-                    if (this.length === 1) {
-                        const el = this[0];
-                        const instance = roots.get(el);
-                        if (!instance) return null;
-                        const controlInstance = instance.ref?.current;
-                        return controlInstance?.value?.() ?? instance.options.value ?? null;
-                    }
-                    return this.map(function() {
+                if (arguments.length >= 3) {
+                    this.each(function() {
                         const instance = roots.get(this);
-                        if (!instance) return null;
-                        const controlInstance = instance.ref?.current;
-                        return controlInstance?.value?.() ?? instance.options.value ?? null;
-                    }).get();
+                        if (!instance) return;
+                        if (instance.ref?.current?.option) {
+                            instance.ref.current.option(arg2, arg3);
+                            return;
+                        }
+                        instance.options[arg2] = arg3;
+                        const Component = controls[instance.name];
+                        instance.root.render(
+                            <Component ref={instance.ref} {...instance.options}/>
+                        );
+                    });
+                    return this;
                 }
-                return undefined;
+                if (this.length === 1) {
+                    const instance = roots.get(this[0]);
+                    if (!instance) return null;
+                    if (instance.ref?.current?.option) return instance.ref.current.option(arg2);
+                    return instance.options[arg2] ?? null;
+                }
+                return this.map(function() {
+                    const instance = roots.get(this);
+                    if (!instance) return null;
+                    if (instance.ref?.current?.option) return instance.ref.current.option(arg2);
+                    return instance.options[arg2] ?? null;
+                }).get();
             }
         }
 

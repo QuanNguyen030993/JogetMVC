@@ -19,9 +19,16 @@ export default defineConfig(({ mode }) => {
         name: 'TMIVCom',
         formats: ['iife'],
         fileName: () => 'bizform.js',
+        cssFileName: 'bizform',
       },
       outDir: path.resolve(configDir, '../wwwroot/lib/tmivcom'),
       emptyOutDir: false,
+      rollupOptions: {
+        output: {
+          assetFileNames: (assetInfo) =>
+            assetInfo.name === 'style.css' ? 'bizform.css' : '[name][extname]',
+        },
+      },
     },
   };
 });
