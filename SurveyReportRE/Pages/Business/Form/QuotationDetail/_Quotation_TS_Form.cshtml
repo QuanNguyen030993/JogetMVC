@@ -16,7 +16,7 @@
         thisObject.ModelName = "Quotation";
         thisObject.formId = `@QTViewIdHelper.Form(dept, quotationId)`;
         thisObject.dept = "@dept";
-        thisObject.prefix = "qt";
+        thisObject.prefix = viewIdModulePrefix.quotation;
         thisObject.schemeName = "Quotation";
         thisObject.decisionColSpan = 2;
 
@@ -70,7 +70,7 @@
         statusButtonDisabled: true
     };
     var makeOptionDecisionV2 = {
-        buttonId: "qt-make-option-TS-@quotationId",
+        buttonId: "@(QTViewIdHelper.Prefix)-make-option-TS-@quotationId",
         text: "Make Option",
         type: "default",
         stylingMode: "contained",
@@ -172,7 +172,7 @@
              name: "decision@(dept)Group",
              cssClass: "workflow-decision-group qt-decision-group-@(dept)",
              elementAttr: {
-                 id: "qt-decision-group-@(dept)-@(quotationId)",
+                 id: "@(QTViewIdHelper.Prefix)-decision-group-@(dept)-@(quotationId)",
                  "data-form-group-name": "decision@(dept)Group",
                  "data-route-dept": "@dept"
              },
@@ -283,7 +283,7 @@
                 var workflowResult =
                     await loadSelectedWorkflow({
 
-                        moduleCode: "qt",
+                        moduleCode: viewIdModulePrefix.quotation,
 
                         id: @(quotationId),
 

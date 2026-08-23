@@ -4,13 +4,13 @@
 @{
     var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
     var quotationId = Convert.ToInt64(ViewData["Id"]);
-    var deptCodes = moduleCode == "qt"
-        ? DepartmentModuleCodes.Quotation
-        : DepartmentModuleCodes.PolicyIssuance;
-    var deptTreeId = moduleCode == "qt"
+    var deptCodes = moduleCode == QTViewIdHelper.Prefix
+        ? QTViewIdHelper.Departments
+        : PIViewIdHelper.Departments;
+    var deptTreeId = moduleCode == QTViewIdHelper.Prefix
         ? QTViewIdHelper.DeptTree(quotationId)
         : PIViewIdHelper.DeptTree(quotationId);
-    var treeStackId = moduleCode == "qt"
+    var treeStackId = moduleCode == QTViewIdHelper.Prefix
         ? QTViewIdHelper.TreeStack(quotationId)
         : PIViewIdHelper.TreeStack(quotationId);
     var overviewScrollId = ViewIdHelper.OverViewScroll(Model.Prefix, Model.Id);
@@ -36,7 +36,7 @@
         <span class="dept-idle-clock-value">02:00</span>
     </div>
     <div class="treeStack" id="@treeStackId">
-        <div class="vline" id="@(moduleCode == "qt" ? QTViewIdHelper.TreeVLine(quotationId) :  PIViewIdHelper.TreeVLine(quotationId))"></div>
+        <div class="vline" id="@(moduleCode == QTViewIdHelper.Prefix ? QTViewIdHelper.TreeVLine(quotationId) :  PIViewIdHelper.TreeVLine(quotationId))"></div>
         <div class="dept-scroll-beacon" aria-hidden="true"></div>
 
         @for (var deptIndex = 0; deptIndex < deptCodes.Length; deptIndex++)
@@ -242,7 +242,7 @@
         var quotationId = @quotationId;
         var formPrefix = "@Model.Prefix";
 
-        const activeDeptCodes = moduleCode === "qt"
+        const activeDeptCodes = moduleCode === viewIdModulePrefix.quotation
             ? qtDeptModuleCode
             : piDeptModuleCode;
 
@@ -366,7 +366,7 @@
                             PM: "@PIViewIdHelper.Form("PM", quotationId)"
                         };
 
-                        if (moduleCode === "qt") {
+                        if (moduleCode === viewIdModulePrefix.quotation) {
                             formId = qtForms[dept];
                         } else {
                             formId = piForms[dept];
@@ -432,12 +432,12 @@
                         };
 
                         const deptForms =
-                            moduleCode === "qt"
+                            moduleCode === viewIdModulePrefix.quotation
                                 ? qtForms
                                 : piForms;
 
                         const depts =
-                            moduleCode === "qt"
+                            moduleCode === viewIdModulePrefix.quotation
                                 ? qtDeptModuleCode
                                 : piDeptModuleCode;
 
@@ -665,7 +665,7 @@
                          */
 
                         const apiUrl =
-                            moduleCode === "qt"
+                            moduleCode === viewIdModulePrefix.quotation
                                 ? "/api/Quotation/UpdateDataAutoSaved"
                                 : "/api/PolicyIssuance/UpdateDataAutoSaved";
 

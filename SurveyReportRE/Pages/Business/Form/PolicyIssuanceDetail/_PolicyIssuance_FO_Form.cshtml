@@ -51,7 +51,7 @@
     ];
 
     var sectionId = "@ViewData["Cd"]";
-    var sectionIdQt = "qt-body_@(dept)_";
+    var sectionIdQt = `${viewIdModulePrefix.quotation}-body_@(dept)_`;
     var that = new Object();
     that.ModelName = "PolicyIssuance";
     that.moduleName = "default";
@@ -107,7 +107,7 @@
                 items: [{
                     itemType: "simple",
                     template: function () {
-                        return $("<div id='pi_fillList_FO_@policyIssuanceId'>").dxDataGrid({
+                        return $("<div id='@(PIViewIdHelper.Prefix)_fillList_FO_@policyIssuanceId'>").dxDataGrid({
                             dataSource: dataSourceGrid,
                             keyExpr: "field",
                             paging: { enabled: false },
@@ -163,7 +163,7 @@
                                             case "checkbox":
                                                 var fillListUploader = new Object();
                                                 fillListUploader.ModelName = "PolicyIssuance";
-                                                fillListUploader.moduleName = `pi_${data.field}`;
+                                                fillListUploader.moduleName = `${viewIdModulePrefix.policyIssuance}_${data.field}`;
                                                 fillListUploader.editorType = "dxFileUploader";
                                                 fillListUploader.id = @(policyIssuanceId);
                                                 fillListUploader.guid = "@(policyIssuanceGuid)";

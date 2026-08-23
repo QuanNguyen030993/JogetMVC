@@ -3,9 +3,9 @@
 @using Newtonsoft.Json
 @model Quotation_Individual_FormModel
 @{
-    var moduleCode = "qt";
+    var moduleCode = QTViewIdHelper.Prefix;
     var prefix = moduleCode;
-    var title = moduleCode == "qt" ? "Quotation Overview" : "Policy Issuance Overview";
+    var title = moduleCode == QTViewIdHelper.Prefix ? "Quotation Overview" : "Policy Issuance Overview";
 }
 @*
 Note:
@@ -484,7 +484,7 @@ Note:
 
 <script type="text/javascript">
         var PIC_JSON = `{}`;
-        var formModuleKeyQt = "qt";
+        var formModuleKeyQt = viewIdModulePrefix.quotation;
         var pICs = [];
         if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
             $('[data-toggle="push-menu"]').click();
@@ -834,7 +834,7 @@ Note:
             function reloadState(){
                   $.each(qtDeptModuleCode, function (itemIndex, item) {
                     var items = new Object();
-                    items.moduleName = "qt";
+                    items.moduleName = viewIdModulePrefix.quotation;
                     items.sectionName = item;
                     loadDxFileUploaderAttachments(item, "Document", items);
                     commentPinModule(formModuleKeyQt,item,state.selectedGuid, state.pinNotes);
@@ -1631,7 +1631,7 @@ Note:
     <div class="contentGrid" id="mainContentGrid">
         @await Html.PartialAsync("_LeftPane", new LeftPanePartialModel
    {
-       Prefix = "qt",
+       Prefix = QTViewIdHelper.Prefix,
        Title = "Your Quotations",
        SearchWidth = "210px",
        SearchPlaceholder = "Search quotation..."
@@ -1649,12 +1649,12 @@ Note:
 
     <div class="actionBar">
         <div class="actionLeft">
-            <span class="pill">Record: <b id="qt-recordNo">Qu-10030</b></span>
-            <span class="pill">Login role: <b id="qt-loginRoleLabel"></b></span>
-            <span id="qt-focusDeptPill" class="pill">Focus section: </span>
+            <span class="pill">Record: <b id="@QTViewIdHelper.Prefix-recordNo">Qu-10030</b></span>
+            <span class="pill">Login role: <b id="@QTViewIdHelper.Prefix-loginRoleLabel"></b></span>
+            <span id="@QTViewIdHelper.Prefix-focusDeptPill" class="pill">Focus section: </span>
         </div>
         <div class="actionRight">
-            <div id="qt-btnClientConfirm"></div>
+            <div id="@QTViewIdHelper.Prefix-btnClientConfirm"></div>
         </div>
     </div>
 

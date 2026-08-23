@@ -44,7 +44,7 @@
     thisObject.ModelName = "PolicyIssuance";
     thisObject.formId = `@PIViewIdHelper.Form(dept, policyIssuanceId)`;
         thisObject.dept = "@dept";
-        thisObject.prefix = "pi";
+        thisObject.prefix = viewIdModulePrefix.policyIssuance;
 
 
     var thisObjectDetails = new Object();
@@ -65,7 +65,7 @@
     // that.titleName = "Upload Quotation";
     // that.uploaderAllow = false;
      var sectionId = "@ViewData["Cd"]";
-    var sectionIdQt = "qt-body_@(dept)_";
+    var sectionIdQt = `${viewIdModulePrefix.quotation}-body_@(dept)_`;
 
     // var that2 = new Object();
     // that2.ModelName = "PolicyIssuance";
@@ -101,7 +101,7 @@
                     {
                         itemType: "simple",
                         template: function () {
-                            return $("<div id='pi_checkList_@policyIssuanceId'>").dxDataGrid({
+                            return $("<div id='@(PIViewIdHelper.Prefix)_checkList_@policyIssuanceId'>").dxDataGrid({
                                 dataSource: policyIssuanceChecklistDataSource,
 
                                 paging: {
@@ -209,7 +209,7 @@
                     name: "decision@(dept)Group",
                     cssClass: "workflow-decision-group pi-decision-group-@(dept)",
                     elementAttr: {
-                        id: "pi-decision-group-@(dept)-@(policyIssuanceId)",
+                        id: "@(PIViewIdHelper.Prefix)-decision-group-@(dept)-@(policyIssuanceId)",
                         "data-form-group-name": "decision@(dept)Group",
                         "data-route-dept": "@dept"
                     },

@@ -579,7 +579,7 @@
 
             function newQuotationForm() {
                 var id = 0;
-                    var sectionName = `qt_default_FO`;
+                    var sectionName = `${viewIdModulePrefix.quotation}_default_FO`;
                 var divMainPopup = $(`#mainPopup`);
                 var popupInstance = divMainPopup.dxPopup({
                     width: "95%",
@@ -2123,7 +2123,7 @@
                                         }
 
                                         function getRouteCommentStageDept() {
-                                            var idManager = moduleKey === "pi"
+                                            var idManager = moduleKey === viewIdModulePrefix.policyIssuance
                                                 ? window.PolicyIssuanceIdManager
                                                 : window.QuotationIdManager;
                                             var workflowFormId = idManager?.form?.(dept, id);
@@ -2131,7 +2131,7 @@
                                                 ? $(`#${workflowFormId}`).dxForm("instance")
                                                 : null;
                                             var workflowFormData = workflowForm?.option("formData") || {};
-                                            var workflowPage = moduleKey === "pi"
+                                            var workflowPage = moduleKey === viewIdModulePrefix.policyIssuance
                                                 ? window.PolicyIssuancePage
                                                 : window.QuotationPage;
 
@@ -2212,7 +2212,7 @@
 
                                        
 
-                                        var departmentCodes = moduleKey === "pi"
+                                        var departmentCodes = moduleKey === viewIdModulePrefix.policyIssuance
                                             ? piDeptModuleCode
                                             : qtDeptModuleCode;
                                         var routeDepartments = departmentCodes.filter(f => f != dept).map(function (code) {
@@ -2222,7 +2222,7 @@
                                         if (typeof $.fn.tmivcommenteditorroute !== "function") {
                                             throw new Error("TMIVCom CommentEditorRoute is not loaded.");
                                         }
-                                        var typeRequest = moduleKey == "qt" ? "Quotation" : "PolicyIssuance"; 
+                                        var typeRequest = moduleKey == viewIdModulePrefix.quotation ? "Quotation" : "PolicyIssuance"; 
 
                                         routeEditorOptions = {
                                             items: initialComments,
@@ -2562,7 +2562,7 @@
             `;
         }
 
-            function TinyMCEElementMaker(classform, dept, id, control, moduleKey = "qt", guid = null)
+            function TinyMCEElementMaker(classform, dept, id, control, moduleKey = viewIdModulePrefix.quotation, guid = null)
             {
             var item = new Object();
 
@@ -2572,7 +2572,7 @@
                     item.editorType = "dxHtmlEditor";
                     item.instanceProps = new Object();
                     item.instanceProps.refKey = id;
-                    const idManager = moduleKey === "pi"
+                    const idManager = moduleKey === viewIdModulePrefix.policyIssuance
                         ? window.PolicyIssuanceIdManager
                         : window.QuotationIdManager;
                     const remarkBoxId = idManager.remarkBox(dept, id);
@@ -2599,8 +2599,8 @@
                     if (existingControl && $element.children().length) {
                         return existingControl;
                     }
-                    var typeRequest = moduleKey == "qt" ? "Quotation" : "PolicyIssuance";
-                     var departmentCodes = moduleKey === "pi"
+                    var typeRequest = moduleKey == viewIdModulePrefix.quotation ? "Quotation" : "PolicyIssuance";
+                     var departmentCodes = moduleKey === viewIdModulePrefix.policyIssuance
                                             ? piDeptModuleCode
                                             : qtDeptModuleCode;
                                         var routeDepartments = departmentCodes.filter(f => f != dept).map(function (code) {
@@ -3237,12 +3237,12 @@
             var container = null;
             var section = null;
 
-            if (module == "qt") {
+            if (module == viewIdModulePrefix.quotation) {
                 container = document.getElementById(window.QuotationIdManager.overviewScroll(recordId));
                 section = document.getElementById(window.QuotationIdManager.sec(deptCode, recordId));
             }
 
-            if (module == "pi"){
+            if (module == viewIdModulePrefix.policyIssuance){
                 container = document.getElementById(window.PolicyIssuanceIdManager.overviewScroll(recordId));
                 section = document.getElementById(window.PolicyIssuanceIdManager.sec(deptCode, recordId));
             }
@@ -3392,7 +3392,7 @@
                 container: null,
                 treeStack: null
             }, options);
-            var manager = module === "pi"
+            var manager = module === viewIdModulePrefix.policyIssuance
                 ? window.PolicyIssuanceIdManager
                 : window.QuotationIdManager;
 
@@ -3755,8 +3755,10 @@
 
             async function persistDepartmentAssignment(schemeName, recordId, dept, store, values, formId) {
                 var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
-                var moduleCode = normalizedScheme === "policyissuance" ? "pi" : "qt";
-                var controllerName = moduleCode === "pi" ? "PolicyIssuance" : "Quotation";
+                var moduleCode = normalizedScheme === "policyissuance"
+                    ? viewIdModulePrefix.policyIssuance
+                    : viewIdModulePrefix.quotation;
+                var controllerName = moduleCode === viewIdModulePrefix.policyIssuance ? "PolicyIssuance" : "Quotation";
                 var reloadKey = `${moduleCode}:${recordId}`;
                 var loadingContexts = beginDepartmentAssignmentLoading(
                     moduleCode,
@@ -3817,7 +3819,7 @@
                         );
                     }
                     var treeStack = document.getElementById(
-                        (moduleCode === "pi" ? window.PolicyIssuanceIdManager : window.QuotationIdManager)
+                        (moduleCode === viewIdModulePrefix.policyIssuance ? window.PolicyIssuanceIdManager : window.QuotationIdManager)
                             ?.treeStack?.(recordId)
                     );
                     treeStack?.deptTreeScrollSpy?.refresh?.();
@@ -3840,7 +3842,7 @@
             //     var pageLayout = window.QuotationPage;
             //     var stateLayout = pageLayout.state;
             //     stateLayout.isAssigneeBoxRender = false;
-            //     if (moduleKey == "qt")
+            //     if (moduleKey == viewIdModulePrefix.quotation)
             //         $.each(qtDeptModuleCode, function (itemIndex, item) {
             //             setTimeout(() => {
             //                     var currentPic = getDefaultPicByDept(item,  data[item]);
@@ -3910,7 +3912,7 @@
             //                 });
             //             }, timeout);
             //         });
-            //     if (moduleKey == "pi")
+            //     if (moduleKey == viewIdModulePrefix.policyIssuance)
             //         $.each(piDeptModuleCode, function (itemIndex, item) {
             //             setTimeout(() => {
             //             var currentPic = getDefaultPicByDept(item, data[item]);
@@ -3990,7 +3992,7 @@
          */
         async function renderAssignment(moduleKey, data, lifecycleState, delay) {
             const renderState = lifecycleState || { isAssigneeBoxRender: false };
-            const isQuotation = moduleKey === "qt";
+            const isQuotation = moduleKey === viewIdModulePrefix.quotation;
             const departments = isQuotation
                 ? FormStageDelay.departmentOrder.quotation
                 : FormStageDelay.departmentOrder.policyIssuance;
@@ -4289,7 +4291,8 @@
 
             const $assignWrapper = $el.closest(".dept-form-header__assign");
             const $assignmentOverviewRoot = $el.closest(
-                "[id^='qt-overviewRoot_'], [id^='pi-overviewRoot_']"
+                `[id^='${viewIdModulePrefix.quotation}-overviewRoot_'], ` +
+                `[id^='${viewIdModulePrefix.policyIssuance}-overviewRoot_']`
             );
             const departmentName = String(settings.groupName || "").trim().toUpperCase();
             let $assignmentStatus = $();
@@ -4669,7 +4672,10 @@
                 //var formItemsRes = $(`#qt-formRES`).dxForm("instance")?.option("formData") || {};
                     var condition = safeJsonParse(findRoute.data) || {};
                 if (condition.source == "form") {
-                            const resAttachmentControlId = window.IdManager.attachmentSectionKey("qt-body_FO_RES", "default", formItems.id);
+                            const resAttachmentControlId = window.IdManager.attachmentSectionKey(
+                                `${viewIdModulePrefix.quotation}-body_FO_RES`,
+                                "default",
+                                formItems.id);
                             const result = extractAttachmentQuantity(getAttachmentPreviewItemsByControlId(resAttachmentControlId));
                          formItems.hasResAttachment =  result.fileCount > 0 ? true : false;
                     // formItems = window.QuotationPage.state.formFO.dxForm("instance").option("formData");
@@ -4678,8 +4684,8 @@
 
                 if (evaluateConditionRule(condition, formItems)) {
                     var flowName = "";
-                    if (moduleName === "qt") flowName = "Quotation";
-                    if (moduleName === "pi") flowName = "PolicyIssuance";
+                    if (moduleName === viewIdModulePrefix.quotation) flowName = "Quotation";
+                    if (moduleName === viewIdModulePrefix.policyIssuance) flowName = "PolicyIssuance";
                     var loadingContext = beginWorkflowViewLoading(
                         flowName,
                         formItems.id,
@@ -4731,8 +4737,8 @@
                 // }
                 if (evaluateConditionRule(condition, formItems)) {
                          var flowName = "";
-                        if (moduleName === "qt") flowName = "Quotation";
-                        if (moduleName === "pi") flowName = "PolicyIssuance";
+                        if (moduleName === viewIdModulePrefix.quotation) flowName = "Quotation";
+                        if (moduleName === viewIdModulePrefix.policyIssuance) flowName = "PolicyIssuance";
                         var loadingContext = beginWorkflowViewLoading(
                             flowName,
                             formItems.id,
@@ -4992,7 +4998,7 @@
             }
                 function buildFolder(latestOptions, sectionName) {
                 //return (latestOptions?.sectionName || sectionName) +
-                return (latestOptions.moduleName.includes('qt') ? `Quotation` : `PolicyIssuance`) +
+                return (latestOptions.moduleName.includes(viewIdModulePrefix.quotation) ? `Quotation` : `PolicyIssuance`) +
                     (latestOptions?.code ? `\\${latestOptions.code}` : "");
             }
 
@@ -6727,7 +6733,7 @@
                     item.instanceProps = new Object();
                     item.instanceProps.refKey = id;
                     var itemElement = $(`<div>`)
-                    // item.moduleName = "qt"; item.sectionName = "SurveyResultAttachment";
+                    // item.moduleName = viewIdModulePrefix.quotation; item.sectionName = "SurveyResultAttachment";
                     createEditor(item, itemElement, $("<div>"), item);
                     control = item;
                     itemElement.appendTo(container);
@@ -7124,9 +7130,9 @@
 
            function resolveDepartmentSection(schemeName, recordId, dept) {
                 var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
-                var moduleCode = normalizedScheme === "policyissuance" || normalizedScheme === "pi"
-                    ? "pi"
-                    : "qt";
+                var moduleCode = normalizedScheme === "policyissuance" || normalizedScheme === viewIdModulePrefix.policyIssuance
+                    ? viewIdModulePrefix.policyIssuance
+                    : viewIdModulePrefix.quotation;
                 return document.getElementById(
                     `${moduleCode}-sec_${String(dept || "").trim().toUpperCase()}_${recordId}`
                 );
@@ -7180,7 +7186,7 @@
 
            function applyAcceptedDepartmentDecision(schemeName, recordId, dept, responseData) {
                 var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
-                var isPolicyIssuance = normalizedScheme === "policyissuance" || normalizedScheme === "pi";
+                var isPolicyIssuance = normalizedScheme === "policyissuance" || normalizedScheme === viewIdModulePrefix.policyIssuance;
                 var manager = isPolicyIssuance
                     ? window.PolicyIssuanceIdManager
                     : window.QuotationIdManager;
@@ -7229,7 +7235,9 @@
 
                 return new Promise(function (resolve) {
                     window.setTimeout(function () {
-                        var overviewRoot = section?.closest("[id^='qt-overviewRoot_'], [id^='pi-overviewRoot_']");
+                        var overviewRoot = section?.closest(
+                            `[id^='${viewIdModulePrefix.quotation}-overviewRoot_'], ` +
+                            `[id^='${viewIdModulePrefix.policyIssuance}-overviewRoot_']`);
                         // if (overviewRoot) mountOverviewDecisionDocks(overviewRoot);
                         // renderDecisionDeferredV2 has already rebuilt the decision
                         // field from the updated TAT. Repainting here recreates the
@@ -7276,7 +7284,7 @@
            function beginDepartmentAssignmentLoading(moduleCode, recordId, dept) {
                 var section = document.getElementById(`${moduleCode}-sec_${dept}_${recordId}`);
                 var assigneeHost = section?.querySelector(".dept-form-header__assign");
-                var manager = moduleCode === "pi"
+                var manager = moduleCode === viewIdModulePrefix.policyIssuance
                     ? window.PolicyIssuanceIdManager
                     : window.QuotationIdManager;
                 var treeStack = manager?.treeStack
@@ -7309,7 +7317,9 @@
            window.WorkflowViewReloadState = window.WorkflowViewReloadState || {};
            function beginWorkflowViewLoading(schemeName, recordId, message) {
                 // var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
-                // var moduleCode = normalizedScheme === "policyissuance" ? "pi" : "qt";
+                // var moduleCode = normalizedScheme === "policyissuance"
+                //     ? viewIdModulePrefix.policyIssuance
+                //     : viewIdModulePrefix.quotation;
                 // var reloadKey = `${moduleCode}:${recordId}`;
                 // var viewInstance = window.OverviewViewRegistry?.[`${moduleCode}:${recordId}`];
                 // var renderGate = viewInstance?.renderGate;
@@ -7354,8 +7364,10 @@
 
            function reloadOverviewViewComponents(moduleCode, recordId, triggerElement, forceReload) {
                 var normalizedModule = String(moduleCode || "").replace(/\s+/g, "").toLowerCase();
-                var isPolicyIssuance = normalizedModule === "pi" || normalizedModule === "policyissuance";
-                var resolvedModuleCode = isPolicyIssuance ? "pi" : "qt";
+                var isPolicyIssuance = normalizedModule === viewIdModulePrefix.policyIssuance || normalizedModule === "policyissuance";
+                var resolvedModuleCode = isPolicyIssuance
+                    ? viewIdModulePrefix.policyIssuance
+                    : viewIdModulePrefix.quotation;
                 var viewInstanceKey = `${resolvedModuleCode}:${recordId}`;
                 var now = Date.now();
                 var previousReloadAt = window.WorkflowViewReloadState[viewInstanceKey] || 0;
@@ -7399,7 +7411,9 @@
            function reloadWorkflowViewComponents(schemeName, recordId, triggerElement, forceReload) {
                 var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
                 var isPolicyIssuance = normalizedScheme === "policyissuance";
-                var moduleCode = isPolicyIssuance ? "pi" : "qt";
+                var moduleCode = isPolicyIssuance
+                    ? viewIdModulePrefix.policyIssuance
+                    : viewIdModulePrefix.quotation;
                 return reloadOverviewViewComponents(moduleCode, recordId, triggerElement, forceReload);
            }
            window.reloadWorkflowViewComponents = reloadWorkflowViewComponents;
@@ -7408,7 +7422,7 @@
                 object = object || {};
                 dept = dept || object.dept;
 
-                var scheme = object.schemeName || (object.prefix === "pi" ? "PolicyIssuance" : "Quotation");
+                var scheme = object.schemeName || (object.prefix === viewIdModulePrefix.policyIssuance ? "PolicyIssuance" : "Quotation");
                 var formItems = object.formItems
                     || $(`#${object.formId}`).dxForm("instance")?.option("formData")
                     || {};
@@ -9468,7 +9482,8 @@
                         if (!$co.length) return;
                         const pic = picMap[dept] || "";
                         const $overviewRoot = $(this).closest(
-                            "[id^='qt-overviewRoot_'], [id^='pi-overviewRoot_']"
+                            `[id^='${viewIdModulePrefix.quotation}-overviewRoot_'], ` +
+                            `[id^='${viewIdModulePrefix.policyIssuance}-overviewRoot_']`
                         );
                         syncDeptNodeAssignmentMenu(
                             dept,
@@ -10342,7 +10357,7 @@
                         return;
                     }
 
-                    var moduleName = item.moduleName || item.formModuleKey || item.moduleKey || "qt";
+                    var moduleName = item.moduleName || item.formModuleKey || item.moduleKey || viewIdModulePrefix.quotation;
                     var nextStep = item.nextStep || item.state?.nextStep || window.QuotationPage?.state?.nextStep;
                     var handlerName = item.handlerName || item.action || (route?.isReturn ? "returnToStep" : "submitNextStep");
 
@@ -10721,9 +10736,11 @@
             .trim()
             .toLowerCase();
 
-        if (moduleCode !== "qt" && moduleCode !== "pi") {
+        if (moduleCode !== viewIdModulePrefix.quotation && moduleCode !== viewIdModulePrefix.policyIssuance) {
             return $.Deferred()
-                .reject(new Error("moduleCode must be 'qt' or 'pi'"))
+                .reject(new Error(
+                    `moduleCode must be '${viewIdModulePrefix.quotation}' or '${viewIdModulePrefix.policyIssuance}'`
+                ))
                 .promise();
         }
         console.log(params);
@@ -10738,7 +10755,7 @@
 
         const state = params.state || {};
         const deptCodes = params.deptCodes || (
-            moduleCode === "pi" ? piDeptModuleCode : qtDeptModuleCode
+            moduleCode === viewIdModulePrefix.policyIssuance ? piDeptModuleCode : qtDeptModuleCode
         );
         const formStages = params.formStages;
         const remarkBoxes = params.remarkBoxes || {};
@@ -10758,8 +10775,8 @@
             params.returnToStep || function () {};
 
         const moduleConfigs = {
-            qt: {
-                key: "qt",
+            [viewIdModulePrefix.quotation]: {
+                key: viewIdModulePrefix.quotation,
 
                 workflowUrl: function (selectedGuid) {
                     return `/api/Quotation/GetQuotationWorkflow/${selectedGuid}`;
@@ -10776,7 +10793,7 @@
                     (
                         typeof formModuleKeyQt !== "undefined"
                             ? formModuleKeyQt
-                            : "qt"
+                            : viewIdModulePrefix.quotation
                     ),
 
                 getFormId: function (dept, recordId) {
@@ -10819,8 +10836,8 @@
                 }
             },
 
-            pi: {
-                key: "pi",
+            [viewIdModulePrefix.policyIssuance]: {
+                key: viewIdModulePrefix.policyIssuance,
 
                 // Change these API routes here if the real PI endpoints differ.
                 workflowUrl: function (selectedGuid) {
@@ -10838,7 +10855,7 @@
                     (
                         typeof formModuleKeyPi !== "undefined"
                             ? formModuleKeyPi
-                            : "pi"
+                            : viewIdModulePrefix.policyIssuance
                     ),
 
                 getFormId: function (dept, recordId) {
@@ -11643,7 +11660,7 @@
 
                     if (
                         !$routeHost?.length &&
-                        moduleCode === "qt"
+                        moduleCode === viewIdModulePrefix.quotation
                     ) {
                         $routeHost =
                             $(
@@ -11654,7 +11671,7 @@
 
                     if (
                         !$routeHost?.length &&
-                        moduleCode === "pi"
+                        moduleCode === viewIdModulePrefix.policyIssuance
                     ) {
                         $routeHost =
                             $(

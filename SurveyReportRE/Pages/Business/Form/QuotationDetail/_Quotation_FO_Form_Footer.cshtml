@@ -1,6 +1,6 @@
 ﻿@using JogetMVC.Model
 @{
-    string prefix = "qt";
+    string prefix = QTViewIdHelper.Prefix;
     string dept = "FO";
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
 }

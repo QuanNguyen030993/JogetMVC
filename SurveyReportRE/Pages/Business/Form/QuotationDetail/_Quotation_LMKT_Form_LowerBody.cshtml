@@ -31,7 +31,7 @@
 
 <script>
     setTimeout(() => {
-        renderFormComment(`@QTViewIdHelper.CommentPanelControl(dept, quotationId)`,`@dept`,`qt`,@(quotationId), "@(quotationGuid)");
+        renderFormComment(`@QTViewIdHelper.CommentPanelControl(dept, quotationId)`,`@dept`,viewIdModulePrefix.quotation,@(quotationId), "@(quotationGuid)");
         
     },1);
 </script>

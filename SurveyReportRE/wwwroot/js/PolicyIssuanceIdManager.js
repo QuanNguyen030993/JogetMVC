@@ -4,8 +4,8 @@
 
 window.PolicyIssuanceIdManager = {
     // Configuration
-    prefix: 'pi',
-    departments: ['FO', 'TS', 'PM'],
+    prefix: window.viewIdModulePrefix.policyIssuance,
+    departments: window.piDeptModuleCode,
     sections: ['Header', 'UpperBody', 'Form', 'LowerBody', 'Footer'],
     // Main ID generation function
     generateId: function (element, department, quotationId, additionalSuffix = '') {

@@ -1441,7 +1441,7 @@
 
         function buildTreeNodeHtml(x) {
             var flowClass = x.flowType === "Quotation" ? "q" :
-                x.flowType === "PolicyIssuance" ? "pi" : "both";
+                x.flowType === "PolicyIssuance" ? viewIdModulePrefix.policyIssuance : "both";
 
             var loopBadge = x.allowLoop ? `<span class="tree-node-mini loop">LOOP</span>` : "";
 

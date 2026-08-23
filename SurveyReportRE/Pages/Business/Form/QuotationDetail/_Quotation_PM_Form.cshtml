@@ -67,7 +67,7 @@
                           name: "decision@(dept)Group",
                           cssClass: "workflow-decision-group qt-decision-group-@(dept)",
                           elementAttr: {
-                              id: "qt-decision-group-@(dept)-@(quotationId)",
+                              id: "@(QTViewIdHelper.Prefix)-decision-group-@(dept)-@(quotationId)",
                               "data-form-group-name": "decision@(dept)Group",
                               "data-route-dept": "@dept"
                           },

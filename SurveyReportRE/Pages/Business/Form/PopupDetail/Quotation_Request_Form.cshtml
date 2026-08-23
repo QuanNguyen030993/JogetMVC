@@ -3,7 +3,7 @@
 @using Newtonsoft.Json
 @model Quotation_Request_FormModel
 @{
-    string prefix = "qt";
+    string prefix = QTViewIdHelper.Prefix;
     string dept = "FO";
     ViewBag.Title = "Quotation";
     ViewData["Id"] = 0;
@@ -110,7 +110,7 @@
             return subjectText;
         }
            var guid= crypto.randomUUID();
-                var sectionId =  "qt-body_@(dept)_";
+                var sectionId = `${viewIdModulePrefix.quotation}-body_@(dept)_`;
                          var that = new Object();
                          that.ModelName = "Quotation";
                          that.moduleName = "default";

@@ -1,6 +1,6 @@
 @using JogetMVC.Model
 @{
-    string prefix = "qt";
+    string prefix = QTViewIdHelper.Prefix;
     string dept = "UW";
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
 }
@@ -133,7 +133,7 @@
              name: "decision@(dept)@(quotationId)Group",
                  cssClass: "workflow-decision-group qt-decision-group-@(dept)-@(quotationId)",
              elementAttr: {
-                  id: "qt-decision-group-@(dept)-@(quotationId)",
+                  id: "@(QTViewIdHelper.Prefix)-decision-group-@(dept)-@(quotationId)",
                  "data-form-group-name": "decision@(dept)Group",
                  "data-route-dept": "@dept"
              }, 
@@ -224,7 +224,7 @@
     }
 );
      var $elems = $(".qt-decision-group-@(dept)").first();
-     $elems.attr("id", "qt-decision-group-@(dept)-@(quotationId)");
+     $elems.attr("id", "@(QTViewIdHelper.Prefix)-decision-group-@(dept)-@(quotationId)");
         
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
 

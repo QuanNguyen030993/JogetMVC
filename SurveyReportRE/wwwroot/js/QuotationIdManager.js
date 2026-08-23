@@ -4,8 +4,8 @@
 
 window.QuotationIdManager = {
     // Configuration
-    prefix: 'qt',
-    departments: ['FO', 'TS', 'UW', 'LMKT', 'PM'],
+    prefix: window.viewIdModulePrefix.quotation,
+    departments: window.qtDeptModuleCode,
     sections: ['Header', 'UpperBody', 'Form', 'LowerBody', 'Footer'],
 
     // Main ID generation function

@@ -3,9 +3,9 @@
 @using Newtonsoft.Json
 @model Quotation_FormModel
 @{
-    var moduleCode = "qt";
+    var moduleCode = QTViewIdHelper.Prefix;
     var prefix = moduleCode;
-    var title = moduleCode == "qt" ? "Quotation Overview" : "Policy Issuance Overview";
+    var title = moduleCode == QTViewIdHelper.Prefix ? "Quotation Overview" : "Policy Issuance Overview";
 }
 @*
 Note:

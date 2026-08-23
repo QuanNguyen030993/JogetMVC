@@ -903,7 +903,8 @@
             let syncingRole = false;
 
             function notifyOpenWorkflowViews(role) {
-                $("[id^='qt-overviewRoot_'], [id^='pi-overviewRoot_']").each(function () {
+                $(`[id^='${viewIdModulePrefix.quotation}-overviewRoot_'], ` +
+                    `[id^='${viewIdModulePrefix.policyIssuance}-overviewRoot_']`).each(function () {
                     const match = String(this.id || "").match(/^(qt|pi)-overviewRoot_(.+)$/);
                     if (!match) return;
                     $(document).trigger("overviewMaintenanceRoleChanged", [{
@@ -1290,8 +1291,8 @@
             default: ["default"],
             assign: ["assign", "assignment"],
             system: ["system", "sys"],
-            quotation: ["quotation", "qt"],
-            policyissuance: ["policyissuance", "policy", "pi"],
+            quotation: ["quotation", viewIdModulePrefix.quotation],
+            policyissuance: ["policyissuance", "policy", viewIdModulePrefix.policyIssuance],
             accept: ["accept", "accepted"],
             success: ["success", "successful"],
             fail: ["fail", "failed", "failure"],
@@ -1409,8 +1410,8 @@
             if (type === "default") continue;
             if (type.includes("assign")) return "assign";
             if (type === "system" || type === "sys") return "system";
-            if (type === "qt" || type.includes("quotation")) return "quotation";
-            if (type === "pi" || type.includes("policyissuance") || type.includes("policy")) return "policyissuance";
+            if (type === viewIdModulePrefix.quotation || type.includes("quotation")) return "quotation";
+            if (type === viewIdModulePrefix.policyIssuance || type.includes("policyissuance") || type.includes("policy")) return "policyissuance";
             if (type.includes("accept")) return "accept";
             if (type.includes("success")) return "success";
             if (type.includes("fail")) return "fail";

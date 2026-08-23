@@ -543,7 +543,9 @@ function startSignalRConnection() {
                 // const normalizedType = String(items.type || "")
                 //     .replace(/\s+/g, "")
                 //     .toLowerCase();
-                // const moduleCode = normalizedType === "policyissuance" ? "pi" : "qt";
+                // const moduleCode = normalizedType === "policyissuance"
+                //     ? viewIdModulePrefix.policyIssuance
+                //     : viewIdModulePrefix.quotation;
                 // const viewKey = `${moduleCode}:${items.id}`;
                 // if (window.WorkflowViewReloadState?.[viewKey] === Number.POSITIVE_INFINITY) {
                 //     return;
@@ -562,7 +564,9 @@ function startSignalRConnection() {
                 //     .catch(function (err) {
                 //         console.error("Submitted item reload failed", err);
                 //     });
-                     var prefix = items.type === "Quotation" ? "qt" : "pi";
+                     var prefix = items.type === "Quotation"
+                        ? viewIdModulePrefix.quotation
+                        : viewIdModulePrefix.policyIssuance;
                                  $(`#${prefix}-btnRefreshOverview_${items.id}`).trigger("click");
             }
         }

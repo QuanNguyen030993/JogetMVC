@@ -3,9 +3,9 @@
 @using Newtonsoft.Json
 @model PolicyIssuance_FormModel
 @{
-    var moduleCode = "pi";
+    var moduleCode = PIViewIdHelper.Prefix;
     var prefix = moduleCode;
-    var title = moduleCode == "pi" ? "PolicyIssuance Overview" : "Policy Issuance Overview";
+    var title = moduleCode == PIViewIdHelper.Prefix ? "PolicyIssuance Overview" : "Policy Issuance Overview";
 }
 @*
 Note:
@@ -171,12 +171,12 @@ Note:
 @* 
     <div class="actionBar">
         <div class="">
-            <span class="pill">Record: <b id="pi-recordNo">Qu-10030</b></span>
-            <span class="pill">Login role: <b id="pi-loginRoleLabel"></b></span>
-            <span id="pi-focusDeptPill" class="pill">Focus section: </span>
+            <span class="pill">Record: <b id="@PIViewIdHelper.Prefix-recordNo">Qu-10030</b></span>
+            <span class="pill">Login role: <b id="@PIViewIdHelper.Prefix-loginRoleLabel"></b></span>
+            <span id="@PIViewIdHelper.Prefix-focusDeptPill" class="pill">Focus section: </span>
         </div>
         <div class="actionRight"  aria-action-right="@dept">
-            <div id="pi-btnClientConfirm"></div>
+            <div id="@PIViewIdHelper.Prefix-btnClientConfirm"></div>
         </div>
     </div> *@
 
@@ -195,7 +195,7 @@ Note:
 </body>
 <script type="text/javascript">
     var PIC_JSON = `{}`;
-    var formModuleKeyPi = "pi";
+    var formModuleKeyPi = viewIdModulePrefix.policyIssuance;
     var pICs = [];
     var workflowStatus = "";
     // if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
@@ -532,7 +532,7 @@ Note:
         }
         function loadSelectedWorkflow() {
             return window.WorkflowLoader.load({
-                moduleCode: "pi",
+                moduleCode: viewIdModulePrefix.policyIssuance,
                 id: @ViewData["Id"],
                 loadingHost: `#${window.PolicyIssuanceIdManager.actionBarDept(stageDept, @ViewData["Id"])}`,
                 guid: state.selectedGuid,
@@ -1008,11 +1008,11 @@ Note:
         window.reloadPolicyIssuanceComponents = function(instanceId) {
             var registry = window.OverviewViewRegistry || {};
             if (instanceId !== undefined && instanceId !== null) {
-                return registry[`pi:${instanceId}`]?.reload?.();
+                return registry[`${viewIdModulePrefix.policyIssuance}:${instanceId}`]?.reload?.();
             }
 
             var reloads = Object.keys(registry)
-                .filter(key => key.startsWith("pi:"))
+                .filter(key => key.startsWith(`${viewIdModulePrefix.policyIssuance}:`))
                 .map(key => registry[key])
                 .filter(entry => entry && document.getElementById(entry.rootId) && typeof entry.reload === "function")
                 .map(entry => entry.reload());
@@ -1631,7 +1631,7 @@ Note:
                     stageDept,
                     @ViewData["Id"],
                     remarkBoxs?.[stageDept]?.controlRemark,
-                    "pi", q.guid);
+                    viewIdModulePrefix.policyIssuance, q.guid);
                 remarkBoxs[stageDept] = {
                     id: q.id,
                     sectionName: stageDept,

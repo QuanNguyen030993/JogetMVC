@@ -5,13 +5,13 @@
     string Id(string name) => $"{Model.Prefix}-{name}_{Model.Id}";
     string Cd(string name) => $"{Model.Prefix}-{name}_";
     var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
-    string[] deptModuleCodes = moduleCode == "qt"
-        ? DepartmentModuleCodes.Quotation
-        : DepartmentModuleCodes.PolicyIssuance;
+    string[] deptModuleCodes = moduleCode == QTViewIdHelper.Prefix
+        ? QTViewIdHelper.Departments
+        : PIViewIdHelper.Departments;
 }
 
 <div id="@ViewIdHelper.OverViewScroll(Model.Prefix,Model.Id)" class="overview-scroll">
-    @if (moduleCode == "qt")
+    @if (moduleCode == QTViewIdHelper.Prefix)
     {
         @foreach (string item in deptModuleCodes)
         {
@@ -43,7 +43,7 @@
                     <partial name="@($"Business/Form/QuotationDetail/_Quotation_{item}_Form_UpperBody")" view-data="viewDataUpperBody" />
                     <div class="dept-decision-dock"
                          data-decision-dock="true"
-                         data-module="qt"
+                         data-module="@QTViewIdHelper.Prefix"
                          data-dept="@item"
                          aria-label="@item decisions"></div>
                 </div>
@@ -90,7 +90,7 @@
         }
 
     }
-    @if (moduleCode == "pi")
+    @if (moduleCode == PIViewIdHelper.Prefix)
     {
         @foreach (string item in deptModuleCodes)
         {
@@ -124,7 +124,7 @@
                     <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_UpperBody")" view-data="viewDataUpperBody" />
                     <div class="dept-decision-dock"
                          data-decision-dock="true"
-                         data-module="pi"
+                         data-module="@PIViewIdHelper.Prefix"
                          data-dept="@item"
                          aria-label="@item decisions"></div>
                 </div>

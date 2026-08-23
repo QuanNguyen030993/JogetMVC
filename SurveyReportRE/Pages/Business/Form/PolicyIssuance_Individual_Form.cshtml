@@ -3,9 +3,9 @@
 @using Newtonsoft.Json
 @model PolicyIssuance_Individual_FormModel
 @{
-     var moduleCode = "pi";   // hoặc "qt"
+     var moduleCode = PIViewIdHelper.Prefix;
     var prefix = moduleCode; // thường cho prefix = luôn qt / pi
-    var title = moduleCode == "pi" ? "Item Overview" : "Policy Issuance Overview";
+    var title = moduleCode == PIViewIdHelper.Prefix ? "Item Overview" : "Policy Issuance Overview";
 }
 @*
 Note: 
@@ -499,7 +499,7 @@ Note:
           var PIC_JSON = `{}`;
 
           
-          var formModuleKeyPi = "pi";
+          var formModuleKeyPi = viewIdModulePrefix.policyIssuance;
         setTimeout(() => enableDxFormGroupToggle("#mainContentGrid"), 0);
 
         var pICs = [];
@@ -629,21 +629,21 @@ Note:
            $.each(piDeptModuleCode, function (itemIndex, item) {
                
                      var items = new Object();
-                     items.moduleName = "pi";
+                     items.moduleName = viewIdModulePrefix.policyIssuance;
                      items.sectionName = item;
                     loadDxFileUploaderAttachments(item,"Document",items );
                
             });
             //   var itemsMKT = new Object();
-            // itemsMKT.moduleName = "pi";
+            // itemsMKT.moduleName = viewIdModulePrefix.policyIssuance;
             //  itemsMKT.sectionName = "FO";
             // loadDxFileUploaderAttachments("FO","Document",itemsMKT );
             //       var itemsTS = new Object();
-            // itemsTS.moduleName = "pi";
+            // itemsTS.moduleName = viewIdModulePrefix.policyIssuance;
             //  itemsTS.sectionName = "TS";
             // loadDxFileUploaderAttachments("TS","Document", itemsTS);
             //       var itemsPM = new Object();
-            // itemsPM.moduleName = "pi";
+            // itemsPM.moduleName = viewIdModulePrefix.policyIssuance;
             //  itemsPM.sectionName = "PM";
             // loadDxFileUploaderAttachments("PM","Document", itemsPM);
             applyEditLock();
@@ -1398,7 +1398,7 @@ Note:
     <div class="contentGrid" id="mainContentGrid">
         @await Html.PartialAsync("_LeftPane", new LeftPanePartialModel
    {
-       Prefix = "pi",
+       Prefix = PIViewIdHelper.Prefix,
        Title = "Your Items",
        SearchWidth = "210px",
        SearchPlaceholder = "Search items..."

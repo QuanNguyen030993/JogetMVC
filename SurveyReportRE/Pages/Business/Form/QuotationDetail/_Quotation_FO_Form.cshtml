@@ -2,7 +2,7 @@
 @{
     string dept = "FO";
     long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
-    string prefix = "qt";
+    string prefix = QTViewIdHelper.Prefix;
 }
 
 <style>
@@ -58,7 +58,7 @@
     that2.uploaderAllow = _role == "@dept";
     that2.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that2.moduleName, @(quotationId)), Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
 
-         var sectionId =  "qt-body_@(dept)_RES";
+         var sectionId = `${viewIdModulePrefix.quotation}-body_@(dept)_RES`;
 
      var thatRes = new Object();
       thatRes.ModelName = "Quotation";
@@ -180,7 +180,7 @@
 
                         cssClass: "workflow-decision-group qt-decision-group-client",
                         elementAttr: {
-                            id: "qt-decision-group-@(dept)-@(quotationId)",
+                            id: "@(QTViewIdHelper.Prefix)-decision-group-@(dept)-@(quotationId)",
                             "data-form-group-name": "decisionClientGroup",
                             "data-route-dept": "@dept",
                             "data-decision-group-key": "clientConfirm",
@@ -371,7 +371,7 @@
                 var workflowResult =
                     await loadSelectedWorkflow({
 
-                        moduleCode: "qt",
+                        moduleCode: viewIdModulePrefix.quotation,
 
                         id: @(quotationId),
 

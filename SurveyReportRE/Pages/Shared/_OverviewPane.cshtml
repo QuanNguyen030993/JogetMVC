@@ -190,14 +190,14 @@
         let syncingMaintenanceRole = false;
 
         function getMaintenanceRoleState() {
-            const page = "@moduleCode" === "pi"
+            const page = "@moduleCode" === viewIdModulePrefix.policyIssuance
                 ? window.PolicyIssuancePage
                 : window.QuotationPage;
             return page?.state;
         }
 
         function getMaintenanceRoles(targetModuleCode = "@moduleCode") {
-            const roles = String(targetModuleCode || "").trim().toLowerCase() === "pi"
+            const roles = String(targetModuleCode || "").trim().toLowerCase() === viewIdModulePrefix.policyIssuance
                 ? window.piDeptModuleCode
                 : window.qtDeptModuleCode;
             return Array.isArray(roles)
@@ -353,7 +353,7 @@
         }
 
         function reloadMaintenanceInfo() {
-            const controller = "@moduleCode" === "pi" ? "PolicyIssuance" : "Quotation";
+            const controller = "@moduleCode" === viewIdModulePrefix.policyIssuance ? "PolicyIssuance" : "Quotation";
             panel.find(".maintenance-value-list")
                 .empty()
                 .append($("<span>", { class: "maintenance-empty", text: "Loading..." }));

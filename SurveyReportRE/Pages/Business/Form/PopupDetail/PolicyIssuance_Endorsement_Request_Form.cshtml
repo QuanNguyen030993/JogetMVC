@@ -3,7 +3,7 @@
 @using Newtonsoft.Json
 @model PolicyIssuance_Endorsement_Request_FormModel
 @{
-    string prefix = "pi";
+    string prefix = PIViewIdHelper.Prefix;
     string dept = "FO";
     ViewBag.Title = "PolicyIssuance";
     ViewData["Id"] = 0;

@@ -3,9 +3,9 @@
 @using Newtonsoft.Json
 @model Quotation_FormModel
 @{
-    var moduleCode = "qt";
+    var moduleCode = QTViewIdHelper.Prefix;
     var prefix = moduleCode;
-    var title = moduleCode == "qt" ? "Quotation Overview" : "Policy Issuance Overview";
+    var title = moduleCode == QTViewIdHelper.Prefix ? "Quotation Overview" : "Policy Issuance Overview";
 }
 @*
 Note:
@@ -154,7 +154,7 @@ Note:
 
 <script type="text/javascript">
     var PIC_JSON = `{}`;
-    var formModuleKeyQt = "qt";
+    var formModuleKeyQt = viewIdModulePrefix.quotation;
     var pICs = [];
     var workflowStatus = "";
     // if ($('[data-toggle="push-menu"]').hasClass("sidebar-collapse")) {
@@ -465,7 +465,7 @@ Note:
 
         function loadSelectedWorkflow() {
             return window.WorkflowLoader.load({
-                moduleCode: "qt",
+                moduleCode: viewIdModulePrefix.quotation,
                 id: @ViewData["Id"],
                 loadingHost: `#${window.QuotationIdManager.actionBarDept(stageDept, @ViewData["Id"])}`,
                 guid: state.selectedGuid,
@@ -1000,11 +1000,11 @@ Note:
         window.reloadQuotationComponents = function(instanceId) {
             var registry = window.OverviewViewRegistry || {};
             if (instanceId !== undefined && instanceId !== null) {
-                return registry[`qt:${instanceId}`]?.reload?.();
+                return registry[`${viewIdModulePrefix.quotation}:${instanceId}`]?.reload?.();
             }
 
             var reloads = Object.keys(registry)
-                .filter(key => key.startsWith("qt:"))
+                .filter(key => key.startsWith(`${viewIdModulePrefix.quotation}:`))
                 .map(key => registry[key])
                 .filter(entry => entry && document.getElementById(entry.rootId) && typeof entry.reload === "function")
                 .map(entry => entry.reload());
@@ -1672,7 +1672,7 @@ Note:
                     stageDept,
                     @ViewData["Id"],
                     remarkBoxs?.[stageDept]?.controlRemark,
-                    "qt",
+                    viewIdModulePrefix.quotation,
                     q.guid);
                 remarkBoxs[stageDept] = {
                     id: q.id,
