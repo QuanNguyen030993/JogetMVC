@@ -24,8 +24,8 @@
                  //Debug
                  _roleAppName = result.userRoles.RoleAppName;
                  _branch = result.userRoles.Branch;
-                 window.syncEnvironmentSiteOffice?.(_branch);
-                $("#roleLabel").text(`Department ${_role}`);
+                 window.syncLoginUserSiteOffice?.(_branch);
+                $("#roleLabel").text(_role ? `Phòng ban ${_role}` : "Phòng ban chưa chọn");
                  _displayName = result.userRoles.DisplayName;
                 $("#displayLabel").text(`${_displayName}`);
                 if (typeof refreshUserRoleSettings === "function")

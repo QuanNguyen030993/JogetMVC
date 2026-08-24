@@ -670,10 +670,6 @@
                                     <span>Environment</span>
                                     <b>@ViewData["Environment"]</b>
                                 </div>
-                                <div class="management-environment-summary-row">
-                                    <span>Site office</span>
-                                    <b id="environmentSiteOffice">-</b>
-                                </div>
                             </div>
                             <div id="homeRoleSwitcher"
                                  class="home-role-switcher management-environment-role-row"
@@ -749,7 +745,8 @@
                         @* <span id="menuAvatarInitial" class="user-menu-avatar">U</span> *@
                         <div>
                             <strong id="displayLabel">User account</strong>
-                            <span id="roleLabel">Workflow group not selected</span>
+                            <span class="user-login-detail">Site Office: <b id="userSiteOffice">-</b></span>
+                            <span id="roleLabel">Phòng ban chưa chọn</span>
                         </div>
                     </div>
                     <button id="openUserSettings" class="user-settings-entry" type="button">
@@ -970,6 +967,12 @@
         if (_notifyEnv == "true") {
             $("#environmentLabel").addClass("is-visible");
         }
+        window.syncLoginUserSiteOffice = function (branch) {
+            const office = String(branch || "").trim();
+            $("#userSiteOffice").text(office || "-");
+        };
+        window.syncLoginUserSiteOffice(_branch);
+
         (function initializeEnvironmentPanel() {
             const $trigger = $("#environmentLabel");
             const $panel = $("#environmentPanel");
@@ -978,11 +981,6 @@
             function setEnvironmentPanelOpen(isOpen) {
                 $trigger.toggleClass("is-open", isOpen).attr("aria-expanded", String(isOpen));
             }
-
-            window.syncEnvironmentSiteOffice = function (branch) {
-                const office = String(branch || "").trim();
-                $("#environmentSiteOffice").text(office || "-");
-            };
 
             $trigger.on("click", function (event) {
                 if ($(event.target).closest("#environmentPanel").length) return;
@@ -1003,8 +1001,6 @@
             $(document).on("keydown.environmentPanel", function (event) {
                 if (event.key === "Escape") setEnvironmentPanelOpen(false);
             });
-
-            window.syncEnvironmentSiteOffice(_branch);
         })();
         // if (_notifyEnv  == "true")
         //     $("#environmentJogetLabel").text(`(Joget Environment: @ViewData["JogetEnvironment"])`);
@@ -1213,7 +1209,7 @@
                 selectedUserRole = (profile.role || "").toUpperCase();
                 userRoleOptions = profile.roles?.length ? profile.roles : fallbackRoleOptions;
                 $("#accountRoleBadge").text(selectedUserRole || "Role not selected");
-                $("#roleLabel").text(selectedUserRole ? `Workflow group ${selectedUserRole}` : "Workflow group not selected");
+                $("#roleLabel").text(selectedUserRole ? `Phòng ban ${selectedUserRole}` : "Phòng ban chưa chọn");
                 $("#displayLabel").text(profile.fullName || _displayName || profile.accountName);
                 const initial = (profile.fullName || profile.accountName || "U").charAt(0).toUpperCase();
                 $("#accountAvatarInitial").text(initial);
@@ -1279,7 +1275,7 @@
             _role = response.data.role;
             window.syncHomeRoleSwitcher?.(_role);
             $("#accountRoleBadge").text(response.data.role);
-            $("#roleLabel").text(`Workflow group ${response.data.role}`);
+            $("#roleLabel").text(`Phòng ban ${response.data.role}`);
             setUserSettingsModalVisible(false);
             appNotify({ message: "Role setting saved. Reload the page to refresh menu permissions.", type: "success" });
         }).fail(function (xhr) {
