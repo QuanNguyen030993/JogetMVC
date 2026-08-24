@@ -48,6 +48,86 @@ button {
   font-weight: 700;
 }
 
+.brand-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-context-dropdown {
+  min-width: 0;
+}
+
+.admin-context-dropdown summary {
+  display: flex;
+  max-width: 132px;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  background: #1f2937;
+  list-style: none;
+  cursor: pointer;
+}
+
+.admin-context-dropdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-context-avatar {
+  display: grid;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.admin-context-name {
+  min-width: 0;
+  overflow: hidden;
+  color: #f9fafb;
+  font-size: 9px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-context-arrow {
+  color: #9ca3af;
+  font-size: 8px;
+}
+
+.admin-context-menu {
+  position: absolute;
+  z-index: 1000;
+  top: calc(100% + 7px);
+  right: 0;
+  display: flex;
+  width: 190px;
+  padding: 10px;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  background: #111827;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .28);
+  flex-direction: column;
+  gap: 5px;
+}
+
+.admin-context-menu small { color: #9ca3af; font-size: 9px; }
+.admin-context-menu strong { overflow-wrap: anywhere; color: #fff; font-size: 11px; }
+.admin-context-menu > span { color: #86efac; font-size: 9px; }
+.admin-context-menu > span.impersonating { color: #fbbf24; }
+.admin-context-menu button { margin-top: 5px; padding: 6px 8px; border-radius: 7px; background: #f59e0b; color: #111827; font-size: 9px; font-weight: 700; }
+.admin-context-menu button:disabled { opacity: .55; cursor: wait; }
+
 .sidebar nav button {
   width: 100%;
   text-align: left;

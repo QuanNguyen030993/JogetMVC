@@ -138,7 +138,37 @@ function App() {
   const [onlineUsers,setOnlineUsers]=useState([]);
   const [onlineUsersLoading,setOnlineUsersLoading]=useState(true);
   const [onlineUsersError,setOnlineUsersError]=useState('');
+  const [currentAccount, setCurrentAccount] = useState(() => String(window._loginUser || '').replace('TOKIOMARINE\\', ''));
+  const [isImpersonating, setIsImpersonating] = useState(() => String(window._isDebugMode || '').toLowerCase() === 'true');
+  const [returningAccount, setReturningAccount] = useState(false);
 //  const [appsettings, setAppsettings] = useState(null);
+
+  useEffect(() => {
+    let attempts = 0;
+    const syncLoginContext = () => {
+      const account = String(window._loginUser || '').replace('TOKIOMARINE\\', '').trim();
+      if (account) setCurrentAccount(account);
+      setIsImpersonating(String(window._isDebugMode || '').toLowerCase() === 'true');
+      attempts += 1;
+      if (account || attempts >= 40) window.clearInterval(timer);
+    };
+    const timer = window.setInterval(syncLoginContext, 250);
+    syncLoginContext();
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const returnToAdminAccount = async () => {
+    setReturningAccount(true);
+    try {
+      const response = await fetch(`${appsettings.UrlConfig.Host}/api/Users/ReturnToAccount`, { method: 'POST' });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.success === false) throw new Error(result.message || 'Unable to return to Admin account.');
+      window.location.replace(`${result.redirectUrl || '/Management'}?returned=${Date.now()}`);
+    } catch (error) {
+      notify({ content: error.message, type: 'error', position: 'bottom-right' });
+      setReturningAccount(false);
+    }
+  };
   // Demo Notification: Delay 5 seconds on load then trigger toast
   // useEffect(() => {
   //   const testTimer = setTimeout(() => {
@@ -470,7 +500,22 @@ function App() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">IT Admin Portal</div>
+        <div className="brand-row">
+          <div className="brand">Admin Config</div>
+          <details className="admin-context-dropdown">
+            <summary title="Current login context">
+              <span className="admin-context-avatar">{(currentAccount || '?').slice(0, 1).toUpperCase()}</span>
+              <span className="admin-context-name">{currentAccount || 'Loading...'}</span>
+              <span className="admin-context-arrow">▾</span>
+            </summary>
+            <div className="admin-context-menu">
+              <small>Current login context</small>
+              <strong>{currentAccount || 'Unknown account'}</strong>
+              <span className={isImpersonating ? 'impersonating' : ''}>{isImpersonating ? 'Login as context' : 'Admin account'}</span>
+              {isImpersonating && <button type="button" disabled={returningAccount} onClick={returnToAdminAccount}>{returningAccount ? 'Returning...' : 'Back to Admin'}</button>}
+            </div>
+          </details>
+        </div>
         <nav>
           {menuItems.map((item) => (
             <button

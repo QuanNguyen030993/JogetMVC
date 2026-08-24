@@ -655,13 +655,34 @@
                     <div id="environmentLabel"
                          class="management-environment-badge"
                          tabindex="0"
-                         aria-describedby="environmentHoverInfo">
+                         role="button"
+                         aria-haspopup="dialog"
+                         aria-expanded="false"
+                         aria-controls="environmentPanel">
                         <i class="fa fa-server" aria-hidden="true"></i>
                         <span>Environment</span>
                         <strong id="environmentValue">@ViewData["Environment"]</strong>
-                        <i class="fa fa-info-circle management-environment-info-icon" aria-hidden="true"></i>
-                        <div id="environmentHoverInfo" class="management-environment-hover" role="tooltip">
+                        <i class="fa fa-chevron-down management-environment-info-icon" aria-hidden="true"></i>
+                        <div id="environmentPanel" class="management-environment-hover" role="dialog" aria-label="Development diagnostics">
                             <strong>Development diagnostics</strong>
+                            <div class="management-environment-summary">
+                                <div class="management-environment-summary-row">
+                                    <span>Environment</span>
+                                    <b>@ViewData["Environment"]</b>
+                                </div>
+                                <div class="management-environment-summary-row">
+                                    <span>Site office</span>
+                                    <b id="environmentSiteOffice">-</b>
+                                </div>
+                            </div>
+                            <div id="homeRoleSwitcher"
+                                 class="home-role-switcher management-environment-role-row"
+                                 title="Switch workflow role for this session"
+                                 aria-label="Switch workflow role for this session"
+                                 aria-hidden="true">
+                                <span>Debug role</span>
+                                <div id="homeRoleSelect"></div>
+                            </div>
                             <div class="management-environment-hover-row">
                                 <span>SignalR</span>
                                 <div id="signalRMonitor" class="signalr-monitor signalr-disconnected">
@@ -686,13 +707,6 @@
 
             <!--Login Info-->
             <div class="management-header-actions">
-                <div id="homeRoleSwitcher"
-                     class="home-role-switcher"
-                     title="Switch workflow role for this session"
-                     aria-label="Switch workflow role for this session">
-                    <i class="fa fa-user-shield" aria-hidden="true"></i>
-                    <div id="homeRoleSelect"></div>
-                </div>
                 <div id="btnNew" style="display:none"></div>
                 <button id="userGuideLauncher"
                         class="ug-guide-launcher"
@@ -956,6 +970,42 @@
         if (_notifyEnv == "true") {
             $("#environmentLabel").addClass("is-visible");
         }
+        (function initializeEnvironmentPanel() {
+            const $trigger = $("#environmentLabel");
+            const $panel = $("#environmentPanel");
+            if (!$trigger.length || !$panel.length) return;
+
+            function setEnvironmentPanelOpen(isOpen) {
+                $trigger.toggleClass("is-open", isOpen).attr("aria-expanded", String(isOpen));
+            }
+
+            window.syncEnvironmentSiteOffice = function (branch) {
+                const office = String(branch || "").trim();
+                $("#environmentSiteOffice").text(office || "-");
+            };
+
+            $trigger.on("click", function (event) {
+                if ($(event.target).closest("#environmentPanel").length) return;
+                setEnvironmentPanelOpen(!$trigger.hasClass("is-open"));
+            });
+            $trigger.on("keydown", function (event) {
+                if (event.target !== this || !["Enter", " "].includes(event.key)) return;
+                event.preventDefault();
+                setEnvironmentPanelOpen(!$trigger.hasClass("is-open"));
+            });
+            $panel.on("click", function (event) {
+                event.stopPropagation();
+            });
+            $(document).on("click.environmentPanel", function (event) {
+                if ($(event.target).closest("#environmentLabel, .dx-overlay-wrapper").length) return;
+                setEnvironmentPanelOpen(false);
+            });
+            $(document).on("keydown.environmentPanel", function (event) {
+                if (event.key === "Escape") setEnvironmentPanelOpen(false);
+            });
+
+            window.syncEnvironmentSiteOffice(_branch);
+        })();
         // if (_notifyEnv  == "true")
         //     $("#environmentJogetLabel").text(`(Joget Environment: @ViewData["JogetEnvironment"])`);
         if (_isDebugMode == "true"){
@@ -3135,6 +3185,12 @@
            color: #8a4b08;
            box-shadow: 0 2px 8px rgba(120, 53, 15, .12);
            white-space: nowrap;
+           cursor: pointer;
+       }
+
+       .management-environment-badge:focus-visible {
+           outline: 2px solid rgba(245, 158, 11, .65);
+           outline-offset: 2px;
        }
 
        .management-environment-info-icon {
@@ -3142,6 +3198,11 @@
            color: #b45309;
            font-size: 12px;
            opacity: .75;
+           transition: transform .16s ease;
+       }
+
+       .management-environment-badge.is-open .management-environment-info-icon {
+           transform: rotate(180deg);
        }
 
        .management-environment-hover {
@@ -3149,7 +3210,7 @@
            z-index: 12000;
            top: calc(100% + 8px);
            right: 0;
-           width: 260px;
+           width: 292px;
            padding: 12px;
            border: 1px solid rgba(180, 83, 9, .22);
            border-radius: 10px;
@@ -3162,6 +3223,7 @@
            transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
            pointer-events: none;
            white-space: normal;
+           cursor: default;
        }
 
        .management-environment-hover::before {
@@ -3177,12 +3239,11 @@
            transform: rotate(45deg);
        }
 
-       .management-environment-badge:hover .management-environment-hover,
-       .management-environment-badge:focus .management-environment-hover,
-       .management-environment-badge:focus-within .management-environment-hover {
+       .management-environment-badge.is-open .management-environment-hover {
            opacity: 1;
            visibility: visible;
            transform: translateY(0);
+           pointer-events: auto;
        }
 
        .management-environment-hover > strong {
@@ -3190,6 +3251,35 @@
            margin-bottom: 9px;
            color: var(--theme-text, #1f2937);
            font-size: 12px;
+       }
+
+       .management-environment-summary {
+           display: grid;
+           gap: 6px;
+           margin-bottom: 8px;
+           padding: 8px;
+           border-radius: 8px;
+           background: color-mix(in srgb, var(--theme-primary) 7%, var(--theme-surface, #fff));
+       }
+
+       .management-environment-summary-row {
+           display: flex;
+           align-items: center;
+           justify-content: space-between;
+           gap: 12px;
+           font-size: 11px;
+       }
+
+       .management-environment-summary-row span {
+           color: var(--theme-muted, #64748b);
+       }
+
+       .management-environment-summary-row b {
+           max-width: 170px;
+           overflow: hidden;
+           color: var(--theme-text, #1f2937);
+           text-overflow: ellipsis;
+           white-space: nowrap;
        }
 
        .management-environment-hover-row {
@@ -3592,6 +3682,27 @@
            padding: 2px 20px 2px 3px !important;
            font-size: 11px !important;
            font-weight: 700;
+       }
+
+       .management-environment-role-row {
+           width: 100%;
+           height: auto;
+           min-height: 34px;
+           margin-bottom: 8px;
+           padding: 5px 7px;
+           justify-content: space-between;
+           border-color: var(--theme-border, #e5e7eb);
+           background: color-mix(in srgb, var(--theme-primary) 5%, var(--theme-surface, #fff));
+       }
+
+       .management-environment-role-row > span {
+           color: var(--theme-muted, #64748b);
+           font-size: 11px;
+           font-weight: 600;
+       }
+
+       .management-environment-role-row #homeRoleSelect {
+           width: 92px;
        }
 
        .management-header-actions #btnNew {
