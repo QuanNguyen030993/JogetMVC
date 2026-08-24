@@ -3,7 +3,7 @@ import appsettings from '../../../host.json';
 
 const MKT_ROOTS = new Set(['Quotations', 'PolicyIssuances', 'SLA', 'DashBoard', 'MasterData']);
 const DEPARTMENT_GROUPS = ['MKT', 'FO', 'TS', 'UW', 'LMKT', 'PM', 'IT'];
-const ROLE_TYPES = ['Approver', 'Leader', 'Staff', 'HOD'];
+const ROLE_TYPES = ['Staff', 'Line Manager', 'HOD', 'BOD'];
 const valueOf = (item, ...keys) => keys.map((key) => item?.[key]).find((value) => value !== undefined && value !== null);
 const userIdOf = (user) => String(valueOf(user, 'id', 'Id') ?? valueOf(user, 'username', 'Username', 'userName', 'UserName'));
 const userNameOf = (user) => String(valueOf(user, 'username', 'Username', 'userName', 'UserName') || '');
@@ -88,6 +88,7 @@ const UserManagement = () => {
   };
 
   const selectedUsers = users.filter((user) => selectedIds.has(userIdOf(user)));
+  const allFilteredSelected = filteredUsers.length > 0 && filteredUsers.every((user) => selectedIds.has(userIdOf(user)));
   const previewUser = stagedUsers.find((user) => userIdOf(user) === previewUserId) || stagedUsers[0];
   const previewDepartment = departmentOf(previewUser);
   const groupMembers = useMemo(() => assignments.filter((item) => departmentOf(item) === selectedGroup), [assignments, selectedGroup]);
@@ -163,7 +164,14 @@ const UserManagement = () => {
         <div className="role-users-panel">
           <div className="role-panel-title">
             <strong>Users ({filteredUsers.length})</strong>
-            <button type="button" disabled={!selectedUsers.length} onClick={() => addUsersToPanel(selectedUsers)}>Thêm {selectedUsers.length || ''} user →</button>
+            <div className="role-user-selection-actions">
+              <button type="button" disabled={!filteredUsers.length} onClick={() => setSelectedIds((current) => {
+                const next = new Set(current);
+                filteredUsers.forEach((user) => allFilteredSelected ? next.delete(userIdOf(user)) : next.add(userIdOf(user)));
+                return next;
+              })}>{allFilteredSelected ? 'Bỏ chọn tất cả' : 'Select all'}</button>
+              <button type="button" disabled={!selectedUsers.length} onClick={() => addUsersToPanel(selectedUsers)}>Thêm {selectedUsers.length || ''} user →</button>
+            </div>
           </div>
           <div className="role-users-list">
             {loading ? <div className="role-empty">Đang tải users...</div> : filteredUsers.map((user) => {

@@ -14,7 +14,7 @@ GO
         DashBoard, MasterData va tat ca menu con.
       - IT: Tat ca menu dang hoat dong.
 
-    Role hop le: Approver, Leader, Staff, HOD.
+    Role hop le: Staff, Line Manager, HOD, BOD.
 
     Vi du:
       EXEC dbo.usp_Role_AddUser @RoleName = 'Staff', @UserName = 'hung.hm', @IsClear = 0;
@@ -50,8 +50,8 @@ BEGIN
 
     SET @RoleName = LTRIM(RTRIM(@RoleName));
 
-    IF @IsClear = 0 AND UPPER(@RoleName) NOT IN ('APPROVER', 'LEADER', 'STAFF', 'HOD')
-        THROW 50006, N'RoleName chi ho tro Approver, Leader, Staff hoac HOD.', 1;
+    IF @IsClear = 0 AND UPPER(@RoleName) NOT IN ('STAFF', 'LINE MANAGER', 'HOD', 'BOD')
+        THROW 50006, N'RoleName chi ho tro Staff, Line Manager, HOD hoac BOD.', 1;
 
     BEGIN TRY
         BEGIN TRANSACTION;
