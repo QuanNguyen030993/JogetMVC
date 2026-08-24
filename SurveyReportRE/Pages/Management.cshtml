@@ -1827,7 +1827,7 @@
     function syncNewRequestButtonVisibility(department) {
         const newRequestDepartment = String(qtDeptModuleCode[0] || "").trim().toUpperCase();
         const userDepartment = String(department || "").trim().toUpperCase();
-        const canCreateRequest = newRequestDepartment !== "" && userDepartment === newRequestDepartment;
+        const canCreateRequest = newRequestDepartment !== "" && (userDepartment === "MKT" || userDepartment === "IT");
         $("#btnNew").toggle(canCreateRequest).attr("aria-hidden", String(!canCreateRequest));
     }
     window.syncNewRequestButtonVisibility = syncNewRequestButtonVisibility;

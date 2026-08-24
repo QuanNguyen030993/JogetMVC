@@ -9395,7 +9395,7 @@
 
                 const $state = $("<span>")
                     .addClass(`overview-status-state statusTagInForm ${safeStatusClass}`)
-                    .text(`Status: ${statusText}`)
+                    .text(`${statusText}`)
                     .appendTo($content);
                 if (detailStatusId) $state.attr("id", detailStatusId);
 
@@ -9418,7 +9418,7 @@
                     .appendTo($content);
                 $("<span>")
                     .addClass("overview-status-owner")
-                    .text(`Account: ${owner}`)
+                    .text(`${owner}`)
                     .appendTo($content);
 
                 $target
@@ -9426,7 +9426,7 @@
                     .removeClass("is-ready")
                     .attr({
                         "aria-busy": "true",
-                        title: `Status: ${statusText}${skipTsEnabled ? " — Skip TS" : ""} — Account: ${owner}`
+                        title: `${statusText}${skipTsEnabled ? " — Skip TS" : ""} — ${owner}`
                     })
                     .empty()
                     .append($content);

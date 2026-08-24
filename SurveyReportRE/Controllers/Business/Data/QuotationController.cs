@@ -518,7 +518,9 @@ public class QuotationController : BaseControllerApi<Quotation>
             // must not move a Skip TS quotation away from the FO start node.
             if (IsSkipTsEnabled(quotationData.QuotationData.Quotation.QuotationType))
             {
-                quotationData.QuotationData.Quotation.StageDept = "FO";
+
+
+
             }
 
             if (files.Count > 0)
@@ -554,6 +556,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                          JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotation)),
                          JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotationData)),
                         siteEnums,
+                        _businessConfig,
                          file,
                          useAllRegionsForInitialNotification
                         );
@@ -612,6 +615,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                         JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotation)),
                         JsonConvert.DeserializeObject<dynamic>(JsonConvert.SerializeObject(quotationData)), 
                         siteEnums,
+                        _businessConfig,
                          null,
                          useAllRegionsForInitialNotification
                         );
@@ -1226,19 +1230,20 @@ public class QuotationController : BaseControllerApi<Quotation>
          dynamic quotation,
          dynamic quotationData,
          List<EnumData> siteEnums,
-        IFormFile file = null,
-        bool useAllRegions = false
+         IOptionsMonitor<BusinessConfig> businessConfig,
+         IFormFile file = null,
+         bool useAllRegions = false
         )
     {
-        List<StepsWorkflow> startSteps = await _stepsWorkflowRepository.GetListObject(step =>
-            step.WorkflowDefinitionId == workflowDefinition.Guid && step.IsStart == true);
-        StepsWorkflow? stepsWorkflow = startSteps
-            .Where(step => !string.Equals(step.FlowType?.Trim(), "Jump", StringComparison.OrdinalIgnoreCase)
-                           && step.StepType != 4)
-            .OrderBy(step => step.SortOrder ?? int.MaxValue)
-            .FirstOrDefault()
-            ?? startSteps.OrderBy(step => step.SortOrder ?? int.MaxValue).FirstOrDefault();
-        InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
+    List<StepsWorkflow> startSteps = await _stepsWorkflowRepository.GetListObject(step =>
+       step.WorkflowDefinitionId == workflowDefinition.Guid && step.IsStart == true);
+    StepsWorkflow? stepsWorkflow = startSteps
+        .Where(step => !string.Equals(step.FlowType?.Trim(), "Jump", StringComparison.OrdinalIgnoreCase)
+                       && step.StepType != 4)
+        .OrderBy(step => step.SortOrder ?? int.MaxValue)
+        .FirstOrDefault()
+        ?? startSteps.OrderBy(step => step.SortOrder ?? int.MaxValue).FirstOrDefault();
+    InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
         instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
         //instanceWorkflow.CurrentStep = "2";
         if (stepsWorkflow != null)
@@ -1249,19 +1254,25 @@ public class QuotationController : BaseControllerApi<Quotation>
             var activeJump = await ResolveActiveInitialJumpAsync(workflowDefinition, stepsWorkflow, quotationObject);
             bool autoJump = activeJump.Step != null && activeJump.IsAuto;
             StepsWorkflow routingStep = autoJump ? activeJump.Step! : stepsWorkflow;
-
-            (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(quotation, routingStep, _businessConfig, siteEnums);
+            (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig, siteEnums);
             quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
             quotation.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
             quotation.StatusId = routingStep.StatusId;
             picS.PICMain.LMKT = picS.PICHOD.FO;
             quotation.PIC = JsonConvert.SerializeObject(picS.PICMain);
-            EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == routingStep.StatusId);
-
-            quotation.WorkflowStatus = enumData?.Value ?? "";
+            if(IsSkipTsEnabled(quotation["QuotationType"].ToString()))
+            {
+                quotation.StageDept = "FO";
+                quotation.WorkflowStatus = _businessConfig.CurrentValue.Status.QuotationInitializeSkipTS;
+            }
+            else
+            {
+                EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == routingStep.StatusId);
+                quotation.WorkflowStatus = enumData?.Value ?? "";
+            }
             string initialStageDept = skipTsEnabled && !autoJump
-                ? "FO"
-                : routingStep.ToNodeId?.Trim() ?? "";
+      ? "FO"
+      : routingStep.ToNodeId?.Trim() ?? "";
             if (string.IsNullOrWhiteSpace(initialStageDept))
             {
                 throw new InvalidOperationException(
@@ -1375,7 +1386,7 @@ public class QuotationController : BaseControllerApi<Quotation>
             deptProcessing = new TurnAroundTimeDeptProcessing
             {
                 TurnAroundTimeSessionId = activeSession.Id,
-                Department = routingStep.FromNodeId,
+                Department = routingStep?.FromNodeId,
                 AcceptDate = acceptDate,
                 CompleteDate = completeDate,
                 ProcessingDays = processingDays

@@ -17,13 +17,22 @@ namespace ERPCore.Models.Business.Migration.Config
         public string DefaultCurrencyEnumName { get; set; } = "";
         public string DefaultCurrencyType { get; set; } = "";
         public string DefaultStatusSurveyEvaluation { get; set; } = "";
+
         public Workflow? Workflow { get; set; }
+        public Status? Status { get; set; }
         public SLA? SLA { get; set; }
         public Dictionary<string, SiteConfig> Sites { get; set; } = new Dictionary<string, SiteConfig>();
     }
     public class SLA
     {
         public string RenewQuotation { get; set; }
+    }
+    public class Status
+    {
+        public string QuotationInitialize { get; set; } = "";
+        public string QuotationInitializeSkipTS { get; set; } = "";
+        public string PolicyIssuanceInitialize { get; set; } = "";
+        public string PolicyIssuanceInitializeSkipTS { get; set; } = "";
     }
     public class SiteConfig
     {
