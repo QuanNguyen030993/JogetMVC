@@ -349,6 +349,14 @@ namespace ERPCore.Controllers.Config
             }
 
             var roleName = string.IsNullOrWhiteSpace(request.RoleName) ? "Staff" : request.RoleName.Trim();
+            var allowedRoles = new[] { "Approver", "Leader", "Staff", "HOD" };
+            var canonicalRoleName = allowedRoles.FirstOrDefault(role =>
+                string.Equals(role, roleName, StringComparison.OrdinalIgnoreCase));
+            if (canonicalRoleName == null && !request.IsClear)
+            {
+                return BadRequest(new { success = false, message = "RoleName must be Approver, Leader, Staff, or HOD." });
+            }
+            roleName = canonicalRoleName ?? "Staff";
             var userNames = request.UserNames
                 .Where(userName => !string.IsNullOrWhiteSpace(userName))
                 .Select(userName => userName.Trim())

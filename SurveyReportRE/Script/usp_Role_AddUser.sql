@@ -10,9 +10,11 @@ GO
     Cap hoac xoa role/menu cho mot user.
 
     Quy tac menu theo Users.department:
-      - MKT: Quotations, PolicyIssuances, SLA, DashBoard, MasterData
-             va tat ca menu con cua cac menu nay.
-      - IT : Tat ca menu dang hoat dong.
+      - MKT, FO, TS, UW, LMKT, PM: Quotations, PolicyIssuances, SLA,
+        DashBoard, MasterData va tat ca menu con.
+      - IT: Tat ca menu dang hoat dong.
+
+    Role hop le: Approver, Leader, Staff, HOD.
 
     Vi du:
       EXEC dbo.usp_Role_AddUser @RoleName = 'Staff', @UserName = 'hung.hm', @IsClear = 0;
@@ -46,6 +48,11 @@ BEGIN
     IF @IsClear NOT IN (0, 1)
         THROW 50002, N'IsClear chi nhan gia tri 0 (cap quyen) hoac 1 (xoa quyen).', 1;
 
+    SET @RoleName = LTRIM(RTRIM(@RoleName));
+
+    IF @IsClear = 0 AND UPPER(@RoleName) NOT IN ('APPROVER', 'LEADER', 'STAFF', 'HOD')
+        THROW 50006, N'RoleName chi ho tro Approver, Leader, Staff hoac HOD.', 1;
+
     BEGIN TRY
         BEGIN TRANSACTION;
 
@@ -77,8 +84,8 @@ BEGIN
         IF @RoleId IS NULL
             THROW 50003, N'RoleName khong ton tai trong bang Roles.', 1;
 
-        IF ISNULL(@Department, N'') NOT IN (N'MKT', N'IT')
-            THROW 50004, N'Department cua user chua duoc cau hinh phan quyen. Chi ho tro MKT va IT.', 1;
+        IF ISNULL(@Department, N'') NOT IN (N'MKT', N'FO', N'TS', N'UW', N'LMKT', N'PM', N'IT')
+            THROW 50004, N'Department chua duoc ho tro. Cac nhom hop le: MKT, FO, TS, UW, LMKT, PM, IT.', 1;
 
         CREATE TABLE #AllowedMenus
         (
@@ -105,7 +112,7 @@ BEGIN
                   AND ISNULL(RootMenu.Active, 0) = 1
                   AND ISNULL(RootMenu.Deleted, 0) = 0
             ) <> 5
-                THROW 50005, N'Khong tim thay day du 5 nhom menu goc danh cho MKT.', 1;
+                THROW 50005, N'Khong tim thay day du 5 nhom menu goc danh cho user khong phai IT.', 1;
 
             ;WITH MenuTree AS
             (
@@ -161,5 +168,54 @@ BEGIN
             ROLLBACK TRANSACTION;
         THROW;
     END CATCH;
+END
+GO
+
+/*
+    Danh sach user da duoc cap quyen, gom mot dong cho moi User + Role.
+    UI dung store nay de hien thi thanh vien cua tung department.
+*/
+CREATE OR ALTER PROCEDURE [dbo].[usp_UserRole_GetStatus]
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        U.Id AS UserId,
+        U.[username] AS UserName,
+        U.[name] AS DisplayName,
+        U.[mail] AS Email,
+        UPPER(LTRIM(RTRIM(CONVERT(NVARCHAR(100), U.[department])))) AS Department,
+        R.Id AS RoleId,
+        R.RoleName,
+        COUNT(DISTINCT UR.MenuId) AS MenuCount
+    FROM dbo.UserRoles AS UR
+    INNER JOIN dbo.Users AS U ON U.Id = UR.UserId
+    INNER JOIN dbo.Roles AS R ON R.Id = UR.RoleId
+    INNER JOIN dbo.Menu AS M ON M.Id = UR.MenuId
+    WHERE ISNULL(M.Deleted, 0) = 0
+    GROUP BY
+        U.Id,
+        U.[username],
+        U.[name],
+        U.[mail],
+        U.[department],
+        R.Id,
+        R.RoleName
+    ORDER BY Department, R.RoleName, U.[username];
+END
+GO
+
+/* Index phuc vu dong bo va load danh sach thanh vien; khong thay doi schema du lieu. */
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.indexes
+    WHERE object_id = OBJECT_ID(N'dbo.UserRoles')
+      AND name = N'IX_UserRoles_UserId_RoleId_MenuId'
+)
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_UserRoles_UserId_RoleId_MenuId
+        ON dbo.UserRoles (UserId, RoleId, MenuId);
 END
 GO

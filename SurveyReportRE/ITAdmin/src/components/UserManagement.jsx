@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import appsettings from '../../../host.json';
 
 const MKT_ROOTS = new Set(['Quotations', 'PolicyIssuances', 'SLA', 'DashBoard', 'MasterData']);
+const DEPARTMENT_GROUPS = ['MKT', 'FO', 'TS', 'UW', 'LMKT', 'PM', 'IT'];
+const ROLE_TYPES = ['Approver', 'Leader', 'Staff', 'HOD'];
 const valueOf = (item, ...keys) => keys.map((key) => item?.[key]).find((value) => value !== undefined && value !== null);
 const userIdOf = (user) => String(valueOf(user, 'id', 'Id') ?? valueOf(user, 'username', 'Username', 'userName', 'UserName'));
 const userNameOf = (user) => String(valueOf(user, 'username', 'Username', 'userName', 'UserName') || '');
@@ -33,8 +35,8 @@ const MenuTree = ({ menus, parentId = null }) => {
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
-  const [roles, setRoles] = useState([]);
   const [menus, setMenus] = useState([]);
+  const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,6 +44,7 @@ const UserManagement = () => {
   const [stagedUsers, setStagedUsers] = useState([]);
   const [previewUserId, setPreviewUserId] = useState('');
   const [roleName, setRoleName] = useState('Staff');
+  const [selectedGroup, setSelectedGroup] = useState('MKT');
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
@@ -52,13 +55,13 @@ const UserManagement = () => {
     };
     Promise.all([
       getJson('/api/Users/GetAll'),
-      getJson('/api/Roles/GetAll').catch(() => []),
       getJson('/api/Menu/GetAll').catch(() => []),
+      getJson('/api/Users/GetUserRoleStatus').catch(() => []),
     ])
-      .then(([userData, roleData, menuData]) => {
+      .then(([userData, menuData, assignmentData]) => {
         setUsers(Array.isArray(userData) ? userData : []);
-        setRoles(Array.isArray(roleData) ? roleData : []);
         setMenus(Array.isArray(menuData) ? menuData : []);
+        setAssignments(Array.isArray(assignmentData) ? assignmentData : []);
       })
       .catch((error) => setMessage({ type: 'error', text: `Không tải được dữ liệu: ${error.message}` }))
       .finally(() => setLoading(false));
@@ -70,7 +73,7 @@ const UserManagement = () => {
     return users.filter((user) => [
       valueOf(user, 'fullname', 'Fullname', 'name', 'Name'),
       userNameOf(user),
-      valueOf(user, 'email', 'Email'),
+      valueOf(user, 'email', 'Email', 'mail', 'Mail'),
       departmentOf(user),
     ].some((value) => String(value || '').toLowerCase().includes(term)));
   }, [searchTerm, users]);
@@ -81,16 +84,18 @@ const UserManagement = () => {
     const nextUsers = [...byId.values()];
     setStagedUsers(nextUsers);
     setPreviewUserId((current) => current || userIdOf(nextUsers[0]));
+    if (nextUsers[0] && DEPARTMENT_GROUPS.includes(departmentOf(nextUsers[0]))) setSelectedGroup(departmentOf(nextUsers[0]));
   };
 
   const selectedUsers = users.filter((user) => selectedIds.has(userIdOf(user)));
   const previewUser = stagedUsers.find((user) => userIdOf(user) === previewUserId) || stagedUsers[0];
   const previewDepartment = departmentOf(previewUser);
+  const groupMembers = useMemo(() => assignments.filter((item) => departmentOf(item) === selectedGroup), [assignments, selectedGroup]);
 
   const allowedMenus = useMemo(() => {
     const activeMenus = menus.filter(isMenuActive);
-    if (previewDepartment === 'IT') return activeMenus;
-    if (previewDepartment !== 'MKT') return [];
+    if (selectedGroup === 'IT') return activeMenus;
+    if (!DEPARTMENT_GROUPS.includes(selectedGroup)) return [];
     const allowedIds = new Set(
       activeMenus
         .filter((menu) => (menuParentIdOf(menu) === null || menuParentIdOf(menu) === undefined) && MKT_ROOTS.has(menuNameOf(menu)))
@@ -108,7 +113,7 @@ const UserManagement = () => {
       });
     }
     return activeMenus.filter((menu) => allowedIds.has(menuIdOf(menu)));
-  }, [menus, previewDepartment]);
+  }, [menus, selectedGroup]);
 
   const submitRoleMenu = async (isClear) => {
     if (!stagedUsers.length) return;
@@ -127,6 +132,11 @@ const UserManagement = () => {
       const result = await response.json().catch(() => ({}));
       if (!response.ok || result.success === false) throw new Error(result.message || 'Không thể cập nhật quyền.');
       const failed = (result.results || []).filter((item) => !item.success);
+      const statusResponse = await fetch(`${appsettings.UrlConfig.Host}/api/Users/GetUserRoleStatus`);
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        setAssignments(Array.isArray(statusData) ? statusData : []);
+      }
       setMessage({
         type: failed.length ? 'warning' : 'success',
         text: failed.length
@@ -176,7 +186,7 @@ const UserManagement = () => {
                     return next;
                   })} />
                   <div className="role-user-avatar">{userNameOf(user).slice(0, 2).toUpperCase()}</div>
-                  <div className="role-user-info"><strong>{valueOf(user, 'fullname', 'Fullname', 'name', 'Name') || userNameOf(user)}</strong><span>{userNameOf(user)} · {valueOf(user, 'email', 'Email') || 'No email'}</span></div>
+                  <div className="role-user-info"><strong>{valueOf(user, 'fullname', 'Fullname', 'name', 'Name') || userNameOf(user)}</strong><span>{userNameOf(user)} · {valueOf(user, 'email', 'Email', 'mail', 'Mail') || 'No email'}</span></div>
                   <span className={`role-department ${departmentOf(user).toLowerCase()}`}>{departmentOf(user) || 'N/A'}</span>
                 </div>
               );
@@ -201,7 +211,7 @@ const UserManagement = () => {
           ) : (
             <div className="role-staged-users">
               {stagedUsers.map((user) => (
-                <button key={userIdOf(user)} type="button" className={userIdOf(user) === userIdOf(previewUser) ? 'active' : ''} onClick={() => setPreviewUserId(userIdOf(user))}>
+                <button key={userIdOf(user)} type="button" className={userIdOf(user) === userIdOf(previewUser) ? 'active' : ''} onClick={() => { setPreviewUserId(userIdOf(user)); if (DEPARTMENT_GROUPS.includes(departmentOf(user))) setSelectedGroup(departmentOf(user)); }}>
                   <span>{userNameOf(user)}</span><small>{departmentOf(user) || 'N/A'}</small>
                   <i onClick={(event) => { event.stopPropagation(); setStagedUsers((current) => current.filter((item) => userIdOf(item) !== userIdOf(user))); }}>×</i>
                 </button>
@@ -209,8 +219,7 @@ const UserManagement = () => {
             </div>
           )}
           <label className="role-select-field"><span>Role</span><select value={roleName} onChange={(event) => setRoleName(event.target.value)}>
-            {!roles.some((role) => String(valueOf(role, 'roleName', 'RoleName')) === 'Staff') && <option value="Staff">Staff</option>}
-            {roles.map((role) => { const name = String(valueOf(role, 'roleName', 'RoleName') || ''); return name && <option key={valueOf(role, 'id', 'Id') || name} value={name}>{name}</option>; })}
+            {ROLE_TYPES.map((role) => <option key={role} value={role}>{role}</option>)}
           </select></label>
           <div className="role-assignment-actions">
             <button type="button" className="clear" disabled={saving || !stagedUsers.length} onClick={() => submitRoleMenu(true)}>Clear role/menu</button>
@@ -219,12 +228,22 @@ const UserManagement = () => {
         </div>
 
         <div className="role-menu-preview">
-          <div className="role-panel-title"><strong>Menu preview</strong><span>{previewUser ? `${userNameOf(previewUser)} · ${previewDepartment || 'N/A'}` : 'Chọn user'}</span></div>
-          {previewUser && !['MKT', 'IT'].includes(previewDepartment) ? (
-            <div className="role-policy-warning">Department chưa được hỗ trợ. Store chỉ chấp nhận MKT và IT.</div>
-          ) : previewUser ? (
-            <><div className="role-policy-summary"><b>{previewDepartment}</b><span>{previewDepartment === 'IT' ? 'Tất cả menu đang hoạt động' : '5 nhóm menu MKT và toàn bộ menu con'}</span><em>{allowedMenus.length} menus</em></div><div className="role-menu-tree-wrap"><MenuTree menus={allowedMenus} /></div></>
-          ) : <div className="role-empty">Thêm và chọn một user để xem menu.</div>}
+          <div className="role-panel-title"><strong>Groups, members & menus</strong><span>{groupMembers.length} members</span></div>
+          <div className="role-group-tabs">
+            {DEPARTMENT_GROUPS.map((group) => <button key={group} type="button" className={selectedGroup === group ? 'active' : ''} onClick={() => setSelectedGroup(group)}>{group}</button>)}
+          </div>
+          <div className="role-policy-summary"><b>{selectedGroup}</b><span>{selectedGroup === 'IT' ? 'Tất cả menu đang hoạt động' : 'Bộ menu chung cho account không phải IT/admin'}</span><em>{allowedMenus.length} menus</em></div>
+          <div className="role-group-members">
+            <strong>Đang có những ai</strong>
+            {groupMembers.length ? groupMembers.map((member) => (
+              <div key={`${valueOf(member, 'userId', 'UserId')}-${valueOf(member, 'roleId', 'RoleId')}`} className="role-member-row">
+                <span>{valueOf(member, 'displayName', 'DisplayName') || userNameOf(member)}</span>
+                <small>{userNameOf(member)}</small>
+                <em>{valueOf(member, 'roleName', 'RoleName') || 'N/A'}</em>
+              </div>
+            )) : <p>Chưa có user trong nhóm này.</p>}
+          </div>
+          <div className="role-menu-tree-wrap"><MenuTree menus={allowedMenus} /></div>
         </div>
       </div>
     </section>
