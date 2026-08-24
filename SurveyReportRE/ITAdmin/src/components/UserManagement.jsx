@@ -45,6 +45,8 @@ const UserManagement = () => {
   const [previewUserId, setPreviewUserId] = useState('');
   const [roleName, setRoleName] = useState('Staff');
   const [selectedGroup, setSelectedGroup] = useState('MKT');
+  const [selectedTag, setSelectedTag] = useState('');
+  const [loginAsUser, setLoginAsUser] = useState('');
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
@@ -67,22 +69,52 @@ const UserManagement = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  const roleByUserName = useMemo(() => {
+    const result = new Map();
+    assignments.forEach((item) => {
+      const userName = userNameOf(item).toLowerCase();
+      const assignedRole = String(valueOf(item, 'roleName', 'RoleName') || '').trim();
+      if (userName && assignedRole) result.set(userName, assignedRole);
+    });
+    return result;
+  }, [assignments]);
+
+  const roleOfUser = (user) => roleByUserName.get(userNameOf(user).toLowerCase()) || 'Chưa phân quyền';
+  const availableTags = useMemo(() => {
+    const stagedIds = new Set(stagedUsers.map(userIdOf));
+    const tags = new Set();
+    users.filter((user) => !stagedIds.has(userIdOf(user))).forEach((user) => {
+      if (departmentOf(user)) tags.add(departmentOf(user));
+      tags.add(roleByUserName.get(userNameOf(user).toLowerCase()) || 'Chưa phân quyền');
+    });
+    return [...tags].sort((a, b) => a.localeCompare(b));
+  }, [roleByUserName, stagedUsers, users]);
+
   const filteredUsers = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
-    if (!term) return users;
-    return users.filter((user) => [
-      valueOf(user, 'fullname', 'Fullname', 'name', 'Name'),
-      userNameOf(user),
-      valueOf(user, 'email', 'Email', 'mail', 'Mail'),
-      departmentOf(user),
-    ].some((value) => String(value || '').toLowerCase().includes(term)));
-  }, [searchTerm, users]);
+    const stagedIds = new Set(stagedUsers.map(userIdOf));
+    return users
+      .filter((user) => !stagedIds.has(userIdOf(user)))
+      .filter((user) => !selectedTag || departmentOf(user) === selectedTag || roleOfUser(user) === selectedTag)
+      .filter((user) => !term || [
+        valueOf(user, 'fullname', 'Fullname', 'name', 'Name'),
+        userNameOf(user),
+        valueOf(user, 'email', 'Email', 'mail', 'Mail'),
+        departmentOf(user),
+        roleOfUser(user),
+      ].some((value) => String(value || '').toLowerCase().includes(term)));
+  }, [roleByUserName, searchTerm, selectedTag, stagedUsers, users]);
 
   const addUsersToPanel = (items) => {
     const byId = new Map(stagedUsers.map((user) => [userIdOf(user), user]));
     items.forEach((user) => byId.set(userIdOf(user), user));
     const nextUsers = [...byId.values()];
     setStagedUsers(nextUsers);
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      items.forEach((user) => next.delete(userIdOf(user)));
+      return next;
+    });
     setPreviewUserId((current) => current || userIdOf(nextUsers[0]));
     if (nextUsers[0] && DEPARTMENT_GROUPS.includes(departmentOf(nextUsers[0]))) setSelectedGroup(departmentOf(nextUsers[0]));
   };
@@ -151,6 +183,26 @@ const UserManagement = () => {
     }
   };
 
+  const loginAs = async (user) => {
+    const userName = userNameOf(user);
+    if (!userName || !window.confirm(`Đăng nhập với tài khoản ${userName}?`)) return;
+    setLoginAsUser(userName);
+    setMessage(null);
+    try {
+      const response = await fetch(`${appsettings.UrlConfig.Host}/api/Users/LoginAs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userName }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.success === false) throw new Error(result.message || 'Không thể Login as user này.');
+      window.location.replace(`${result.redirectUrl || '/Management'}?impersonated=${Date.now()}`);
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message });
+      setLoginAsUser('');
+    }
+  };
+
   return (
     <section className="panel role-assignment-page">
       <div className="panel-header role-assignment-header">
@@ -172,6 +224,10 @@ const UserManagement = () => {
               })}>{allFilteredSelected ? 'Bỏ chọn tất cả' : 'Select all'}</button>
               <button type="button" disabled={!selectedUsers.length} onClick={() => addUsersToPanel(selectedUsers)}>Thêm {selectedUsers.length || ''} user →</button>
             </div>
+          </div>
+          <div className="role-user-filter-tags">
+            <button type="button" className={!selectedTag ? 'active' : ''} onClick={() => setSelectedTag('')}>Tất cả</button>
+            {availableTags.map((tag) => <button key={tag} type="button" className={selectedTag === tag ? 'active' : ''} onClick={() => setSelectedTag((current) => current === tag ? '' : tag)}>{tag}</button>)}
           </div>
           <div className="role-users-list">
             {loading ? <div className="role-empty">Đang tải users...</div> : filteredUsers.map((user) => {
@@ -195,7 +251,13 @@ const UserManagement = () => {
                   })} />
                   <div className="role-user-avatar">{userNameOf(user).slice(0, 2).toUpperCase()}</div>
                   <div className="role-user-info"><strong>{valueOf(user, 'fullname', 'Fullname', 'name', 'Name') || userNameOf(user)}</strong><span>{userNameOf(user)} · {valueOf(user, 'email', 'Email', 'mail', 'Mail') || 'No email'}</span></div>
-                  <span className={`role-department ${departmentOf(user).toLowerCase()}`}>{departmentOf(user) || 'N/A'}</span>
+                  <div className="role-user-row-actions">
+                    <div className="role-user-tags">
+                      <button type="button" className={`role-department ${departmentOf(user).toLowerCase()}`} onClick={() => setSelectedTag(departmentOf(user))}>{departmentOf(user) || 'N/A'}</button>
+                      <button type="button" className="role-access-tag" onClick={() => setSelectedTag(roleOfUser(user))}>{roleOfUser(user)}</button>
+                    </div>
+                    <button type="button" className="role-login-as-btn" disabled={Boolean(loginAsUser)} onClick={() => loginAs(user)}>{loginAsUser === userNameOf(user) ? 'Đang login...' : 'Login as'}</button>
+                  </div>
                 </div>
               );
             })}
