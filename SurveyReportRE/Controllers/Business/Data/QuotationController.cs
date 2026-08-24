@@ -1069,6 +1069,157 @@ public class QuotationController : BaseControllerApi<Quotation>
         }
     }
 
+    private async Task<(StepsWorkflow? Step, bool IsAuto)> ResolveActiveInitialJumpAsync(
+        WorkflowDefinition workflowDefinition,
+        StepsWorkflow initialStep,
+        JObject quotationData)
+    {
+        string sourceNodeId = initialStep.FNodeId?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(sourceNodeId)) return (null, false);
+
+        List<StepsWorkflow> workflowSteps = await _stepsWorkflowRepository.GetListObject(step =>
+            step.WorkflowDefinitionId == workflowDefinition.Guid);
+
+        foreach (StepsWorkflow jumpStep in workflowSteps
+                     .Where(step => step.IsActive != false
+                                    && string.Equals(step.FNodeId?.Trim(), sourceNodeId, StringComparison.OrdinalIgnoreCase)
+                                    && (string.Equals(step.FlowType?.Trim(), "Jump", StringComparison.OrdinalIgnoreCase)
+                                        || step.StepType == 4))
+                     .OrderBy(step => step.SortOrder ?? int.MaxValue))
+        {
+            JObject stepData;
+            try
+            {
+                stepData = JObject.Parse(jumpStep.Data ?? "{}");
+            }
+            catch (JsonException)
+            {
+                continue;
+            }
+
+            JObject? nodeJump = stepData.GetValue("nodeJump", StringComparison.OrdinalIgnoreCase) as JObject;
+            if (nodeJump == null) continue;
+
+            List<string> conditionNames = (nodeJump.GetValue("conditionNames", StringComparison.OrdinalIgnoreCase) as JArray)?
+                .Values<string>()
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => value.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList() ?? new List<string>();
+
+            if (conditionNames.Count == 0)
+            {
+                string transitionId = nodeJump.GetValue("transitionId", StringComparison.OrdinalIgnoreCase)?.ToString() ?? "";
+                JObject? transitionMap = nodeJump.GetValue("transitionMap", StringComparison.OrdinalIgnoreCase) as JObject;
+                if (transitionMap != null)
+                {
+                    conditionNames.AddRange(transitionMap.Properties()
+                        .Where(property => string.Equals(property.Value?.ToString(), transitionId, StringComparison.OrdinalIgnoreCase))
+                        .Select(property => property.Name));
+                }
+            }
+
+            if (!conditionNames.Any(condition => IsWorkflowJumpConditionEnabled(condition, quotationData)))
+                continue;
+
+            string jumpMode = nodeJump.GetValue("mode", StringComparison.OrdinalIgnoreCase)?.ToString()?.Trim() ?? "";
+            bool requiresUserAction = nodeJump.GetValue("requiresUserAction", StringComparison.OrdinalIgnoreCase)?.Value<bool?>() == true;
+            bool isAuto = !requiresUserAction
+                          && !string.Equals(jumpMode, "manual", StringComparison.OrdinalIgnoreCase)
+                          && nodeJump.GetValue("autoJump", StringComparison.OrdinalIgnoreCase)?.Value<bool?>() != false;
+
+            return (jumpStep, isAuto);
+        }
+
+        return (null, false);
+    }
+
+    private static bool IsWorkflowJumpConditionEnabled(string propertyKey, JObject quotationData)
+    {
+        string normalizedKey = (propertyKey ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(normalizedKey)) return false;
+
+        if (string.Equals(normalizedKey, "SkipTS", StringComparison.OrdinalIgnoreCase))
+        {
+            string? quotationType = quotationData
+                .GetValue("QuotationType", StringComparison.OrdinalIgnoreCase)?
+                .ToString();
+            return IsSkipTsEnabled(quotationType);
+        }
+
+        string[] pathParts = normalizedKey
+            .Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(part => !string.Equals(part, "formData", StringComparison.OrdinalIgnoreCase)
+                           && !string.Equals(part, "payload", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        JToken? value = FindWorkflowProperty(quotationData, pathParts, 0);
+        return IsTruthyWorkflowValue(value);
+    }
+
+    private static JToken? FindWorkflowProperty(JToken token, string[] pathParts, int pathIndex)
+    {
+        if (pathParts.Length == 0) return null;
+
+        if (token is JObject obj)
+        {
+            JProperty? matchingProperty = obj.Properties().FirstOrDefault(property =>
+                string.Equals(property.Name, pathParts[pathIndex], StringComparison.OrdinalIgnoreCase));
+            if (matchingProperty != null)
+            {
+                if (pathIndex == pathParts.Length - 1) return matchingProperty.Value;
+                JToken? nestedMatch = FindWorkflowProperty(matchingProperty.Value, pathParts, pathIndex + 1);
+                if (nestedMatch != null) return nestedMatch;
+            }
+
+            foreach (JProperty property in obj.Properties())
+            {
+                JToken? nestedMatch = FindWorkflowProperty(property.Value, pathParts, pathIndex);
+                if (nestedMatch != null) return nestedMatch;
+            }
+        }
+        else if (token is JArray array)
+        {
+            foreach (JToken item in array)
+            {
+                JToken? nestedMatch = FindWorkflowProperty(item, pathParts, pathIndex);
+                if (nestedMatch != null) return nestedMatch;
+            }
+        }
+        else if (token.Type == JTokenType.String)
+        {
+            string rawValue = token.ToString().Trim();
+            if (rawValue.StartsWith('{') || rawValue.StartsWith('['))
+            {
+                try
+                {
+                    return FindWorkflowProperty(JToken.Parse(rawValue), pathParts, pathIndex);
+                }
+                catch (JsonException)
+                {
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsTruthyWorkflowValue(JToken? value)
+    {
+        if (value == null || value.Type is JTokenType.Null or JTokenType.Undefined) return false;
+        if (value.Type == JTokenType.Boolean) return value.Value<bool>();
+        if (value.Type is JTokenType.Integer or JTokenType.Float) return value.Value<decimal>() != 0;
+        if (value.Type == JTokenType.String)
+        {
+            string normalized = value.ToString().Trim();
+            return !string.IsNullOrWhiteSpace(normalized)
+                   && !new[] { "false", "0", "null", "undefined", "no", "off" }
+                       .Contains(normalized, StringComparer.OrdinalIgnoreCase);
+        }
+
+        return value.HasValues;
+    }
+
     [NonAction]
     public async Task NotificationHandle(
          WorkflowDefinition workflowDefinition,
@@ -1079,26 +1230,38 @@ public class QuotationController : BaseControllerApi<Quotation>
         bool useAllRegions = false
         )
     {
-        StepsWorkflow stepsWorkflow = await _stepsWorkflowRepository.GetSingleObject(s => s.WorkflowDefinitionId == workflowDefinition.Guid && s.IsStart == true);
+        List<StepsWorkflow> startSteps = await _stepsWorkflowRepository.GetListObject(step =>
+            step.WorkflowDefinitionId == workflowDefinition.Guid && step.IsStart == true);
+        StepsWorkflow? stepsWorkflow = startSteps
+            .Where(step => !string.Equals(step.FlowType?.Trim(), "Jump", StringComparison.OrdinalIgnoreCase)
+                           && step.StepType != 4)
+            .OrderBy(step => step.SortOrder ?? int.MaxValue)
+            .FirstOrDefault()
+            ?? startSteps.OrderBy(step => step.SortOrder ?? int.MaxValue).FirstOrDefault();
         InstanceWorkflow instanceWorkflow = new InstanceWorkflow();
         instanceWorkflow.WorkflowDefinitionId = workflowDefinition.Guid;
         //instanceWorkflow.CurrentStep = "2";
         if (stepsWorkflow != null)
 
         {
-            (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(quotation, stepsWorkflow, _businessConfig, siteEnums);
+            JObject quotationObject = JObject.FromObject((object)quotation);
+            bool skipTsEnabled = IsSkipTsEnabled(Convert.ToString(quotation.QuotationType));
+            var activeJump = await ResolveActiveInitialJumpAsync(workflowDefinition, stepsWorkflow, quotationObject);
+            bool autoJump = activeJump.Step != null && activeJump.IsAuto;
+            StepsWorkflow routingStep = autoJump ? activeJump.Step! : stepsWorkflow;
+
+            (PICAttributes PICMain, PICSysHandleAttributes PICLeader, PICAttributes PICHOD) picS = ControllerUtil.PersonInChargeHandle(quotation, routingStep, _businessConfig, siteEnums);
             quotation.LeaderPIC = JsonConvert.SerializeObject(picS.PICLeader);
             quotation.HODPIC = JsonConvert.SerializeObject(picS.PICHOD);
-            quotation.StatusId = stepsWorkflow.StatusId;
+            quotation.StatusId = routingStep.StatusId;
             picS.PICMain.LMKT = picS.PICHOD.FO;
             quotation.PIC = JsonConvert.SerializeObject(picS.PICMain);
-            EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == stepsWorkflow.StatusId);
+            EnumData enumData = await _enumDataRepository.GetSingleObject(s => s.Id == routingStep.StatusId);
 
             quotation.WorkflowStatus = enumData?.Value ?? "";
-            bool skipTsEnabled = IsSkipTsEnabled(Convert.ToString(quotation.QuotationType));
-            string initialStageDept = skipTsEnabled
+            string initialStageDept = skipTsEnabled && !autoJump
                 ? "FO"
-                : stepsWorkflow.ToNodeId?.Trim() ?? "";
+                : routingStep.ToNodeId?.Trim() ?? "";
             if (string.IsNullOrWhiteSpace(initialStageDept))
             {
                 throw new InvalidOperationException(
@@ -1109,7 +1272,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
             TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
-            TurnAroundItem tatObject = Util.TurnAroundTimePicker(result, stepsWorkflow.FromNodeId);
+            TurnAroundItem tatObject = Util.TurnAroundTimePicker(result, routingStep.FromNodeId);
 
             if (file != null)
             {
@@ -1134,9 +1297,9 @@ public class QuotationController : BaseControllerApi<Quotation>
             //    stepsWorkflow.ToNodeId = resolvedDeptCode;
             //}
 
-            instanceWorkflow.CurrentStep = skipTsEnabled
+            instanceWorkflow.CurrentStep = skipTsEnabled && !autoJump
                 ? stepsWorkflow.FNodeId
-                : stepsWorkflow.TNodeId;
+                : routingStep.TNodeId;
             if (string.IsNullOrWhiteSpace(instanceWorkflow.CurrentStep))
             {
                 throw new InvalidOperationException(
@@ -1151,7 +1314,7 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
             SubmitRequest submitRequest = new SubmitRequest();
-            submitRequest.StepsWorkflow = stepsWorkflow;
+            submitRequest.StepsWorkflow = routingStep;
             submitRequest.Comment = $"{quotation.QuotationCode} created!";
             submitRequest.InstanceWorkflow = instanceWorkflow;
 
@@ -1212,7 +1375,7 @@ public class QuotationController : BaseControllerApi<Quotation>
             deptProcessing = new TurnAroundTimeDeptProcessing
             {
                 TurnAroundTimeSessionId = activeSession.Id,
-                Department = stepsWorkflow?.FromNodeId,
+                Department = routingStep.FromNodeId,
                 AcceptDate = acceptDate,
                 CompleteDate = completeDate,
                 ProcessingDays = processingDays
@@ -1226,7 +1389,7 @@ public class QuotationController : BaseControllerApi<Quotation>
                 NotificationTypeKeys.Initial);
             NotificationTemplate notificationTitle = await ResolveRouteTransitionNotificationTitleAsyncV2(
                 workflowDefinition,
-                stepsWorkflow,
+                routingStep,
                 JsonConvert.DeserializeObject<Quotation>(JsonConvert.SerializeObject(quotation)));
             string foRoutingCode = Convert.ToString(quotation.LineCode)
                 ?? Convert.ToString(quotation.ProductCode)
