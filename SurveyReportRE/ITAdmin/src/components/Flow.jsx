@@ -237,7 +237,8 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
                 id: definition.id || `jump-definition-${index}-${definitionIndex}`,
                 conditionName: definition.conditionName || definition.propertyKey || definition.name || '',
                 propertyKey: definition.propertyKey || definition.conditionName || definition.name || '',
-                transitionId: definition.transitionId || definition.jumpTransitionId || ''
+                transitionId: definition.transitionId || definition.jumpTransitionId || '',
+                jumpMode: String(definition.jumpMode || definition.mode || 'auto').toLowerCase() === 'manual' ? 'manual' : 'auto'
             }))
             : [];
 
@@ -1073,14 +1074,23 @@ function Flow({ id: propId }) {
                 };
                 if (edge.data?.transitionType === 'Jump' || fromNode.data?.jumpEnabled) {
                     const jumpDefinitions = fromNode.data?.jumpDefinitions || [];
+                    const edgeJumpDefinitions = jumpDefinitions.filter((definition) => definition.transitionId === edge.id);
+                    const jumpMode = edgeJumpDefinitions.some((definition) => definition.jumpMode === 'manual') ? 'manual' : 'auto';
                     stepData.nodeJump = {
                         enabled: !!fromNode.data?.jumpEnabled,
                         transitionId: edge.id,
                         targetNodeId: edge.target || null,
-                        conditionNames: jumpDefinitions
-                            .filter((definition) => definition.transitionId === edge.id)
+                        mode: jumpMode,
+                        autoJump: jumpMode === 'auto',
+                        requiresUserAction: jumpMode === 'manual',
+                        conditionNames: edgeJumpDefinitions
                             .map((definition) => definition.propertyKey || definition.conditionName)
                             .filter(Boolean),
+                        conditionModes: Object.fromEntries(
+                            jumpDefinitions
+                                .filter((definition) => (definition.propertyKey || definition.conditionName) && definition.transitionId)
+                                .map((definition) => [definition.propertyKey || definition.conditionName, definition.jumpMode || 'auto'])
+                        ),
                         transitionMap: Object.fromEntries(
                             jumpDefinitions
                                 .filter((definition) => (definition.propertyKey || definition.conditionName) && definition.transitionId)
@@ -1938,7 +1948,8 @@ const updateSelectedEdge = useCallback(
                                         id: `jump-definition-${Date.now()}`,
                                         conditionName: '',
                                         propertyKey: '',
-                                        transitionId: outgoingJumpEdges[0]?.id || ''
+                                        transitionId: outgoingJumpEdges[0]?.id || '',
+                                        jumpMode: 'auto'
                                     }]);
                                 }}
                                 style={{ padding: '4px 8px', border: 'none', borderRadius: '6px', background: outgoingJumpEdges.length ? '#d97706' : '#cbd5e1', color: '#fff', cursor: outgoingJumpEdges.length ? 'pointer' : 'not-allowed' }}
@@ -1998,6 +2009,20 @@ const updateSelectedEdge = useCallback(
                                                 {edge.id} · {edge.data?.actionName || edge.target || 'Jump'}
                                             </option>
                                         ))}
+                                    </select>
+                                </label>
+                                <label style={{ marginTop: '7px' }}>
+                                    <span>Jump behavior</span>
+                                    <select
+                                        value={definition.jumpMode || 'auto'}
+                                        onChange={(event) => {
+                                            const definitions = [...(selectedNode.data?.jumpDefinitions || [])];
+                                            definitions[definitionIndex] = { ...definitions[definitionIndex], jumpMode: event.target.value };
+                                            updateSelectedNode('jumpDefinitions', definitions);
+                                        }}
+                                    >
+                                        <option value="auto">Auto jump · không hiện action button</option>
+                                        <option value="manual">Manual jump · dừng và chờ user bấm</option>
                                     </select>
                                 </label>
                             </div>

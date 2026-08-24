@@ -180,12 +180,14 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
                 conditionName: definition.conditionName || definition.propertyKey || definition.name || '',
                 propertyKey: definition.propertyKey || definition.conditionName || definition.name || '',
                 transitionId: String(definition.transitionId || definition.jumpTransitionId || ''),
+                jumpMode: String(definition.jumpMode || definition.mode || 'auto').toLowerCase() === 'manual' ? 'manual' : 'auto',
             }))
             : Object.entries(jumpTransitionMap || {}).map(([propertyKey, transitionId], definitionIndex) => ({
                 id: `jump-definition-${index}-${definitionIndex}`,
                 conditionName: propertyKey,
                 propertyKey,
                 transitionId: String(transitionId || ''),
+                jumpMode: 'auto',
             }));
 
         return {
@@ -451,23 +453,20 @@ const filterRuntimeTransitions = (nodes, edges, runtimeProperties) => {
             .map((node) => [String(node.id), node.data.jumpDefinitions]),
     );
 
-    const selectedJumpIdsByNode = new Map();
+    const activeDefinitionsByNode = new Map();
     definitionsByNode.forEach((definitions, nodeId) => {
         const availableJumpIds = new Set(
             edges
                 .filter((edge) => String(edge.source) === nodeId && String(edge.data?.transitionType).toLowerCase() === 'jump')
                 .map((edge) => String(edge.id)),
         );
-        const selectedIds = new Set(
-            definitions
+        const activeDefinitions = definitions
                 .filter((definition) => {
                     const propertyKey = definition.propertyKey || definition.conditionName;
                     return propertyKey && isSatisfiedJumpValue(getRuntimePropertyValue(runtimeProperties, propertyKey));
                 })
-                .map((definition) => String(definition.transitionId || ''))
-                .filter((transitionId) => availableJumpIds.has(transitionId)),
-        );
-        selectedJumpIdsByNode.set(nodeId, selectedIds);
+                .filter((definition) => availableJumpIds.has(String(definition.transitionId || '')));
+        activeDefinitionsByNode.set(nodeId, activeDefinitions);
     });
 
     return edges
@@ -475,10 +474,45 @@ const filterRuntimeTransitions = (nodes, edges, runtimeProperties) => {
             const nodeId = String(edge.source);
             if (!definitionsByNode.has(nodeId)) return true;
             const isJump = String(edge.data?.transitionType).toLowerCase() === 'jump';
-            const selectedJumpIds = selectedJumpIdsByNode.get(nodeId);
-            return selectedJumpIds?.size
-                ? isJump && selectedJumpIds.has(String(edge.id))
+            const activeDefinitions = activeDefinitionsByNode.get(nodeId) || [];
+            return activeDefinitions.length
+                ? isJump && activeDefinitions.some((definition) => String(definition.transitionId) === String(edge.id))
                 : !isJump;
+        })
+        .map((edge) => {
+            const isJump = String(edge.data?.transitionType).toLowerCase() === 'jump';
+            if (!isJump) return edge;
+            const activeDefinitions = (activeDefinitionsByNode.get(String(edge.source)) || [])
+                .filter((definition) => String(definition.transitionId) === String(edge.id));
+            if (!activeDefinitions.length) return edge;
+            const jumpMode = activeDefinitions.some((definition) => definition.jumpMode === 'manual') ? 'manual' : 'auto';
+            const jumpPayload = {
+                transitionId: edge.id,
+                fromNodeId: edge.source,
+                toNodeId: edge.target,
+                mode: jumpMode,
+                propertyKeys: activeDefinitions.map((definition) => definition.propertyKey || definition.conditionName).filter(Boolean),
+                edge,
+            };
+            return {
+                ...edge,
+                animated: jumpMode === 'auto',
+                style: jumpMode === 'manual'
+                    ? { ...edge.style, stroke: '#9333ea', strokeWidth: 4, strokeDasharray: undefined }
+                    : { ...edge.style, stroke: '#7c3aed', strokeWidth: 3, strokeDasharray: '8 5' },
+                markerEnd: { ...edge.markerEnd, color: jumpMode === 'manual' ? '#9333ea' : '#7c3aed' },
+                data: {
+                    ...edge.data,
+                    jumpMode,
+                    showJumpButton: jumpMode === 'manual',
+                    jumpButtonLabel: edge.data?.actionName || 'Jump',
+                    onJump: () => {
+                        if (typeof runtimeProperties?.onJump === 'function') runtimeProperties.onJump(jumpPayload);
+                        const hostElement = runtimeProperties?.__hostElement;
+                        if (hostElement && window.jQuery) window.jQuery(hostElement).trigger('flow:jump', [jumpPayload]);
+                    },
+                },
+            };
         })
         .sort((left, right) => {
             const leftJump = String(left.data?.transitionType).toLowerCase() === 'jump';

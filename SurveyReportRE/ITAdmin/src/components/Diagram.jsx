@@ -274,7 +274,7 @@ const CustomEdge = ({
                     onMouseDown={onCorner3MouseDown}
                 />
             )}
-            {(label || (data?.notificationTemplateId && String(data.notificationTemplateId).trim() !== '') || (data?.mailTemplateId && String(data.mailTemplateId).trim() !== '')) && (
+            {(label || data?.showJumpButton || (data?.notificationTemplateId && String(data.notificationTemplateId).trim() !== '') || (data?.mailTemplateId && String(data.mailTemplateId).trim() !== '')) && (
                 <EdgeLabelRenderer>
                     <div
                         style={{
@@ -299,6 +299,33 @@ const CustomEdge = ({
                         title={isReadOnly ? undefined : 'Kéo để dời panel trạng thái'}
                     >
                         {label && <span style={{ fontWeight: '500' }}>{label}</span>}
+                        {data?.showJumpButton && data?.jumpMode === 'manual' && (
+                            <button
+                                type="button"
+                                className="manual-jump-button nodrag nopan"
+                                onMouseDown={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                }}
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    data?.onJump?.();
+                                }}
+                                style={{
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    padding: '4px 10px',
+                                    background: '#9333ea',
+                                    color: '#fff',
+                                    fontSize: '11px',
+                                    fontWeight: 700,
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                {data?.jumpButtonLabel || 'Jump'}
+                            </button>
+                        )}
                         {data?.notificationTemplateId && String(data.notificationTemplateId).trim() !== '' && (
                             <span 
                                 className="diagram-icon-hover-trigger"
@@ -603,6 +630,17 @@ export default function Diagram({
         return edges.map((edge) => {
             const sourceNode = nodes.find((n) => n.id === edge.source);
             const targetNode = nodes.find((n) => n.id === edge.target);
+            const isJumpTransition = String(edge.data?.transitionType || '').toLowerCase() === 'jump';
+            const jumpDefinitions = sourceNode?.data?.jumpDefinitions || [];
+            const configuredJumpMode = jumpDefinitions
+                .filter((definition) => String(definition.transitionId) === String(edge.id))
+                .some((definition) => definition.jumpMode === 'manual')
+                ? 'manual'
+                : 'auto';
+            const jumpMode = edge.data?.jumpMode || configuredJumpMode;
+            const jumpStyle = jumpMode === 'manual'
+                ? { stroke: '#9333ea', strokeWidth: 4, strokeDasharray: undefined }
+                : { stroke: '#7c3aed', strokeWidth: 3, strokeDasharray: '8 5' };
 
             let sourceHandle = edge.sourceHandle;
             let targetHandle = edge.targetHandle;
@@ -653,10 +691,16 @@ export default function Diagram({
 
             return {
                 ...edge,
+                animated: isJumpTransition ? jumpMode === 'auto' : edge.animated,
+                style: isJumpTransition ? { ...edge.style, ...jumpStyle } : edge.style,
+                markerEnd: isJumpTransition
+                    ? { ...edge.markerEnd, color: jumpMode === 'manual' ? '#9333ea' : '#7c3aed' }
+                    : edge.markerEnd,
                 sourceHandle,
                 targetHandle,
                 data: {
                     ...edge.data,
+                    jumpMode: isJumpTransition ? jumpMode : edge.data?.jumpMode,
                     routeOffset,
                     parallelIndex,
                     parallelCount,

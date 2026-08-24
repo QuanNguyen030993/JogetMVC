@@ -34,7 +34,8 @@ function mount(element, name, options){
    }
    instance.options = {
        ...instance.options,
-       ...options
+       ...options,
+       __hostElement: element
    };
    const Component = controls[name];
    instance.root.render(
