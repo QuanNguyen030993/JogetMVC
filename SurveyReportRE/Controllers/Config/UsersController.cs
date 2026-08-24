@@ -40,6 +40,13 @@ namespace ERPCore.Controllers.Config
             public string UserName { get; set; } = "";
         }
 
+        public sealed class AssignRoleMenusRequest
+        {
+            public string RoleName { get; set; } = "Staff";
+            public List<string> UserNames { get; set; } = new();
+            public bool IsClear { get; set; }
+        }
+
         public UsersController(IBaseRepository<Users> BaseRepository, IConfiguration configuration, IHttpContextAccessor httpContextAccessor) : base(BaseRepository, httpContextAccessor)
         {
             _BaseRepository = BaseRepository;
@@ -331,6 +338,51 @@ namespace ERPCore.Controllers.Config
                 return Ok();
             }
             return BadRequest();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AssignRoleMenus([FromBody] AssignRoleMenusRequest request)
+        {
+            if (request == null || request.UserNames == null || request.UserNames.Count == 0)
+            {
+                return BadRequest(new { success = false, message = "UserNames is required." });
+            }
+
+            var roleName = string.IsNullOrWhiteSpace(request.RoleName) ? "Staff" : request.RoleName.Trim();
+            var userNames = request.UserNames
+                .Where(userName => !string.IsNullOrWhiteSpace(userName))
+                .Select(userName => userName.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var results = new List<object>();
+            var successCount = 0;
+
+            foreach (var userName in userNames)
+            {
+                try
+                {
+                    await _BaseRepository.ExecuteStoredProcedureReturn(
+                        "usp_Role_AddUser",
+                        ("@RoleName", roleName),
+                        ("@UserName", userName),
+                        ("@IsClear", request.IsClear ? 1 : 0));
+                    successCount++;
+                    results.Add(new { userName, success = true, message = request.IsClear ? "CLEARED" : "ASSIGNED" });
+                }
+                catch (Exception ex)
+                {
+                    Serilog.Log.Error(ex, "Assign role/menu failed for user {UserName}.", userName);
+                    results.Add(new { userName, success = false, message = ex.Message });
+                }
+            }
+
+            return Ok(new
+            {
+                success = true,
+                successCount,
+                failedCount = userNames.Count - successCount,
+                results
+            });
         }
 
         [HttpGet("{userName}")]

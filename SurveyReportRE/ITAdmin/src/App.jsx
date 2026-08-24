@@ -35,6 +35,7 @@ import './styles/notificationtemplate.css';
 import './styles/notificationTemplateDesigner.css';
 import './styles/databasemanagement.css';
 import './styles/turnAroundTimeAnalytics.css';
+import './styles/usermanagement.css';
 import { notify, ToastContainer } from '../../TMIVCom/src/components/Notification';
 import "./fonts/css/all.min.css";
 
