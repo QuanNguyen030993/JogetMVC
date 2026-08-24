@@ -1960,6 +1960,24 @@
 
 
                 const sectionCommentRequestCache = new Map();
+                const routeCommentPermissionRefreshers = window.routeCommentPermissionRefreshers instanceof Map
+                    ? window.routeCommentPermissionRefreshers
+                    : new Map();
+                window.routeCommentPermissionRefreshers = routeCommentPermissionRefreshers;
+                window.refreshRouteCommentPermissions = function () {
+                    routeCommentPermissionRefreshers.forEach(function (entry, key) {
+                        if (!entry?.element || !document.documentElement.contains(entry.element)) {
+                            routeCommentPermissionRefreshers.delete(key);
+                            return;
+                        }
+                        entry.refresh?.();
+                    });
+                };
+                $(document)
+                    .off("overviewMaintenanceRoleChanged.routeCommentPermissions")
+                    .on("overviewMaintenanceRoleChanged.routeCommentPermissions", function () {
+                        window.refreshRouteCommentPermissions();
+                    });
 
                 function normalizeSectionCommentGuid(guid) {
                     return String(guid || "").trim().toLowerCase();
@@ -2122,31 +2140,12 @@
                                             return String(value || "").trim().toUpperCase();
                                         }
 
-                                        function getRouteCommentStageDept() {
-                                            var idManager = moduleKey === viewIdModulePrefix.policyIssuance
-                                                ? window.PolicyIssuanceIdManager
-                                                : window.QuotationIdManager;
-                                            var workflowFormId = idManager?.form?.(dept, id);
-                                            var workflowForm = workflowFormId
-                                                ? $(`#${workflowFormId}`).dxForm("instance")
-                                                : null;
-                                            var workflowFormData = workflowForm?.option("formData") || {};
-                                            var workflowPage = moduleKey === viewIdModulePrefix.policyIssuance
-                                                ? window.PolicyIssuancePage
-                                                : window.QuotationPage;
-
-                                            return normalizeCommentDepartment(
-                                                workflowFormData.stageDept
-                                                || workflowPage?.state?.stageDept
-                                            );
-                                        }
-
                                         function shouldDisableRouteComment() {
                                             var sectionDept = normalizeCommentDepartment(dept);
-                                            var currentStageDept = getRouteCommentStageDept();
-                                            return !sectionDept && (_role == dept)
-                                                || !currentStageDept
-                                                || sectionDept !== currentStageDept;
+                                            var currentRole = normalizeCommentDepartment(_role);
+                                            return !sectionDept
+                                                || !currentRole
+                                                || sectionDept !== currentRole;
                                         }
 
 
@@ -2277,6 +2276,15 @@
                                             }
                                         };
                                         item.control = $(itemElement).tmivcommenteditorroute(routeEditorOptions);
+                                        var routePermissionKey = [moduleKey, id, dept, guid].join(":");
+                                        routeCommentPermissionRefreshers.set(routePermissionKey, {
+                                            element: itemElement[0],
+                                            refresh: function () {
+                                                routeEditorOptions.fromDepartment = normalizeCommentDepartment(_role);
+                                                routeEditorOptions.disableComment = shouldDisableRouteComment();
+                                                $(itemElement).tmivcommenteditorroute(routeEditorOptions);
+                                            }
+                                        });
 
                                         d.done(function (comments) {
                                             renderRouteEditorItems(comments);

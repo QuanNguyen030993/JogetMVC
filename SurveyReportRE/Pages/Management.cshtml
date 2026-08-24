@@ -955,6 +955,7 @@
                     _role = e.value;
                     window._role = e.value;
                     notifyOpenWorkflowViews(e.value);
+                    window.refreshRouteCommentPermissions?.();
                     DevExpress.ui.notify("Role switched: " + e.value, "info", 1200);
                 }
             });
@@ -1274,6 +1275,7 @@
         }).done(function (response) {
             _role = response.data.role;
             window.syncHomeRoleSwitcher?.(_role);
+            window.refreshRouteCommentPermissions?.();
             $("#accountRoleBadge").text(response.data.role);
             $("#roleLabel").text(`Phòng ban ${response.data.role}`);
             setUserSettingsModalVisible(false);
