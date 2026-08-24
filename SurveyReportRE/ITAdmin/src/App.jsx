@@ -139,6 +139,9 @@ function App() {
   const [onlineUsersLoading,setOnlineUsersLoading]=useState(true);
   const [onlineUsersError,setOnlineUsersError]=useState('');
   const [currentAccount, setCurrentAccount] = useState(() => String(window._loginUser || '').replace('TOKIOMARINE\\', ''));
+  const [currentDisplayName, setCurrentDisplayName] = useState(() => String(window._displayName || '').trim());
+  const [currentSiteOffice, setCurrentSiteOffice] = useState(() => String(window._branch || '').trim());
+  const [currentDepartment, setCurrentDepartment] = useState(() => String(window._role || '').trim());
   const [isImpersonating, setIsImpersonating] = useState(() => String(window._isDebugMode || '').toLowerCase() === 'true');
   const [returningAccount, setReturningAccount] = useState(false);
 //  const [appsettings, setAppsettings] = useState(null);
@@ -147,10 +150,16 @@ function App() {
     let attempts = 0;
     const syncLoginContext = () => {
       const account = String(window._loginUser || '').replace('TOKIOMARINE\\', '').trim();
+      const displayName = String(window._displayName || '').trim();
+      const siteOffice = String(window._branch || '').trim();
+      const department = String(window._role || '').trim();
       if (account) setCurrentAccount(account);
+      if (displayName) setCurrentDisplayName(displayName);
+      if (siteOffice) setCurrentSiteOffice(siteOffice);
+      if (department) setCurrentDepartment(department);
       setIsImpersonating(String(window._isDebugMode || '').toLowerCase() === 'true');
       attempts += 1;
-      if (account || attempts >= 40) window.clearInterval(timer);
+      if ((account && siteOffice && department) || attempts >= 40) window.clearInterval(timer);
     };
     const timer = window.setInterval(syncLoginContext, 250);
     syncLoginContext();
@@ -510,7 +519,14 @@ function App() {
             </summary>
             <div className="admin-context-menu">
               <small>Current login context</small>
-              <strong>{currentAccount || 'Unknown account'}</strong>
+              <div className="admin-context-profile">
+                <strong>{currentDisplayName || currentAccount || 'Unknown account'}</strong>
+                {currentDisplayName && <small>{currentAccount || 'Unknown account'}</small>}
+              </div>
+              <div className="admin-context-details">
+                <div><span>Site Office</span><b>{currentSiteOffice || '-'}</b></div>
+                <div><span>Phòng ban</span><b>{currentDepartment || 'Chưa chọn'}</b></div>
+              </div>
               <span className={isImpersonating ? 'impersonating' : ''}>{isImpersonating ? 'Login as context' : 'Admin account'}</span>
               {isImpersonating && <button type="button" disabled={returningAccount} onClick={returnToAdminAccount}>{returningAccount ? 'Returning...' : 'Back to Admin'}</button>}
             </div>
