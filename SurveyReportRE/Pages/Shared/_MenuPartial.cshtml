@@ -18,6 +18,8 @@
                 $("#accountLabel").text(_loginUser);
                 $("#accountAvatarInitial").text((_loginUser || "U").charAt(0).toUpperCase());
                  _role = result.userRoles.RoleName;
+                 _userDepartment = String(result.userRoles.Department || "").trim().toUpperCase();
+                 window.syncNewRequestButtonVisibility?.(_userDepartment);
                  window.syncHomeRoleSwitcher?.(_role);
                  //Debug
                  _roleAppName = result.userRoles.RoleAppName;

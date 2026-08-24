@@ -213,6 +213,7 @@ public class MenuController : BaseControllerApi<Menu>
             roles = new
             {
                 RoleName = "SuperUser",
+                Department = "",
                 DisplayName = loginAccount,
                 LoginName = loginAccount,
                 Branch = "",

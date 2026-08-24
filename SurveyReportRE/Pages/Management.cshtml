@@ -693,7 +693,7 @@
                     <i class="fa fa-user-shield" aria-hidden="true"></i>
                     <div id="homeRoleSelect"></div>
                 </div>
-                <div id="btnNew"></div>
+                <div id="btnNew" style="display:none"></div>
                 <button id="userGuideLauncher"
                         class="ug-guide-launcher"
                         type="button"
@@ -1776,7 +1776,15 @@
         });
     });
 
-      let moduleLauncherPopup;
+    function syncNewRequestButtonVisibility(department) {
+        const newRequestDepartment = String(qtDeptModuleCode[0] || "").trim().toUpperCase();
+        const userDepartment = String(department || "").trim().toUpperCase();
+        const canCreateRequest = newRequestDepartment !== "" && userDepartment === newRequestDepartment;
+        $("#btnNew").toggle(canCreateRequest).attr("aria-hidden", String(!canCreateRequest));
+    }
+    window.syncNewRequestButtonVisibility = syncNewRequestButtonVisibility;
+
+    let moduleLauncherPopup;
     function openModuleLauncherPopup() {
        if (!moduleLauncherPopup) {
            var moduleLauncherPopup = makePopupWithScroll(
@@ -2062,6 +2070,7 @@
        },
        onClick: () => openModuleLauncherPopup()
     });
+    syncNewRequestButtonVisibility(_userDepartment);
 
     $(window).on('scroll', function () {
         handleFloating();
