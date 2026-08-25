@@ -1,10 +1,13 @@
-USE [WorkflowManagementv2]
+USE [WorkflowManagementv3]
 GO
 
+/****** Object:  StoredProcedure [dbo].[usp_Role_AddUser]    Script Date: 8/25/2026 6:45:16 PM ******/
 SET ANSI_NULLS ON
 GO
+
 SET QUOTED_IDENTIFIER ON
 GO
+
 
 /*
     Cap hoac xoa role/menu cho mot user.
@@ -14,17 +17,13 @@ GO
         DashBoard, MasterData va tat ca menu con.
       - IT: Tat ca menu dang hoat dong.
 
-    Role hop le: Staff, Line Manager, HOD, BOD.
+    Role hop le: Approver, Leader, Staff, HOD.
 
     Vi du:
       EXEC dbo.usp_Role_AddUser @RoleName = 'Staff', @UserName = 'hung.hm', @IsClear = 0;
       EXEC dbo.usp_Role_AddUser @UserName = 'hung.hm', @IsClear = 1;
 */
-IF OBJECT_ID(N'dbo.usp_Role_AddUser', N'P') IS NULL
-    EXEC(N'CREATE PROCEDURE dbo.usp_Role_AddUser AS BEGIN SET NOCOUNT ON; END');
-GO
-
-ALTER PROCEDURE [dbo].[usp_Role_AddUser]
+ALTER   PROCEDURE [dbo].[usp_Role_AddUser]
 (
     @RoleName VARCHAR(100) = 'Staff',
     @UserName NVARCHAR(4000) = N'',
@@ -39,12 +38,24 @@ BEGIN
     DECLARE @RoleId     INT;
     DECLARE @Department NVARCHAR(100);
 
-    SELECT TOP (1)
-        @UserId = U.Id,
-        @Department = UPPER(LTRIM(RTRIM(CONVERT(NVARCHAR(100), U.[department]))))
-    FROM dbo.[Users] AS U
-    WHERE U.[username] = @UserName
-    ORDER BY U.Id;
+    --SELECT TOP (1)
+    --    @UserId = U.Id,
+    --    @Department = UPPER(LTRIM(RTRIM(CONVERT(NVARCHAR(100), U.[department]))))
+    --FROM dbo.[Users] AS U
+    --WHERE U.[username] = @UserName
+    --ORDER BY U.Id;
+
+	SELECT TOP (1)
+		@UserId = U.Id,
+		@Department =
+		CASE
+		WHEN UPPER(LTRIM(RTRIM(CONVERT(NVARCHAR(100), U.[department])))) LIKE '%UWRI%'
+		THEN 'UW'
+		ELSE UPPER(LTRIM(RTRIM(CONVERT(NVARCHAR(100), U.[department]))))
+		END
+		FROM dbo.[Users] AS U
+		WHERE U.[username] = @UserName
+		ORDER BY U.Id;
 
     IF @UserId IS NULL
         THROW 50001, N'UserName khong ton tai trong bang Users.', 1;
@@ -52,10 +63,10 @@ BEGIN
     IF @IsClear NOT IN (0, 1)
         THROW 50002, N'IsClear chi nhan gia tri 0 (cap quyen) hoac 1 (xoa quyen).', 1;
 
-    SET @RoleName = LTRIM(RTRIM(@RoleName));
+    --SET @RoleName = LTRIM(RTRIM(@RoleName));
 
-    IF @IsClear = 0 AND UPPER(@RoleName) NOT IN ('STAFF', 'LINE MANAGER', 'HOD', 'BOD')
-        THROW 50006, N'RoleName chi ho tro Staff, Line Manager, HOD hoac BOD.', 1;
+    --IF @IsClear = 0 AND UPPER(@RoleName) NOT IN ('APPROVER', 'LEADER', 'STAFF', 'HOD')
+    --    THROW 50006, N'RoleName chi ho tro Approver, Leader, Staff hoac HOD.', 1;
 
     BEGIN TRY
         BEGIN TRANSACTION;
@@ -68,17 +79,25 @@ BEGIN
 
             COMMIT TRANSACTION;
 
-            SELECT
-                @UserId AS UserId,
-                @UserName AS UserName,
-                @Department AS Department,
-                CAST(NULL AS INT) AS RoleId,
-                CAST(NULL AS VARCHAR(100)) AS RoleName,
-                0 AS MenuCount,
-                N'CLEARED' AS [Status];
-            RETURN;
-        END;
+    --        SELECT
+    --            @UserId AS UserId,
+    --            @UserName AS UserName,
+    --            @Department AS Department,
+    --            CAST(NULL AS INT) AS RoleId,
+    --            Department AS RoleName,
+    --            0 AS MenuCount,
+    --            N'CLEARED' AS [Status]
+				--FROM Employee
+				--WHERE AccountName = @UserName
+				
+			    SET @RoleName = (SELECT TOP 1 Department FROM Employee
+				WHERE AccountName = @UserName)
 
+            RETURN;
+
+        END;
+		SET @RoleName = (SELECT TOP 1 Department FROM Employee
+				WHERE AccountName = @UserName)
         SELECT TOP (1)
             @RoleId = R.Id
         FROM dbo.Roles AS R
@@ -175,55 +194,4 @@ BEGIN
 END
 GO
 
-/*
-    Danh sach user da duoc cap quyen, gom mot dong cho moi User + Role.
-    UI dung store nay de hien thi thanh vien cua tung department.
-*/
-IF OBJECT_ID(N'dbo.usp_UserRole_GetStatus', N'P') IS NULL
-    EXEC(N'CREATE PROCEDURE dbo.usp_UserRole_GetStatus AS BEGIN SET NOCOUNT ON; END');
-GO
 
-ALTER PROCEDURE [dbo].[usp_UserRole_GetStatus]
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    SELECT
-        U.Id AS UserId,
-        U.[username] AS UserName,
-        U.[name] AS DisplayName,
-        U.[mail] AS Email,
-        UPPER(LTRIM(RTRIM(CONVERT(NVARCHAR(100), U.[department])))) AS Department,
-        R.Id AS RoleId,
-        R.RoleName,
-        COUNT(DISTINCT UR.MenuId) AS MenuCount
-    FROM dbo.UserRoles AS UR
-    INNER JOIN dbo.Users AS U ON U.Id = UR.UserId
-    INNER JOIN dbo.Roles AS R ON R.Id = UR.RoleId
-    INNER JOIN dbo.Menu AS M ON M.Id = UR.MenuId
-    WHERE ISNULL(M.Deleted, 0) = 0
-    GROUP BY
-        U.Id,
-        U.[username],
-        U.[name],
-        U.[mail],
-        U.[department],
-        R.Id,
-        R.RoleName
-    ORDER BY Department, R.RoleName, U.[username];
-END
-GO
-
-/* Index phuc vu dong bo va load danh sach thanh vien; khong thay doi schema du lieu. */
-IF NOT EXISTS
-(
-    SELECT 1
-    FROM sys.indexes
-    WHERE object_id = OBJECT_ID(N'dbo.UserRoles')
-      AND name = N'IX_UserRoles_UserId_RoleId_MenuId'
-)
-BEGIN
-    CREATE NONCLUSTERED INDEX IX_UserRoles_UserId_RoleId_MenuId
-        ON dbo.UserRoles (UserId, RoleId, MenuId);
-END
-GO
