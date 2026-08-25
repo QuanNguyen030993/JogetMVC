@@ -2137,6 +2137,7 @@ const updateSelectedEdge = useCallback(
                                     department: selectedNode.data?.departmentName || '',
                                     targetItemType: 'group',
                                     groupNames: [],
+                                    groupNamesText: '',
                                     targets: [],
                                     mode: 'ReadOnly',
                                     condition: ''
@@ -2229,9 +2230,10 @@ const updateSelectedEdge = useCallback(
                                     <span>Tên dxForm group (mỗi dòng hoặc phân cách bằng dấu phẩy)</span>
                                     <textarea
                                         rows={3}
-                                        value={getUiConditionGroupNames(rule).join('\n')}
+                                        value={rule.groupNamesText ?? getUiConditionGroupNames(rule).join('\n')}
                                         onChange={(e) => {
-                                            const groupNames = e.target.value
+                                            const groupNamesText = e.target.value;
+                                            const groupNames = groupNamesText
                                                 .split(/[\n,]/)
                                                 .map((name) => name.trim())
                                                 .filter(Boolean);
@@ -2240,6 +2242,7 @@ const updateSelectedEdge = useCallback(
                                                 ...currentRules[idx],
                                                 type: 'uiLock',
                                                 targetItemType: 'group',
+                                                groupNamesText,
                                                 groupNames,
                                                 targets: groupNames.map((name) => ({ itemType: 'group', name })),
                                                 // Keep the first target readable by the legacy section consumer.
