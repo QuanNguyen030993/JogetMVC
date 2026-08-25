@@ -20,7 +20,11 @@ GO
       EXEC dbo.usp_Role_AddUser @RoleName = 'Staff', @UserName = 'hung.hm', @IsClear = 0;
       EXEC dbo.usp_Role_AddUser @UserName = 'hung.hm', @IsClear = 1;
 */
-CREATE OR ALTER PROCEDURE [dbo].[usp_Role_AddUser]
+IF OBJECT_ID(N'dbo.usp_Role_AddUser', N'P') IS NULL
+    EXEC(N'CREATE PROCEDURE dbo.usp_Role_AddUser AS BEGIN SET NOCOUNT ON; END');
+GO
+
+ALTER PROCEDURE [dbo].[usp_Role_AddUser]
 (
     @RoleName VARCHAR(100) = 'Staff',
     @UserName NVARCHAR(4000) = N'',
@@ -175,7 +179,11 @@ GO
     Danh sach user da duoc cap quyen, gom mot dong cho moi User + Role.
     UI dung store nay de hien thi thanh vien cua tung department.
 */
-CREATE OR ALTER PROCEDURE [dbo].[usp_UserRole_GetStatus]
+IF OBJECT_ID(N'dbo.usp_UserRole_GetStatus', N'P') IS NULL
+    EXEC(N'CREATE PROCEDURE dbo.usp_UserRole_GetStatus AS BEGIN SET NOCOUNT ON; END');
+GO
+
+ALTER PROCEDURE [dbo].[usp_UserRole_GetStatus]
 AS
 BEGIN
     SET NOCOUNT ON;
