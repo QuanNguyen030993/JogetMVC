@@ -18,6 +18,7 @@ using ERPCore.Models.Base;
 using Microsoft.AspNetCore.Mvc;
 using iText.StyledXmlParser.Node;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
 using RESurveyTool.Models.Models.Parsing;
 using ERPCore.Models.Migration.Business.Social;
 using ERPCore.Common;
@@ -946,7 +947,7 @@ namespace ERPCore.ControllerUtil
 
         public static async Task<DigisignCallbackResult?> SignByKeywordWithCKSHSM(IBaseRepository<Document> baseRepository, long?  documentId)
         {
-            var uRLConfig = baseRepository._baseConfiguration.GetSection("URLConfig").Get<URLConfig>();
+            // var uRLConfig = baseRepository._baseConfiguration.GetSection("URLConfig").Get<URLConfig>();
             var blobSettings = baseRepository._baseConfiguration.GetSection("BlobStorage").Get<BlobStorageSettings>();
             // Chờ 5 giây
             await Task.Delay(TimeSpan.FromSeconds(10));
@@ -958,14 +959,8 @@ namespace ERPCore.ControllerUtil
             // Bạn sửa lại theo cấu trúc thật của hệ thống
             string filePath = Path.Combine(
                 blobSettings.Path,
-                attachment.SubDirectory ?? "", attachment.FileName
+                attachment.SubDirectory ?? "", attachment.Guid.ToString() + attachment.FileType
             );
-
-
-            // Callback sang API khác
-            using var client = new HttpClient();
-
-            string callbackUrl = uRLConfig.GetStreamHost;
 
             byte[]? fileBytes = File.ReadAllBytes(filePath);
 
@@ -973,49 +968,46 @@ namespace ERPCore.ControllerUtil
             {
                 JobId = Guid.NewGuid().ToString(),
                 Status = "SUCCESS",
-                FileName = Path.GetFileName(filePath),
+                FileName = attachment.FileName,
                 ContentType = "application/pdf",
                 FileBase64 = Convert.ToBase64String(fileBytes),
                 Metadata = new
                 {
+                    Id = attachment.Id,
                     DocumentId = attachment.Id,
                     attachment.FileName
                 },
                 ConvertedAt = DateTime.UtcNow
             };
 
-            var response = await client.PostAsJsonAsync(
-            callbackUrl,
-            callbackResult);
+            // Callback qua HTTP tạm thời không sử dụng.
+            // using var client = new HttpClient();
+            // string callbackUrl = uRLConfig.GetStreamHost;
+            // var response = await client.PostAsJsonAsync(callbackUrl, callbackResult);
 
-            if (!response.IsSuccessStatusCode)
+            var requestServices = baseRepository._httpContextAccessor?.HttpContext?.RequestServices
+                ?? throw new InvalidOperationException("Request services are unavailable for CallbackSignature.");
+            var instanceWorkflowController = ActivatorUtilities.CreateInstance<global::InstanceWorkflowController>(requestServices);
+            var callbackResponse = await instanceWorkflowController.CallbackSignature(callbackResult);
+            var callbackStatusCode = callbackResponse switch
+            {
+                ObjectResult objectResult => objectResult.StatusCode ?? StatusCodes.Status200OK,
+                StatusCodeResult statusCodeResult => statusCodeResult.StatusCode,
+                _ => StatusCodes.Status200OK
+            };
+
+            if (callbackStatusCode < StatusCodes.Status200OK ||
+                callbackStatusCode >= StatusCodes.Status300MultipleChoices)
             {
                 return new DigisignCallbackResult
                 {
-                JobId = "11ad617b-5a8b-4fa4-9548-3f70ce4a1138",
-                Status = "FAILED",
-                Error = $"File not found: {filePath}"
-                };
-
-            }
-            else
-            {
-                return new DigisignCallbackResult
-                {
-                JobId = "11ad617b-5a8b-4fa4-9548-3f70ce4a1138",
-                Status = "SUCCESS",
-                FileName = Path.GetFileName(filePath),
-                ContentType = "application/pdf",
-                FileBase64 = Convert.ToBase64String(fileBytes),
-                Metadata = new
-                {
-                DocumentId = attachment.Id,
-                attachment.FileName
-                },
-                ConvertedAt = DateTime.UtcNow
+                    JobId = callbackResult.JobId,
+                    Status = "FAILED",
+                    Error = $"CallbackSignature failed with status code {callbackStatusCode}."
                 };
             }
 
+            return callbackResult;
         }
 
         public static async Task SignManualByLocationWithCKSHSMCompany()

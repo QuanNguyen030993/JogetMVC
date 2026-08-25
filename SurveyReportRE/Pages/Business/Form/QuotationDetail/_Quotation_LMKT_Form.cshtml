@@ -68,6 +68,53 @@
             FormId: "@QTViewIdHelper.Form(dept, quotationId)"
         };
 
+        async function signAgain_@(quotationId)(e) {
+            const button = e.component;
+            const lmktForm = $("#@QTViewIdHelper.Form(dept, quotationId)").dxForm("instance");
+            const formItems = lmktForm?.option("formData") || {};
+            const documentId = formItems.documentId ?? formItems.DocumentId;
+
+            button.option({ disabled: true, text: "Signing..." });
+
+            try {
+                const signResponse = await fetch(
+                    `/api/Document/SignByKeywordWithCKSHSM/${encodeURIComponent(documentId)}`,
+                    { method: "GET" }
+                );
+
+                if (!signResponse.ok) {
+                    const message = await signResponse.text();
+                    throw new Error(message || "Sign simulation failed.");
+                }
+
+                const statusResponse = await fetch(
+                    "/api/Quotation/UpdateWorkflowStatusSigned/@quotationId",
+                    { method: "POST" }
+                );
+
+                if (!statusResponse.ok) {
+                    const message = await statusResponse.text();
+                    throw new Error(message || "The files were signed, but Workflow Status could not be updated.");
+                }
+
+                const statusResult = await statusResponse.json();
+                lmktForm?.updateData("workflowStatus", statusResult.workflowStatus);
+
+                DevExpress.ui.notify(
+                    `Sign simulation completed. Status: ${statusResult.workflowStatus}.`,
+                    "success",
+                    2500
+                );
+            }
+            catch (error) {
+                console.error("LMKT sign again failed", error);
+                DevExpress.ui.notify(error.message || "Sign again failed.", "error", 3500);
+            }
+            finally {
+                button.option({ disabled: _role !== "@dept", text: "Sign again" });
+            }
+        }
+
 
         var mainFields = [
             {
@@ -80,6 +127,20 @@
                         caption: "Attachment",
                         colCount: 1,
                         items: attachmentByCase(that, that2)
+                    },
+                    {
+                        itemType: "button",
+                        name: "signAgain",
+                        horizontalAlignment: "right",
+                        buttonOptions: {
+                            text: "Sign again",
+                            icon: "repeat",
+                            hint: "Sign quotation again",
+                            type: "default",
+                            stylingMode: "contained",
+                            disabled: _role !== "@dept",
+                            onClick: signAgain_@(quotationId)
+                        }
                     }
                 ]
             }

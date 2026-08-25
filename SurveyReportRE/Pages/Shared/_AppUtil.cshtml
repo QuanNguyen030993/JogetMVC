@@ -5416,6 +5416,60 @@
             }
             */
 
+            function enableDocumentSharePointUploadFallback() {
+                if (window.__documentSharePointUploadFallbackInstalled) return;
+
+                window.__documentSharePointUploadFallbackInstalled = true;
+                window.__documentFileUploaderLocalMode = false;
+
+                const nativeFetch = window.fetch.bind(window);
+                const sharePointUploadPath = "/api/Document/AsyncUploadFileSharePoint";
+                const localUploadPath = "/api/Document/AsyncUploadFileLocal";
+
+                window.fetch = async function (input, init) {
+                    const requestUrl = typeof input === "string"
+                        ? input
+                        : (input?.url || "");
+                    const absoluteUrl = new URL(requestUrl, window.location.origin);
+
+                    if (absoluteUrl.pathname.toLowerCase() !== sharePointUploadPath.toLowerCase()) {
+                        return nativeFetch(input, init);
+                    }
+
+                    if (window.__documentFileUploaderLocalMode) {
+                        return nativeFetch(localUploadPath, init);
+                    }
+
+                    let sharePointResponse = null;
+                    try {
+                        sharePointResponse = await nativeFetch(input, init);
+                        if (sharePointResponse.ok) return sharePointResponse;
+                    }
+                    catch (sharePointError) {
+                        console.warn("SharePoint upload request failed. Retrying locally.", sharePointError);
+                    }
+
+                    console.warn(
+                        `SharePoint upload failed (${sharePointResponse?.status || "network error"}). ` +
+                        "Retrying once with local storage."
+                    );
+
+                    const localResponse = await nativeFetch(localUploadPath, init);
+                    if (localResponse.ok) {
+                        window.__documentFileUploaderLocalMode = true;
+                        if (typeof DevExpress !== "undefined") {
+                            DevExpress.ui.notify(
+                                "SharePoint is unavailable. Switched attachment upload to Local mode.",
+                                "warning",
+                                3500
+                            );
+                        }
+                    }
+
+                    return localResponse;
+                };
+            }
+
             function renderDxFileUploader(editorOptions, $container, options, isRenderUploader = true, uploaderAllow = true)  {
             const renderTime = Date.now();
             const editorOptionsIn = cloneReusableOptions(editorOptions);
@@ -5677,17 +5731,26 @@
               });
               }
               else {
+                    enableDocumentSharePointUploadFallback();
+
+                    const currentFormData = getCurrentFormOptions(editorOptionsIn) || {};
+                    const normalizedModelName = String(editorOptionsIn.ModelName || "").toLowerCase();
+                    const isQuotationUploader = normalizedModelName.includes("quotation");
+                    const recordCode = editorOptionsIn.code
+                        || (isQuotationUploader
+                            ? currentFormData.quotationCode
+                            : currentFormData.policyIssuanceCode)
+                        || "";
+
                         $uploader.fileuploader({
                     guid: editorOptionsIn.guid,
                     controllerName: "Document",
                     titleName: "Select or drag files to upload",
-                    // LEGACY ROLLBACK: this uploader was forced to SharePoint.
-                    uploadUrl: editorOptionsIn.id == 0 ? "/api/Document/AsyncUploadFile" : "/api/Document/AsyncUploadFileSharePoint",
-                    //uploadUrl: "/api/Document/AsyncUploadFile",
+                    uploadUrl: "/api/Document/AsyncUploadFileSharePoint",
                     showUploader: isRenderUploader,
                     data: {
-                        ModuleName: editorOptionsIn.ModelName,
-                        code: editorOptionsIn.ModelName, // subfolder Sharepoint
+                        ModuleName: isQuotationUploader ? "QT" : "PI",
+                        code: recordCode,
                         SectionName: editorOptionsIn.controlId
                     },
                     specificFolder: "Workflow",

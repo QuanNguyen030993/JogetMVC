@@ -170,6 +170,61 @@ public class QuotationController : BaseControllerApi<Quotation>
 
         return Ok();
     }
+
+    [HttpPost("{id}")]
+    public async Task<IActionResult> UpdateWorkflowStatusSigned(long id)
+    {
+        if (id <= 0)
+            return BadRequest(new { message = "A valid quotation id is required." });
+
+        Quotation? quotation = await _BaseRepository.GetSingleObject(item =>
+            item.Id == id && !item.Deleted);
+        if (quotation == null)
+            return NotFound(new { message = $"Quotation {id} was not found." });
+
+        List<EnumData> overallStatuses = await _enumDataRepository.EnumData("OverallStatus");
+        EnumData? signedStatus = overallStatuses.FirstOrDefault(item =>
+            string.Equals(item.Code?.Trim(), "DGSC", StringComparison.OrdinalIgnoreCase));
+
+        if (signedStatus == null)
+            return StatusCode(StatusCodes.Status500InternalServerError, new
+            {
+                message = "Status code DGSC was not found in EnumData/OverallStatus."
+            });
+
+        string workflowStatus = !string.IsNullOrWhiteSpace(signedStatus.Value)
+            ? signedStatus.Value.Trim()
+            : signedStatus.Name.Trim();
+
+        quotation.WorkflowStatus = workflowStatus;
+        quotation.StatusId = signedStatus.Id;
+
+        await _BaseRepository.UpdateData(
+            quotation,
+            JsonConvert.SerializeObject(new
+            {
+                quotation.WorkflowStatus,
+                quotation.StatusId
+            }),
+            quotation.Id,
+            "Id");
+
+        await ControllerHelper.SignalRResponse(
+            _usersSessionRepository,
+            "R_ItemSubmitted",
+            new { id = quotation.Id, type = nameof(Quotation), workflowStatus },
+            ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration),
+            DOMAIN_NAME);
+
+        return Ok(new
+        {
+            success = true,
+            id = quotation.Id,
+            workflowStatus,
+            statusId = signedStatus.Id
+        });
+    }
+
     [HttpGet]
     public async Task<ActionResult<List<Quotation>>> RenewList()
     {

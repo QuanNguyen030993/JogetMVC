@@ -101,85 +101,86 @@ public class DocumentController : BaseControllerApi<Document>
         }
     }
 
-    [HttpPost]
-    [AllowAnonymous]
-    //public async Task<IActionResult> TestCallBackUrl([FromBody] DigisignCallbackResult convertResult)
-    public async Task<IActionResult> CallBackFileDigisign([FromBody] DigisignCallbackResult convertResult)
-    {
-        try
-        {
-            Document document = new Document();
-            document = JsonConvert.DeserializeObject<Document>(JsonConvert.SerializeObject(convertResult.Metadata));
-            //Determine instance record
+    //Old Callback 20260825
+    //[HttpPost] 
+    //[AllowAnonymous]
+    ////public async Task<IActionResult> TestCallBackUrl([FromBody] DigisignCallbackResult convertResult)
+    //public async Task<IActionResult> CallBackFileDigisign([FromBody] DigisignCallbackResult convertResult)
+    //{
+    //    try
+    //    {
+    //        Document document = new Document();
+    //        document = JsonConvert.DeserializeObject<Document>(JsonConvert.SerializeObject(convertResult.Metadata));
+    //        //Determine instance record
  
 
-            if (document != null)
-            {
-                document = await _BaseRepository.GetSingleObject(s => s.Id == document.Id);
-                Document newDocument = new Document();
-                JsonConvert.PopulateObject(JsonConvert.SerializeObject(document),newDocument);
-                newDocument.Id = 0;
+    //        if (document != null)
+    //        {
+    //            document = await _BaseRepository.GetSingleObject(s => s.Id == document.Id);
+    //            Document newDocument = new Document();
+    //            JsonConvert.PopulateObject(JsonConvert.SerializeObject(document),newDocument);
+    //            newDocument.Id = 0;
 
-                //dynamic object 
-                Quotation quotation = new Quotation();
-                IBaseRepository<Quotation> _quotationRepository = new BaseRepository<Quotation>(configuration,_httpContextAccessor);
-                IBaseRepository<EnumData> _enumDataRepository = new BaseRepository<EnumData>(configuration,_httpContextAccessor);
-                quotation = await _quotationRepository.GetSingleObject(s => s.Guid == newDocument.RecordGuid);
-                List<EnumData> enumDatas = await _enumDataRepository.EnumData("OverallStatus");
-                EnumData completeSigning = enumDatas.FirstOrDefault(f => f.Code == "DGSC");
-                string approveDept = "LMKT";
-                PICAttributes pICAttributes = new PICAttributes();
-                pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
-                string accountApproveName = Util.PICPicker(pICAttributes, approveDept);
-                //    switch
-                //{
-                //    "FO" => pICAttributes.FO,
-                //    "TS" => pICAttributes.TS,
-                //    "UW" => pICAttributes.UW,
-                //    "LMKT" => pICAttributes.LMKT,
-                //    "PM" => pICAttributes.PM,
-                //    _ => string.Join(",",
-                //                    new[]
-                //                    {
-                //                       pICAttributes.FO,
-                //                       pICAttributes.TS,
-                //                       pICAttributes.UW,
-                //                       pICAttributes.LMKT,
-                //                       pICAttributes.PM
-                //                    }.Where(x => !string.IsNullOrEmpty(x)))
-                //};
-                if (quotation != null)
-                {
-                    if (!Directory.Exists(path.Value + "\\Digisign"))
-                    {
-                        Directory.CreateDirectory(path.Value + "\\Digisign");
-                    }
-                    System.IO.File.WriteAllBytes(Path.Combine(path.Value,"Digisign", accountApproveName, quotation.QuotationCode,convertResult.FileName), Convert.FromBase64String(convertResult.FileBase64));
-                    newDocument.SubDirectory = $"Digisign\\{accountApproveName}\\{quotation.QuotationCode}";
+    //            //dynamic object 
+    //            Quotation quotation = new Quotation();
+    //            IBaseRepository<Quotation> _quotationRepository = new BaseRepository<Quotation>(configuration,_httpContextAccessor);
+    //            IBaseRepository<EnumData> _enumDataRepository = new BaseRepository<EnumData>(configuration,_httpContextAccessor);
+    //            quotation = await _quotationRepository.GetSingleObject(s => s.Guid == newDocument.RecordGuid);
+    //            List<EnumData> enumDatas = await _enumDataRepository.EnumData("OverallStatus");
+    //            EnumData completeSigning = enumDatas.FirstOrDefault(f => f.Code == "DGSC");
+    //            string approveDept = "LMKT";
+    //            PICAttributes pICAttributes = new PICAttributes();
+    //            pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
+    //            string accountApproveName = Util.PICPicker(pICAttributes, approveDept);
+    //            //    switch
+    //            //{
+    //            //    "FO" => pICAttributes.FO,
+    //            //    "TS" => pICAttributes.TS,
+    //            //    "UW" => pICAttributes.UW,
+    //            //    "LMKT" => pICAttributes.LMKT,
+    //            //    "PM" => pICAttributes.PM,
+    //            //    _ => string.Join(",",
+    //            //                    new[]
+    //            //                    {
+    //            //                       pICAttributes.FO,
+    //            //                       pICAttributes.TS,
+    //            //                       pICAttributes.UW,
+    //            //                       pICAttributes.LMKT,
+    //            //                       pICAttributes.PM
+    //            //                    }.Where(x => !string.IsNullOrEmpty(x)))
+    //            //};
+    //            if (quotation != null)
+    //            {
+    //                if (!Directory.Exists(path.Value + "\\Digisign"))
+    //                {
+    //                    Directory.CreateDirectory(path.Value + "\\Digisign");
+    //                }
+    //                System.IO.File.WriteAllBytes(Path.Combine(path.Value,"Digisign", accountApproveName, quotation.QuotationCode,convertResult.FileName), Convert.FromBase64String(convertResult.FileBase64));
+    //                newDocument.SubDirectory = $"Digisign\\{accountApproveName}\\{quotation.QuotationCode}";
 
-                    Quotation newQuotation = new Quotation();
-                    newQuotation.WorkflowStatus = completeSigning.Name;
-                    newQuotation.StatusId = completeSigning.Id;
+    //                Quotation newQuotation = new Quotation();
+    //                newQuotation.WorkflowStatus = completeSigning.Name;
+    //                newQuotation.StatusId = completeSigning.Id;
 
 
 
-                    newDocument = await _BaseRepository.InsertData(newDocument);
+    //                newDocument = await _BaseRepository.InsertData(newDocument);
 
-                    newQuotation.DocumentId = newDocument.Id;
-                    await _quotationRepository.UpdateData(newQuotation, quotation, ["DocumentId", "WorkflowStatus", "StatusId"], "Id");
-                }
-            }
-            //Update status instance to complete 
-            //
-            return Ok();
+    //                newQuotation.DocumentId = newDocument.Id;
+    //                await _quotationRepository.UpdateData(newQuotation, quotation, ["DocumentId", "WorkflowStatus", "StatusId"], "Id");
+    //            }
+    //        }
+    //        //Update status instance to complete 
+    //        //
+    //        return Ok();
 
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, ex.Message);
-            return StatusCode(500, ex.Message);
-        }
-    }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        Log.Error(ex, ex.Message);
+    //        return StatusCode(500, ex.Message);
+    //    }
+    //}
 
     [HttpGet("{id}")]
     public async Task<IActionResult> LibreConvert(long? id)
@@ -507,12 +508,17 @@ public class DocumentController : BaseControllerApi<Document>
     {
         try
         {
-            // Xử lý ký demo
-            ControllerUtil.SignByKeywordWithCKSHSM(_BaseRepository, id);
+            var result = await ControllerUtil.SignByKeywordWithCKSHSM(_BaseRepository, id);
+
+            if (result == null || !string.Equals(result.Status, "SUCCESS", StringComparison.OrdinalIgnoreCase))
+            {
+                return StatusCode(StatusCodes.Status502BadGateway, result?.Error ?? "Sign failed.");
+            }
 
             return Ok(new
             {
-                Message = "Sign success and callback completed"
+                Message = "Sign success and callback completed",
+                Result = result
             });
         }
         catch (Exception ex)

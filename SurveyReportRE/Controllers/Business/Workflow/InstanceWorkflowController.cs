@@ -553,10 +553,13 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             if (string.IsNullOrWhiteSpace(sourcePath))
                 throw new Exception("Source file path is empty");
             if (!System.IO.File.Exists(sourcePath) && !sourcePath.Contains("sharepoint"))
-                throw new FileNotFoundException(
-                    "Source file not found",
-                    sourcePath
-                );
+            {
+
+                //throw new FileNotFoundException(
+                //    "Source file not found",
+                //    sourcePath
+                //);
+            }
             // Folder hiện tại của file Word
             string directory = _blobStorageSettings.CurrentValue.Path;
             // Tên file không có extension
@@ -681,7 +684,9 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 $"FilePath is empty for document '{document.FileName}'."
             );
         }
-        if (!System.IO.File.Exists(document.SubDirectory))
+        string filePath = System.IO.Path.Combine(_blobStorageSettings.CurrentValue.Path, document.SubDirectory, document.Guid.ToString() + document.FileType);
+
+        if (!System.IO.File.Exists(System.IO.Path.Combine(_blobStorageSettings.CurrentValue.Path,document.SubDirectory, document.Guid.ToString() + document.FileType)))
         {
             throw new FileNotFoundException(
                 $"File '{document.FileName}' was not found.",
@@ -689,7 +694,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             );
         }
         return new FileStream(
-            document.SubDirectory,
+            isSharePoint ? document.SubDirectory : filePath,
             FileMode.Open,
             FileAccess.Read,
             FileShare.Read,
