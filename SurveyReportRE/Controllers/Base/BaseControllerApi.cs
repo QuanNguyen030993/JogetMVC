@@ -1332,6 +1332,12 @@ namespace ERPCore.Controllers.Base
         [HttpDelete]
         public virtual async Task<IActionResult> BulkDelete([FromBody] BulkDeleteRequest request)
         {
+            if (!IsCurrentUserSuperUser())
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    message = "Bulk delete is available to Super Users only."
+                });
+
             if (request?.Ids == null || request.Ids.Count == 0)
                 return BadRequest("At least one Id is required.");
             if (request.Ids.Any(id => id <= 0))
@@ -1356,6 +1362,12 @@ namespace ERPCore.Controllers.Base
         [HttpPost]
         public virtual async Task<IActionResult> BulkDelete([FromBody] List<long> ids)
         {
+            if (!IsCurrentUserSuperUser())
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    message = "Bulk delete is available to Super Users only."
+                });
+
             if (ids == null || ids.Count == 0)
                 return BadRequest("At least one Id is required.");
             if (ids.Any(id => id <= 0))
@@ -1373,6 +1385,15 @@ namespace ERPCore.Controllers.Base
                 affected = distinctIds.Count,
                 legacy = true
             });
+        }
+
+        private bool IsCurrentUserSuperUser()
+        {
+            var configuration = _BaseRepository._baseConfiguration;
+            var accountName = ERPCore.ControllerUtil.ControllerUtil.GetCurrentContextUser(
+                _httpContextAccessor,
+                configuration);
+            return ERPCore.ControllerUtil.ControllerUtil.IsSuperUser(configuration, accountName);
         }
 
 

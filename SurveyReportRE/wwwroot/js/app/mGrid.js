@@ -1,3 +1,8 @@
+function mGridIsSuperUser() {
+    const value = window._isSuperUser;
+    return value === true || String(value || "").trim().toLowerCase() === "true";
+}
+
 var MGrid = class MGrid {
     constructor(gridConfig, container, mGridOption) {
         try {
@@ -183,6 +188,11 @@ var MGrid = class MGrid {
      */
     toggleEditLayoutMode() {
         try {
+            if (!mGridIsSuperUser()) {
+                appNotifyInfo("This action is available to Super Users only");
+                return false;
+            }
+
             this.isEditLayoutMode = !this.isEditLayoutMode;
 
             if (this.component) {
@@ -405,6 +415,11 @@ var MGrid = class MGrid {
 
     toggleBulkMode() {
         try {
+            if (!mGridIsSuperUser()) {
+                appNotifyInfo("This action is available to Super Users only");
+                return false;
+            }
+
             this.isBulkMode = !this.isBulkMode;
 
             if (this.component) {
@@ -438,6 +453,11 @@ var MGrid = class MGrid {
     }
 
     executeBulkDelete() {
+        if (!mGridIsSuperUser()) {
+            appNotifyInfo("This action is available to Super Users only");
+            return;
+        }
+
         const rows = this.getSelectedRows();
 
         if (!rows || rows.length === 0) {
@@ -674,24 +694,34 @@ var MGridOption = class MGridOption {
             }
         });
 
-        if (_isSuperUser) {
+        if (mGridIsSuperUser()) {
             // Add Edit Layout button (always visible)
             e.toolbarOptions.items.unshift({
                 location: "after",
                 widget: "dxButton",
                 options: {
-                    text: 'Edit Layout',
                     icon: "edit",
-                    onClick: function () {
+                    hint: "Edit layout",
+                    elementAttr: {
+                        "aria-label": "Edit layout"
+                    },
+                    onClick: function (buttonEvent) {
                         if (that.mGridInstance) {
                             that.mGridInstance.toggleEditLayoutMode();
-                            // Update button appearance
                             if (that.mGridInstance.isEditLayoutMode) {
-                                $(this).dxButton('instance').option('type', 'success');
-                                $(this).dxButton('instance').option('text', 'Exit Layout Edit');
+                                buttonEvent.component.option({
+                                    type: "success",
+                                    icon: "save",
+                                    hint: "Save layout",
+                                    elementAttr: { "aria-label": "Save layout" }
+                                });
                             } else {
-                                $(this).dxButton('instance').option('type', 'default');
-                                $(this).dxButton('instance').option('text', 'Edit Layout');
+                                buttonEvent.component.option({
+                                    type: "default",
+                                    icon: "edit",
+                                    hint: "Edit layout",
+                                    elementAttr: { "aria-label": "Edit layout" }
+                                });
                             }
                         }
                     }
@@ -702,23 +732,27 @@ var MGridOption = class MGridOption {
                 location: "after",
                 widget: "dxButton",
                 options: {
-                    text: "Bulk Mode",
-                    icon: "check",
-                    onClick: function () {
+                    icon: "selectall",
+                    hint: "Enable bulk mode",
+                    elementAttr: {
+                        "aria-label": "Enable bulk mode"
+                    },
+                    onClick: function (buttonEvent) {
                         if (that.mGridInstance) {
                             let isOn = that.mGridInstance.toggleBulkMode();
-
-                            const btn = $(this).dxButton("instance");
-
                             if (isOn) {
-                                btn.option({
+                                buttonEvent.component.option({
                                     type: "success",
-                                    text: "Exit Bulk Mode"
+                                    icon: "unselectall",
+                                    hint: "Exit bulk mode",
+                                    elementAttr: { "aria-label": "Exit bulk mode" }
                                 });
                             } else {
-                                btn.option({
+                                buttonEvent.component.option({
                                     type: "default",
-                                    text: "Bulk Mode"
+                                    icon: "selectall",
+                                    hint: "Enable bulk mode",
+                                    elementAttr: { "aria-label": "Enable bulk mode" }
                                 });
                             }
                         }
@@ -730,8 +764,11 @@ var MGridOption = class MGridOption {
                 location: "after",
                 widget: "dxButton",
                 options: {
-                    text: "Delete Selected",
                     icon: "trash",
+                    hint: "Delete selected",
+                    elementAttr: {
+                        "aria-label": "Delete selected"
+                    },
                     onClick: function () {
                         if (that.mGridInstance) {
                             that.mGridInstance.executeBulkDelete();
