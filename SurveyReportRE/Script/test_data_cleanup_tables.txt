@@ -1,0 +1,11 @@
+WorkflowManagementLog.dbo.QuotationWorkflowHistory
+WorkflowManagementLog.dbo.QuotationCommentLog
+WorkflowManagementLog.dbo.WorkflowHistory
+WorkflowManagementLog.dbo.CommentLog
+
+WorkflowManagementv2.dbo.MailQueue
+WorkflowManagementv2.dbo.Notification
+WorkflowManagementv2.dbo.InstanceWorkflow
+WorkflowManagementv2.dbo.PolicyIssuance
+WorkflowManagementv2.dbo.Quotation
+
