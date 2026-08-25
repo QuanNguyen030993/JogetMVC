@@ -39,8 +39,39 @@ namespace ERPCore.ControllerUtil
     public static class ControllerUtil
     {
         public const string InitialNotificationITAllRegionsConstant = "InitialNotificationITAllRegions";
+        public const string ConnectionEnvironmentSessionKey = "CurrentConnectionEnvironment";
+        public const string DatabaseProfileSessionKey = "CurrentDbProfile";
         public static string tmivEnvironment = "Default";
         public static string jogetEnvironment = "Joget";
+
+        public static string NormalizeConnectionEnvironment(string? environment)
+        {
+            if (string.Equals(environment, "Default", StringComparison.OrdinalIgnoreCase)) return "Default";
+            if (string.Equals(environment, "UAT", StringComparison.OrdinalIgnoreCase)) return "UAT";
+
+            throw new ArgumentException("Connection environment must be Default or UAT.", nameof(environment));
+        }
+
+        public static string GetApplicationConnectionName(string environment)
+        {
+            return NormalizeConnectionEnvironment(environment) == "Default"
+                ? "DefaultConnection"
+                : "UATConnection";
+        }
+
+        public static string GetJogetConnectionName(string environment)
+        {
+            return NormalizeConnectionEnvironment(environment) == "Default"
+                ? "JogetConnection"
+                : "UATJogetConnection";
+        }
+
+        public static string GetLogConnectionName(string environment)
+        {
+            return NormalizeConnectionEnvironment(environment) == "Default"
+                ? "LogConnection"
+                : "UATLogConnection";
+        }
         public static string GetWebFile(IWebHostEnvironment env, string folder, string filename)
         {
             return env.WebRootPath

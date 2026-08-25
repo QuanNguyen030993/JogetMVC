@@ -131,17 +131,51 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     public BaseRepository(IConfiguration config, IHttpContextAccessor httpContextAccessor)
     {
         _baseConfiguration = config;
-        
-        _connectionString = _baseConfiguration.GetConnectionString(ControllerUtil.tmivEnvironment + "Connection");
-        _connectionString = ControllerUtil.ParseConnectionString(_connectionString,config);
-        _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.jogetEnvironment + "Connection");
-        _logConnectionString = _baseConfiguration.GetConnectionString("LogConnection");
         _httpContextAccessor = httpContextAccessor;
+        var selectedEnvironment = _httpContextAccessor?.HttpContext?.Session?
+            .GetString(ControllerUtil.ConnectionEnvironmentSessionKey) ?? "Default";
+        ApplyConnectionEnvironment(selectedEnvironment, updateSession: false);
         userName = _httpContextAccessor?.HttpContext?.User?.Identity?.Name ?? "";
+    }
+
+    private string ResolveConnectionString(string connectionName)
+    {
+        var rawConnectionString = _baseConfiguration.GetConnectionString(connectionName);
+        if (string.IsNullOrWhiteSpace(rawConnectionString))
+        {
+            throw new InvalidOperationException($"ConnectionStrings:{connectionName} is not configured.");
+        }
+
+        return ControllerUtil.ParseConnectionString(rawConnectionString, _baseConfiguration);
+    }
+
+    private void ApplyConnectionEnvironment(string environment, bool updateSession)
+    {
+        var normalizedEnvironment = ControllerUtil.NormalizeConnectionEnvironment(environment);
+        var applicationConnectionName = ControllerUtil.GetApplicationConnectionName(normalizedEnvironment);
+        var jogetConnectionName = ControllerUtil.GetJogetConnectionName(normalizedEnvironment);
+        var logConnectionName = ControllerUtil.GetLogConnectionName(normalizedEnvironment);
+
+        // Resolve all three before changing the active profile. A profile is never
+        // left partially switched when one connection string is missing or invalid.
+        var applicationConnection = ResolveConnectionString(applicationConnectionName);
+        var jogetConnection = ResolveConnectionString(jogetConnectionName);
+        var logConnection = ResolveConnectionString(logConnectionName);
+
+        _connectionString = applicationConnection;
+        _jogetConnectionString = jogetConnection;
+        _logConnectionString = logConnection;
+        ControllerUtil.tmivEnvironment = normalizedEnvironment;
+        ControllerUtil.jogetEnvironment = normalizedEnvironment == "Default" ? "Joget" : "UATJoget";
+
+        if (!updateSession) return;
+        var session = _httpContextAccessor?.HttpContext?.Session;
+        session?.SetString(ControllerUtil.ConnectionEnvironmentSessionKey, normalizedEnvironment);
+        session?.SetString(ControllerUtil.DatabaseProfileSessionKey, applicationConnectionName);
     }
     public string GetConnection()
     {
-        return _baseConfiguration.GetConnectionString(ControllerUtil.jogetEnvironment + "Connection");
+        return _jogetConnectionString;
     }
 
     //public async Task DbContextEnvironmentChange(string environment)
@@ -294,15 +328,19 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
             return entity;
         }
     }
-    public async Task DbContextEnvironmentChange(string environment)
+    public Task DbContextEnvironmentChange(string environment)
     {
-        ControllerUtil.tmivEnvironment = environment;
-        _connectionString = _baseConfiguration.GetConnectionString(ControllerUtil.tmivEnvironment + "Connection");
+        ApplyConnectionEnvironment(environment, updateSession: true);
+        return Task.CompletedTask;
     }    
-    public async Task DbContextJogetEnvironmentChange(string environment)
+    public Task DbContextJogetEnvironmentChange(string environment)
     {
-        ControllerUtil.jogetEnvironment = environment;
-        _jogetConnectionString = _baseConfiguration.GetConnectionString(ControllerUtil.jogetEnvironment + "Connection");
+        var connectionName = environment.EndsWith("Connection", StringComparison.OrdinalIgnoreCase)
+            ? environment
+            : environment + "Connection";
+        _jogetConnectionString = ResolveConnectionString(connectionName);
+        ControllerUtil.jogetEnvironment = connectionName[..^"Connection".Length];
+        return Task.CompletedTask;
     }
     public async Task<T> InsertData(T entity)
     {

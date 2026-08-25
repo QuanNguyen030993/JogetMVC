@@ -5,17 +5,39 @@
 }
 <script>
     $(function () {
+          let currentConnectionEnvironment = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CurrentConnectionEnvironment));
+          let syncingConnectionEnvironment = false;
 
           $("#tabPanel").dxSelectBox({
-            dataSource:["Default","UAT"],
-             searchEnabled: true,
-             width: 300,
+             dataSource: ["Default", "UAT"],
+             value: currentConnectionEnvironment,
+             searchEnabled: false,
+             showClearButton: false,
+             stylingMode: "outlined",
+             width: 180,
              onValueChanged: function (e) { // handle after select
+                  if (syncingConnectionEnvironment || !e.value || e.value === currentConnectionEnvironment) return;
+                  const selectBox = e.component;
+                  selectBox.option("disabled", true);
                   $.ajax({
                       url: `/api/Menu/DbContextEnvironmentChange/${e.value}`,
+                      method: "GET",
                       success: function (response) {
+                          currentConnectionEnvironment = response.environment;
+                          DevExpress.ui.notify(response.message, "success", 1800);
                       },
                       error: function (err) {
+                          syncingConnectionEnvironment = true;
+                          selectBox.option("value", currentConnectionEnvironment);
+                          syncingConnectionEnvironment = false;
+                          DevExpress.ui.notify(
+                              err.responseJSON?.message || "Unable to switch connection environment.",
+                              "error",
+                              3500
+                          );
+                      },
+                      complete: function () {
+                          selectBox.option("disabled", false);
                       }
                   });
              },
@@ -326,16 +348,14 @@
     });
 
 </script>
-<div>TMIV environment
+<div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+    <strong>Connection environment</strong>
     <div id="tabPanel">
         @* <div id="dataGrid_@UsersModel.ModelName"></div> *@
     </div>
-</div>
-<div>Joget environment
-    <div id="jogetPanel">
-    @* <div id="dataGrid_@UsersModel.ModelName"></div> *@
-</div>
-
+    <span style="color: var(--c-64748b); font-size: 12px;">
+        Switches Application, Joget and Log connections together.
+    </span>
 </div>
     <div id="generateEncryptPassword"></div>
 <div id="DecryptPassword"></div>

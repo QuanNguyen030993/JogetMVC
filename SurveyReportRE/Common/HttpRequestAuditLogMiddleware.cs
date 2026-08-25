@@ -37,8 +37,6 @@ public sealed class HttpRequestAuditMiddleware
     private readonly IHttpContextAccessor _httpContextAccessor;
     public IConfiguration _baseConfiguration { get; set; }
 
-    private readonly string _connectionString;
-
     public HttpRequestAuditMiddleware(RequestDelegate next, ILogger<HttpRequestAuditMiddleware> logger,
         IConfiguration config,
         IHttpContextAccessor httpContextAccessor)
@@ -47,8 +45,6 @@ public sealed class HttpRequestAuditMiddleware
         _logger = logger;
         _httpContextAccessor = httpContextAccessor;
         _baseConfiguration = config;
-        _connectionString = _baseConfiguration.GetConnectionString(ControllerUtil.tmivEnvironment + "Connection");
-        _connectionString = ControllerUtil.ParseConnectionString(_connectionString, config);
 
 
 #if false
@@ -115,7 +111,13 @@ public sealed class HttpRequestAuditMiddleware
             return;
         }
 
-        var writeSettings = await SystemWriteControl.GetAsync(_connectionString);
+        var selectedEnvironment = ctx.Session.GetString(ControllerUtil.ConnectionEnvironmentSessionKey) ?? "Default";
+        var connectionName = ControllerUtil.GetApplicationConnectionName(selectedEnvironment);
+        var rawConnectionString = _baseConfiguration.GetConnectionString(connectionName)
+            ?? throw new InvalidOperationException($"ConnectionStrings:{connectionName} is not configured.");
+        var connectionString = ControllerUtil.ParseConnectionString(rawConnectionString, _baseConfiguration);
+
+        var writeSettings = await SystemWriteControl.GetAsync(connectionString);
         if (!writeSettings.HttpAuditRequest)
         {
             await _next(ctx);
@@ -156,7 +158,7 @@ public sealed class HttpRequestAuditMiddleware
             }
 
             // Ghi DB
-            await writer.WriteAsync(log, _connectionString, true);
+            await writer.WriteAsync(log, connectionString, true);
 
             // Log kỹ thuật (optional)
             //_logger.LogInformation("HTTP {Method} {Path} => {Status} ({Elapsed} ms) TraceId={TraceId}",

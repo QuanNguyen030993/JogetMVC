@@ -83,8 +83,11 @@ namespace ERPCore.Pages
             if (!string.IsNullOrEmpty(loadParams))
                 ViewData["LoadParams"] = loadParams;
             ViewData[nameof(HostUrl)] = _configuration.GetSection("UrlConfig:Host").Value;
-            ViewData["Environment"] = ControllerUtil.ControllerUtil.tmivEnvironment;
-            ViewData["JogetEnvironment"] = ControllerUtil.ControllerUtil.jogetEnvironment;
+            var selectedEnvironment = HttpContext.Session
+                .GetString(ControllerUtil.ControllerUtil.ConnectionEnvironmentSessionKey) ?? "Default";
+            selectedEnvironment = ControllerUtil.ControllerUtil.NormalizeConnectionEnvironment(selectedEnvironment);
+            ViewData["Environment"] = selectedEnvironment;
+            ViewData["JogetEnvironment"] = selectedEnvironment == "Default" ? "Joget" : "UATJoget";
         }
     }
 }

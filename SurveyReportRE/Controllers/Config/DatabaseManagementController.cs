@@ -33,8 +33,11 @@ namespace ERPCore.Controllers.Config
 
         private string GetConnectionString()
         {
-            string profile = HttpContext?.Session.GetString("CurrentDbProfile") ?? "Default";
-            var rawConn = _configuration.GetConnectionString(profile) ?? _configuration.GetConnectionString(ERPCore.ControllerUtil.ControllerUtil.tmivEnvironment + "Connection");
+            var selectedEnvironment = HttpContext?.Session.GetString(ERPCore.ControllerUtil.ControllerUtil.ConnectionEnvironmentSessionKey) ?? "Default";
+            var defaultProfile = ERPCore.ControllerUtil.ControllerUtil.GetApplicationConnectionName(selectedEnvironment);
+            string profile = HttpContext?.Session.GetString(ERPCore.ControllerUtil.ControllerUtil.DatabaseProfileSessionKey) ?? defaultProfile;
+            var rawConn = _configuration.GetConnectionString(profile)
+                ?? throw new InvalidOperationException($"ConnectionStrings:{profile} is not configured.");
             return ERPCore.ControllerUtil.ControllerUtil.ParseConnectionString(rawConn, _configuration);
         }
 

@@ -14,7 +14,11 @@ public class DynamicDbContextFactory
 
     public DbContext CreateDbContext()
     {
-        string profile = _httpContextAccessor.HttpContext?.Session.GetString("CurrentDbProfile") ?? "Default";
+        var selectedEnvironment = _httpContextAccessor.HttpContext?.Session
+            .GetString(ERPCore.ControllerUtil.ControllerUtil.ConnectionEnvironmentSessionKey) ?? "Default";
+        var defaultProfile = ERPCore.ControllerUtil.ControllerUtil.GetApplicationConnectionName(selectedEnvironment);
+        string profile = _httpContextAccessor.HttpContext?.Session
+            .GetString(ERPCore.ControllerUtil.ControllerUtil.DatabaseProfileSessionKey) ?? defaultProfile;
         var connectionString = _config.GetConnectionString(profile);
 
         var optionsBuilder = new DbContextOptionsBuilder<DbContext>();

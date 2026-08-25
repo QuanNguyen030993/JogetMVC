@@ -117,8 +117,21 @@ namespace ERPCore.Controllers.Base
         [HttpGet("{environment}")]
         public async Task<IActionResult> DbContextEnvironmentChange(string environment)
         {
-            await _BaseRepository.DbContextEnvironmentChange(environment);
-            return Ok();
+            try
+            {
+                var normalizedEnvironment = ERPCore.ControllerUtil.ControllerUtil.NormalizeConnectionEnvironment(environment);
+                await _BaseRepository.DbContextEnvironmentChange(normalizedEnvironment);
+                return Ok(new
+                {
+                    success = true,
+                    environment = normalizedEnvironment,
+                    message = $"All connections switched to {normalizedEnvironment}."
+                });
+            }
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet("{environment}")]
