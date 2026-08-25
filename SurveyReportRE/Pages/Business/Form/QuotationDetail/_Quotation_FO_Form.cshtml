@@ -43,7 +43,7 @@
     that.sectionName = "@(dept)";
     that.titleName = "Upload Quotation";
     that.uploaderAllow = _role == "@dept";
-    that.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that.moduleName, @(quotationId)), Department: "@(dept)", FieldName: "Quotation", FormId: "@(QTViewIdHelper.Form(dept, quotationId))" , ValidationRules: [{ type: "required" }]}; //{"SectionName":"default_FO_410"}
+    that.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that.moduleName, @(quotationId)), Department: "@(dept)", FieldName: "Quotation", FormId: "@(QTViewIdHelper.Form(dept, quotationId))" , CustomField : "Quotation",ValidationRules: [{ type: "required" }]}; //{"SectionName":"default_FO_410"}
 
 
     var that2 = new Object();
@@ -142,7 +142,7 @@
                       valueExpr: "id"
                  },
                     { dataField: "quotationType",visible: false, label:  { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
-                    makeSkipTSSwitchFormItem("quotationType"),
+                    // makeSkipTSSwitchFormItem("quotationType"),
                     { dataField: "businessChannelName", label: { template: labelTpl("BusinessChannelName - Kênh kinh doanh (name)") } },
                     { dataField: "businessChannelDisplayName",visible: false, label: { template: labelTpl("BusinessChannelDisplayName - Tên hiển thị kênh (name of biz)") } },
                      { dataField:"reinsuranceId", editorType:"dxSelectBox", label:{text:"Reinsurance"},

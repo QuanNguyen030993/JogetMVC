@@ -1326,8 +1326,8 @@ public class QuotationController : BaseControllerApi<Quotation>
                 quotation.WorkflowStatus = enumData?.Value ?? "";
             }
             string initialStageDept = skipTsEnabled && !autoJump
-      ? "FO"
-      : routingStep.ToNodeId?.Trim() ?? "";
+              ? "FO"
+              : routingStep.ToNodeId?.Trim() ?? "";
             if (string.IsNullOrWhiteSpace(initialStageDept))
             {
                 throw new InvalidOperationException(
