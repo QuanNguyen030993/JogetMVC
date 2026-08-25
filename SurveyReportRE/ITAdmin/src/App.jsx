@@ -151,6 +151,8 @@ function App() {
   const [currentDepartment, setCurrentDepartment] = useState(() => String(loginContextValue('_role') || '').trim());
   const [isImpersonating, setIsImpersonating] = useState(() => String(loginContextValue('_isDebugMode') || '').toLowerCase() === 'true');
   const [returningAccount, setReturningAccount] = useState(false);
+  const [adminAccess, setAdminAccess] = useState('checking');
+  const [serverRole, setServerRole] = useState('');
 //  const [appsettings, setAppsettings] = useState(null);
 
   useEffect(() => {
@@ -163,17 +165,24 @@ function App() {
         if (!response.ok) throw new Error(`GetHierarchyMenu failed (${response.status})`);
         const result = await response.json();
         const context = result?.userRoles || result?.UserRoles;
-        if (!context || cancelled) return;
+        if (!context || cancelled) {
+          if (!cancelled) setAdminAccess('denied');
+          return;
+        }
         const account = String(context.loginName ?? context.LoginName ?? '').replace('TOKIOMARINE\\', '').trim();
         const displayName = String(context.displayName ?? context.DisplayName ?? '').trim();
         const siteOffice = String(context.branch ?? context.Branch ?? '').trim();
+        const role = String(context.roleName ?? context.RoleName ?? '').trim().toUpperCase();
         const department = String(context.department ?? context.Department ?? context.roleName ?? context.RoleName ?? '').trim();
         if (account) setCurrentAccount(account);
         if (displayName) setCurrentDisplayName(displayName);
         setCurrentSiteOffice(siteOffice);
         setCurrentDepartment(department);
+        setServerRole(role);
+        setAdminAccess(role === 'IT' ? 'allowed' : 'denied');
       } catch (error) {
         console.error('Unable to load server login context from GetHierarchyMenu', error);
+        if (!cancelled) setAdminAccess('denied');
       } finally {
         if (!cancelled) setIsImpersonating(String(loginContextValue('_isDebugMode') || '').toLowerCase() === 'true');
       }
@@ -237,6 +246,7 @@ function App() {
 // }, []);
 
         useEffect(() => {
+            if (adminAccess !== 'allowed') return undefined;
             let activeUsersTimer;
     const loadOnlineUsers = () => {
       setOnlineUsersLoading(true);
@@ -365,7 +375,7 @@ function App() {
         setTicketData([]);
       });
     return () => clearInterval(activeUsersTimer);
-  },[]);
+  },[adminAccess]);
 
   const userCount = useMemo(() => ({
     label: 'Người dùng hoạt động',
@@ -521,6 +531,19 @@ function App() {
         );
     }
   }, [activeSection, selectedWorkflowId, disk, loginStats, ticketData, serilogHourly, onlineUsers, onlineUsersLoading, onlineUsersError, userCount]);
+
+  if (adminAccess !== 'allowed') {
+    return (
+      <div className="admin-access-screen">
+        <div className={`admin-access-card ${adminAccess}`}>
+          <span className="admin-access-icon">{adminAccess === 'checking' ? '…' : '!'}</span>
+          <h1>{adminAccess === 'checking' ? 'Đang kiểm tra quyền truy cập' : 'Không có quyền truy cập'}</h1>
+          <p>{adminAccess === 'checking' ? 'Đang đọc role từ GetHierarchyMenu…' : `Admin Config chỉ dành cho role IT. Role hiện tại: ${serverRole || 'không xác định'}.`}</p>
+          {currentAccount && <small>Account: {currentAccount}</small>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-shell">

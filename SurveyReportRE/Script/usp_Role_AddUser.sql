@@ -13,9 +13,11 @@ GO
     Cap hoac xoa role/menu cho mot user.
 
     Quy tac menu theo Users.department:
-      - MKT, FO, TS, UW, LMKT, PM: Quotations, PolicyIssuances, SLA,
+      - MKT, FO, TS, PM: Quotations, PolicyIssuances, SLA,
         DashBoard, MasterData va tat ca menu con.
-      - IT: Tat ca menu dang hoat dong.
+      - UW: Quotations, SLA, DashBoard, MasterData; khong co PolicyIssuances.
+      - LMKT: nhom menu cua MKT/FO/TS/PM va them QuotationApproval.
+      - IT: Tat ca menu dang hoat dong, bao gom Admins.
 
     Role hop le: Approver, Leader, Staff, HOD.
 
@@ -115,6 +117,11 @@ BEGIN
             MenuId INT NOT NULL PRIMARY KEY
         );
 
+        CREATE TABLE #AllowedRootNames
+        (
+            MenuName VARCHAR(255) NOT NULL PRIMARY KEY
+        );
+
         IF @Department = N'IT'
         BEGIN
             INSERT INTO #AllowedMenus (MenuId)
@@ -125,25 +132,47 @@ BEGIN
         END;
         ELSE
         BEGIN
+            /* Menu nghiep vu chung; khong bao gom Admins. */
+            INSERT INTO #AllowedRootNames (MenuName)
+            VALUES
+                ('Quotations'),
+                ('SLA'),
+                ('DashBoard'),
+                ('MasterData');
+
+            /* UW khong duoc xem Policy Issuance. */
+            IF @Department <> N'UW'
+            BEGIN
+                INSERT INTO #AllowedRootNames (MenuName)
+                VALUES ('PolicyIssuances');
+            END;
+
+            /* Chi LMKT duoc xem them Quotation Approval. */
+            IF @Department = N'LMKT'
+            BEGIN
+                INSERT INTO #AllowedRootNames (MenuName)
+                VALUES ('QuotationApproval');
+            END;
+
             IF
             (
                 SELECT COUNT(*)
                 FROM dbo.Menu AS RootMenu
+                INNER JOIN #AllowedRootNames AS AllowedRoot
+                    ON AllowedRoot.MenuName = RootMenu.[Name]
                 WHERE RootMenu.ParentId IS NULL
-                  AND RootMenu.[Name] IN
-                      ('Quotations', 'PolicyIssuances', 'SLA', 'DashBoard', 'MasterData')
                   AND ISNULL(RootMenu.Active, 0) = 1
                   AND ISNULL(RootMenu.Deleted, 0) = 0
-            ) <> 5
-                THROW 50005, N'Khong tim thay day du 5 nhom menu goc danh cho user khong phai IT.', 1;
+            ) <> (SELECT COUNT(*) FROM #AllowedRootNames)
+                THROW 50005, N'Khong tim thay day du cac nhom menu goc cua department.', 1;
 
             ;WITH MenuTree AS
             (
                 SELECT M.Id
                 FROM dbo.Menu AS M
+                INNER JOIN #AllowedRootNames AS AllowedRoot
+                    ON AllowedRoot.MenuName = M.[Name]
                 WHERE M.ParentId IS NULL
-                  AND M.[Name] IN
-                      ('Quotations', 'PolicyIssuances', 'SLA', 'DashBoard', 'MasterData')
                   AND ISNULL(M.Active, 0) = 1
                   AND ISNULL(M.Deleted, 0) = 0
 

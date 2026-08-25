@@ -14,6 +14,31 @@ body {
   min-height: 100vh;
 }
 
+.admin-access-screen {
+  display: grid;
+  min-height: 100vh;
+  padding: 24px;
+  place-items: center;
+  background: #f5f7fb;
+}
+
+.admin-access-card {
+  width: min(430px, 100%);
+  padding: 28px;
+  border: 1px solid #fecaca;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, .1);
+  text-align: center;
+}
+
+.admin-access-card.checking { border-color: #bfdbfe; }
+.admin-access-icon { display: grid; width: 42px; height: 42px; margin: 0 auto 12px; place-items: center; border-radius: 50%; background: #fee2e2; color: #b91c1c; font-size: 20px; font-weight: 800; }
+.admin-access-card.checking .admin-access-icon { background: #dbeafe; color: #1d4ed8; }
+.admin-access-card h1 { margin: 0 0 8px; color: #111827; }
+.admin-access-card p { margin: 0 0 10px; color: #64748b; font-size: 11px; line-height: 1.5; }
+.admin-access-card small { color: #475569; font-size: 10px; font-weight: 600; }
+
 button {
   border: none;
   cursor: pointer;
