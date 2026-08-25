@@ -3833,10 +3833,14 @@
        }
 
        .management-header-actions .user-account-trigger {
+           width: 132px;
            min-width: 132px;
+           max-width: 132px;
            height: var(--management-header-control-height);
            padding: 2px 6px 2px 3px;
            gap: 5px;
+           flex: 0 0 132px;
+           overflow: hidden;
            border-radius: 8px;
        }
 
@@ -3878,7 +3882,7 @@
 
        @@media (max-width: 900px) {
            .management-logo-slot { flex-basis: 16%; max-width: 16%; }
-           .management-header-actions .user-account-trigger { min-width: 28px; width: 28px; padding: 2px; }
+           .management-header-actions .user-account-trigger { min-width: 28px; width: 28px; max-width: 28px; padding: 2px; flex-basis: 28px; }
            .management-header-actions .user-account-copy,
            .management-header-actions .user-account-chevron { display: none; }
            .management-header-actions #btnNew .dx-button-text { display: none; }
