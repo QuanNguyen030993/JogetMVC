@@ -712,13 +712,16 @@
             <!--Login Info-->
             <div class="management-header-actions">
                 <div id="btnNew" style="display:none"></div>
-                <button id="userGuideLauncher"
-                        class="ug-guide-launcher"
-                        type="button"
-                        title="Set up user guides"
-                        aria-label="Set up user guides">
-                    <i class="fa fa-compass" aria-hidden="true"></i>
-                </button>
+                @if (string.Equals(ViewData["IsSuperUser"]?.ToString(), "true", StringComparison.OrdinalIgnoreCase))
+                {
+                    <button id="userGuideLauncher"
+                            class="ug-guide-launcher"
+                            type="button"
+                            title="Set up user guides"
+                            aria-label="Set up user guides">
+                        <i class="fa fa-compass" aria-hidden="true"></i>
+                    </button>
+                }
                 <button id="tmivTourGuideLauncher"
                         class="ug-guide-launcher"
                         type="button"
