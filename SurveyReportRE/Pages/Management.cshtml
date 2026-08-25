@@ -679,6 +679,14 @@
                                 <span>Debug role</span>
                                 <div id="homeRoleSelect"></div>
                             </div>
+                            <div id="homeBranchSwitcher"
+                                 class="home-role-switcher management-environment-role-row"
+                                 title="Switch site office for this debug session"
+                                 aria-label="Switch site office for this debug session"
+                                 aria-hidden="true">
+                                <span>Debug site office</span>
+                                <div id="homeBranchSelect"></div>
+                            </div>
                             <div class="management-environment-hover-row">
                                 <span>SignalR</span>
                                 <div id="signalRMonitor" class="signalr-monitor signalr-disconnected">
@@ -961,6 +969,56 @@
             });
 
             window.syncHomeRoleSwitcher(_role);
+            $switcher.attr("aria-hidden", "false");
+        })();
+
+        (function initializeHomeBranchSwitcher() {
+            const canSwitchBranch = String(_isDebugMode).toLowerCase() === "true"
+                || String(_isSuperUser).toLowerCase() === "true";
+            const $switcher = $("#homeBranchSwitcher").toggleClass("is-visible", canSwitchBranch);
+            const $select = $("#homeBranchSelect");
+            const branches = ["HCM", "HN"];
+            let syncingBranch = false;
+
+            function normalizeBranch(branch) {
+                return String(branch || "").trim().toUpperCase();
+            }
+
+            window.syncHomeBranchSwitcher = function (branch) {
+                const normalizedBranch = normalizeBranch(branch);
+                const instance = $select.hasClass("dx-selectbox")
+                    ? $select.dxSelectBox("instance")
+                    : null;
+                if (!instance) return;
+                syncingBranch = true;
+                instance.option("value", branches.includes(normalizedBranch) ? normalizedBranch : null);
+                syncingBranch = false;
+            };
+
+            if (!canSwitchBranch || !$select.length) return;
+
+            $select.dxSelectBox({
+                dataSource: branches,
+                value: branches.includes(normalizeBranch(_branch)) ? normalizeBranch(_branch) : null,
+                placeholder: "Office",
+                stylingMode: "outlined",
+                width: 92,
+                searchEnabled: false,
+                showClearButton: false,
+                onValueChanged: function (e) {
+                    if (syncingBranch || !e.value) return;
+                    _branch = e.value;
+                    window._branch = e.value;
+                    window.syncLoginUserSiteOffice?.(e.value);
+                    $(document).trigger("debugSiteOfficeChanged", [{
+                        branch: e.value,
+                        source: "home"
+                    }]);
+                    DevExpress.ui.notify("Site office switched: " + e.value, "info", 1200);
+                }
+            });
+
+            window.syncHomeBranchSwitcher(_branch);
             $switcher.attr("aria-hidden", "false");
         })();
 
@@ -3665,17 +3723,21 @@
        }
 
        .home-role-switcher #homeRoleSelect,
-       .home-role-switcher #homeRoleSelect .dx-texteditor {
+       .home-role-switcher #homeRoleSelect .dx-texteditor,
+       .home-role-switcher #homeBranchSelect,
+       .home-role-switcher #homeBranchSelect .dx-texteditor {
            height: 24px !important;
            min-height: 24px !important;
        }
 
-       .home-role-switcher #homeRoleSelect .dx-texteditor {
+       .home-role-switcher #homeRoleSelect .dx-texteditor,
+       .home-role-switcher #homeBranchSelect .dx-texteditor {
            border: 0 !important;
            background: transparent !important;
        }
 
-       .home-role-switcher #homeRoleSelect .dx-texteditor-input {
+       .home-role-switcher #homeRoleSelect .dx-texteditor-input,
+       .home-role-switcher #homeBranchSelect .dx-texteditor-input {
            min-height: 22px !important;
            padding: 2px 20px 2px 3px !important;
            font-size: 11px !important;
@@ -3699,7 +3761,8 @@
            font-weight: 600;
        }
 
-       .management-environment-role-row #homeRoleSelect {
+       .management-environment-role-row #homeRoleSelect,
+       .management-environment-role-row #homeBranchSelect {
            width: 92px;
        }
 

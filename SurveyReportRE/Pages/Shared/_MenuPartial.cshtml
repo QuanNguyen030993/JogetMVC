@@ -25,6 +25,7 @@
                  _roleAppName = result.userRoles.RoleAppName;
                  _branch = result.userRoles.Branch;
                  window.syncLoginUserSiteOffice?.(_branch);
+                 window.syncHomeBranchSwitcher?.(_branch);
                 $("#roleLabel").text(_role ? `Phòng ban ${_role}` : "Phòng ban chưa chọn");
                  _displayName = result.userRoles.DisplayName;
                 $("#displayLabel").text(`${_displayName}`);

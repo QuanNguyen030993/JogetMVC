@@ -198,7 +198,7 @@
 	</ItemGroup>
 
 	<ProjectExtensions>
-		<VisualStudio><UserProperties appsettings_1json__JsonSchema="https://atmos.tools/schemas/atmos/atmos-manifest/1.0/atmos-manifest.json" properties_4launchsettings_1json__JsonSchema="https://bioimage-io.github.io/spec-bioimage-io/bioimageio_schema_latest.json" /></VisualStudio>
+		<VisualStudio><UserProperties appsettings_1json__JsonSchema="https://cdn.subsquid.io/schemas/squid_manifest.json" properties_4launchsettings_1json__JsonSchema="https://bioimage-io.github.io/spec-bioimage-io/bioimageio_schema_latest.json" /></VisualStudio>
 	</ProjectExtensions>
 
 </Project>
