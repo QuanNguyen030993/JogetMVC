@@ -126,9 +126,16 @@ if (typeof window !== 'undefined' && !window.__apiInterceptorInstalled) {
   };
 
   window.__apiHistory = apiHistory;
-  window.__apiListeners = apiListeners;
+window.__apiListeners = apiListeners;
 }
 
+const loginContextValue = (key) => {
+  try {
+    return window[key] || (window.parent !== window ? window.parent[key] : '');
+  } catch {
+    return window[key] || '';
+  }
+};
 
 function App() {
   const [loginStats,setLoginStats]=useState([]);
@@ -138,32 +145,41 @@ function App() {
   const [onlineUsers,setOnlineUsers]=useState([]);
   const [onlineUsersLoading,setOnlineUsersLoading]=useState(true);
   const [onlineUsersError,setOnlineUsersError]=useState('');
-  const [currentAccount, setCurrentAccount] = useState(() => String(window._loginUser || '').replace('TOKIOMARINE\\', ''));
-  const [currentDisplayName, setCurrentDisplayName] = useState(() => String(window._displayName || '').trim());
-  const [currentSiteOffice, setCurrentSiteOffice] = useState(() => String(window._branch || '').trim());
-  const [currentDepartment, setCurrentDepartment] = useState(() => String(window._role || '').trim());
-  const [isImpersonating, setIsImpersonating] = useState(() => String(window._isDebugMode || '').toLowerCase() === 'true');
+  const [currentAccount, setCurrentAccount] = useState(() => String(loginContextValue('_loginUser') || '').replace('TOKIOMARINE\\', ''));
+  const [currentDisplayName, setCurrentDisplayName] = useState(() => String(loginContextValue('_displayName') || '').trim());
+  const [currentSiteOffice, setCurrentSiteOffice] = useState(() => String(loginContextValue('_branch') || '').trim());
+  const [currentDepartment, setCurrentDepartment] = useState(() => String(loginContextValue('_role') || '').trim());
+  const [isImpersonating, setIsImpersonating] = useState(() => String(loginContextValue('_isDebugMode') || '').toLowerCase() === 'true');
   const [returningAccount, setReturningAccount] = useState(false);
 //  const [appsettings, setAppsettings] = useState(null);
 
   useEffect(() => {
-    let attempts = 0;
-    const syncLoginContext = () => {
-      const account = String(window._loginUser || '').replace('TOKIOMARINE\\', '').trim();
-      const displayName = String(window._displayName || '').trim();
-      const siteOffice = String(window._branch || '').trim();
-      const department = String(window._role || '').trim();
-      if (account) setCurrentAccount(account);
-      if (displayName) setCurrentDisplayName(displayName);
-      if (siteOffice) setCurrentSiteOffice(siteOffice);
-      if (department) setCurrentDepartment(department);
-      setIsImpersonating(String(window._isDebugMode || '').toLowerCase() === 'true');
-      attempts += 1;
-      if ((account && siteOffice && department) || attempts >= 40) window.clearInterval(timer);
+    let cancelled = false;
+    const loadLoginContext = async () => {
+      try {
+        const response = await fetch(`${appsettings.UrlConfig.Host}/api/Menu/GetHierarchyMenu?pageSystem=Management`, {
+          credentials: 'same-origin',
+        });
+        if (!response.ok) throw new Error(`GetHierarchyMenu failed (${response.status})`);
+        const result = await response.json();
+        const context = result?.userRoles || result?.UserRoles;
+        if (!context || cancelled) return;
+        const account = String(context.loginName ?? context.LoginName ?? '').replace('TOKIOMARINE\\', '').trim();
+        const displayName = String(context.displayName ?? context.DisplayName ?? '').trim();
+        const siteOffice = String(context.branch ?? context.Branch ?? '').trim();
+        const department = String(context.department ?? context.Department ?? context.roleName ?? context.RoleName ?? '').trim();
+        if (account) setCurrentAccount(account);
+        if (displayName) setCurrentDisplayName(displayName);
+        setCurrentSiteOffice(siteOffice);
+        setCurrentDepartment(department);
+      } catch (error) {
+        console.error('Unable to load server login context from GetHierarchyMenu', error);
+      } finally {
+        if (!cancelled) setIsImpersonating(String(loginContextValue('_isDebugMode') || '').toLowerCase() === 'true');
+      }
     };
-    const timer = window.setInterval(syncLoginContext, 250);
-    syncLoginContext();
-    return () => window.clearInterval(timer);
+    loadLoginContext();
+    return () => { cancelled = true; };
   }, []);
 
   const returnToAdminAccount = async () => {

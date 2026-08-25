@@ -57,11 +57,24 @@ const UserManagement = () => {
     };
     Promise.all([
       getJson('/api/Users/GetAll'),
+      getJson('/api/Employee/GetAll').catch(() => []),
       getJson('/api/Menu/GetAll').catch(() => []),
       getJson('/api/Users/GetUserRoleStatus').catch(() => []),
     ])
-      .then(([userData, menuData, assignmentData]) => {
-        setUsers(Array.isArray(userData) ? userData : []);
+      .then(([userData, employeeData, menuData, assignmentData]) => {
+        const employeesByAccount = new Map(
+          (Array.isArray(employeeData) ? employeeData : [])
+            .map((employee) => [String(valueOf(employee, 'accountName', 'AccountName') || '').trim().toLowerCase(), employee])
+            .filter(([accountName]) => accountName),
+        );
+        const mergedUsers = (Array.isArray(userData) ? userData : []).map((user) => {
+          const employee = employeesByAccount.get(userNameOf(user).trim().toLowerCase());
+          const employeeDepartment = String(valueOf(employee, 'department', 'Department') || '').trim();
+          const userDepartment = String(valueOf(user, 'department', 'Department') || '').trim();
+          const department = employeeDepartment || userDepartment;
+          return { ...user, department, Department: department };
+        });
+        setUsers(mergedUsers);
         setMenus(Array.isArray(menuData) ? menuData : []);
         setAssignments(Array.isArray(assignmentData) ? assignmentData : []);
       })
