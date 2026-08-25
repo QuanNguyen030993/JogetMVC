@@ -30,9 +30,10 @@ namespace ERPCore.ControllerUtil
 
         public async static Task<UserInfo> FetchUserRoles(IHttpContextAccessor httpContextAccessor, IConfiguration configuration, string DOMAIN_NAME)
         {
-            string userName = httpContextAccessor.HttpContext.User.Identity.Name?.Replace(DOMAIN_NAME, "") ?? "anonymous" ;
             var userInfo = new UserInfo();
-            if (userName == "anonymous")
+            string userName = ControllerUtil.GetCurrentContextUser(httpContextAccessor, configuration);
+
+            if (!string.IsNullOrWhiteSpace(userName))
             {
                 IBaseRepository<Users> _usersRepository = new BaseRepository<Users>(configuration, httpContextAccessor);
                 userInfo.Users = await _usersRepository.GetSingleObject(s => s.username == userName);

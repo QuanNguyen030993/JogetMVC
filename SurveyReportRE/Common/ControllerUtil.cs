@@ -635,13 +635,21 @@ namespace ERPCore.ControllerUtil
 
 
             var userInfo = await ControllerHelper.FetchUserRoles(httpContextAccessor, configuration, DOMAIN_NAME);
+            var actorName = userInfo.Users?.name;
+            if (string.IsNullOrWhiteSpace(actorName))
+                actorName = GetCurrentContextUser(httpContextAccessor, configuration);
+            if (string.IsNullOrWhiteSpace(actorName))
+                actorName = "anonymous";
+
+            var actorSqlValue = SqlValue(actorName);
+            var commentSqlValue = SqlValue(Convert.ToString(workflowEntity.Comment) ?? string.Empty);
               string logQuery = $@"INSERT INTO CommentLog (RecordGuid
             ,DeptCode,CommentOrder,CommentBy,CommentTime,CommentText,SourceSystem,CreatedAtUtc)
                         VALUES ('{entity.Guid}','{workflowEntity.StepsWorkflow.FromNodeId} - {workflowEntity.StepsWorkflow.StepName}'
             ,{0}
-            ,'{userInfo.Users?.name ?? "anonymous"}'
+            ,{actorSqlValue}
             ,'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}'
-            ,N'{workflowEntity.Comment}'
+            ,{commentSqlValue}
             ,'WEB', GETDATE())
                     ";
             string logFlowQuery = "";
@@ -656,7 +664,7 @@ namespace ERPCore.ControllerUtil
             ,'{workflowEntity.StepsWorkflow.FromNodeId}'
             ,'{workflowEntity.StepsWorkflow.ToNodeId}'
             ,'{workflowEntity.StepsWorkflow.ActionCode}'
-            ,'{userInfo.Users?.name ?? "anonymous"}','WEB',GETDATE())
+            ,{actorSqlValue},'WEB',GETDATE())
                     ";
             }
             using var loggerFactory = LoggerFactory.Create(loggingBuilder => loggingBuilder

@@ -309,11 +309,28 @@ public class MenuController : BaseControllerApi<Menu>
             }
         }
 
+        var selectedEnvironment = HttpContext.Session
+            .GetString(ERPCore.ControllerUtil.ControllerUtil.ConnectionEnvironmentSessionKey) ?? "Default";
+        selectedEnvironment = ERPCore.ControllerUtil.ControllerUtil
+            .NormalizeConnectionEnvironment(selectedEnvironment);
+        var jogetEnvironment = selectedEnvironment == "Default" ? "Joget" : "UATJoget";
+
         if (roles != null)
-            return Ok(new { Menu = result, UserRoles = roles });
+            return Ok(new
+            {
+                Menu = result,
+                UserRoles = roles,
+                Environment = selectedEnvironment,
+                JogetEnvironment = jogetEnvironment
+            });
         else
         {
-            return Ok(new { UserRoles = roles });
+            return Ok(new
+            {
+                UserRoles = roles,
+                Environment = selectedEnvironment,
+                JogetEnvironment = jogetEnvironment
+            });
         }
     }
 

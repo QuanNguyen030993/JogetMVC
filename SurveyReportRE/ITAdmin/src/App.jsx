@@ -153,6 +153,8 @@ function App() {
   const [returningAccount, setReturningAccount] = useState(false);
   const [adminAccess, setAdminAccess] = useState('checking');
   const [serverRole, setServerRole] = useState('');
+  const [serverEnvironment, setServerEnvironment] = useState('');
+  const [jogetEnvironment, setJogetEnvironment] = useState('');
 //  const [appsettings, setAppsettings] = useState(null);
 
   useEffect(() => {
@@ -164,6 +166,10 @@ function App() {
         });
         if (!response.ok) throw new Error(`GetHierarchyMenu failed (${response.status})`);
         const result = await response.json();
+        if (!cancelled) {
+          setServerEnvironment(String(result?.environment ?? result?.Environment ?? '').trim());
+          setJogetEnvironment(String(result?.jogetEnvironment ?? result?.JogetEnvironment ?? '').trim());
+        }
         const context = result?.userRoles || result?.UserRoles;
         if (!context || cancelled) {
           if (!cancelled) setAdminAccess('denied');
@@ -565,6 +571,8 @@ function App() {
               <div className="admin-context-details">
                 <div><span>Site Office</span><b>{currentSiteOffice || '-'}</b></div>
                 <div><span>Phòng ban</span><b>{currentDepartment || 'Chưa chọn'}</b></div>
+                <div><span>Environment</span><b>{serverEnvironment || '-'}</b></div>
+                <div><span>Joget</span><b>{jogetEnvironment || '-'}</b></div>
               </div>
               <span className={isImpersonating ? 'impersonating' : ''}>{isImpersonating ? 'Login as context' : 'Admin account'}</span>
               {isImpersonating && <button type="button" disabled={returningAccount} onClick={returnToAdminAccount}>{returningAccount ? 'Returning...' : 'Back to Admin'}</button>}
