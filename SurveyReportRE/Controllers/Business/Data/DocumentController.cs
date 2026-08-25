@@ -39,6 +39,30 @@ public class DocumentController : BaseControllerApi<Document>
         //_httpClientFactory = httpClientFactory;
     }
 
+    private string ResolveLocalDocumentPath(Document document)
+    {
+        string guidPath = System.IO.Path.Combine(
+            path.Value,
+            document.SubDirectory ?? string.Empty,
+            document.Guid.ToString() + document.FileType);
+        if (System.IO.File.Exists(guidPath))
+            return guidPath;
+
+        // Files created by the legacy signature callback were stored by FileName.
+        string legacyFileName = System.IO.Path.GetFileName(document.FileName ?? string.Empty);
+        if (!string.IsNullOrWhiteSpace(legacyFileName))
+        {
+            string legacyPath = System.IO.Path.Combine(
+                path.Value,
+                document.SubDirectory ?? string.Empty,
+                legacyFileName);
+            if (System.IO.File.Exists(legacyPath))
+                return legacyPath;
+        }
+
+        return guidPath;
+    }
+
 
 
     public async Task<IActionResult> StreamDocument(long id)
@@ -56,7 +80,7 @@ public class DocumentController : BaseControllerApi<Document>
                 return Redirect(Document.SubDirectory);
             }
 
-            string fullPath = System.IO.Path.Combine(path.Value, Document.SubDirectory, Document.Guid.ToString()+ Document.FileType);
+            string fullPath = ResolveLocalDocumentPath(Document);
             var mimeTypes = Util.GetMimeType(Document.FileName);
             if (System.IO.File.Exists(fullPath))
             {
@@ -383,11 +407,7 @@ public class DocumentController : BaseControllerApi<Document>
 
                 var ext = d.FileType;
                 if (!IsRemoteDocumentUrl(d.SubDirectory))
-                    if (!System.IO.File.Exists(
-                        Path.Combine(
-                            path.Value,
-                            d.SubDirectory,
-                            d.Guid.ToString() + d.FileType)))
+                    if (!System.IO.File.Exists(ResolveLocalDocumentPath(d)))
                 {
                     ext = "Not Found On Server";
                 }

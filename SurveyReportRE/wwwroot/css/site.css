@@ -35571,3 +35571,89 @@ body.skin-re .dx-popup-wrapper.dx-rtl > .dx-overlay-content > .dx-popup-title.dx
 .workflow-ui-lock-group[data-workflow-ui-locked="true"] .attachment-drop-zone {
     opacity: .6;
 }
+
+/* Critical Management account-header layout.
+   This stylesheet loads before the large page-level style block, preventing
+   the native button and async account text from resizing the top bar. */
+.management-header-actions {
+    display: flex;
+    height: var(--management-header-height, 32px);
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--management-header-gap, 6px);
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.management-header-actions .user.user-menu {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+.management-header-actions .user-account-trigger {
+    appearance: none;
+    width: 132px;
+    min-width: 132px;
+    max-width: 132px;
+    height: var(--management-header-control-height, 28px);
+    padding: 2px 6px 2px 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: 0 0 132px;
+    overflow: hidden;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.management-header-actions .user-account-avatar {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 22px;
+    border-radius: 7px;
+    font-size: 10px;
+}
+
+.management-header-actions .user-account-copy {
+    width: 0;
+    min-width: 0;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    overflow: hidden;
+    line-height: 1.1;
+}
+
+.management-header-actions .user-account-name,
+.management-header-actions .user-account-role {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.management-header-actions .user-account-chevron {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 900px) {
+    .management-header-actions .user-account-trigger {
+        width: 28px;
+        min-width: 28px;
+        max-width: 28px;
+        padding: 2px;
+        flex-basis: 28px;
+    }
+
+    .management-header-actions .user-account-copy,
+    .management-header-actions .user-account-chevron {
+        display: none;
+    }
+}

@@ -9149,30 +9149,49 @@
         }
         async function openPDFPopup(id) {
             const popup = getAttachmentPreviewPopup("PDF Preview");
+            let fileURL = null;
             popup.option({
                 width: "80vw",
                 height: "90vh",
                 title: "PDF Preview",
+                onHidden: function () {
+                    if (fileURL) {
+                        URL.revokeObjectURL(fileURL);
+                        fileURL = null;
+                    }
+                },
                 contentTemplate(container) {
-                           $.ajax({
-                            url: `/api/Utility/GetPdfFile/${id}`,
-                            method: "GET",
-                            xhrFields: { responseType: "blob" },
-                            success: function (blob) {
-                                const fileURL = URL.createObjectURL(blob);
-                                     $("<iframe>")
-                                .attr("id", `pdfViewer_${id}`)
-                                 .attr("src", fileURL)
-                                .css({ width: "100%", height: "800px", border: "1px solid var(--c-cccccc)" })
-                                    .appendTo(container);
-                                // $(`#${formModuleKeyQt}-pdfViewer_${quoteId}`).attr("src", fileURL);
-                            },
-                            error: function (xhr, status, error) {
-                                console.error("Error loading PDF:", error);
+                    const $loading = $("<div>")
+                        .css({ padding: "20px" })
+                        .text("Loading PDF...")
+                        .appendTo(container);
+
+                    fetch(`/api/Document/StreamDocument?id=${encodeURIComponent(id)}`, {
+                        credentials: "include"
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                const message = response.headers.get("X-Error-Message") || `Unable to load PDF (${response.status})`;
+                                throw new Error(message);
                             }
+                            return response.blob();
+                        })
+                        .then(blob => {
+                            fileURL = URL.createObjectURL(blob);
+                            $loading.remove();
+                            $("<iframe>")
+                                .attr({
+                                    id: `pdfViewer_${id}`,
+                                    src: fileURL,
+                                    title: "PDF Preview"
+                                })
+                                .css({ width: "100%", height: "100%", minHeight: "75vh", border: 0 })
+                                .appendTo(container);
+                        })
+                        .catch(error => {
+                            console.error("Error loading PDF:", error);
+                            $loading.text(error.message || "Unable to load PDF");
                         });
-
-
                 }
             });
             popup.show();

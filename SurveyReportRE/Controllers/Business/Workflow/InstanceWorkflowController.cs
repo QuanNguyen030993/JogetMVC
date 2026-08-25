@@ -2075,9 +2075,16 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             quotation = await _quotationRepository.GetSingleObject(s => s.Guid == newDocument.RecordGuid);
             //quotation = await _quotationRepository.GetSingleObject(s => s.Guid == Guid.Parse(fileName.JobId));
             string subDir = Path.Combine(nameof(Quotation), quotation.QuotationCode);
-            string fullPath = Path.Combine(_blobStorageSettings.CurrentValue.Path, subDir, _blobStorageSettings.CurrentValue.Sign);
-            if (!Directory.Exists(fullPath))
-                Directory.CreateDirectory(fullPath);
+            string askingSignaturePath = Path.Combine(
+                _blobStorageSettings.CurrentValue.Path,
+                subDir,
+                _blobStorageSettings.CurrentValue.AskingSignature);
+            string signPath = Path.Combine(
+                _blobStorageSettings.CurrentValue.Path,
+                subDir,
+                _blobStorageSettings.CurrentValue.Sign);
+            Directory.CreateDirectory(askingSignaturePath);
+            Directory.CreateDirectory(signPath);
             var mimeTypes = Util.GetMimeType(fileName.FileName);
             //dynamic object 
 
@@ -2093,13 +2100,26 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 TurnAroundItem tatObject = Util.TurnAroundTimePicker(result, approveDept);
                 result.LMKT.CompleteDate = DateTime.Now;
                 tatObject.CompleteDate = result?.LMKT?.CompleteDate;
-                newDocument.FileName = newDocument.FileName + "(Approved)";
-                newDocument.SubDirectory = Path.Combine(subDir, _blobStorageSettings.CurrentValue.Sign);
-                System.IO.File.WriteAllBytes(Path.Combine(fullPath, newDocument.FileName), Convert.FromBase64String(fileName.FileBase64));
+                string approvedExtension = !string.IsNullOrWhiteSpace(newDocument.FileType)
+                    ? newDocument.FileType
+                    : Path.GetExtension(newDocument.FileName);
+                if (!approvedExtension.StartsWith('.'))
+                    approvedExtension = "." + approvedExtension;
+                string approvedBaseName = Path.GetFileNameWithoutExtension(newDocument.FileName);
+                newDocument.FileName = $"{approvedBaseName}(Approved){approvedExtension}";
+                newDocument.FileType = approvedExtension;
+                newDocument.Guid = Guid.NewGuid();
+                newDocument.SubDirectory = Path.Combine(subDir, _blobStorageSettings.CurrentValue.AskingSignature);
                 //Quotation newQuotation = new Quotation();
                 //newQuotation.WorkflowStatus = completeSigning.Name;
                 //newQuotation.StatusId = completeSigning.Id;
                 newDocument = await _documentRepository.InsertData(newDocument);
+                string approvedFilePath = Path.Combine(
+                    askingSignaturePath,
+                    newDocument.Guid.ToString() + newDocument.FileType);
+                await System.IO.File.WriteAllBytesAsync(
+                    approvedFilePath,
+                    Convert.FromBase64String(fileName.FileBase64));
 
                 quotation.DocumentId = newDocument.Id;
                 quotation.WorkflowStatus = completeSigning.Value;
