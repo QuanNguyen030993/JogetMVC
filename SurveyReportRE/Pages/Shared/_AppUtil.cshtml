@@ -5916,7 +5916,8 @@
                     $host = $('<div id="attachmentPreviewPopup"></div>').appendTo(document.body);
                 }
 
-                let popup = $host.dxPopup("instance");
+                const hostElement = $host.get(0);
+                let popup = DevExpress.ui.dxPopup.getInstance(hostElement);
                 if (!popup) {
                     $host.dxPopup({
                         width: "80vw",
@@ -5932,7 +5933,7 @@
                             return container;
                         }
                     });
-                    popup = $host.dxPopup("instance");
+                    popup = DevExpress.ui.dxPopup.getInstance(hostElement);
                 }
 
                 popup.option({
