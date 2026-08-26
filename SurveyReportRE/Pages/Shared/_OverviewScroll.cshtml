@@ -28,6 +28,17 @@
                     };
                     }
                     <partial name="@($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Header")" view-data="viewDataHeader" />
+                    <button type="button"
+                            class="dept-admin-refresh"
+                            hidden
+                            data-overview-section-refresh="true"
+                            data-module="@QTViewIdHelper.Prefix"
+                            data-record-id="@Model.Id"
+                            data-dept="@item"
+                            title="Refresh @item section"
+                            aria-label="Refresh @item section">
+                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                    </button>
                 </div>
 
                 <!-- 2. UpperBody -->
@@ -108,6 +119,17 @@
                     };
                     }
                     <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Header")" view-data="viewDataHeader" />
+                    <button type="button"
+                            class="dept-admin-refresh"
+                            hidden
+                            data-overview-section-refresh="true"
+                            data-module="@PIViewIdHelper.Prefix"
+                            data-record-id="@Model.Id"
+                            data-dept="@item"
+                            title="Refresh @item section"
+                            aria-label="Refresh @item section">
+                        <i class="fa fa-refresh" aria-hidden="true"></i>
+                    </button>
                 </div>
                 <!-- 2. UpperBody -->
                 <div id="@Id($"sec_{item}-upperbody")" class="dept-upperbody">
@@ -179,4 +201,5 @@
 
 <script>
     window.mountOverviewDecisionDocks?.("#@ViewIdHelper.OverViewScroll(Model.Prefix, Model.Id)");
+    window.syncOverviewAdminRefreshButtons?.("#@ViewIdHelper.OverViewScroll(Model.Prefix, Model.Id)");
 </script>

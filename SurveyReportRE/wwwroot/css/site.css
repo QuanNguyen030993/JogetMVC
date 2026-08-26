@@ -33650,6 +33650,51 @@ textarea {
     z-index: 1;
 }
 
+.dept-admin-refresh {
+    display: inline-grid;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    place-items: center;
+    padding: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: #475569;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+    transition: border-color .16s ease, color .16s ease, background .16s ease, transform .16s ease;
+}
+
+.dept-admin-refresh[hidden] {
+    display: none !important;
+}
+
+.dept-admin-refresh:hover {
+    border-color: var(--theme-primary);
+    background: color-mix(in srgb, var(--theme-primary) 7%, #fff);
+    color: var(--theme-primary);
+    transform: translateY(-1px);
+}
+
+.dept-admin-refresh:focus-visible {
+    outline: 2px solid var(--theme-primary-ring);
+    outline-offset: 2px;
+}
+
+.dept-admin-refresh:disabled {
+    cursor: wait;
+    opacity: .72;
+}
+
+.dept-admin-refresh.is-refreshing .fa {
+    animation: dept-admin-refresh-spin .75s linear infinite;
+}
+
+@keyframes dept-admin-refresh-spin {
+    to { transform: rotate(360deg); }
+}
+
 .dept-tree .treeStack[data-dept-tree-ready="true"] > .dept-scroll-beacon {
     opacity: 1;
     visibility: visible;

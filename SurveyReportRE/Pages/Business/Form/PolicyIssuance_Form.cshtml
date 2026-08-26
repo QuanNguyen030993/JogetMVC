@@ -478,7 +478,7 @@ Note:
 
         }
 
-        async function loadPolicyIssuanceSectionComments() {
+        async function loadPolicyIssuanceSectionComments(refreshDept) {
             try {
                 const res = await loadSectionCommentsCached(state.selectedGuid);
                 const pinnedNotes = (res || []).map(x => ({
@@ -506,7 +506,12 @@ Note:
                 state.pinNotes = [];
                 console.warn("Policy issuance comments could not be loaded.", error);
             }
-            reloadState();
+            if (refreshDept) {
+                commentPinModule(formModuleKeyPi, refreshDept, "@ViewData["Guid"]", state.pinNotes, @ViewData["Id"]);
+                loadCommentModule(formModuleKeyPi, refreshDept, "@ViewData["Guid"]", state.comments, @ViewData["Id"]);
+            } else {
+                reloadState();
+            }
         }
 
         async function renderPolicyIssuancePersonInCharge() {
@@ -1005,6 +1010,75 @@ Note:
         }
 
         window.OverviewViewRegistry[policyIssuanceViewInstanceKey].reload = reloadPolicyIssuanceInstance;
+        var policyIssuanceDepartmentRefreshes = {};
+        function refreshPolicyIssuanceDepartment(dept) {
+            dept = String(dept || "").trim().toUpperCase();
+            if (!window.PolicyIssuanceIdManager.validateDepartment(dept)) {
+                return Promise.reject(new Error(`Invalid policy issuance department: ${dept}`));
+            }
+            if (policyIssuanceDepartmentRefreshes[dept]) return policyIssuanceDepartmentRefreshes[dept];
+
+            policyIssuanceDepartmentRefreshes[dept] = (async function () {
+                var response = await $.ajax({
+                    url: `/api/PolicyIssuance/GetAll?key=@ViewData["Id"]`,
+                    method: "GET",
+                    contentType: "application/json"
+                });
+                var q = Array.isArray(response) ? response[0] : response;
+                if (!q) throw new Error("Policy issuance data was not found.");
+
+                var quoteIndex = state.quotes.findIndex(function (item) {
+                    return String(item.id) === String(q.id);
+                });
+                if (quoteIndex >= 0) state.quotes[quoteIndex] = q;
+                else state.quotes.unshift(q);
+
+                workflowStatus = q.workflowStatus ?? q.status;
+                stageDept = String(q.stageDept || "").trim().toUpperCase() || null;
+                state.stageDept = stageDept;
+                PIC_JSON = q.pIC || q.pic || "{}";
+                var picMap = parsePicMap(PIC_JSON);
+                stageAccount = picMap[stageDept] || "(Unassigned)";
+
+                deptData[dept] = { ...q, id: q.id, sectionName: dept, code: q.policyIssuanceCode };
+                var formId = window.PolicyIssuanceIdManager.form(dept, @ViewData["Id"]);
+                var form = $(`#${formId}`).dxForm("instance");
+                if (!form) throw new Error(`${dept} form is not initialized.`);
+                form.option("formData", deptData[dept]);
+
+                await renderAssignment(
+                    formModuleKeyPi,
+                    { [dept]: deptData[dept] },
+                    policyAssignmentLifecycle,
+                    0
+                );
+
+                var decisionEntry = window.WorkflowDecisionRegistry?.[`${formId}:${dept}`];
+                if (decisionEntry) {
+                    renderDecisionDeferredV2(
+                        decisionEntry.formProps,
+                        decisionEntry.groupName,
+                        decisionEntry.mainFields,
+                        ...decisionEntry.params
+                    );
+                }
+
+                invalidateSectionCommentCache(state.selectedGuid);
+                await loadPolicyIssuanceSectionComments(dept);
+                var section = document.getElementById(`${formModuleKeyPi}-sec_${dept}_@ViewData["Id"]`);
+                await window.refreshOverviewDepartmentWidgets?.(section);
+                setAttachmentPermissionForSection(
+                    `#${formModuleKeyPi}-sec_${dept}_@ViewData["Id"]`,
+                    _isSuperUser || state.currentUserRole === dept
+                );
+            })().finally(function () {
+                delete policyIssuanceDepartmentRefreshes[dept];
+            });
+
+            return policyIssuanceDepartmentRefreshes[dept];
+        }
+        window.OverviewViewRegistry[policyIssuanceViewInstanceKey].refreshDepartment = refreshPolicyIssuanceDepartment;
+        window.syncOverviewAdminRefreshButtons?.(`#${window.PolicyIssuanceIdManager.overviewScroll(@ViewData["Id"])}`);
         window.reloadPolicyIssuanceComponents = function(instanceId) {
             var registry = window.OverviewViewRegistry || {};
             if (instanceId !== undefined && instanceId !== null) {

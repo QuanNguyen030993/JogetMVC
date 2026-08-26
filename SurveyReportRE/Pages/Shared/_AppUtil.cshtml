@@ -7268,6 +7268,108 @@
                 }, isError ? 900 : 260);
            }
 
+           function isOverviewRefreshAdmin() {
+                return window._isSuperUser === true
+                    || String(window._isSuperUser).toLowerCase() === "true";
+           }
+
+           function syncOverviewAdminRefreshButtons(root) {
+                var scope = root ? document.querySelector(root) : document;
+                if (!scope) return;
+                var isAdmin = isOverviewRefreshAdmin();
+                scope.querySelectorAll("[data-overview-section-refresh='true']").forEach(function (button) {
+                    var moduleCode = String(button.dataset.module || "").trim().toLowerCase();
+                    var recordId = button.dataset.recordId;
+                    var entry = (window.OverviewViewRegistry || {})[`${moduleCode}:${recordId}`];
+                    button.hidden = !(isAdmin && typeof entry?.refreshDepartment === "function");
+                });
+           }
+           window.syncOverviewAdminRefreshButtons = syncOverviewAdminRefreshButtons;
+
+           async function refreshOverviewDepartmentSection(button) {
+                if (!button || button.disabled || !isOverviewRefreshAdmin()) return;
+
+                var moduleCode = String(button.dataset.module || "").trim().toLowerCase();
+                var recordId = button.dataset.recordId;
+                var dept = String(button.dataset.dept || "").trim().toUpperCase();
+                var registry = window.OverviewViewRegistry || {};
+                var entry = registry[`${moduleCode}:${recordId}`];
+                if (!entry || typeof entry.refreshDepartment !== "function") {
+                    DevExpress.ui.notify("Section refresh is not ready", "warning", 1500);
+                    return;
+                }
+
+                var schemeName = moduleCode === viewIdModulePrefix.policyIssuance
+                    ? "PolicyIssuance"
+                    : "Quotation";
+                var loadingContext = beginDepartmentSectionLoading(
+                    schemeName,
+                    recordId,
+                    dept,
+                    `Refreshing ${dept} section...`
+                );
+
+                button.disabled = true;
+                button.classList.add("is-refreshing");
+                try {
+                    await entry.refreshDepartment(dept);
+                    finishDepartmentSectionLoading(loadingContext, `${dept} section refreshed`, false);
+                } catch (error) {
+                    console.error(`${dept} section refresh failed`, error);
+                    finishDepartmentSectionLoading(loadingContext, `${dept} refresh failed`, true);
+                    DevExpress.ui.notify(`Refresh ${dept} section failed`, "error", 1800);
+                } finally {
+                    button.disabled = false;
+                    button.classList.remove("is-refreshing");
+                }
+           }
+           window.refreshOverviewDepartmentSection = refreshOverviewDepartmentSection;
+
+           async function refreshOverviewDepartmentWidgets(section) {
+                if (!section) return;
+
+                section.querySelectorAll(".dx-form").forEach(function (element) {
+                    DevExpress.ui.dxForm.getInstance(element)?.repaint();
+                });
+
+                var reloads = [];
+                section.querySelectorAll(".dx-datagrid").forEach(function (element) {
+                    var grid = DevExpress.ui.dxDataGrid.getInstance(element);
+                    var dataSource = grid?.getDataSource?.();
+                    if (dataSource?.reload) reloads.push(Promise.resolve(dataSource.reload()));
+                    else grid?.repaint();
+                });
+                section.querySelectorAll(".dx-list").forEach(function (element) {
+                    var list = DevExpress.ui.dxList.getInstance(element);
+                    var dataSource = list?.getDataSource?.();
+                    if (dataSource?.reload) reloads.push(Promise.resolve(dataSource.reload()));
+                    else list?.repaint();
+                });
+
+                await Promise.allSettled(reloads);
+                await new Promise(function (resolve) {
+                    requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+                });
+           }
+           window.refreshOverviewDepartmentWidgets = refreshOverviewDepartmentWidgets;
+
+           if (!window.__overviewAdminRefreshBound) {
+                window.__overviewAdminRefreshBound = true;
+                document.addEventListener("click", function (event) {
+                    var button = event.target.closest?.("[data-overview-section-refresh='true']");
+                    if (!button) return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    refreshOverviewDepartmentSection(button);
+                });
+                document.addEventListener("overviewMaintenanceRoleChanged", function () {
+                    syncOverviewAdminRefreshButtons();
+                });
+                window.setTimeout(function () { syncOverviewAdminRefreshButtons(); }, 500);
+                window.setTimeout(function () { syncOverviewAdminRefreshButtons(); }, 1500);
+                window.setTimeout(function () { syncOverviewAdminRefreshButtons(); }, 3000);
+           }
+
            function applyAcceptedDepartmentDecision(schemeName, recordId, dept, responseData) {
                 var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
                 var isPolicyIssuance = normalizedScheme === "policyissuance" || normalizedScheme === viewIdModulePrefix.policyIssuance;
