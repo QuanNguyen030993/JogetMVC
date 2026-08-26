@@ -40,6 +40,37 @@ const getCellValue = (row, fieldName) => {
   return matchingKey ? row[matchingKey] : undefined;
 };
 
+const getRowKey = (row, keyExpr = 'id') => {
+  if (!row) return undefined;
+  return getCellValue(row, keyExpr) ?? getCellValue(row, 'id') ?? getCellValue(row, 'Id');
+};
+
+const coerceClipboardValue = (value, column) => {
+  const text = String(value ?? '');
+  const dataType = String(column?.dataType || '').toLowerCase();
+  const editorType = String(column?.editorType || '').toLowerCase();
+
+  if (dataType === 'number' || editorType.includes('number')) {
+    if (!text.trim()) return null;
+    const normalized = text.trim().replace(/,/g, '');
+    const numberValue = Number(normalized);
+    return Number.isFinite(numberValue) ? numberValue : value;
+  }
+
+  if (dataType === 'boolean' || editorType.includes('checkbox')) {
+    if (!text.trim()) return null;
+    return ['true', '1', 'yes', 'y', 'x'].includes(text.trim().toLowerCase());
+  }
+
+  if (dataType === 'date' || dataType === 'datetime' || editorType.includes('date')) {
+    if (!text.trim()) return null;
+    const dateValue = new Date(text.trim());
+    return Number.isNaN(dateValue.getTime()) ? value : dateValue.toISOString();
+  }
+
+  return text;
+};
+
 const getAvatarBgColor = (name) => {
   const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6', '#06b6d4', '#f43f5e'];
   if (!name) return colors[0];
@@ -194,6 +225,8 @@ const CustomGrid = forwardRef(({
   const [draftRows, setDraftRows] = useState(initialRows ?? []);
   const [editMode, setEditMode] = useState(initialEditMode);
   const [displayExpr, setDisplayExpr] = useState('name');
+  const gridElementRef = useRef(null);
+  const initializedRef = useRef(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -219,11 +252,20 @@ const CustomGrid = forwardRef(({
   const [sortInfo, setSortInfo] = useState({ field: null, direction: 'asc' });
   const [filters, setFilters] = useState({});
   const [groupColumns, setGroupColumns] = useState([]);
-  const [pageSize, setPageSize] = useState(10);
+  const pagingConfig = gridOption?.paging || {};
+  const pagerConfig = gridOption?.pager || {};
+  const pagingEnabled = pagingConfig.enabled !== false;
+  const allowedPageSizes = Array.isArray(pagerConfig.allowedPageSizes) && pagerConfig.allowedPageSizes.length
+    ? pagerConfig.allowedPageSizes
+    : [25, 50, 100, 200];
+  const initialPageSize = Number(pagingConfig.pageSize) || 50;
+  const [pageSize, setPageSize] = useState(initialPageSize);
   const [pageIndex, setPageIndex] = useState(0);
   const [expandedGroups, setExpandedGroups] = useState({});
   const [editingRowId, setEditingRowId] = useState(null);
   const [activeCell, setActiveCell] = useState(null);
+  const [focusedCell, setFocusedCell] = useState(null);
+  const [searchText, setSearchText] = useState(gridOption?.searchPanel?.text || '');
   const [isDirty, setIsDirty] = useState(false);
   const [isEditLayoutMode, setIsEditLayoutMode] = useState(false);
 
@@ -238,7 +280,7 @@ const CustomGrid = forwardRef(({
     const uniqueMap = new Map();
     const column = columns.find(c => getColumnId(c) === field);
     draftRows.forEach(r => {
-      const rawVal = r[field];
+      const rawVal = getCellValue(r, field);
       let displayVal = rawVal;
       if (rawVal === undefined || rawVal === null || rawVal === '') {
         uniqueMap.set('', '(Blanks)');
@@ -308,6 +350,20 @@ const CustomGrid = forwardRef(({
   const allowDeleting = editingConfig.allowDeleting !== false;
   const filterRowVisible = gridOption?.filterRow?.visible !== false;
   const groupPanelVisible = gridOption?.groupPanel?.visible !== false;
+  const searchPanelVisible = gridOption?.searchPanel?.visible === true;
+  const pagerVisible = pagerConfig.visible !== false && pagingEnabled;
+  const showPageSizeSelector = pagerConfig.showPageSizeSelector !== false;
+  const showNavigationButtons = pagerConfig.showNavigationButtons !== false;
+  const showPagerInfo = pagerConfig.showInfo !== false;
+  const keyExpr = gridOption?.keyExpr || 'id';
+
+  useEffect(() => {
+    const configuredPageSize = Number(pagingConfig.pageSize);
+    if (configuredPageSize > 0) {
+      setPageSize(configuredPageSize);
+      setPageIndex(0);
+    }
+  }, [pagingConfig.pageSize]);
 
   // Theme support
   const [theme, setTheme] = useState(propTheme || 'light');
@@ -347,7 +403,7 @@ const CustomGrid = forwardRef(({
     if (callback) {
       callback({
         selectedRowKeys,
-        selectedRowsData: draftRows.filter(r => selectedRowKeys.includes(r.id || r.Id))
+        selectedRowsData: draftRows.filter(r => selectedRowKeys.includes(getRowKey(r, keyExpr)))
       });
     }
   }, [selectedRowKeys, draftRows, gridOption]);
@@ -530,6 +586,23 @@ const CustomGrid = forwardRef(({
     loadData();
   }, [modelName, refKey, refField, refOperator, refKey2, refField2, refOperator2, overrideGetUrl, initialRows, dataSource]);
 
+  useEffect(() => {
+    if (!gridElementRef.current || initializedRef.current) return;
+    initializedRef.current = true;
+    gridOption?.onInitialized?.({
+      component: ref?.current,
+      element: gridElementRef.current,
+    });
+  }, [gridOption, ref]);
+
+  useEffect(() => {
+    if (loading || !gridElementRef.current) return;
+    gridOption?.onContentReady?.({
+      component: ref?.current,
+      element: gridElementRef.current,
+    });
+  }, [loading, draftRows.length, columns.length]);
+
   // Normalize Columns Definitions for Rendering
   const normalizedColumns = useMemo(() => {
     return columns.map((column) => {
@@ -620,6 +693,7 @@ const CustomGrid = forwardRef(({
         caption: column.caption || column.field || column.dataField,
         width: (isQuotationGrid && isPicColumn ? 500 : column.width) || '1fr',
         visible: column.visible !== false,
+        allowSearch: column.allowSearch !== false,
         sortable: column.sortable !== false && column.allowSorting !== false && !(isQuotationGrid && isPicColumn),
         groupable: column.groupable !== false,
         editable: column.editable !== false && column.allowEditing !== false,
@@ -667,6 +741,23 @@ const CustomGrid = forwardRef(({
     }
 
     return getCellValue(row, column.field);
+  };
+
+  const getSearchableCellText = (row, column) => {
+    const value = getColumnValue(row, column);
+    const lookup = column?.lookup;
+    if (lookup && Array.isArray(lookup.dataSource)) {
+      const valueExpr = lookup.valueExpr || 'id';
+      const displayExpr = lookup.displayExpr || 'name';
+      const item = lookup.dataSource.find((candidate) => {
+        const candidateValue = typeof candidate === 'object' ? candidate[valueExpr] : candidate;
+        return String(candidateValue ?? '') === String(value ?? '');
+      });
+      if (item !== undefined) {
+        return typeof item === 'object' ? (item[displayExpr] ?? value ?? '') : item;
+      }
+    }
+    return value ?? '';
   };
 
   useEffect(() => {
@@ -867,14 +958,14 @@ const CustomGrid = forwardRef(({
       const targetRows = draftRows;
       if (modelName) {
         const modifiedRows = targetRows.filter((row) => {
-          const original = rows.find(r => (r.id || r.Id) === (row.id || row.Id));
+          const original = rows.find(r => getRowKey(r, keyExpr) === getRowKey(row, keyExpr));
           return !original || JSON.stringify(original) !== JSON.stringify(row);
         });
 
         setLoading(true);
         try {
           for (const row of modifiedRows) {
-            const rowId = row.id || row.Id;
+            const rowId = getRowKey(row, keyExpr);
             const formData = new FormData();
             formData.append("key", rowId);
             formData.append("values", JSON.stringify(row));
@@ -894,7 +985,7 @@ const CustomGrid = forwardRef(({
       } else if (dataSource && typeof dataSource.update === 'function') {
         try {
           await Promise.all(
-            targetRows.map((row) => dataSource.update(row.id || row.Id, row)).filter(Boolean),
+            targetRows.map((row) => dataSource.update(getRowKey(row, keyExpr), row)).filter(Boolean),
           );
         } catch (err) {
           setError(err.message);
@@ -918,7 +1009,7 @@ const CustomGrid = forwardRef(({
     if (!confirm("Bạn có chắc chắn muốn xóa dòng này không?")) return;
 
     if (!modelName) {
-      const nextRows = draftRows.filter((row) => (row.id || row.Id) !== rowId);
+      const nextRows = draftRows.filter((row) => getRowKey(row, keyExpr) !== rowId);
       commitRows(nextRows);
       if (selectedRowId === rowId) {
         setSelectedRowId(null);
@@ -957,7 +1048,7 @@ const CustomGrid = forwardRef(({
 
   // Drag and drop handlers
   const handleRowDragStart = (event, row) => {
-    const rowKey = row.id || row.Id;
+    const rowKey = getRowKey(row, keyExpr);
     setDraggedRowKey(rowKey);
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('application/x-tmivcom-row-key', String(rowKey));
@@ -971,15 +1062,15 @@ const CustomGrid = forwardRef(({
   const handleRowDrop = (event, targetRow) => {
     event.preventDefault();
     const sourceKey = event.dataTransfer.getData('application/x-tmivcom-row-key') || draggedRowKey;
-    const targetKey = targetRow.id || targetRow.Id;
+    const targetKey = getRowKey(targetRow, keyExpr);
     if (!sourceKey || String(sourceKey) === String(targetKey)) {
       setDraggedRowKey(null);
       return;
     }
 
     const reordered = [...draftRows];
-    const sourceIndex = reordered.findIndex((row) => String(row.id || row.Id) === String(sourceKey));
-    const targetIndex = reordered.findIndex((row) => String(row.id || row.Id) === String(targetKey));
+    const sourceIndex = reordered.findIndex((row) => String(getRowKey(row, keyExpr)) === String(sourceKey));
+    const targetIndex = reordered.findIndex((row) => String(getRowKey(row, keyExpr)) === String(targetKey));
     if (sourceIndex < 0 || targetIndex < 0) {
       setDraggedRowKey(null);
       return;
@@ -1009,18 +1100,28 @@ const CustomGrid = forwardRef(({
   };
 
   const handleSelectAllCheckbox = () => {
-    const allIds = draftRows.map((r) => r.id || r.Id);
-    if (selectedRowKeys.length === allIds.length) {
-      setSelectedRowKeys([]);
+    const selectableIds = filteredRows.map((row) => getRowKey(row, keyExpr)).filter((key) => key !== undefined);
+    const allSelected = selectableIds.length > 0 && selectableIds.every((key) => selectedRowKeys.includes(key));
+    if (allSelected) {
+      setSelectedRowKeys((current) => current.filter((key) => !selectableIds.includes(key)));
     } else {
-      setSelectedRowKeys(allIds);
+      setSelectedRowKeys((current) => [...new Set([...current, ...selectableIds])]);
     }
   };
 
   // Sorting & Filtering (Case-Insensitive getCellValue fixes filters not working)
   const filteredRows = useMemo(() => {
-    return draftRows.filter((row) =>
-      normalizedColumns.every((column) => {
+    const normalizedSearch = searchText.trim().toLocaleLowerCase();
+    return draftRows.filter((row) => {
+      if (normalizedSearch) {
+        const matchesSearch = normalizedColumns.some((column) => {
+          if (column.visible === false || column.isCommand || column.allowSearch === false) return false;
+          return String(getSearchableCellText(row, column)).toLocaleLowerCase().includes(normalizedSearch);
+        });
+        if (!matchesSearch) return false;
+      }
+
+      return normalizedColumns.every((column) => {
         if (column.actions) return true;
         const value = getColumnValue(row, column);
         
@@ -1054,9 +1155,9 @@ const CustomGrid = forwardRef(({
         }
 
         return true;
-      }),
-    );
-  }, [draftRows, filters, excelFilters, normalizedColumns]);
+      });
+    });
+  }, [draftRows, filters, excelFilters, normalizedColumns, searchText]);
 
   const sortedRows = useMemo(() => {
     if (!sortInfo.field) {
@@ -1142,7 +1243,7 @@ const CustomGrid = forwardRef(({
   const exportToExcel = (options = {}) => {
     const selectedOnly = options.selectedOnly ?? options.exportSelectedRows ?? false;
     const sourceRows = selectedOnly
-      ? sortedRows.filter((row) => selectedRowKeys.includes(row.id || row.Id))
+      ? sortedRows.filter((row) => selectedRowKeys.includes(getRowKey(row, keyExpr)))
       : sortedRows;
 
     const headers = exportColumns.map((column) => column.caption || column.field);
@@ -1168,9 +1269,28 @@ const CustomGrid = forwardRef(({
   // Imperative handle to allow jQuery or parent components to get data or call options
   useImperativeHandle(ref, () => ({
     getData: () => draftRows,
+    getVisibleRows: () => pagedRows.map((data, rowIndex) => ({ data, key: getRowKey(data, keyExpr), rowIndex, rowType: 'data' })),
     getSelectedRowKeys: () => selectedRowKeys,
-    getSelectedRowsData: () => draftRows.filter(r => selectedRowKeys.includes(r.id || r.Id)),
+    getSelectedRowsData: () => draftRows.filter(r => selectedRowKeys.includes(getRowKey(r, keyExpr))),
     exportToExcel,
+    refresh: loadData,
+    saveEditData: saveChanges,
+    cancelEditData: cancelChanges,
+    clearFilter: () => {
+      setFilters({});
+      setExcelFilters({});
+      setSearchText('');
+      setPageIndex(0);
+    },
+    pageIndex: (value) => {
+      if (value === undefined) return pageIndex;
+      setPageIndex(Math.max(0, Number(value) || 0));
+    },
+    pageSize: (value) => {
+      if (value === undefined) return pageSize;
+      setPageSize(Math.max(1, Number(value) || initialPageSize));
+      setPageIndex(0);
+    },
     selectRows: (keys, preserveExisting = false) => {
       if (preserveExisting) {
         setSelectedRowKeys(prev => [...new Set([...prev, ...keys])]);
@@ -1202,16 +1322,24 @@ const CustomGrid = forwardRef(({
           return selectedRowKeys;
         }
       }
+      if (name === 'searchPanel.text') {
+        if (value !== undefined) {
+          setSearchText(String(value ?? ''));
+          setPageIndex(0);
+        } else {
+          return searchText;
+        }
+      }
     },
     value: () => draftRows
   }));
 
   const pageCount = useMemo(() => {
-    if (groupColumns.length > 0) {
+    if (!pagingEnabled || groupColumns.length > 0) {
       return 1;
     }
     return Math.max(1, Math.ceil(filteredRows.length / pageSize));
-  }, [filteredRows.length, pageSize, groupColumns.length]);
+  }, [filteredRows.length, pageSize, groupColumns.length, pagingEnabled]);
 
   useEffect(() => {
     if (pageIndex >= pageCount) {
@@ -1220,12 +1348,61 @@ const CustomGrid = forwardRef(({
   }, [pageCount, pageIndex]);
 
   const pagedRows = useMemo(() => {
-    if (groupColumns.length > 0) {
+    if (!pagingEnabled || groupColumns.length > 0) {
       return sortedRows;
     }
     const start = pageIndex * pageSize;
     return sortedRows.slice(start, start + pageSize);
-  }, [sortedRows, pageIndex, pageSize, groupColumns.length]);
+  }, [sortedRows, pageIndex, pageSize, groupColumns.length, pagingEnabled]);
+
+  const handleGridPaste = (event) => {
+    if (!focusedCell || !allowUpdating) return;
+    if (event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+
+    const clipboardText = event.clipboardData?.getData('text/plain');
+    if (!clipboardText) return;
+
+    const pastedRows = clipboardText
+      .replace(/\r/g, '')
+      .split('\n')
+      .map((line) => line.split('\t'));
+    if (pastedRows.length > 1 && pastedRows[pastedRows.length - 1].every((value) => value === '')) {
+      pastedRows.pop();
+    }
+    if (!pastedRows.length) return;
+
+    const editableColumns = normalizedColumns.filter((column) => column.visible !== false && column.editable !== false && column.field);
+    const startColumnIndex = editableColumns.findIndex((column) => column.field === focusedCell.field);
+    const startRowIndex = pagedRows.findIndex((row) => getRowKey(row, keyExpr) === focusedCell.rowKey);
+    if (startColumnIndex < 0 || startRowIndex < 0) return;
+
+    event.preventDefault();
+    const updates = new Map();
+    pastedRows.forEach((values, rowOffset) => {
+      const targetRow = pagedRows[startRowIndex + rowOffset];
+      if (!targetRow) return;
+      const targetKey = getRowKey(targetRow, keyExpr);
+      const nextRow = { ...(updates.get(targetKey) || targetRow) };
+
+      values.forEach((value, columnOffset) => {
+        const targetColumn = editableColumns[startColumnIndex + columnOffset];
+        if (!targetColumn) return;
+        nextRow[targetColumn.field] = coerceClipboardValue(value, targetColumn);
+      });
+      updates.set(targetKey, nextRow);
+    });
+
+    if (!updates.size) return;
+    const nextRows = draftRows.map((row) => updates.get(getRowKey(row, keyExpr)) || row);
+    commitRows(nextRows);
+    gridOption?.onCellValueChanged?.({
+      component: ref?.current,
+      data: updates.get(focusedCell.rowKey),
+      key: focusedCell.rowKey,
+      column: normalizedColumns.find((column) => column.field === focusedCell.field),
+      value: updates.get(focusedCell.rowKey)?.[focusedCell.field],
+    });
+  };
 
   // Grouping
   const buildGroups = (items, groupIndex = 0, parentPath = []) => {
@@ -1270,7 +1447,7 @@ const CustomGrid = forwardRef(({
   };
 
   const handleCellChange = (rowId, field, value) => {
-    const nextRows = draftRows.map((row) => ((row.id || row.Id) === rowId ? { ...row, [field]: value } : row));
+    const nextRows = draftRows.map((row) => (getRowKey(row, keyExpr) === rowId ? { ...row, [field]: value } : row));
     commitRows(nextRows);
   };
 
@@ -1673,7 +1850,7 @@ const CustomGrid = forwardRef(({
   };
 
   const renderRow = (node) => {
-    const rowId = node.id || node.Id;
+    const rowId = getRowKey(node, keyExpr);
     const rowClasses = `grid-row dx-data-row ${selectedRowId === rowId ? 'dx-selection' : ''} ${String(draggedRowKey) === String(rowId) ? 'row-dragging' : ''}`;
     const rowProps = {
       key: rowId,
@@ -1765,10 +1942,23 @@ const CustomGrid = forwardRef(({
             <td 
               key={column.field || `col-${column.caption}`} 
               className={`grid-cell dx-cell ${column.cssClass || ''} ${isEditing ? 'editing-cell' : ''}`}
-              onClick={() => {
+              tabIndex={0}
+              onFocus={() => setFocusedCell({ rowKey: rowId, field: column.field })}
+              onClick={(event) => {
+                setFocusedCell({ rowKey: rowId, field: column.field });
                 if (editMode === 'cell' && column.editable) {
                   setActiveCell({ rowId, field: column.field });
                 }
+                gridOption?.onCellClick?.({
+                  column,
+                  columnIndex: renderingColumns.findIndex((item) => item.field === column.field),
+                  component: ref?.current,
+                  data: node,
+                  event,
+                  key: rowId,
+                  rowType: 'data',
+                  value: getColumnValue(node, column),
+                });
               }}
             >
               <div className="grid-cell-content" style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%', height: '100%' }}>
@@ -1860,11 +2050,18 @@ const CustomGrid = forwardRef(({
 
   const renderedToolbarItems = [...defaultToolbarItems, ...toolbarItems];
 
-  const showingStart = filteredRows.length === 0 ? 0 : pageIndex * pageSize + 1;
-  const showingEnd = Math.min(filteredRows.length, (pageIndex + 1) * pageSize);
+  const showingStart = filteredRows.length === 0 ? 0 : (pagingEnabled ? pageIndex * pageSize + 1 : 1);
+  const showingEnd = pagingEnabled ? Math.min(filteredRows.length, (pageIndex + 1) * pageSize) : filteredRows.length;
 
   return (
-    <div className={`custom-grid dx-datagrid custom-grid-${theme}`}>
+    <div
+      ref={gridElementRef}
+      className={`custom-grid dx-datagrid custom-grid-${theme}`}
+      role="grid"
+      aria-rowcount={filteredRows.length}
+      aria-colcount={renderingColumns.length}
+      onPaste={handleGridPaste}
+    >
       <div className="grid-toolbar">
         <div className="toolbar-group toolbar-group-before">
           {renderedToolbarItems
@@ -1883,6 +2080,26 @@ const CustomGrid = forwardRef(({
             ))}
         </div>
         <div className="toolbar-group toolbar-group-after">
+          {searchPanelVisible && (
+            <label className="grid-search-panel">
+              <i className="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+              <input
+                type="search"
+                value={searchText}
+                placeholder={gridOption?.searchPanel?.placeholder || 'Search...'}
+                aria-label={gridOption?.searchPanel?.placeholder || 'Search grid'}
+                onChange={(event) => {
+                  setSearchText(event.target.value);
+                  setPageIndex(0);
+                }}
+              />
+              {searchText && (
+                <button type="button" onClick={() => setSearchText('')} title="Clear search" aria-label="Clear search">
+                  ×
+                </button>
+              )}
+            </label>
+          )}
           {renderedToolbarItems
             .filter((item) => item.location === 'after')
             .map((item) => (
@@ -1936,8 +2153,9 @@ const CustomGrid = forwardRef(({
                       <div className="grid-header-cell-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
                         <input 
                           type="checkbox" 
-                          checked={draftRows.length > 0 && selectedRowKeys.length === draftRows.length}
+                          checked={filteredRows.length > 0 && filteredRows.every((row) => selectedRowKeys.includes(getRowKey(row, keyExpr)))}
                           onChange={handleSelectAllCheckbox}
+                          aria-label="Select all filtered rows"
                         />
                       </div>
                     </th>
@@ -2082,10 +2300,9 @@ const CustomGrid = forwardRef(({
         </table>
       </div>
 
-      {/* Styled Footer to match mockup exactly */}
-      <div className="grid-footer dx-toolbar">
+      {pagerVisible && <div className="grid-footer dx-toolbar">
         <div className="pager-controls">
-          <button 
+          {showNavigationButtons && <button 
             type="button" 
             className="pager-btn" 
             onClick={() => setPageIndex(0)} 
@@ -2093,8 +2310,8 @@ const CustomGrid = forwardRef(({
             title="First page"
           >
             <i className="fa fa-angle-double-left"></i>
-          </button>
-          <button 
+          </button>}
+          {showNavigationButtons && <button 
             type="button" 
             className="pager-btn" 
             onClick={() => setPageIndex((prev) => Math.max(0, prev - 1))} 
@@ -2102,7 +2319,7 @@ const CustomGrid = forwardRef(({
             title="Previous page"
           >
             <i className="fa fa-angle-left"></i>
-          </button>
+          </button>}
           
           <span className="pager-nav-text">Page</span>
           <input 
@@ -2120,7 +2337,7 @@ const CustomGrid = forwardRef(({
           />
           <span className="pager-nav-text">of {pageCount}</span>
 
-          <button 
+          {showNavigationButtons && <button 
             type="button" 
             className="pager-btn" 
             onClick={() => setPageIndex((prev) => Math.min(pageCount - 1, prev + 1))} 
@@ -2128,8 +2345,8 @@ const CustomGrid = forwardRef(({
             title="Next page"
           >
             <i className="fa fa-angle-right"></i>
-          </button>
-          <button 
+          </button>}
+          {showNavigationButtons && <button 
             type="button" 
             className="pager-btn" 
             onClick={() => setPageIndex(pageCount - 1)} 
@@ -2137,12 +2354,11 @@ const CustomGrid = forwardRef(({
             title="Last page"
           >
             <i className="fa fa-angle-double-right"></i>
-          </button>
+          </button>}
 
-          <span className="pager-separator">|</span>
-
-          <span className="pager-nav-text">Results per page</span>
-          <select 
+          {showPageSizeSelector && <span className="pager-separator">|</span>}
+          {showPageSizeSelector && <span className="pager-nav-text">Results per page</span>}
+          {showPageSizeSelector && <select 
             className="pager-size-select"
             value={pageSize} 
             onChange={(event) => {
@@ -2150,12 +2366,12 @@ const CustomGrid = forwardRef(({
               setPageIndex(0);
             }}
           >
-            {[5, 10, 20, 50].map((size) => (
+            {allowedPageSizes.map((size) => (
               <option key={size} value={size}>
                 {size}
               </option>
             ))}
-          </select>
+          </select>}
 
           <span className="pager-separator">|</span>
 
@@ -2170,10 +2386,10 @@ const CustomGrid = forwardRef(({
           </button>
         </div>
 
-        <div className="pager-info">
+        {showPagerInfo && <div className="pager-info">
           {`Showing ${showingStart} - ${showingEnd} of ${filteredRows.length}`}
-        </div>
-      </div>
+        </div>}
+      </div>}
 
       {openFilterField && (
         <div 
