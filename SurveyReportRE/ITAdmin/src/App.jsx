@@ -161,7 +161,7 @@ function App() {
     let cancelled = false;
     const loadLoginContext = async () => {
       try {
-        const response = await fetch(`${appsettings.UrlConfig.Host}/api/Menu/GetHierarchyMenu?pageSystem=Management`, {
+        const response = await fetch(`${appsettings.UrlConfig.Host}/api/Menu/GetITAdminRole?pageSystem=Management`, {
           credentials: 'same-origin',
         });
         if (!response.ok) throw new Error(`GetHierarchyMenu failed (${response.status})`);

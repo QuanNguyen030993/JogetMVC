@@ -263,89 +263,89 @@
     // });
     const uploadDemoGuid = "3b6f39cc-8a18-4ce3-a8d2-cceb2757a111";
 
-    $("#localFileUploader").fileuploader({
-        guid: uploadDemoGuid,
-        controllerName: "Document",
-        titleName: "Select or drag files to upload locally",
-        uploadUrl: "/api/Document/AsyncUploadFileLocal",
-        data: {
-            ModuleName: "PolicyIssuance",
-            code: "UPLOAD-DEMO",
-            SectionName: "LOCAL"
-        },
-        specificFolder: "EnvironmentDemoLocal",
-        onUploaded: function () {
-            console.log("Local upload completed");
-        },
-        onDeleted: function (file) {
-            console.log("Local file deleted", file);
-        }
-    });
+    // $("#localFileUploader").fileuploader({
+    //     guid: uploadDemoGuid,
+    //     controllerName: "Document",
+    //     titleName: "Select or drag files to upload locally",
+    //     uploadUrl: "/api/Document/AsyncUploadFileLocal",
+    //     data: {
+    //         ModuleName: "PolicyIssuance",
+    //         code: "UPLOAD-DEMO",
+    //         SectionName: "LOCAL"
+    //     },
+    //     specificFolder: "EnvironmentDemoLocal",
+    //     onUploaded: function () {
+    //         console.log("Local upload completed");
+    //     },
+    //     onDeleted: function (file) {
+    //         console.log("Local file deleted", file);
+    //     }
+    // });
 
-    $("#nasFileUploader").fileuploader({
-        guid: uploadDemoGuid,
-        controllerName: "Document",
-        titleName: "Select or drag files to upload to NAS",
-        uploadUrl: "/api/Document/AsyncUploadFileNAS",
-        data: {
-            ModuleName: "PolicyIssuance",
-            code: "UPLOAD-DEMO",
-            SectionName: "NAS"
-        },
-        specificFolder: "EnvironmentDemoNas",
-        onUploaded: function () {
-            console.log("NAS upload completed");
-        },
-        onDeleted: function (file) {
-            console.log("NAS file deleted", file);
-        }
-    });
+    // $("#nasFileUploader").fileuploader({
+    //     guid: uploadDemoGuid,
+    //     controllerName: "Document",
+    //     titleName: "Select or drag files to upload to NAS",
+    //     uploadUrl: "/api/Document/AsyncUploadFileNAS",
+    //     data: {
+    //         ModuleName: "PolicyIssuance",
+    //         code: "UPLOAD-DEMO",
+    //         SectionName: "NAS"
+    //     },
+    //     specificFolder: "EnvironmentDemoNas",
+    //     onUploaded: function () {
+    //         console.log("NAS upload completed");
+    //     },
+    //     onDeleted: function (file) {
+    //         console.log("NAS file deleted", file);
+    //     }
+    // });
 
-    $("#sharePointFileUploader").fileuploader({
-        guid: uploadDemoGuid,
-        controllerName: "Document",
-        titleName: "Select or drag files to upload to SharePoint",
-        uploadUrl: "/api/Document/AsyncUploadFileSharePoint",
-        data: {
-            ModuleName: "PolicyIssuance",
-            code: "UPLOAD-DEMO",
-            SectionName: "SHAREPOINT"
-        },
-        specificFolder: "EnvironmentDemoSharePoint",
-        onUploaded: function () {
-            console.log("SharePoint upload completed");
-        },
-        onDeleted: function (file) {
-            console.log("SharePoint file deleted", file);
-        }
-    });
+    // $("#sharePointFileUploader").fileuploader({
+    //     guid: uploadDemoGuid,
+    //     controllerName: "Document",
+    //     titleName: "Select or drag files to upload to SharePoint",
+    //     uploadUrl: "/api/Document/AsyncUploadFileSharePoint",
+    //     data: {
+    //         ModuleName: "PolicyIssuance",
+    //         code: "UPLOAD-DEMO",
+    //         SectionName: "SHAREPOINT"
+    //     },
+    //     specificFolder: "EnvironmentDemoSharePoint",
+    //     onUploaded: function () {
+    //         console.log("SharePoint upload completed");
+    //     },
+    //     onDeleted: function (file) {
+    //         console.log("SharePoint file deleted", file);
+    //     }
+    // });
 
-    $("#handsomGrid").tmivhandsomgrid({
-        columns: [
-            { dataField: "code", caption: "Mã số", dataType: "string", width: "160px" },
-            { dataField: "salary", caption: "Lương", dataType: "number", width: "180px" }
-        ],
-        rows: [
-            { code: "NV001", salary: 15000000 },
-            { code: "NV002", salary: 18500000 },
-            { code: "NV003", salary: 22000000 }
-        ],
-        height: "280px",
-        onRowsChange: function (rows) {
-            console.log("HandsomGrid rows changed", rows);
-        }
-    });
+    // $("#handsomGrid").tmivhandsomgrid({
+    //     columns: [
+    //         { dataField: "code", caption: "Mã số", dataType: "string", width: "160px" },
+    //         { dataField: "salary", caption: "Lương", dataType: "number", width: "180px" }
+    //     ],
+    //     rows: [
+    //         { code: "NV001", salary: 15000000 },
+    //         { code: "NV002", salary: 18500000 },
+    //         { code: "NV003", salary: 22000000 }
+    //     ],
+    //     height: "280px",
+    //     onRowsChange: function (rows) {
+    //         console.log("HandsomGrid rows changed", rows);
+    //     }
+    // });
 
-    $("#getHandsomGridValue").dxButton({
-        text: "Lấy dữ liệu HandsomGrid",
-        type: "default",
-        icon: "exportselected",
-        onClick: function () {
-            const rows = $("#handsomGrid").tmivhandsomgrid("value");
-            $("#handsomGridResult").text(JSON.stringify(rows, null, 2));
-            console.log("HandsomGrid value", rows);
-        }
-    });
+    // $("#getHandsomGridValue").dxButton({
+    //     text: "Lấy dữ liệu HandsomGrid",
+    //     type: "default",
+    //     icon: "exportselected",
+    //     onClick: function () {
+    //         const rows = $("#handsomGrid").tmivhandsomgrid("value");
+    //         $("#handsomGridResult").text(JSON.stringify(rows, null, 2));
+    //         console.log("HandsomGrid value", rows);
+    //     }
+    // });
 
 </script>
 <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -366,7 +366,7 @@
 <div id="surveyGrid"></div>
 <div id="commentBox"></div>
 <div id="flow"> </div>
-<section style="margin-top: 30px; padding: 20px; border-top: 2px dashed var(--c-0284c7); background: var(--c-f8fafc);">
+@* <section style="margin-top: 30px; padding: 20px; border-top: 2px dashed var(--c-0284c7); background: var(--c-f8fafc);">
     <h3 style="font-family: sans-serif; color: var(--c-0f172a); margin-bottom: 6px;">Document upload examples</h3>
     <p style="margin: 0 0 18px; color: var(--c-475569);">
         All three controls create Document records; only the physical storage destination is different.
@@ -388,9 +388,9 @@
             <div id="sharePointFileUploader"></div>
         </div>
     </div>
-</section>
+</section> *@
 
-<section style="margin-top: 30px; padding: 20px; border-top: 2px dashed var(--c-0284c7); background: var(--c-f8fafc);">
+@* <section style="margin-top: 30px; padding: 20px; border-top: 2px dashed var(--c-0284c7); background: var(--c-f8fafc);">
     <h3 style="font-family: sans-serif; color: var(--c-0f172a); margin-bottom: 6px;">HandsomGrid example</h3>
     <p style="margin: 0 0 18px; color: var(--c-475569);">
         Edit cells directly, then use the button to read the current rows with
@@ -399,9 +399,10 @@
     <div id="handsomGrid"></div>
     <div id="getHandsomGridValue" style="margin-top: 14px;"></div>
     <pre id="handsomGridResult" style="min-height: 64px; margin: 14px 0 0; padding: 12px; overflow: auto; border: 1px solid var(--c-cbd5e1); border-radius: 6px; background: white; color: var(--c-0f172a);">[]</pre>
-</section>
-
+</section> *@
+@* 
 <div style="margin-top: 30px; padding: 20px; border-top: 2px dashed var(--c-0284c7); background: var(--c-f8fafc);">
     <h3 style="font-family: sans-serif; color: var(--c-0f172a); margin-bottom: 12px;">TMIV Map Demo</h3>
     <div id="demoMap" style="max-width: 900px; border-radius: 8px;"></div>
 </div>
+ *@

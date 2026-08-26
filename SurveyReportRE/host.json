@@ -1,13 +1,14 @@
 {
   "UrlConfig": {
     "OrderMail": "Order Mail",
-    "RedirectMainView": "https://localhost:7254/api/",
+    "RedirectMainView": "https://svrappit-sgn01.tokiomarine.com.vn:7256/api/",
     "Host": "https://localhost:7254",
-    "REHost": "https://localhost:5000",
+    "DeployHost": "https://svrappit-sgn01.tokiomarine.com.vn:7256",
+    "REHost": "https://svrappit-sgn01.tokiomarine.com.vn:5000",
     "LibreOfficeHost": "http://192.168.0.16:5000",
     "DigiSignHost": "http://192.168.0.16:5000",
-    "CallbackHost": "https://svrappit-sgn01.tokiomarine.com.vn:7254/api/SurveyWorkflow/TestCallBackUrl",
-    "GetStreamHost": "https://svrappit-sgn01.tokiomarine.com.vn:7254/api/SurveyWorkflow/CallBackGetFile",
-    "DigisignStorageHost": "https://svrappit-sgn01.tokiomarine.com.vn:7254/api/SurveyWorkflow/CallBackFileDigisign"
+    "CallbackHost": "https://svrappit-sgn01.tokiomarine.com.vn:7256/api/SurveyWorkflow/TestCallBackUrl",
+    "GetStreamHost": "https://svrappit-sgn01.tokiomarine.com.vn:7256/api/SurveyWorkflow/CallBackGetFile",
+    "DigisignStorageHost": "https://svrappit-sgn01.tokiomarine.com.vn:7256/api/SurveyWorkflow/CallBackFileDigisign"
   }
 }

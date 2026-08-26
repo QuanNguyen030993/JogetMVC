@@ -334,6 +334,76 @@ public class MenuController : BaseControllerApi<Menu>
         }
     }
 
+
+    [HttpGet]
+    public async Task<ActionResult<Menu>> GetITAdminRole(string pageSystem)
+    {
+        var result = new List<MenuHierarchy>();
+        string loginAccount = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, _configuration);
+        bool isSuperUser = ControllerUtil.IsSuperUser(_configuration, loginAccount);
+        var roles = await _BaseRepository.GetUserRoles(loginAccount, isSuperUser);
+        if (isSuperUser && roles == null)
+        {
+            roles = new
+            {
+                RoleName = "SuperUser",
+                Department = "",
+                DisplayName = loginAccount,
+                LoginName = loginAccount,
+                Branch = "",
+                RoleAppName = "SuperUser"
+            };
+        }
+
+        // Get user's role name
+        string userRole = "";
+        if (roles != null)
+        {
+            try
+            {
+                var prop = roles.GetType().GetProperty("RoleName");
+                if (prop != null)
+                {
+                    userRole = prop.GetValue(roles)?.ToString() ?? "";
+                }
+                else
+                {
+                    dynamic dynamicRoles = roles;
+                    userRole = dynamicRoles.RoleName?.ToString() ?? "";
+                }
+            }
+            catch { }
+        }
+        var selectedEnvironment = HttpContext.Session
+    .GetString(ERPCore.ControllerUtil.ControllerUtil.ConnectionEnvironmentSessionKey) ?? "Default";
+        selectedEnvironment = ERPCore.ControllerUtil.ControllerUtil
+            .NormalizeConnectionEnvironment(selectedEnvironment);
+        var jogetEnvironment = selectedEnvironment == "Default" ? "Joget" : "UATJoget";
+        if (isSuperUser)
+        {
+            return Ok(new
+            {
+                Menu = result,
+                UserRoles = roles,
+                Environment = selectedEnvironment,
+                JogetEnvironment = jogetEnvironment
+            });
+        }
+        else
+        {
+            return Ok(new
+            {
+                UserRoles = roles,
+                Environment = selectedEnvironment,
+                JogetEnvironment = jogetEnvironment
+            });
+        }
+
+
+
+       
+    }
+
     public override async Task<ActionResult<List<dynamic>>> GetSystemScheme()
     {
         var entity = new Menu();

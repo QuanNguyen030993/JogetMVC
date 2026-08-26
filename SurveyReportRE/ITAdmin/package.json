@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node move-to-wwwroot-itadmin.js",
+    "build": "vite build",
+    "build:deploy": "vite build && node move-to-wwwroot-itadmin.js",
     "preview": "vite preview"
   },
   "dependencies": {

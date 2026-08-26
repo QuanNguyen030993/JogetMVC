@@ -65,6 +65,8 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     private readonly IBaseRepository<TurnAroundTimeDeptProcessing> _turnAroundTimeDeptProcessingRepository;
     private readonly IBaseRepository<CommentLog> _policyIssuanceCommentLogRepository;
     private readonly IBaseRepository<SLA> _slaRepository;
+    private readonly IBaseRepository<Product> _productRepository;
+    private readonly IBaseRepository<Line> _lineRepository;
     private readonly ILogger<PolicyIssuance> _logger;
     private readonly IConfigurationSection path;
     public static string MANAGER_APP = "";
@@ -122,6 +124,8 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         _turnAroundTimeSessionRepository = new BaseRepository<TurnAroundTimeSession>(configuration, _httpContextAccessor);
         _policyIssuanceCommentLogRepository = new BaseRepository<CommentLog>(configuration, _httpContextAccessor);
         _turnAroundTimeDeptProcessingRepository = new BaseRepository<TurnAroundTimeDeptProcessing>(configuration, _httpContextAccessor);
+        _productRepository = new BaseRepository<Product>(configuration, _httpContextAccessor);
+        _lineRepository = new BaseRepository<Line>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _hubContext = hubContext;
         MANAGER_APP = configuration.GetSection("BusinessConfig:ManagerAppKey").Value;
@@ -1408,6 +1412,47 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                     message = Notification.Message
                 }
                 , memberName, DOMAIN_NAME);
+            }
+
+            try
+            {
+                string lineCode = policyIssuance.LineCode;
+
+                Line line = await _lineRepository.GetSingleObject(s => s.LineCode == lineCode);
+
+                    string productCode = policyIssuance.ProductCode;
+
+                Product product = await _productRepository.GetSingleObject(s => s.ProductCode == productCode);
+
+                var definitions = await _checklistDefinitionRepository.GetListObject(definition =>
+                    definition.LineId == line.Id
+                    && definition.ProductId == product.Id
+                    && !definition.Deleted);
+
+
+
+
+                var rowsToInsert = definitions
+                    .Select(definition => new PolicyIssuanceChecklist
+                    {
+                        PolicyIssuanceId = policyIssuance.Id,
+                        RecordGuid = policyIssuance.Guid,
+                        SequenceNo = definition.SequenceNo,
+                        Checkpoint = definition.Checkpoint ?? "",
+                        NeedToCheck = definition.NeedToCheck ?? "",
+                        Result = "review",
+                        LineId = line.Id,
+                        ProductId = product.Id,
+                        RowOrder = definition.RowOrder,
+                        CopyFromGuid = definition.Guid
+                    })
+                    .ToList();
+                if (rowsToInsert.Count> 0)
+                await _policyIssuanceChecklistRepository.BulkInsertAsync(rowsToInsert);
+            }
+            catch
+            {
+
             }
         }
     }

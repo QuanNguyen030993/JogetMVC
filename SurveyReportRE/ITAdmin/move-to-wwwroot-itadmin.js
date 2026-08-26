@@ -20,6 +20,7 @@ const replaceDeployHost = () => {
 
   const appsettings = JSON.parse(readFileSync(hostConfigPath, 'utf8'));
   const localHost = normalizeHost(appsettings?.UrlConfig?.Host);
+  console.log(localHost);
   const deployHost = normalizeHost(
     process.env.HOST_DEPLOY
       || process.env.DEPLOY_HOST
@@ -27,7 +28,7 @@ const replaceDeployHost = () => {
       || appsettings?.UrlConfig?.HostDeploy
       || appsettings?.UrlConfig?.DeployHost,
   );
-
+  console.log(deployHost);
   if (!deployHost) {
     console.log('HostDeploy is not configured; localhost replacement skipped.');
     return;

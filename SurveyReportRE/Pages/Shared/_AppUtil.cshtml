@@ -2052,6 +2052,7 @@
                        label: { visible: false},
                        template: function (data, itemElement) {
                            const parentForm = $(`#${idForm}`).dxForm("instance");
+                           // const formItems = parentForm.option("formItems");
                            const wrapper = $(`
                             <div class="jira-comment-box">
                             <div class="jira-comment-editor-wrap">
@@ -2147,60 +2148,67 @@
                                                 || !currentRole
                                                 || sectionDept !== currentRole;
                                         }
+                                        function shouldDisableComment() {
+                                            debugger
+                                            var sectionDept = normalizeCommentDepartment(dept);
+                                            var currentRole = normalizeCommentDepartment(_role);
+                                            return !sectionDept
+                                                || !currentRole
+                                                || sectionDept !== currentRole;
+                                        }
 
+                                        // routeEditorOptions = {
+                                        //     items: initialComments,
+                                        //     departments: routeDepartments,
+                                        //     valueExpr: "id",
+                                        //     displayExpr: "name",
+                                        //     selectedDepartment: "",
+                                        //     recordGuid: guid,
+                                        //     fromDepartment: _role,
+                                        //     submitUrl: `api/Notification/CommentNotify?sendTo=quan.nh&typeRequest=${typeRequest}&id=${id}`, // TODO:
+                                        //     // currentDepartment: dept,
+                                        //     type: "Discussion",
+                                        //     author: _displayName,
+                                        //     createdBy: _loginUser,
+                                        //     showComposer: true,
+                                        //     disableComment: shouldDisableComment(),
+                                        //     emptyText: "No comments.",
+                                        //     headerTitle: "",
+                                        //     // routeLabel: "Route to:",
+                                        //     routePlaceholder: "Select department",
+                                        //     onChange: function (value) {
+                                        //         parentForm.updateData(updateField, value);
+                                        //     },
+                                        //     onSubmit: function (newComment) {
+                                        //         var commentText = newComment.Content || newComment.text || "";
+                                        //         var commentData = {
+                                        //             RecordGuid: guid,
+                                        //             FromDepartment: _role,
+                                        //             ToDepartment: newComment.ToDepartment || newComment.toDepartment,
+                                        //             CurrentDepartment: newComment.ToDepartment,
+                                        //             Type: newComment.Type || "Discussion",
+                                        //             Content: commentText,
+                                        //             IsPrimaryNote: false,
+                                        //             IsPinned: false,
+                                        //             IsUrgent: false,
+                                        //             IsRead: false,
+                                        //             IsResolved: false,
+                                        //             Author: _displayName
+                                        //         };
 
-                                        routeEditorOptions = {
-                                            items: initialComments,
-                                            departments: routeDepartments,
-                                            valueExpr: "id",
-                                            displayExpr: "name",
-                                            selectedDepartment: "",
-                                            recordGuid: guid,
-                                            fromDepartment: _role,
-                                            submitUrl: `api/Notification/CommentNotify?sendTo=quan.nh&typeRequest=${typeRequest}&id=${id}`, // TODO:
-                                            // currentDepartment: dept,
-                                            type: "Discussion",
-                                            author: _displayName,
-                                            createdBy: _loginUser,
-                                            showComposer: true,
-                                            disableComment: shouldDisableRouteComment(),
-                                            emptyText: "No comments.",
-                                            headerTitle: "",
-                                            // routeLabel: "Route to:",
-                                            routePlaceholder: "Select department",
-                                            onChange: function (value) {
-                                                parentForm.updateData(updateField, value);
-                                            },
-                                            onSubmit: function (newComment) {
-                                                var commentText = newComment.Content || newComment.text || "";
-                                                var commentData = {
-                                                    RecordGuid: guid,
-                                                    FromDepartment: _role,
-                                                    ToDepartment: newComment.ToDepartment || newComment.toDepartment,
-                                                    CurrentDepartment: newComment.ToDepartment,
-                                                    Type: newComment.Type || "Discussion",
-                                                    Content: commentText,
-                                                    IsPrimaryNote: false,
-                                                    IsPinned: false,
-                                                    IsUrgent: false,
-                                                    IsRead: false,
-                                                    IsResolved: false,
-                                                    Author: _displayName
-                                                };
-
-                                                store.insert(commentData)
-                                                    .done(function () {
-                                                        DevExpress.ui.notify("Send message successfully", "success", 2000);
-                                                        invalidateSectionCommentCache(guid);
-                                                        reloadRouteComments(guid);
-                                                    })
-                                                    .fail(function (error) {
-                                                        console.error(error);
-                                                        DevExpress.ui.notify("Send message failed", "error", 2000);
-                                                        reloadRouteComments(guid);
-                                                    });
-                                            }
-                                        };
+                                        //         store.insert(commentData)
+                                        //             .done(function () {
+                                        //                 DevExpress.ui.notify("Send message successfully", "success", 2000);
+                                        //                 invalidateSectionCommentCache(guid);
+                                        //                 reloadRouteComments(guid);
+                                        //             })
+                                        //             .fail(function (error) {
+                                        //                 console.error(error);
+                                        //                 DevExpress.ui.notify("Send message failed", "error", 2000);
+                                        //                 reloadRouteComments(guid);
+                                        //             });
+                                        //     }
+                                        // };
 
                                         function renderRouteEditorItems(comments) {
                                             routeEditorOptions.items = comments || [];
@@ -2222,6 +2230,8 @@
                                             throw new Error("TMIVCom CommentEditorRoute is not loaded.");
                                         }
                                         var typeRequest = moduleKey == viewIdModulePrefix.quotation ? "Quotation" : "PolicyIssuance"; 
+                                        // var isdisableComment =  shouldDisableComment();
+                                        // if (formItems.stageDept == _role)  isdisableComment = true;
 
                                         routeEditorOptions = {
                                             items: initialComments,
@@ -2244,7 +2254,7 @@
                                             onChange: function (value) {
                                                 parentForm.updateData(updateField, value);
                                             },
-                                            disableComment: shouldDisableRouteComment(),
+                                            disableComment: shouldDisableComment(),
                                             onSubmit: function (newComment) {
                                                 var commentText = newComment.Content || newComment.text || "";
                                                 var commentData = {
