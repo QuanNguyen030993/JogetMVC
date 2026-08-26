@@ -849,11 +849,17 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, new()
     {
         using (var connection = new SqlConnection(_connectionString))
         {
+            //var sql = $@"SELECT DISTINCT TOP 1 r.Department RoleName, u.department AS Department, u.name AS DisplayName, u.username AS LoginName, u.branch AS Branch, ro.RoleName AS RoleAppName
+            //        FROM UserRoles ur
+            //        INNER JOIN Users u ON ur.UserId = u.Id
+            //        INNER JOIN Employee r ON r.AccountName = u.[username]
+            //        INNER JOIN Roles ro ON ro.Id = r.SystemRolesId
+            //        WHERE u.[username] = '{accountName}'";
             var sql = $@"SELECT DISTINCT TOP 1 r.Department RoleName, u.department AS Department, u.name AS DisplayName, u.username AS LoginName, u.branch AS Branch, ro.RoleName AS RoleAppName
                     FROM UserRoles ur
                     INNER JOIN Users u ON ur.UserId = u.Id
                     INNER JOIN Employee r ON r.AccountName = u.[username]
-                    INNER JOIN Roles ro ON ro.Id = r.SystemRolesId
+                    INNER JOIN Roles ro ON ro.[RoleName] = r.Department
                     WHERE u.[username] = '{accountName}'";
             if (isSuperUser)
                 sql = $@"SELECT DISTINCT TOP 1 u.department RoleName, u.department AS Department, u.name AS DisplayName, u.username AS LoginName, u.branch AS Branch

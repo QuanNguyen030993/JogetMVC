@@ -30,7 +30,7 @@
     that.sectionName = "@(dept)";
     that.titleName = "Upload Quotation";
     that.uploaderAllow = _role == "@dept";
-    that.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that.moduleName, @(quotationId)), Department: "@(dept)", FieldName: "Quotation", FormId: "@(QTViewIdHelper.Form(dept, quotationId))" , ValidationRules: [{ type: "required" }]}; //{"SectionName":"default_FO_410"}
+    that.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that.moduleName, @(quotationId)), Department: "@(dept)", FieldName: "Quotation", FormId: "@(QTViewIdHelper.Form(dept, quotationId))" , CustomField : "Quotation", ValidationRules: [{ type: "required" }]}; //{"SectionName":"default_FO_410"}
 
 
     var that2 = new Object();
