@@ -1417,7 +1417,7 @@ useEffect(() => {
 
                 <div className="tmiv-html-editor-route">
 
-                    <div className="tmiv-html-toolbar">
+                    <div className="tmiv-html-toolbar tmiv-comment-toolbar">
 
     <div
         className="tmiv-tool-item"
