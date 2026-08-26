@@ -221,6 +221,11 @@ const HtmlEditor = forwardRef(({
     onFocus,
     onBlur,
 
+    showComposer = true,
+    disabledComment = false,
+    // Alias tương thích với CommentEditorRoute.
+    disableComment = false,
+
     showSendButton = true,
     sendLabel = "Send Comment",
     sendIcon = "fa fa-paper-plane",
@@ -265,6 +270,18 @@ const HtmlEditor = forwardRef(({
     );
 
     const [comments, setComments] = useState(Array.isArray(items) ? items : []);
+    const [composerVisible, setComposerVisible] = useState(showComposer !== false);
+    const [commentDisabled, setCommentDisabled] = useState(
+        Boolean(disabledComment || disableComment)
+    );
+
+    useEffect(() => {
+        setComposerVisible(showComposer !== false);
+    }, [showComposer]);
+
+    useEffect(() => {
+        setCommentDisabled(Boolean(disabledComment || disableComment));
+    }, [disabledComment, disableComment]);
 
     useEffect(() => {
         setComments(Array.isArray(items) ? items : []);
@@ -411,6 +428,8 @@ const HtmlEditor = forwardRef(({
     };
 
     const addComment = async (event = null) => {
+        if (!composerVisible || commentDisabled) return null;
+
         const htmlText = getCurrentValue();
         const textOnly = (htmlText || "")
             .replace(/<[^>]*>/g, "")
@@ -1311,6 +1330,23 @@ useEffect(() => {
                     );
                     return;
 
+                case "showComposer":
+                    if (arguments.length === 1) {
+                        return composerVisible;
+                    }
+
+                    setComposerVisible(value !== false);
+                    return;
+
+                case "disabledComment":
+                case "disableComment":
+                    if (arguments.length === 1) {
+                        return commentDisabled;
+                    }
+
+                    setCommentDisabled(Boolean(value));
+                    return;
+
                 default:
                     return undefined;
             }
@@ -1413,6 +1449,7 @@ useEffect(() => {
 
     return (
         <div className="jira-comment-box">
+            {composerVisible && !commentDisabled && (
             <div className="jira-comment-editor-wrap">
 
                 <div className="tmiv-html-editor-route">
@@ -2012,6 +2049,7 @@ useEffect(() => {
      
 
             </div>
+            )}
         </div>
     );
 });
