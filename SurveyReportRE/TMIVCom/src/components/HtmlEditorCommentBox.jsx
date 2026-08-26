@@ -221,7 +221,7 @@ const HtmlEditor = forwardRef(({
     onFocus,
     onBlur,
 
-    disableComment: disableCommentOption = false,
+    disableComment = false,
 
     showSendButton = true,
     sendLabel = "Send Comment",
@@ -267,11 +267,11 @@ const HtmlEditor = forwardRef(({
     );
 
     const [comments, setComments] = useState(Array.isArray(items) ? items : []);
-    const [disableComment, setDisableComment] = useState(Boolean(disableCommentOption));
+    // const [disableComment, setDisableComment] = useState(Boolean(disableComment));
 
     useEffect(() => {
-        setDisableComment(Boolean(disableCommentOption));
-    }, [disableCommentOption]);
+        setDisableComment(Boolean(disableComment));
+    }, [disableComment]);
 
     useEffect(() => {
         setComments(Array.isArray(items) ? items : []);

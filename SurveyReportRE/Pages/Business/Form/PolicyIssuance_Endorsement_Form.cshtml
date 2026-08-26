@@ -1016,7 +1016,7 @@ Note:
         async function renderDeptForms() {
             policyIssuanceDepartmentOrder.forEach(function (item) {
                 policyIssuanceFormStages.prepareSection(
-                    `#${formModuleKeyPi}-sec_${item}_@ViewData["Id"]`
+                    `#${formModuleKeyPi}-sec_${item}_@ViewData["Id"]`,@ViewData["Id"], item
                 );
             });
 

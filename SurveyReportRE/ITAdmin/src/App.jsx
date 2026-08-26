@@ -544,7 +544,7 @@ function App() {
         <div className={`admin-access-card ${adminAccess}`}>
           <span className="admin-access-icon">{adminAccess === 'checking' ? '…' : '!'}</span>
           <h1>{adminAccess === 'checking' ? 'Đang kiểm tra quyền truy cập' : 'Không có quyền truy cập'}</h1>
-          <p>{adminAccess === 'checking' ? 'Đang đọc role từ GetHierarchyMenu…' : `Admin Config chỉ dành cho role IT. Role hiện tại: ${serverRole || 'không xác định'}.`}</p>
+          <p>{adminAccess === 'checking' ? 'Authorize checking...' : `Admin Config chỉ dành cho role IT. Role hiện tại: ${serverRole || 'không xác định'}.`}</p>
           {currentAccount && <small>Account: {currentAccount}</small>}
         </div>
       </div>

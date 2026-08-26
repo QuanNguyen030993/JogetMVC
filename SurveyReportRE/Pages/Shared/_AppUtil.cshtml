@@ -2030,7 +2030,7 @@
                     });
                 }
 
-                function renderFormComment(idForm, dept, moduleKey, id, guid ) {
+                function renderFormComment(idForm, dept, moduleKey, id, guid, dataFormId) {
 
                     var control = new Object();
               $(`#${idForm}`).dxForm({
@@ -2052,7 +2052,6 @@
                        label: { visible: false},
                        template: function (data, itemElement) {
                            const parentForm = $(`#${idForm}`).dxForm("instance");
-                           // const formItems = parentForm.option("formItems");
                            const wrapper = $(`
                             <div class="jira-comment-box">
                             <div class="jira-comment-editor-wrap">
@@ -2149,7 +2148,6 @@
                                                 || sectionDept !== currentRole;
                                         }
                                         function shouldDisableComment() {
-                                            debugger
                                             var sectionDept = normalizeCommentDepartment(dept);
                                             var currentRole = normalizeCommentDepartment(_role);
                                             return !sectionDept
@@ -2230,8 +2228,15 @@
                                             throw new Error("TMIVCom CommentEditorRoute is not loaded.");
                                         }
                                         var typeRequest = moduleKey == viewIdModulePrefix.quotation ? "Quotation" : "PolicyIssuance"; 
-                                        // var isdisableComment =  shouldDisableComment();
-                                        // if (formItems.stageDept == _role)  isdisableComment = true;
+                                        debugger
+                                         var isdisableComment =  shouldDisableComment();
+                                         try {
+                                             const formItems = $(`[data-form-part='bodyForm'][data-form-dept='${dept}']`).dxForm("instance").option("formItems");
+                                            if (formItems.stageDept == _role)  isdisableComment = true;
+                                         }
+                                         catch{ 
+                                         
+                                         }
 
                                         routeEditorOptions = {
                                             items: initialComments,
@@ -2628,7 +2633,7 @@
                              that.ModelName = "SectionCommentNote";
                              var dataSource = makeBasicDataSource(that, false);
                              var store = dataSource.store();
-                    var routeEditorOptions = {
+                             var routeEditorOptions = {
                                             departments: routeDepartments,
                                             valueExpr: "id",
                                             displayExpr: "name",
@@ -2637,10 +2642,11 @@
                                             fromDepartment: dept, // or _role
                                             submitUrl: `api/Notification/CommentNotify?sendTo=quan.nh&typeRequest=${typeRequest}&id=${id}`,
                                             // currentDepartment: _role,
+                                            
                                             type: "Discussion",
                                             author: _displayName,
                                             createdBy: _loginUser,
-                                            showComposer: true,
+                                            disableComment: false,
                                             emptyText: "No comments.",
                                             headerTitle: "",
                                             // routeLabel: "Route to:",

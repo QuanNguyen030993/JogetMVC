@@ -1090,7 +1090,7 @@ Note:
         async function renderDeptForms() {
             quotationDepartmentOrder.forEach(function (item) {
                 quotationFormStages.prepareSection(
-                    `#${formModuleKeyQt}-sec_${item}_@ViewData["Id"]`
+                    `#${formModuleKeyQt}-sec_${item}_@ViewData["Id"]`, @ViewData["Id"], item
                 );
             });
 

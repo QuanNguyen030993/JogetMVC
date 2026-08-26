@@ -72,13 +72,14 @@
             return wait((Math.max(0, Number(index) || 0)) * FormStageDelay.routeComponent);
         };
 
-        const prepareSection = function (section) {
+        const prepareSection = function (section,id, dept) {
             const $section = section?.jquery ? section : $(section);
             sectionParts.forEach(function (part) {
                 $section.find(part.selector)
                     .addClass("form-stage-part")
                     .removeClass("form-stage-ready")
-                    .attr("data-form-part", part.name);
+                    .attr("data-form-part", `${part.name}_${id}`)
+                    .attr("data-form-dept", `${dept}`);
             });
         };
 
