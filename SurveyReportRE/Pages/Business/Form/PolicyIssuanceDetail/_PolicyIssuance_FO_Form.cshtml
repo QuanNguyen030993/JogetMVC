@@ -242,7 +242,7 @@
                 colCount: 3,
                 items: [
                 { dataField: "requestNo", label: { template: labelTpl("RequestNo - Mã Quotation Request") } },
-                {dataField: "policyNo",editorType: "dxTextBox",visible:true},
+                {dataField: "policyNo",editorType: "dxTextBox",visible:true, validationRules: [{ type: "required" }],
                     { dataField: "requestRefNo",visible: false, label: { template: labelTpl("RequestRefNo - Refversion của request") } },
                     { dataField: "quotationCode", label: { template: labelTpl("QuotationCode - Mã quotation khi request vào xử lý (Joget)") } },
                      { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.requestType),displayExpr: "value",

@@ -3,6 +3,7 @@ import CustomGrid from './components/CustomGrid';
 import HandsomGrid from './components/HandsomGrid';
 import HtmlEditor from './components/HtmlEditor';
 import DateBox from './components/DateBox';
+import TimeBox from './components/TimeBox';
 import CommentEditor from './components/CommentEditor';
 import CommentEditorRoute from './components/CommentEditorRoute';
 import TextBox from './components/TextBox';
@@ -539,6 +540,23 @@ function App() {
             onRowsChange={setHandsomRows}
             theme="light"
             height="300px"
+          />
+        </div>
+      </section>
+
+      <section className="section" id="tour-handsomgrid-section">
+        <div className="section-title">HandsomGrid (Spreadsheet Excel Style - Di chuyển phím mũi tên, Enter để sửa, Ctrl+C/V để copy paste)</div>
+        <div style={{ padding: '16px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <DateBox
+          />
+        </div>
+      </section>
+
+ <section className="section" id="tour-handsomgrid-section">
+        <div className="section-title">HandsomGrid (Spreadsheet Excel Style - Di chuyển phím mũi tên, Enter để sửa, Ctrl+C/V để copy paste)</div>
+        <div style={{ padding: '16px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <TimeBox
+          mode="range"
           />
         </div>
       </section>
