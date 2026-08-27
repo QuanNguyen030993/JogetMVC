@@ -6,9 +6,26 @@ import React, {
     useRef,
     useState
 } from "react";
+import DateBox from "./Datebox.jsx";
 
 const padTime = value => String(value).padStart(2, "0");
 const clamp = (value, min, max) => Math.min(max, Math.max(min, Number(value) || 0));
+
+const toLocalDateKey = date => (
+    `${date.getFullYear()}-${padTime(date.getMonth() + 1)}-${padTime(date.getDate())}`
+);
+
+const parseDateKey = value => {
+    if (value instanceof Date && !Number.isNaN(value.getTime())) return toLocalDateKey(value);
+    if (value && typeof value === "object") {
+        const nestedDate = value.date ?? value.dateTime ?? value.value;
+        if (nestedDate instanceof Date) return toLocalDateKey(nestedDate);
+        const nestedMatch = String(nestedDate || "").match(/^(\d{4}-\d{2}-\d{2})/);
+        if (nestedMatch) return nestedMatch[1];
+    }
+    const match = String(value || "").match(/^(\d{4}-\d{2}-\d{2})/);
+    return match ? match[1] : toLocalDateKey(new Date());
+};
 
 const parseTime = value => {
     if (value instanceof Date && !Number.isNaN(value.getTime())) {
@@ -22,7 +39,10 @@ const parseTime = value => {
         };
     }
 
-    const match = String(value || "").match(/^(\d{1,2})(?::(\d{1,2}))?(?::(\d{1,2}))?/);
+    const source = value && typeof value === "object" && !(value instanceof Date)
+        ? (value.time ?? value.dateTime ?? value.value ?? "")
+        : value;
+    const match = String(source || "").match(/(?:T|\s)?(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
     return match
         ? {
             hour: clamp(match[1], 0, 23),
@@ -34,6 +54,10 @@ const parseTime = value => {
 
 const formatTimeValue = (time, showSeconds) => (
     `${padTime(time.hour)}:${padTime(time.minute)}${showSeconds ? `:${padTime(time.second)}` : ""}`
+);
+
+const formatDateTimeValue = (dateKey, time, showSeconds, includeDate) => (
+    `${includeDate ? `${dateKey}T` : ""}${formatTimeValue(time, showSeconds)}`
 );
 
 const positionOnDial = (value, radius, multiplier = 30) => {
@@ -48,7 +72,10 @@ const TimeBox = forwardRef(({
     value = "",
     onChange,
     onValueChanged,
-    placeholder = "Select time",
+    placeholder,
+    includeDate = true,
+    locale = "en-GB",
+    wheelNavigation = true,
     use24Hour = true,
     showSeconds = false,
     minuteStep = 5,
@@ -62,11 +89,16 @@ const TimeBox = forwardRef(({
     const containerRef = useRef(null);
     const hasInitialValue = value !== undefined && value !== null && value !== "";
     const initialTime = parseTime(value);
+    const initialDateKey = parseDateKey(value);
     const [time, setTime] = useState(initialTime);
+    const [dateKey, setDateKey] = useState(initialDateKey);
     const [hasValue, setHasValue] = useState(hasInitialValue);
     const [opened, setOpened] = useState(false);
     const [clockView, setClockView] = useState("hours");
-    const previousValueRef = useRef(hasInitialValue ? formatTimeValue(initialTime, showSeconds) : "");
+    const [pickerView, setPickerView] = useState(includeDate ? "date" : "time");
+    const previousValueRef = useRef(hasInitialValue
+        ? formatDateTimeValue(initialDateKey, initialTime, showSeconds, includeDate)
+        : "");
     const currentValueRef = useRef(previousValueRef.current);
 
     const requestedMinuteStep = Number(minuteStep);
@@ -81,12 +113,16 @@ const TimeBox = forwardRef(({
     useEffect(() => {
         const nextHasValue = value !== undefined && value !== null && value !== "";
         const nextTime = parseTime(value);
-        const nextValue = nextHasValue ? formatTimeValue(nextTime, showSeconds) : "";
+        const nextDateKey = parseDateKey(value);
+        const nextValue = nextHasValue
+            ? formatDateTimeValue(nextDateKey, nextTime, showSeconds, includeDate)
+            : "";
         setTime(nextTime);
+        setDateKey(nextDateKey);
         setHasValue(nextHasValue);
         currentValueRef.current = nextValue;
         previousValueRef.current = nextValue;
-    }, [value, showSeconds]);
+    }, [value, showSeconds, includeDate]);
 
     useEffect(() => {
         if (!opened) return undefined;
@@ -104,9 +140,10 @@ const TimeBox = forwardRef(({
         };
     }, [opened]);
 
-    const emitTime = (nextTime, event) => {
-        const nextValue = formatTimeValue(nextTime, showSeconds);
+    const emitDateTime = (nextDateKey, nextTime, event) => {
+        const nextValue = formatDateTimeValue(nextDateKey, nextTime, showSeconds, includeDate);
         currentValueRef.current = nextValue;
+        setDateKey(nextDateKey);
         setTime(nextTime);
         setHasValue(true);
         onChange?.(nextValue);
@@ -114,11 +151,23 @@ const TimeBox = forwardRef(({
         previousValueRef.current = nextValue;
     };
 
+    const emitTime = (nextTime, event) => emitDateTime(dateKey, nextTime, event);
+
+    const selectDate = (nextDateKey, event) => {
+        emitDateTime(nextDateKey, time, event);
+        setPickerView("time");
+        setClockView("hours");
+    };
+
     const applyInternalValue = nextValue => {
         const nextHasValue = nextValue !== undefined && nextValue !== null && nextValue !== "";
         const nextTime = parseTime(nextValue);
-        const normalizedValue = nextHasValue ? formatTimeValue(nextTime, showSeconds) : "";
+        const nextDateKey = parseDateKey(nextValue);
+        const normalizedValue = nextHasValue
+            ? formatDateTimeValue(nextDateKey, nextTime, showSeconds, includeDate)
+            : "";
         setTime(nextTime);
+        setDateKey(nextDateKey);
         setHasValue(nextHasValue);
         currentValueRef.current = normalizedValue;
         previousValueRef.current = normalizedValue;
@@ -135,7 +184,7 @@ const TimeBox = forwardRef(({
         focus: () => containerRef.current?.querySelector(".tmivcom-timebox-trigger")?.focus(),
         open: () => !disabled && !readOnly && setOpened(true),
         close: () => setOpened(false)
-    }), [disabled, readOnly, showSeconds]);
+    }), [disabled, readOnly, showSeconds, includeDate]);
 
     const clearValue = event => {
         event?.stopPropagation();
@@ -177,6 +226,15 @@ const TimeBox = forwardRef(({
     const dialValue = clockView === "hours" ? time.hour : clockView === "seconds" ? time.second : time.minute;
     const handAngle = clockView === "hours" ? (time.hour % 12) * 30 : dialValue * 6;
     const handLength = clockView === "hours" && use24Hour && (time.hour === 0 || time.hour > 12) ? 63 : 94;
+    const displayDate = new Intl.DateTimeFormat(locale, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    }).format(new Date(`${dateKey}T00:00:00`));
+    const displayValue = includeDate
+        ? `${displayDate}, ${formatTimeValue(time, showSeconds)}`
+        : formatTimeValue(time, showSeconds);
+    const effectivePlaceholder = placeholder || (includeDate ? "Select date & time" : "Select time");
 
     return (
         <div
@@ -184,42 +242,62 @@ const TimeBox = forwardRef(({
             className={`tmivcom-timebox ${opened ? "is-open" : ""} ${disabled ? "is-disabled" : ""} ${className}`.trim()}
             style={width ? { width } : undefined}
         >
-            <div
+            <div className="tmivcom-timebox-control">
+            <button
+                type="button"
                 className="tmivcom-timebox-trigger"
-                role="button"
-                tabIndex={disabled ? -1 : 0}
+                disabled={disabled}
                 aria-haspopup="dialog"
                 aria-expanded={opened}
-                onClick={() => !disabled && !readOnly && setOpened(current => {
-                    if (!current) setClockView("hours");
+                onClick={() => !readOnly && setOpened(current => {
+                    if (!current) {
+                        setPickerView(includeDate ? "date" : "time");
+                        setClockView("hours");
+                    }
                     return !current;
                 })}
-                onKeyDown={event => {
-                    if ((event.key === "Enter" || event.key === " ") && !disabled && !readOnly) {
-                        event.preventDefault();
-                        setOpened(current => !current);
-                    }
-                }}
             >
                 <svg className="tmivcom-timebox-clock-icon" viewBox="0 0 24 24" aria-hidden="true">
                     <circle cx="12" cy="12" r="9" />
                     <path d="M12 7v5l3.5 2" />
                 </svg>
                 <span className={`tmivcom-timebox-value ${hasValue ? "" : "is-placeholder"}`}>
-                    {hasValue ? formatTimeValue(time, showSeconds) : placeholder}
+                    {hasValue ? displayValue : effectivePlaceholder}
                 </span>
-                {clearable && hasValue && !disabled && !readOnly && (
-                    <button type="button" className="tmivcom-timebox-clear" onClick={clearValue} title="Clear time" aria-label="Clear time">×</button>
-                )}
                 <svg className="tmivcom-timebox-chevron" viewBox="0 0 20 20" aria-hidden="true">
                     <path d="m6 8 4 4 4-4" />
                 </svg>
+            </button>
+            {clearable && hasValue && !disabled && !readOnly && (
+                <button type="button" className="tmivcom-timebox-clear" onClick={clearValue} title="Clear date and time" aria-label="Clear date and time">×</button>
+            )}
             </div>
 
-            {name && <input type="hidden" name={name} value={hasValue ? formatTimeValue(time, showSeconds) : ""} />}
+            {name && <input type="hidden" name={name} value={hasValue ? currentValueRef.current : ""} />}
 
             {opened && (
-                <div className="tmivcom-timebox-popover" role="dialog" aria-label="Choose time">
+                <div className={`tmivcom-timebox-popover ${includeDate ? "has-date" : ""}`} role="dialog" aria-label={includeDate ? "Choose date and time" : "Choose time"}>
+                    {includeDate && (
+                        <div className="tmivcom-timebox-tabs">
+                            <button type="button" className={pickerView === "date" ? "is-active" : ""} onClick={() => setPickerView("date")}>Date</button>
+                            <button type="button" className={pickerView === "time" ? "is-active" : ""} onClick={() => setPickerView("time")}>Time</button>
+                        </div>
+                    )}
+
+                    {includeDate && pickerView === "date" && (
+                        <DateBox
+                            inline
+                            value={dateKey}
+                            locale={locale}
+                            wheelNavigation={wheelNavigation}
+                            clearable={false}
+                            showFooter={false}
+                            onChange={selectDate}
+                            width="100%"
+                        />
+                    )}
+
+                    {(!includeDate || pickerView === "time") && <>
                     <div className="tmivcom-timebox-display">
                         <div className="tmivcom-timebox-digits">
                             <button type="button" className={clockView === "hours" ? "is-active" : ""} onClick={() => setClockView("hours")}>
@@ -276,11 +354,13 @@ const TimeBox = forwardRef(({
                                 </button>
                             ))}
                     </div>
+                    </>}
 
                     <div className="tmivcom-timebox-footer">
                         <button type="button" onClick={() => {
                             const now = new Date();
-                            emitTime({ hour: now.getHours(), minute: now.getMinutes(), second: now.getSeconds() }, null);
+                            emitDateTime(toLocalDateKey(now), { hour: now.getHours(), minute: now.getMinutes(), second: now.getSeconds() }, null);
+                            setPickerView("time");
                         }}>Now</button>
                         <button type="button" className="is-primary" onClick={() => setOpened(false)}>Done</button>
                     </div>

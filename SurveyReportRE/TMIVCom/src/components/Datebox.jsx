@@ -70,6 +70,9 @@ const DateBox = forwardRef(({
     disabled = false,
     readOnly = false,
     clearable = true,
+    wheelNavigation = true,
+    inline = false,
+    showFooter = true,
     name,
     startName,
     endName,
@@ -78,6 +81,7 @@ const DateBox = forwardRef(({
 }, ref) => {
     const isRange = range || mode === "range" || selectionMode === "range" || type === "range";
     const containerRef = useRef(null);
+    const popoverRef = useRef(null);
     const previousValueRef = useRef(value);
     const initialRange = parseRangeValue(value);
     const initialSingle = isRange ? null : fromDateKey(value);
@@ -245,6 +249,7 @@ const DateBox = forwardRef(({
 
     const handleCalendarWheel = event => {
         event.preventDefault();
+        event.stopPropagation();
         const direction = event.deltaY > 0 ? 1 : -1;
         if (calendarView === "days" && (event.ctrlKey || event.shiftKey)) {
             setViewDate(current => new Date(current.getFullYear() + direction, current.getMonth(), 1));
@@ -257,28 +262,31 @@ const DateBox = forwardRef(({
         setCalendarView(current => current === "days" ? "months" : "years");
     };
 
+    useEffect(() => {
+        const popover = popoverRef.current;
+        if (!popover || !wheelNavigation || (!opened && !inline)) return undefined;
+
+        popover.addEventListener("wheel", handleCalendarWheel, { passive: false });
+        return () => popover.removeEventListener("wheel", handleCalendarWheel);
+    }, [opened, inline, wheelNavigation, calendarView]);
+
     return (
         <div
             ref={containerRef}
-            className={`tmivcom-datebox ${opened ? "is-open" : ""} ${disabled ? "is-disabled" : ""} ${className}`.trim()}
+            className={`tmivcom-datebox ${opened ? "is-open" : ""} ${inline ? "is-inline" : ""} ${disabled ? "is-disabled" : ""} ${className}`.trim()}
             style={width ? { width } : undefined}
         >
-            <div
+            {!inline && <div className="tmivcom-datebox-control">
+            <button
+                type="button"
                 className="tmivcom-datebox-trigger"
-                role="button"
-                tabIndex={disabled ? -1 : 0}
+                disabled={disabled}
                 aria-haspopup="dialog"
                 aria-expanded={opened}
-                onClick={() => !disabled && !readOnly && setOpened(current => {
+                onClick={() => !readOnly && setOpened(current => {
                     if (!current) setCalendarView("days");
                     return !current;
                 })}
-                onKeyDown={event => {
-                    if ((event.key === "Enter" || event.key === " ") && !disabled && !readOnly) {
-                        event.preventDefault();
-                        setOpened(current => !current);
-                    }
-                }}
             >
                 <svg className="tmivcom-datebox-calendar-icon" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M7 3v3m10-3v3M4.5 9h15M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
@@ -286,13 +294,14 @@ const DateBox = forwardRef(({
                 <span className={`tmivcom-datebox-value ${displayValue ? "" : "is-placeholder"}`}>
                     {displayValue || (isRange ? "Select date range" : placeholder)}
                 </span>
-                {clearable && (startDate || endDate) && !disabled && !readOnly && (
-                    <button type="button" className="tmivcom-datebox-clear" onClick={clearValue} title="Clear date" aria-label="Clear date">×</button>
-                )}
                 <svg className="tmivcom-datebox-chevron" viewBox="0 0 20 20" aria-hidden="true">
                     <path d="m6 8 4 4 4-4" />
                 </svg>
-            </div>
+            </button>
+            {clearable && (startDate || endDate) && !disabled && !readOnly && (
+                <button type="button" className="tmivcom-datebox-clear" onClick={clearValue} title="Clear date" aria-label="Clear date">×</button>
+            )}
+            </div>}
 
             {name && !isRange && <input type="hidden" name={name} value={toDateKey(startDate)} />}
             {isRange && (
@@ -302,12 +311,12 @@ const DateBox = forwardRef(({
                 </>
             )}
 
-            {opened && (
+            {(opened || inline) && (
                 <div
-                    className="tmivcom-datebox-popover"
+                    ref={popoverRef}
+                    className={`tmivcom-datebox-popover ${inline ? "is-inline" : ""}`}
                     role="dialog"
                     aria-label={isRange ? "Choose date range" : "Choose date"}
-                    onWheel={handleCalendarWheel}
                 >
                     <div className="tmivcom-datebox-header">
                         <button type="button" className="tmivcom-datebox-nav" onClick={() => moveCalendar(-1)} aria-label="Previous period">‹</button>
@@ -395,7 +404,7 @@ const DateBox = forwardRef(({
                         </div>
                     )}
 
-                    <div className="tmivcom-datebox-footer">
+                    {showFooter && <div className="tmivcom-datebox-footer">
                         <span className="tmivcom-datebox-hint">
                             {calendarView === "days"
                                 ? (isRange && startDate && !endDate ? "Choose an end date" : (isRange ? "Start date – End date" : "Scroll to change month"))
@@ -405,7 +414,7 @@ const DateBox = forwardRef(({
                             {(startDate || endDate) && clearable && <button type="button" onClick={clearValue}>Clear</button>}
                             <button type="button" className="is-primary" onClick={selectToday}>Today</button>
                         </div>
-                    </div>
+                    </div>}
                 </div>
             )}
         </div>

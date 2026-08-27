@@ -309,6 +309,12 @@
     font-size: 14px;
 }
 
+.tmivcom-datebox-control,
+.tmivcom-timebox-control {
+    position: relative;
+    width: 100%;
+}
+
 .tmivcom-datebox-trigger {
     display: flex;
     align-items: center;
@@ -319,6 +325,8 @@
     border: 1px solid #d0d5dd;
     border-radius: 9px;
     background: #fff;
+    color: inherit;
+    font: inherit;
     box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
     cursor: pointer;
     outline: none;
@@ -383,6 +391,11 @@
     border-radius: 50%;
     font-size: 19px;
     line-height: 1;
+    position: absolute;
+    top: 50%;
+    right: 34px;
+    z-index: 1;
+    transform: translateY(-50%);
 }
 
 .tmivcom-datebox-clear:hover,
@@ -407,6 +420,21 @@
     background: #fff;
     box-shadow: 0 18px 45px rgba(16, 24, 40, .16), 0 2px 8px rgba(16, 24, 40, .08);
     animation: tmiv-datebox-enter .14s ease-out;
+}
+
+.tmivcom-datebox.is-inline {
+    display: block;
+    width: 100%;
+}
+
+.tmivcom-datebox-popover.is-inline {
+    position: static;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    animation: none;
 }
 
 @keyframes tmiv-datebox-enter {
@@ -620,6 +648,8 @@
     border: 1px solid #d0d5dd;
     border-radius: 9px;
     background: #fff;
+    color: inherit;
+    font: inherit;
     box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
     cursor: pointer;
     outline: none;
@@ -680,6 +710,11 @@
     cursor: pointer;
     font-size: 19px;
     line-height: 1;
+    position: absolute;
+    top: 50%;
+    right: 34px;
+    z-index: 1;
+    transform: translateY(-50%);
 }
 
 .tmivcom-timebox-clear:hover {
@@ -703,6 +738,38 @@
     background: #fff;
     box-shadow: 0 18px 45px rgba(16, 24, 40, .16), 0 2px 8px rgba(16, 24, 40, .08);
     animation: tmiv-datebox-enter .14s ease-out;
+}
+
+.tmivcom-timebox-popover.has-date {
+    width: min(352px, calc(100vw - 24px));
+}
+
+.tmivcom-timebox-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-bottom: 14px;
+    padding: 4px;
+    border-radius: 10px;
+    background: #f2f4f7;
+}
+
+.tmivcom-timebox-tabs button {
+    height: 34px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: #667085;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.tmivcom-timebox-tabs button.is-active {
+    background: #fff;
+    color: #4338ca;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, .12);
 }
 
 .tmivcom-timebox-display {
