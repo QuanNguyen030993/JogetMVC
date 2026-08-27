@@ -8393,6 +8393,104 @@
         }
         //START FORM ELEMENT HANDLE
 
+    function makeTmivDateBoxFormItem(config) {
+        config = config || {};
+        var editorOptions = { ...(config.editorOptions || {}) };
+        var dataField = config.dataField;
+        var defaultValue = editorOptions.value ?? config.defaultValue ?? "";
+        var userOnValueChanged = editorOptions.onValueChanged;
+        var userOnChange = editorOptions.onChange;
+        var dateBoxOptions = {
+            placeholder: editorOptions.placeholder || "Select date",
+            locale: editorOptions.locale || "en-GB",
+            min: editorOptions.min,
+            max: editorOptions.max,
+            clearable: editorOptions.clearable !== false && editorOptions.showClearButton !== false,
+            wheelNavigation: editorOptions.wheelNavigation !== false,
+            showFooter: editorOptions.showFooter !== false,
+            width: editorOptions.width ?? config.width,
+            disabled: editorOptions.disabled === true,
+            readOnly: editorOptions.readOnly === true
+        };
+        var formItem = { ...config };
+
+        // A dxForm template hosts the TMIVCom React control; no DevExtreme date
+        // editor is created for this item.
+        delete formItem.editorType;
+        delete formItem.editorOptions;
+        formItem.template = function (data, itemElement) {
+            var form = data.component;
+            var $host = $("<div>")
+                .addClass("tmiv-render-form-datebox")
+                .attr("data-field", dataField)
+                .appendTo(itemElement);
+            var syncingFromForm = false;
+
+            function getFormValue() {
+                var formData = form.option("formData") || {};
+                return formData[dataField] ?? defaultValue;
+            }
+
+            function mountDateBox(value) {
+                $host.datebox({
+                    ...dateBoxOptions,
+                    value: value ?? "",
+                    disabled: dateBoxOptions.disabled || form.option("disabled") === true,
+                    readOnly: dateBoxOptions.readOnly || form.option("readOnly") === true,
+                    onChange: function (nextValue) {
+                        if (syncingFromForm) return;
+                        form.updateData(dataField, nextValue || null);
+                        if (typeof userOnChange === "function") userOnChange(nextValue);
+                    },
+                    onValueChanged: function (eventArgs) {
+                        if (syncingFromForm || typeof userOnValueChanged !== "function") return;
+                        userOnValueChanged({
+                            ...eventArgs,
+                            component: {
+                                option: function (optionName, optionValue) {
+                                    if (optionName !== "value") return undefined;
+                                    if (arguments.length === 1) {
+                                        return $host.datebox("option", "value");
+                                    }
+                                    $host.datebox("option", "value", optionValue);
+                                    return optionValue;
+                                }
+                            },
+                            element: $host
+                        });
+                    }
+                });
+            }
+
+            mountDateBox(getFormValue());
+
+            var fieldChangedHandler = function (eventArgs) {
+                if (!document.documentElement.contains($host.get(0))) {
+                    form.off("fieldDataChanged", fieldChangedHandler);
+                    return;
+                }
+                if (eventArgs?.dataField !== dataField) return;
+                syncingFromForm = true;
+                $host.datebox("option", "value", eventArgs.value ?? "");
+                syncingFromForm = false;
+            };
+            var optionChangedHandler = function (eventArgs) {
+                if (!document.documentElement.contains($host.get(0))) {
+                    form.off("optionChanged", optionChangedHandler);
+                    return;
+                }
+                if (eventArgs?.name !== "readOnly" && eventArgs?.name !== "disabled") return;
+                mountDateBox(getFormValue());
+            };
+
+            form.on("fieldDataChanged", fieldChangedHandler);
+            form.on("optionChanged", optionChangedHandler);
+        };
+
+        return formItem;
+    }
+    window.makeTmivDateBoxFormItem = makeTmivDateBoxFormItem;
+
 
 
 
@@ -8845,28 +8943,15 @@
                };
                 */
 
-                var tmivDateField = item.dataField;
-                var tmivDateDefaultValue = additionalEditorOptions.value ?? item.defaultValue ?? "";
-                var tmivDateUserOnValueChanged = additionalEditorOptions.onValueChanged;
-                var tmivDateUserOnChange = additionalEditorOptions.onChange;
-                var tmivDateOptions = {
-                    placeholder: additionalEditorOptions.placeholder || "Select date",
-                    locale: additionalEditorOptions.locale || "en-GB",
-                    min: additionalEditorOptions.min,
-                    max: additionalEditorOptions.max,
-                    clearable: additionalEditorOptions.clearable !== false
-                        && additionalEditorOptions.showClearButton !== false,
-                    wheelNavigation: additionalEditorOptions.wheelNavigation !== false,
-                    showFooter: additionalEditorOptions.showFooter !== false,
-                    width: item.width,
-                    disabled: additionalEditorOptions.disabled === true,
-                    readOnly: additionalEditorOptions.readOnly === true
-                };
-
-                itemOptions = {
+                itemOptions = makeTmivDateBoxFormItem({
                     formGroupName: item.formGroupName,
-                    dataField: tmivDateField,
+                    dataField: item.dataField,
                     customEditorOptions: customEditorOptions,
+                    editorOptions: {
+                        width: item.width,
+                        value: item.defaultValue ?? "",
+                        ...additionalEditorOptions
+                    },
                     label: {
                         location: formInstanceProps.labelLocation,
                         text: item.caption,
@@ -8877,85 +8962,8 @@
                     validationRules: item.validationRules,
                     outlineObject: item.outlineObject,
                     visible: item.visible
-                };
-
-                item.template = function (data, itemElement) {
-                    var form = data.component;
-                    var $host = $("<div>")
-                        .addClass("tmiv-render-form-datebox")
-                        .attr("data-field", tmivDateField)
-                        .appendTo(itemElement);
-                    var syncingFromForm = false;
-
-                    function getFormValue() {
-                        var formData = form.option("formData") || {};
-                        return formData[tmivDateField] ?? tmivDateDefaultValue;
-                    }
-
-                    function isFormReadOnly() {
-                        return form.option("readOnly") === true;
-                    }
-
-                    function mountTmivDateBox(value) {
-                        $host.datebox({
-                            ...tmivDateOptions,
-                            value: value ?? "",
-                            disabled: tmivDateOptions.disabled || form.option("disabled") === true,
-                            readOnly: tmivDateOptions.readOnly || isFormReadOnly(),
-                            onChange: function (nextValue) {
-                                if (syncingFromForm) return;
-                                form.updateData(tmivDateField, nextValue || null);
-                                if (typeof tmivDateUserOnChange === "function") {
-                                    tmivDateUserOnChange(nextValue);
-                                }
-                            },
-                            onValueChanged: function (eventArgs) {
-                                if (syncingFromForm) return;
-                                if (typeof tmivDateUserOnValueChanged === "function") {
-                                    tmivDateUserOnValueChanged({
-                                        ...eventArgs,
-                                        component: {
-                                            option: function (optionName, optionValue) {
-                                                if (optionName !== "value") return undefined;
-                                                if (arguments.length === 1) {
-                                                    return $host.datebox("option", "value");
-                                                }
-                                                $host.datebox("option", "value", optionValue);
-                                                return optionValue;
-                                            }
-                                        },
-                                        element: $host
-                                    });
-                                }
-                            }
-                        });
-                    }
-
-                    mountTmivDateBox(getFormValue());
-
-                    var fieldChangedHandler = function (eventArgs) {
-                        if (!document.documentElement.contains($host.get(0))) {
-                            form.off("fieldDataChanged", fieldChangedHandler);
-                            return;
-                        }
-                        if (eventArgs?.dataField !== tmivDateField) return;
-                        syncingFromForm = true;
-                        $host.datebox("option", "value", eventArgs.value ?? "");
-                        syncingFromForm = false;
-                    };
-
-                    var optionChangedHandler = function (eventArgs) {
-                        if (!document.documentElement.contains($host.get(0))) {
-                            form.off("optionChanged", optionChangedHandler);
-                            return;
-                        }
-                        if (eventArgs?.name !== "readOnly" && eventArgs?.name !== "disabled") return;
-                        mountTmivDateBox(getFormValue());
-                    };
-
-                    form.on("fieldDataChanged", fieldChangedHandler);
-                    form.on("optionChanged", optionChangedHandler);
-                };
+                });
+                item.template = itemOptions.template;
            }
            else {
                itemOptions = {

@@ -100,8 +100,12 @@
         {dataField: "currencyId",editorType: "dxSelectBox", label: { text: "Currency" } , editorOptions: makeSelectBoxEditorOptions(_enums.Currency) }]},
         {itemType: "group",caption: "Insurance Period",colCount:4, colSpan: 2,items: [
         {dataField: "insPeriodId", label: { text: "Insurance Period" },editorType: "dxSelectBox",visible: true , editorOptions: makeSelectBoxEditorOptions(_enums.InsPeriod) },
+        /* LEGACY ROLLBACK - DevExtreme dxDateBox
         {dataField: "periodInsuranceStartDate",editorType: "dxDateBox", editorOptions: { displayFormat: "dd/MM/yyyy" } ,visible:true},
         {dataField: "periodInsuranceEndDate",editorType: "dxDateBox", editorOptions: { displayFormat: "dd/MM/yyyy" },visible:true},
+        */
+        makeTmivDateBoxFormItem({ dataField: "periodInsuranceStartDate", visible: true }),
+        makeTmivDateBoxFormItem({ dataField: "periodInsuranceEndDate", visible: true }),
         {dataField: "actualDays",editorType: "dxNumberBox",visible:true}
         ]},
 
