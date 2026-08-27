@@ -88,6 +88,7 @@ const DateBox = forwardRef(({
     const [endDate, setEndDate] = useState(isRange ? initialRange[1] : null);
     const [viewDate, setViewDate] = useState(initialRange[0] || initialSingle || new Date());
     const [opened, setOpened] = useState(false);
+    const [calendarView, setCalendarView] = useState("days");
 
     const minDate = useMemo(() => fromDateKey(min), [min]);
     const maxDate = useMemo(() => fromDateKey(max), [max]);
@@ -219,6 +220,42 @@ const DateBox = forwardRef(({
         ? [formatDisplayDate(startDate), formatDisplayDate(endDate)].filter(Boolean).join(" – ")
         : formatDisplayDate(startDate);
     const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(viewDate);
+    const monthNames = useMemo(() => Array.from({ length: 12 }, (_, monthIndex) => (
+        new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(2024, monthIndex, 1))
+    )), [locale]);
+    const yearPageStart = Math.floor(viewDate.getFullYear() / 10) * 10;
+    const visibleYears = Array.from({ length: 12 }, (_, index) => yearPageStart + index);
+    const calendarTitle = calendarView === "days"
+        ? monthLabel
+        : calendarView === "months"
+            ? String(viewDate.getFullYear())
+            : `${yearPageStart} – ${yearPageStart + 11}`;
+
+    const moveCalendar = direction => {
+        setViewDate(current => {
+            if (calendarView === "years") {
+                return new Date(current.getFullYear() + (direction * 10), current.getMonth(), 1);
+            }
+            if (calendarView === "months") {
+                return new Date(current.getFullYear() + direction, current.getMonth(), 1);
+            }
+            return new Date(current.getFullYear(), current.getMonth() + direction, 1);
+        });
+    };
+
+    const handleCalendarWheel = event => {
+        event.preventDefault();
+        const direction = event.deltaY > 0 ? 1 : -1;
+        if (calendarView === "days" && (event.ctrlKey || event.shiftKey)) {
+            setViewDate(current => new Date(current.getFullYear() + direction, current.getMonth(), 1));
+            return;
+        }
+        moveCalendar(direction);
+    };
+
+    const zoomOutCalendar = () => {
+        setCalendarView(current => current === "days" ? "months" : "years");
+    };
 
     return (
         <div
@@ -232,7 +269,10 @@ const DateBox = forwardRef(({
                 tabIndex={disabled ? -1 : 0}
                 aria-haspopup="dialog"
                 aria-expanded={opened}
-                onClick={() => !disabled && !readOnly && setOpened(current => !current)}
+                onClick={() => !disabled && !readOnly && setOpened(current => {
+                    if (!current) setCalendarView("days");
+                    return !current;
+                })}
                 onKeyDown={event => {
                     if ((event.key === "Enter" || event.key === " ") && !disabled && !readOnly) {
                         event.preventDefault();
@@ -263,50 +303,103 @@ const DateBox = forwardRef(({
             )}
 
             {opened && (
-                <div className="tmivcom-datebox-popover" role="dialog" aria-label={isRange ? "Choose date range" : "Choose date"}>
+                <div
+                    className="tmivcom-datebox-popover"
+                    role="dialog"
+                    aria-label={isRange ? "Choose date range" : "Choose date"}
+                    onWheel={handleCalendarWheel}
+                >
                     <div className="tmivcom-datebox-header">
-                        <button type="button" className="tmivcom-datebox-nav" onClick={() => setViewDate(current => new Date(current.getFullYear(), current.getMonth() - 1, 1))} aria-label="Previous month">‹</button>
-                        <strong>{monthLabel}</strong>
-                        <button type="button" className="tmivcom-datebox-nav" onClick={() => setViewDate(current => new Date(current.getFullYear(), current.getMonth() + 1, 1))} aria-label="Next month">›</button>
+                        <button type="button" className="tmivcom-datebox-nav" onClick={() => moveCalendar(-1)} aria-label="Previous period">‹</button>
+                        <button
+                            type="button"
+                            className="tmivcom-datebox-title"
+                            onClick={zoomOutCalendar}
+                            title="Click to choose month or year"
+                        >
+                            {calendarTitle}
+                        </button>
+                        <button type="button" className="tmivcom-datebox-nav" onClick={() => moveCalendar(1)} aria-label="Next period">›</button>
                     </div>
 
-                    <div className="tmivcom-datebox-weekdays">
-                        {DAY_NAMES.map(day => <span key={day}>{day}</span>)}
-                    </div>
+                    {calendarView === "days" && (
+                        <>
+                            <div className="tmivcom-datebox-weekdays">
+                                {DAY_NAMES.map(day => <span key={day}>{day}</span>)}
+                            </div>
+                            <div className="tmivcom-datebox-days">
+                                {calendarDays.map(date => {
+                                    const key = toDateKey(date);
+                                    const isStart = startDate && sameDay(date, startDate);
+                                    const isEnd = endDate && sameDay(date, endDate);
+                                    const inRange = isRange && startDate && endDate && date > startDate && date < endDate;
+                                    const outsideMonth = date.getMonth() !== viewDate.getMonth();
 
-                    <div className="tmivcom-datebox-days">
-                        {calendarDays.map(date => {
-                            const key = toDateKey(date);
-                            const isStart = startDate && sameDay(date, startDate);
-                            const isEnd = endDate && sameDay(date, endDate);
-                            const inRange = isRange && startDate && endDate && date > startDate && date < endDate;
-                            const outsideMonth = date.getMonth() !== viewDate.getMonth();
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={key}
+                                            className={[
+                                                "tmivcom-datebox-day",
+                                                outsideMonth ? "is-outside" : "",
+                                                sameDay(date, new Date()) ? "is-today" : "",
+                                                inRange ? "is-in-range" : "",
+                                                isStart ? "is-range-start" : "",
+                                                isEnd ? "is-range-end" : ""
+                                            ].filter(Boolean).join(" ")}
+                                            disabled={isDisabledDate(date)}
+                                            onClick={event => selectDate(date, event)}
+                                            aria-label={formatDisplayDate(date)}
+                                        >
+                                            {date.getDate()}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    )}
 
-                            return (
+                    {calendarView === "months" && (
+                        <div className="tmivcom-datebox-period-grid">
+                            {monthNames.map((monthName, monthIndex) => (
                                 <button
                                     type="button"
-                                    key={key}
-                                    className={[
-                                        "tmivcom-datebox-day",
-                                        outsideMonth ? "is-outside" : "",
-                                        sameDay(date, new Date()) ? "is-today" : "",
-                                        inRange ? "is-in-range" : "",
-                                        isStart ? "is-range-start" : "",
-                                        isEnd ? "is-range-end" : ""
-                                    ].filter(Boolean).join(" ")}
-                                    disabled={isDisabledDate(date)}
-                                    onClick={event => selectDate(date, event)}
-                                    aria-label={formatDisplayDate(date)}
+                                    key={monthName}
+                                    className={monthIndex === viewDate.getMonth() ? "is-selected" : ""}
+                                    onClick={() => {
+                                        setViewDate(current => new Date(current.getFullYear(), monthIndex, 1));
+                                        setCalendarView("days");
+                                    }}
                                 >
-                                    {date.getDate()}
+                                    {monthName}
                                 </button>
-                            );
-                        })}
-                    </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {calendarView === "years" && (
+                        <div className="tmivcom-datebox-period-grid">
+                            {visibleYears.map(year => (
+                                <button
+                                    type="button"
+                                    key={year}
+                                    className={year === viewDate.getFullYear() ? "is-selected" : ""}
+                                    onClick={() => {
+                                        setViewDate(current => new Date(year, current.getMonth(), 1));
+                                        setCalendarView("months");
+                                    }}
+                                >
+                                    {year}
+                                </button>
+                            ))}
+                        </div>
+                    )}
 
                     <div className="tmivcom-datebox-footer">
                         <span className="tmivcom-datebox-hint">
-                            {isRange && startDate && !endDate ? "Choose an end date" : (isRange ? "Start date – End date" : "Choose a date")}
+                            {calendarView === "days"
+                                ? (isRange && startDate && !endDate ? "Choose an end date" : (isRange ? "Start date – End date" : "Scroll to change month"))
+                                : `Scroll to change ${calendarView === "months" ? "year" : "year range"}`}
                         </span>
                         <div className="tmivcom-datebox-actions">
                             {(startDate || endDate) && clearable && <button type="button" onClick={clearValue}>Clear</button>}

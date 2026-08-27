@@ -1,4 +1,5 @@
 import DateBox from "../components/Datebox.jsx"; 
+import TimeBox from "../components/TimeBox.jsx";
 import HtmlEditor from "../components/HtmlEditor.jsx"; 
 import HtmlEditorCommentBox from "../components/HtmlEditorCommentBox.jsx"; 
 import CustomGrid from "../components/CustomGrid.jsx"; 
@@ -176,6 +177,38 @@ const $ = window.jQuery;
 
         return this;
     };
+
+  $.fn.timebox = function(arg1, arg2, arg3){
+        if (arg1 === "option" && arg2 === "value") {
+            if (arguments.length >= 3) {
+                this.each(function(){
+                    const instance = roots.get(this);
+                    if (!instance) return;
+                    instance.options.value = arg3;
+                    if (instance.ref?.current) {
+                        instance.ref.current.option("value", arg3);
+                    } else {
+                        const Component = controls[instance.name];
+                        instance.root.render(<Component ref={instance.ref} {...instance.options}/>);
+                    }
+                });
+                return this;
+            }
+
+            const instance = this.length === 1 ? roots.get(this[0]) : null;
+            return instance?.ref?.current?.option("value") ?? instance?.options?.value;
+        }
+
+        if (typeof arg1 === "object" || typeof arg1 === "undefined") {
+            return this.each(function(){
+                mount(this, "TimeBox", arg1 || {});
+            });
+        }
+
+        return this;
+    };
+
+  $.fn.tmivtimebox = $.fn.timebox;
 
   $.fn.htmleditor = function(arg1,arg2,arg3){
         if (typeof arg1 === "string") {
@@ -1399,6 +1432,11 @@ register(
 );
 
 register(
+    "TimeBox",
+    TimeBox
+);
+
+register(
     "HtmlEditor",
     HtmlEditor
 );
@@ -1512,4 +1550,4 @@ if (typeof window !== "undefined") {
     //}, 5000);
 }
 
-export default { DateBox, HtmlEditor, HtmlEditorCommentBox, CustomGrid, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify, TourGuide, startTour, exportTour };
+export default { DateBox, TimeBox, HtmlEditor, HtmlEditorCommentBox, CustomGrid, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify, TourGuide, startTour, exportTour };
