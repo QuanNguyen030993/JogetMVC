@@ -147,15 +147,34 @@ function mount(element, name, options){
 // }
 const $ = window.jQuery;
 
-  $.fn.datebox = function(options){
-        return this.each(function(){
-            mount(
-                this,
-                "DateBox",
-                options
-            );
+  $.fn.datebox = function(arg1, arg2, arg3){
+        if (arg1 === "option" && arg2 === "value") {
+            if (arguments.length >= 3) {
+                this.each(function(){
+                    const instance = roots.get(this);
+                    if (!instance) return;
+                    instance.options.value = arg3;
+                    if (instance.ref?.current) {
+                        instance.ref.current.option("value", arg3);
+                    } else {
+                        const Component = controls[instance.name];
+                        instance.root.render(<Component ref={instance.ref} {...instance.options}/>);
+                    }
+                });
+                return this;
+            }
 
-        });
+            const instance = this.length === 1 ? roots.get(this[0]) : null;
+            return instance?.ref?.current?.option("value") ?? instance?.options?.value;
+        }
+
+        if (typeof arg1 === "object" || typeof arg1 === "undefined") {
+            return this.each(function(){
+                mount(this, "DateBox", arg1 || {});
+            });
+        }
+
+        return this;
     };
 
   $.fn.htmleditor = function(arg1,arg2,arg3){

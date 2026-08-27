@@ -301,43 +301,260 @@
 
 .tmivcom-datebox {
     position: relative;
-    display: inline-flex;
-    flex-direction: column;
-    gap: 8px;
-    font-family: Inter, system-ui, sans-serif;
+    display: inline-block;
+    width: 260px;
+    max-width: 100%;
+    color: #0f172a;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 14px;
 }
 
-.tmivcom-datebox-input {
+.tmivcom-datebox-trigger {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 0 11px;
+    border: 1px solid #d0d5dd;
+    border-radius: 9px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
+    cursor: pointer;
+    outline: none;
+    transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+}
+
+.tmivcom-datebox-trigger:hover { border-color: #98a2b3; }
+
+.tmivcom-datebox-trigger:focus-visible,
+.tmivcom-datebox.is-open .tmivcom-datebox-trigger {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, .14);
+}
+
+.tmivcom-datebox.is-disabled { opacity: .62; }
+
+.tmivcom-datebox.is-disabled .tmivcom-datebox-trigger {
+    background: #f2f4f7;
+    cursor: not-allowed;
+}
+
+.tmivcom-datebox-calendar-icon,
+.tmivcom-datebox-chevron {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    fill: none;
+    stroke: #667085;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.tmivcom-datebox-value {
+    min-width: 0;
+    flex: 1;
+    padding: 0 9px;
+    overflow: hidden;
+    color: #101828;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tmivcom-datebox-value.is-placeholder { color: #98a2b3; }
+
+.tmivcom-datebox-clear,
+.tmivcom-datebox-nav {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    border: 1px solid #cbd5e1;
-    border-radius: 10px;
-    padding: 8px 10px;
-    background: #ffffff;
-}
-
-    .tmivcom-datebox-input input {
-        border: none;
-        background: transparent;
-        outline: none;
-        width: 140px;
-        cursor: pointer;
-    }
-
-.tmivcom-datebox-button {
-    border: none;
+    justify-content: center;
+    border: 0;
     background: transparent;
+    color: #667085;
     cursor: pointer;
-    font-size: 1rem;
 }
 
-.tmivcom-datebox-picker {
-    width: 100%;
-    border: 1px solid #cbd5e1;
-    border-radius: 10px;
-    padding: 11px 12px;
-    background: #ffffff;
+.tmivcom-datebox-clear {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    border-radius: 50%;
+    font-size: 19px;
+    line-height: 1;
+}
+
+.tmivcom-datebox-clear:hover,
+.tmivcom-datebox-nav:hover {
+    background: #f2f4f7;
+    color: #344054;
+}
+
+.tmivcom-datebox-chevron { transition: transform .16s ease; }
+.tmivcom-datebox.is-open .tmivcom-datebox-chevron { transform: rotate(180deg); }
+
+.tmivcom-datebox-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 10020;
+    width: min(320px, calc(100vw - 24px));
+    box-sizing: border-box;
+    padding: 14px;
+    border: 1px solid #eaecf0;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 18px 45px rgba(16, 24, 40, .16), 0 2px 8px rgba(16, 24, 40, .08);
+    animation: tmiv-datebox-enter .14s ease-out;
+}
+
+@keyframes tmiv-datebox-enter {
+    from { opacity: 0; transform: translateY(-5px) scale(.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.tmivcom-datebox-header {
+    display: grid;
+    grid-template-columns: 34px 1fr 34px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.tmivcom-datebox-header strong {
+    color: #101828;
+    font-size: 14px;
+    font-weight: 650;
+    text-align: center;
+    text-transform: capitalize;
+}
+
+.tmivcom-datebox-nav {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    font-size: 25px;
+    line-height: 1;
+}
+
+.tmivcom-datebox-weekdays,
+.tmivcom-datebox-days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.tmivcom-datebox-weekdays { margin-bottom: 5px; }
+
+.tmivcom-datebox-weekdays span {
+    color: #98a2b3;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 28px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.tmivcom-datebox-days { row-gap: 3px; }
+
+.tmivcom-datebox-day {
+    position: relative;
+    min-width: 0;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #344054;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color .12s ease, color .12s ease, transform .12s ease;
+}
+
+.tmivcom-datebox-day:hover:not(:disabled) {
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.tmivcom-datebox-day:active:not(:disabled) { transform: scale(.94); }
+.tmivcom-datebox-day.is-outside { color: #c4c9d2; }
+
+.tmivcom-datebox-day.is-today {
+    box-shadow: inset 0 0 0 1px #a5b4fc;
+    color: #4f46e5;
+    font-weight: 700;
+}
+
+.tmivcom-datebox-day.is-in-range {
+    border-radius: 0;
+    background: #eef2ff;
+    color: #3730a3;
+}
+
+.tmivcom-datebox-day.is-range-start,
+.tmivcom-datebox-day.is-range-end {
+    border-radius: 8px;
+    background: #4f46e5;
+    box-shadow: none;
+    color: #fff;
+    font-weight: 700;
+}
+
+.tmivcom-datebox-day:disabled {
+    color: #d0d5dd;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+.tmivcom-datebox-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 11px;
+    border-top: 1px solid #eaecf0;
+}
+
+.tmivcom-datebox-hint {
+    min-width: 0;
+    color: #667085;
+    font-size: 11px;
+}
+
+.tmivcom-datebox-actions {
+    display: flex;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.tmivcom-datebox-actions button {
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid #d0d5dd;
+    border-radius: 7px;
+    background: #fff;
+    color: #344054;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.tmivcom-datebox-actions button:hover { background: #f9fafb; }
+
+.tmivcom-datebox-actions button.is-primary {
+    border-color: #4f46e5;
+    background: #4f46e5;
+    color: #fff;
+}
+
+.tmivcom-datebox-actions button.is-primary:hover { background: #4338ca; }
+
+@media (max-width: 420px) {
+    .tmivcom-datebox-popover { padding: 12px; }
+    .tmivcom-datebox-hint { display: none; }
+    .tmivcom-datebox-footer { justify-content: flex-end; }
 }
 
 .tmiv-tool-item {
