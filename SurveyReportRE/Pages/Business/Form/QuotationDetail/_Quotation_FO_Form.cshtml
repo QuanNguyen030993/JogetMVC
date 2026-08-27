@@ -131,7 +131,7 @@
 
                  // { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" ,editorOptions:{ switchedOnText: "Yes", switchedOffText: "No"} },
                  {itemType: "group",
-                caption: "Request Infomation",
+                caption: "Request Information",
                 colCount: 3,
                 items: [
                 { dataField: "requestNo", label: { template: labelTpl("RequestNo - Mã Quotation Request") } },
@@ -142,8 +142,21 @@
                       valueExpr: "id"
                  },
                     { dataField: "quotationType",visible: false, label:  { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
-                    // makeSkipTSSwitchFormItem("quotationType"),
-                    { dataField: "businessChannelName", label: { template: labelTpl("BusinessChannelName - Kênh kinh doanh (name)") } },
+                    // Skip TS is selected at Quotation Request and is intentionally
+                    // not mixed into the Request Information fields here.
+                    {
+                        dataField: "businessChannelName",
+                        isRequired: true,
+                        editorType: "dxSelectBox",
+                        label: { text: "Business Channel" },
+                        editorOptions: {
+                            items: _enums.BusinessChannel,
+                            displayExpr: "value",
+                            valueExpr: "value",
+                            searchEnabled: true,
+                            showClearButton: true
+                        }
+                    },
                     { dataField: "businessChannelDisplayName",visible: false, label: { template: labelTpl("BusinessChannelDisplayName - Tên hiển thị kênh (name of biz)") } },
                      { dataField:"reinsuranceId", editorType:"dxSelectBox", label:{text:"Reinsurance"},
                      editorOptions:{

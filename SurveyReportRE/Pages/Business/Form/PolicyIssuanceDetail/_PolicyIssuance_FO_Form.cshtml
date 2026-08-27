@@ -228,7 +228,7 @@
 
                  // { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" ,editorOptions:{ switchedOnText: "Yes", switchedOffText: "No"} },
                  {itemType: "group",
-                caption: "Request Infomation",
+                caption: "Request Information",
                 colCount: 3,
                 items: [
                 { dataField: "requestNo", label: { template: labelTpl("RequestNo - Mã Quotation Request") } },
@@ -238,9 +238,20 @@
                      { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.requestType),displayExpr: "value",
                      valueExpr: "id"
                  },
-                    makeSkipTSSwitchFormItem("policyIssuanceType"),
                     { dataField: "quotationType",visible: false, label: { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
-                    { dataField: "businessChannelName", label: { template: labelTpl("BusinessChannelName - Kênh kinh doanh (name)") } },
+                    {
+                        dataField: "businessChannelName",
+                        isRequired: true,
+                        editorType: "dxSelectBox",
+                        label: { text: "Business Channel" },
+                        editorOptions: {
+                            items: _enums.BusinessChannel,
+                            displayExpr: "value",
+                            valueExpr: "value",
+                            searchEnabled: true,
+                            showClearButton: true
+                        }
+                    },
                     { dataField: "businessChannelDisplayName",visible: false, label: { template: labelTpl("BusinessChannelDisplayName - Tên hiển thị kênh (name of biz)") } },
                      { dataField:"reinsuranceId", editorType:"dxSelectBox", label:{text:"Reinsurance"},
                      editorOptions:{
@@ -252,7 +263,16 @@
 
                  { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3},
 
-                            ]},{
+                            ]},
+                {
+                    itemType: "group",
+                    name: "workflowOptionsGroup",
+                    caption: "Workflow Options",
+                    colCount: 3,
+                    items: [
+                        makeSkipTSSwitchFormItem("policyIssuanceType")
+                    ]
+                },{
                 itemType: "group",
                 caption: "Attachment",
                 colCount: 1,
