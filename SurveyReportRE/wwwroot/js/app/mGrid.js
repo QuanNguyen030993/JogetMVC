@@ -1240,6 +1240,7 @@ var MGridOption = class MGridOption {
                     selection: (Object.keys(selection).length > 0) ? selection : defaultSelection,
                     //onCellHoverChanged: tryExecute(this.onCellHoverChanged.bind(this)),
                     onRowClick: tryExecute(this.onRowClick.bind(this)),
+                    onRowDblClick: tryExecute(this.onRowDblClick.bind(this)),
                     //editing: {
                     //    ...((Object.keys(gridEditorOptions).length > 0) ? gridEditorOptions.edit : defaultEditing.edit)
                     //},
