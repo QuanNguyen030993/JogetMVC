@@ -404,7 +404,7 @@ Note:
                 resolveSkipTSFromRequestType(q, "policyIssuanceType") === true
             );
         }
-        function loadSelectedWorkflow() {
+        function selfLoadSelectedWorkflow() {
             return window.WorkflowLoader.load({
                 moduleCode: viewIdModulePrefix.policyIssuance,
                 id: @ViewData["Id"],
@@ -864,7 +864,7 @@ Note:
                 firstRender = false;
                 await policyIssuanceFormStages.enter("personInCharge");
                 await renderPolicyIssuancePersonInCharge();
-                await loadSelectedWorkflow();
+                await selfLoadSelectedWorkflow();
                 invalidateSectionCommentCache(state.selectedGuid);
                 await policyIssuanceFormStages.enter("comments");
                 await loadPolicyIssuanceSectionComments();
@@ -1948,7 +1948,7 @@ Note:
             firstRender = false;
             await policyIssuanceFormStages.enter("personInCharge");
             await renderPolicyIssuancePersonInCharge();
-            await loadSelectedWorkflow();
+            await selfLoadSelectedWorkflow();
             invalidateSectionCommentCache(state.selectedGuid);
             await policyIssuanceFormStages.enter("comments");
             await loadPolicyIssuanceSectionComments();

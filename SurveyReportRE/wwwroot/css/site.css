@@ -30879,7 +30879,7 @@ aside {
     top: 78px;
     width: var(--overview-control-rail-width);
     padding: 7px 0;
-    
+    z-index: var(--z-index-medium);
     pointer-events: none;
     box-sizing: border-box;
 }
@@ -35816,7 +35816,7 @@ textarea {
 .overview-scroll .dept-section > .dept-header {
     position: sticky !important;
     top: 0 !important;
-    
+    z-index: var(--z-index-medium);
     box-sizing: border-box;
     isolation: isolate;
     overflow: visible;
@@ -36042,6 +36042,7 @@ textarea {
     padding: var(--overview-section-padding) !important;
     margin-bottom: var(--overview-section-gap) !important;
     border-radius: 10px !important;
+    
 }
 
 :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-section > .dept-header {
@@ -37496,7 +37497,7 @@ body.skin-re .dx-popup-wrapper.dx-rtl > .dx-overlay-content > .dx-popup-title.dx
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    flex: 0 0 132px;
+    flex: 0 0 28px;
     overflow: hidden;
     border-radius: 8px;
     box-sizing: border-box;

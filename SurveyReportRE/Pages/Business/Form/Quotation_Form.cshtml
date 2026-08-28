@@ -218,7 +218,8 @@ Note:
 
         var deptData = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
         var remarkBoxs = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
-
+        var quotationData = new Object();
+        var tatObject = new Object();
         state.quoteDetails = {};
 
         const quotationRenderGate = (function () {
@@ -468,7 +469,7 @@ Note:
             );
         }
 
-        function loadSelectedWorkflow() {
+        function selfLoadSelectedWorkflow() {
             return window.WorkflowLoader.load({
                 moduleCode: viewIdModulePrefix.quotation,
                 id: @ViewData["Id"],
@@ -484,7 +485,11 @@ Note:
                 submitNextStep: submitNextStep,
                 returnToStep: returnToStep,
                 formModuleKey: formModuleKeyQt,
-                reload: true
+                reload: true,
+                data: {
+                    formItems: quotationData,
+                    tatObject: tatObject
+                }
             });
             // if (!state.selectedGuid) return $.Deferred().resolve().promise();
 
@@ -914,7 +919,8 @@ Note:
                     contentType: "application/json"
                 });
                 quotationRenderGate.setPhase("Quotation data received…", 38);
-
+                quotationData = data[0];
+                tatObject = tryParseJSON(quotationData.turnAroundTimeAttributes, "Submit Button Problem") || {};
                 const rows = Array.isArray(data)
                     ? data.map(item => ({ ...item, pIC: item.pic }))
                     : [];
@@ -990,7 +996,7 @@ Note:
                 await quotationRenderGate.complete(renderToken);
                 await quotationFormStages.enter("personInCharge");
                 await renderQuotationPersonInCharge();
-                await loadSelectedWorkflow();
+                await selfLoadSelectedWorkflow();
                 invalidateSectionCommentCache(state.selectedGuid);
                 await quotationFormStages.enter("comments");
                 await loadQuotationSectionComments();
@@ -1032,7 +1038,7 @@ Note:
                 PIC_JSON = q.pIC || "{}";
                 var picMap = parsePicMap(PIC_JSON);
                 stageAccount = picMap[stageDept] || "(Unassigned)";
-
+                quotationData = q;
                 deptData[dept] = { ...q, id: q.id, sectionName: dept, code: q.quotationCode };
                 var formId = window.QuotationIdManager.form(dept, @ViewData["Id"]);
                 var form = $(`#${formId}`).dxForm("instance");
@@ -1899,7 +1905,7 @@ Note:
             firstRender = false;
             await quotationFormStages.enter("personInCharge");
             await renderQuotationPersonInCharge();
-            await loadSelectedWorkflow();
+            await selfLoadSelectedWorkflow();
             invalidateSectionCommentCache(state.selectedGuid);
             await quotationFormStages.enter("comments");
             await loadQuotationSectionComments();

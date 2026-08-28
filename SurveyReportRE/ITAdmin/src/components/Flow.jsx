@@ -342,6 +342,7 @@ const parseJsonToRulesState = (jsonStr) => {
 const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) =>
     workflowTransitions.map((transition, index) => {
         const isReturn = transition.isReturn === true || String(transition.isReturn) === 'true' || transition.flowType === 'Return';
+        const isReturnNeedAccepted = transition.isReturnNeedAccepted === true || String(transition.isReturnNeedAccepted) === 'true' || transition.flowType === 'Return';
         const legacyExitTransition = transition.isExitTransition === true || String(transition.isExitTransition).toLowerCase() === 'true';
         const transitionType = legacyExitTransition
             ? 'Exit'
@@ -395,6 +396,7 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                 uiLockRules,
                 isExitTransition: isExit,
                 isReturn: isReturn,
+                isReturnNeedAccepted: isReturnNeedAccepted,
                 statusId: transition.statusId || '',
                 statusName: transition.statusName || '',
                 transitionScript: normalizeTransitionScript(transition.transitionScript || (() => {
@@ -551,6 +553,7 @@ function Flow({ id: propId }) {
         { dataField: 'stepNo', caption: 'Step No', width: 90 },
         { dataField: 'transitionType', caption: 'Flow Type', width: 110 },
         { dataField: 'isReturn', caption: 'Is Return', width: 90 },
+        { dataField: 'isReturnNeedAccepted', caption: "Is Return Need Accepted", width: 90},
         { dataField: 'isLoop', caption: 'Is Loop', width: 90 },
         { dataField: 'loopGroup', caption: 'Loop Group', width: 110 },
         { dataField: 'loopExitMode', caption: 'Loop Exit Mode', width: 130 },
@@ -604,6 +607,7 @@ function Flow({ id: propId }) {
                 stepNo: edge.data?.stepNo || '',
                 transitionType: edge.data?.transitionType || 'Normal',
                 isReturn: edge.data?.isReturn ? 'Yes' : 'No',
+                isReturnNeedAccepted: edge.data?.isReturnNeedAccepted ? 'Yes' : 'No',
                 isLoop: edge.data?.isLoop ? 'Yes' : 'No',
                 loopGroup: edge.data?.loopGroup || '',
                 loopExitMode: edge.data?.loopExitMode || 'None',
@@ -672,6 +676,7 @@ function Flow({ id: propId }) {
                     uiLockRules: [],
                     isExitTransition: false,
                     isReturn: false,
+                    isReturnNeedAccepted: false,
                     statusId: '',
                     statusName: '',
                     icon: '',
@@ -871,6 +876,7 @@ function Flow({ id: propId }) {
                     },
                     isExitTransition: edge.data?.transitionType === 'Exit',
                     isReturn: edge.data?.isReturn === true,
+                    isReturnNeedAccepted: edge.data?.isReturnNeedAccepted === true,
                     statusId: edge.data?.statusId || '',
                     statusName: edge.data?.statusName || '',
                     icon: edge.data?.icon || '',
@@ -1041,7 +1047,7 @@ function Flow({ id: propId }) {
                 const isStart = fromNode.data?.nodeType === 'start' || incomingEdgesCount === 0;
                 const isEnd = edge.data?.transitionType === 'Exit' || !edge.target;
                 const isReturn = edge.data?.isReturn === true || false; 
-
+                const isReturnNeedAccepted = edge.data?.isReturnNeedAccepted === true || false;
                 let uiMode = "Start";
                 const actionCode = edge.data?.actionCode || "";
                 if (actionCode.startsWith("SUBMIT")) uiMode = "Forward";
@@ -1121,6 +1127,7 @@ function Flow({ id: propId }) {
                     isEnd: isEnd,
                     isStart: isStart,
                     isReturn : isReturn,
+                    isReturnNeedAccepted : isReturnNeedAccepted,
                     levelNo: fromNode.data?.levelNo ? parseInt(fromNode.data.levelNo) : null,
                     loopGroup: edge.data?.loopGroup || null,
                     parentStepId: null,
@@ -1500,44 +1507,6 @@ function Flow({ id: propId }) {
         [selectedNode, setNodes],
     );
 
-    // const updateSelectedEdge = useCallback(
-    //     (field, value) => {
-    //         if (!selectedEdge) {
-    //             return;
-    //         }
-
-    //         const matched = edges.find((e) => e.id === selectedEdge.id);
-    //         const dataToUse = matched ? matched.data : selectedEdge.data;
-    //         const nextData = {
-    //             ...dataToUse,
-    //             [field]: value,
-    //         };
-    //         const isReturn = nextData.isReturn === true || String(nextData.isReturn) === 'true';
-    //         const hasCommand = nextData.command && nextData.command !== 'None' && nextData.command !== '0';
-
-    //         const nextEdge = {
-    //             ...(matched || selectedEdge),
-    //             label: formatTransitionLabel(nextData.actionName, nextData.statusName || nextData.statusId, nextData.command),
-    //             data: nextData,
-    //             animated: !hasCommand,
-    //             style: isReturn
-    //                 ? { stroke: '#dc2626', strokeWidth: 3 }
-    //                 : { stroke: '#2563eb', strokeWidth: 2 },
-    //             markerEnd: {
-    //                 type: MarkerType.ArrowClosed,
-    //                 width: 16,
-    //                 height: 16,
-    //                 color: isReturn ? '#dc2626' : '#2563eb',
-    //             },
-    //         };
-
-    //         setEdges((currentEdges) =>
-    //             currentEdges.map((edge) => (edge.id === selectedEdge.id ? nextEdge : edge))
-    //         );
-    //         setSelectedEdge(nextEdge);
-    //     },
-    //     [selectedEdge, edges, setEdges],
-    // );
 const updateSelectedEdge = useCallback(
    (fieldOrValues, value) => {
        if (!selectedEdge) return;
@@ -1558,6 +1527,11 @@ const updateSelectedEdge = useCallback(
                const isReturn =
                    nextData.isReturn === true ||
                    String(nextData.isReturn) === 'true';
+
+            const isReturnNeedAccepted =
+                   nextData.isReturnNeedAccepted === true ||
+                   String(nextData.isReturnNeedAccepted) === 'true';
+
                const isJump = String(nextData.transitionType || '').toLowerCase() === 'jump';
                const isExit = String(nextData.transitionType || '').toLowerCase() === 'exit';
                const hasCommand =
@@ -2380,6 +2354,7 @@ const updateSelectedEdge = useCallback(
                         onChange={(event) => updateSelectedEdge('actionName', event.target.value)}
                     />
                 </label>
+                
                 <label>
                     <span>Action code</span>
                     <input
@@ -2545,6 +2520,14 @@ const updateSelectedEdge = useCallback(
                         onChange={(event) => updateSelectedEdge('isReturn', event.target.checked)}
                     />
                     <span>Return transition (Quay lại)</span>
+                </label>
+                <label className="flow-checkbox">
+                    <input
+                        type="checkbox"
+                        checked={Boolean(selectedEdge.data?.isReturnNeedAccepted)}
+                        onChange={(event) => updateSelectedEdge('isReturnNeedAccepted', event.target.checked)}
+                    />
+                    <span>Is Return Accepted Needed</span>
                 </label>
                 <label>
                     <span>System Command (Lệnh hệ thống)</span>

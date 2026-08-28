@@ -10034,94 +10034,27 @@
                 { disabled: ruleDisabled }
             );
         rendered.setDisabled(ruleDisabled);
-
         return {
             formProps: formProps,
-
+            formItems: decisionFormItems,
+            tatObject: decisionTatObject,
             formId: formProps.formId,
-
             dept: delayObject.dept,
-
             groupName: decisionGroupName,
-
             registryKey: decisionRegistryKey,
-
             params: params,
-
             status: rendered.status,
-
             actionHost: rendered.actionHost,
-
             buttons: rendered.buttons,
-
             primaryButton: rendered.primaryButton,
-
             enable: rendered.enable,
-
             disable: rendered.disable,
-
             setDisabled: rendered.setDisabled,
-
             getButton: rendered.getButton,
-
             ruleDisabled: ruleDisabled
         };
     }
-                //Comment out 2026-08-10
-        // function ensureDecisionCommonStatus(statusId, buttonId) {
-        //     if (!statusId) return $();
-
-        //     var $status = $(`#${statusId}`);
-        //     var $button = buttonId ? $(`#${buttonId}`) : $();
-        //     if (!$status.length) {
-        //         $status = $(`<span id="${statusId}_labelStatus" role="status" aria-live="polite"></span>`);
-        //     }
-
-        //     var $fieldItem = $button.length ? $button.closest(".dx-field-item") : $status.closest(".dx-field-item");
-        //     var $content = $button.length
-        //         ? $button.closest(".dx-field-item-content")
-        //         : $fieldItem.find(".dx-field-item-content").first();
-
-        //     if ($content.length) {
-        //         var $actionRow = $content.children(".decision-action-row").first();
-        //         var $statusRow = $content.children(".decision-status-row").first();
-        //         if (!$statusRow.length) {
-        //             $statusRow = $('<div class="decision-status-row" aria-live="polite"></div>').prependTo($content);
-        //         }
-        //         if (!$actionRow.length) {
-        //             $actionRow = $('<div class="decision-action-row"></div>').appendTo($content);
-        //         }
-        //         if (!$status.parent().is($statusRow)) {
-        //             $status.detach().appendTo($statusRow);
-        //         }
-        //         if ($button.length && !$button.parent().is($actionRow)) {
-        //             $button.detach().appendTo($actionRow);
-        //         }
-        //     } else if (!$status.parent().length && $button.length) {
-        //         $status.prependTo($button.parent());
-        //     }
-
-        //     $status
-        //     .addClass("decision-common-status decision-status-button")
-        //     .attr({ role: "status", "aria-live": "polite" })
-        //     .removeAttr("aria-disabled")
-        //     .css({
-        //         display: "inline-flex",
-        //         alignItems: "center",
-        //         justifyContent: "center",
-        //         gap: "5px",
-        //         minHeight: "20px",
-        //         padding: "2px 8px",
-        //         borderRadius: "999px",
-        //         fontSize: "var(--management-font-body, 10px)",
-        //         fontWeight: "600",
-        //         lineHeight: "16px",
-        //         boxSizing: "border-box",
-        //         width: "fit-content"
-        //     });
-
-        //     return $status;
-        // }
+        
 
         function setDecisionCommonStatus(statusId, typeRender, state) {
 
@@ -11063,8 +10996,8 @@
                                         }
 
     function loadSelectedWorkflow(params) {
+        //start render workflowc lazy load, all view department with decision load first , second time in QT or PI  _Form 
         params = params || {};
-
         const moduleCode = String(params.moduleCode || "")
             .trim()
             .toLowerCase();
@@ -11759,7 +11692,7 @@
         function buildNormalRouteButton(options) {
             const route = options.route;
             const isReturn = options.type === "return";
-
+            const isReturnNeedAccepted = options.route.isReturnNeedAccepted || false;
             const buttonHostId =
                 isReturn
                     ? moduleConfig.getReturnButtonId(stageDept, id)
@@ -11812,13 +11745,19 @@
             ).appendTo($host);
 
             const buttonFormItems = getFormItems(stageDept);
-            const buttonDisabled = shouldDisableWorkflowButton({
+            var buttonDisabled = shouldDisableWorkflowButton({
                 dept: stageDept,
                 stageDept: buttonFormItems.stageDept || stageDept,
                 formItems: buttonFormItems,
                 type: "route",
                 items: $button
-            });
+                });
+
+                    if (isReturn && isReturnNeedAccepted) {
+                        if (!(options.data.tatObject[buttonFormItems.stageDept].AcceptDate) && options.data.tatObject[buttonFormItems.stageDept].AcceptDate == ""){
+                            buttonDisabled = false;
+                        }
+                }
 
             $button.dxButton({
                 disabled: buttonDisabled,
@@ -11913,225 +11852,234 @@
             }
         }
 
-        async function buildCustomRoutes(customRoutes) {
-            for (
-                const [deptIndex, deptItem]
-                of deptCodes.entries()
-            ) {
+            async function buildCustomRoutes(customRoutes) {
+                for (
+                    const [deptIndex, deptItem]
+                    of deptCodes.entries()
+                ) {
                 
-                const normalizedDept =
-                    normalizeDept(deptItem);
+                    const normalizedDept =
+                        normalizeDept(deptItem);
 
-                const customRoutesInDept =
-                    customRoutes.filter(function (route) {
-                        const routeKeys =
-                            getRouteGroupKeys(route);
+                    const customRoutesInDept =
+                        customRoutes.filter(function (route) {
+                            const routeKeys =
+                                getRouteGroupKeys(route);
 
-                        const deptKey =
-                            normalizeGroupKey(deptItem);
+                            const deptKey =
+                                normalizeGroupKey(deptItem);
 
-                        const isDeptMatch =
-                            routeKeys.some(function (routeKey) {
-                                return (
-                                    routeKey === deptKey ||
-                                    routeKey.indexOf(deptKey) >= 0 ||
-                                    deptKey.indexOf(routeKey) >= 0
-                                );
-                            });
+                            const isDeptMatch =
+                                routeKeys.some(function (routeKey) {
+                                    return (
+                                        routeKey === deptKey ||
+                                        routeKey.indexOf(deptKey) >= 0 ||
+                                        deptKey.indexOf(routeKey) >= 0
+                                    );
+                                });
 
-                        const routeData =
-                            String(route?.data || "");
+                            const routeData =
+                                String(route?.data || "");
 
-                        var groupMatch =
-                            !routeData ||
-                            routeData.includes(
-                                `decision${deptItem}Group`
-                            );
-
-                            if (deptItem == "FO")
-                            {
-                                 groupMatch =
+                            var groupMatch =
                                 !routeData ||
                                 routeData.includes(
-                                    `decisionClientGroup`
+                                    `decision${deptItem}Group`
                                 );
-                            }
+
+                                if (deptItem == "FO")
+                                {
+                                     groupMatch =
+                                    !routeData ||
+                                    routeData.includes(
+                                        `decisionClientGroup`
+                                    );
+                                }
                            
 
-                        return isDeptMatch && groupMatch;
-                    });
+                            return isDeptMatch && groupMatch;
+                        });
 
-                if (!customRoutesInDept.length) {
-                    continue;
-                }
-
-                for (
-                    const [routeIndex, route]
-                    of customRoutesInDept.entries()
-                ) {
-                    if (formStages?.pace) {
-                        await formStages.pace(routeIndex);
-                    }
-                    const routeDept =
-                        getRouteDept(
-                            route,
-                            normalizedDept
-                        );
-
-                    let $routeHost =
-                        typeof params.resolveCustomRouteHost === "function"
-                            ? params.resolveCustomRouteHost({
-                                moduleCode: moduleCode,
-                                dept: routeDept,
-                                deptItem: deptItem,
-                                route: route,
-                                id: id,
-                                prefix: prefix
-                            })
-                            : $();
-
-                    if (
-                        !$routeHost?.length &&
-                        moduleCode === viewIdModulePrefix.quotation
-                    ) {
-                        $routeHost =
-                            $(
-                                `#decision-actions-qt-form_${deptItem}_${id}-${deptItem}`
-                            )
-                                .first();
-                    }
-
-                    if (
-                        !$routeHost?.length &&
-                        moduleCode === viewIdModulePrefix.policyIssuance
-                    ) {
-                        $routeHost =
-                            $(
-                                `#decision-actions-pi-form_${deptItem}_${id}-${deptItem}`
-                            )
-                                .first();
-                    }
-
-                    if (!$routeHost.length) {
-                        console.warn(
-                            "Custom route host not found",
-                            {
-                                moduleCode: moduleCode,
-                                deptItem: deptItem,
-                                routeDept: routeDept,
-                                route: route
-                            }
-                        );
-
+                    if (!customRoutesInDept.length) {
                         continue;
                     }
 
-                    const rawRouteKey =
-                        route?.routeId ||
-                        route?.id ||
-                        route?.actionCode ||
-                        routeIndex;
+                    for (
+                        const [routeIndex, route]
+                        of customRoutesInDept.entries()
+                    ) {
+                        if (formStages?.pace) {
+                            await formStages.pace(routeIndex);
+                        }
+                        const routeDept =
+                            getRouteDept(
+                                route,
+                                normalizedDept
+                            );
 
-                    const customButtonId =
-                        `${moduleCode}-custom-route-` +
-                        `${id}-` +
-                        `${routeDept}-` +
-                        `${safeKey(rawRouteKey)}-` +
-                        `${routeIndex}`;
+                        let $routeHost =
+                            typeof params.resolveCustomRouteHost === "function"
+                                ? params.resolveCustomRouteHost({
+                                    moduleCode: moduleCode,
+                                    dept: routeDept,
+                                    deptItem: deptItem,
+                                    route: route,
+                                    id: id,
+                                    prefix: prefix
+                                })
+                                : $();
 
-                    const $old =
-                        $(`#${customButtonId}`);
-
-                    if ($old.length) {
-                        try {
-                            $old.dxButton("instance")?.dispose();
-                        } catch (e) {}
-
-                        $old.remove();
-                    }
-
-                    const $customButton =
-                        $(
-                            `<div
-                                id="${customButtonId}"
-                                data-workflow-record-id="${id}"
-                                data-custom-route-button="true">
-                            </div>`
-                        )
-                            .appendTo($routeHost);
-
-
-                    const formItems =
-                        getFormItems(routeDept);
-
-                    const latestTatObject =
-                        typeof tryParseJSON === "function"
-                            ? (
-                                tryParseJSON(
-                                    formItems.turnAroundTimeAttributes,
-                                    "TAT Load Button Problem"
-                                ) || {}
-                            )
-                            : {};
-
-                    var disabled = shouldDisableWorkflowButton({
-                        dept: routeDept,
-                        stageDept: formItems.stageDept || stageDept,
-                        formItems: formItems,
-                        tatObject: latestTatObject,
-                        type: "custom",
-                        items: $customButton
-                    });
-
-
-                    $customButton.dxButton({
-                        disabled: disabled,
-
-                        text:
-                            route?.displayStatus ||
-                            route?.actionName ||
-                            route?.actionCode ||
-                            "Custom action",
-
-                        icon:
-                            typeof getTransitionButtonIcon === "function"
-                                ? getTransitionButtonIcon(
-                                    route,
-                                    route?.isReturn
-                                        ? "undo"
-                                        : ""
+                        if (
+                            !$routeHost?.length &&
+                            moduleCode === viewIdModulePrefix.quotation
+                        ) {
+                            $routeHost =
+                                $(
+                                    `#decision-actions-qt-form_${deptItem}_${id}-${deptItem}`
                                 )
-                                : undefined,
+                                    .first();
+                        }
 
-                        type:
-                            route?.isReturn
-                                ? "danger"
-                                : "info",
+                        if (
+                            !$routeHost?.length &&
+                            moduleCode === viewIdModulePrefix.policyIssuance
+                        ) {
+                            $routeHost =
+                                $(
+                                    `#decision-actions-pi-form_${deptItem}_${id}-${deptItem}`
+                                )
+                                    .first();
+                        }
 
-                        onClick: function () {
-                            const routeFormItems =
-                                getFormItems(routeDept);
+                        if (!$routeHost.length) {
+                            console.warn(
+                                "Custom route host not found",
+                                {
+                                    moduleCode: moduleCode,
+                                    deptItem: deptItem,
+                                    routeDept: routeDept,
+                                    route: route
+                                }
+                            );
 
-                            const content =
-                                getRemark(routeDept);
+                            continue;
+                        }
 
-                            if (
-                                route?.isReturn &&
-                                !content
-                            ) {
-                                appNotifyWarning(
-                                    "Please put your reason to remarks!",
-                                    false
-                                );
+                        const rawRouteKey =
+                            route?.routeId ||
+                            route?.id ||
+                            route?.actionCode ||
+                            routeIndex;
 
-                                return;
-                            }
+                        const customButtonId =
+                            `${moduleCode}-custom-route-` +
+                            `${id}-` +
+                            `${routeDept}-` +
+                            `${safeKey(rawRouteKey)}-` +
+                            `${routeIndex}`;
 
-                            routeFormItems.comment =
-                                content || "";
+                        const $old =
+                            $(`#${customButtonId}`);
 
-                            if (route?.isReturn) {
-                                return returnToStepFn(
+                        if ($old.length) {
+                            try {
+                                $old.dxButton("instance")?.dispose();
+                            } catch (e) {}
+
+                            $old.remove();
+                        }
+
+                        const $customButton =
+                            $(
+                                `<div
+                                    id="${customButtonId}"
+                                    data-workflow-record-id="${id}"
+                                    data-custom-route-button="true">
+                                </div>`
+                            )
+                                .appendTo($routeHost);
+
+
+                        const formItems =
+                            getFormItems(routeDept);
+
+                        const latestTatObject =
+                            typeof tryParseJSON === "function"
+                                ? (
+                                    tryParseJSON(
+                                        formItems.turnAroundTimeAttributes,
+                                        "TAT Load Button Problem"
+                                    ) || {}
+                                )
+                                : {};
+
+                        var disabled = shouldDisableWorkflowButton({
+                            dept: routeDept,
+                            stageDept: formItems.stageDept || stageDept,
+                            formItems: formItems,
+                            tatObject: latestTatObject,
+                            type: "custom",
+                            items: $customButton
+                        });
+
+
+                        $customButton.dxButton({
+                            disabled: disabled,
+
+                            text:
+                                route?.displayStatus ||
+                                route?.actionName ||
+                                route?.actionCode ||
+                                "Custom action",
+
+                            icon:
+                                typeof getTransitionButtonIcon === "function"
+                                    ? getTransitionButtonIcon(
+                                        route,
+                                        route?.isReturn
+                                            ? "undo"
+                                            : ""
+                                    )
+                                    : undefined,
+
+                            type:
+                                route?.isReturn
+                                    ? "danger"
+                                    : "info",
+
+                            onClick: function () {
+                                const routeFormItems =
+                                    getFormItems(routeDept);
+
+                                const content =
+                                    getRemark(routeDept);
+
+                                if (
+                                    route?.isReturn &&
+                                    !content
+                                ) {
+                                    appNotifyWarning(
+                                        "Please put your reason to remarks!",
+                                        false
+                                    );
+
+                                    return;
+                                }
+
+                                routeFormItems.comment =
+                                    content || "";
+
+                                if (route?.isReturn) {
+                                    return returnToStepFn(
+                                        moduleConfig.formKey,
+                                        state.nextStep,
+                                        route,
+                                        routeFormItems,
+                                        params
+                                    );
+                                }
+
+                                return submitNextStepFn(
                                     moduleConfig.formKey,
                                     state.nextStep,
                                     route,
@@ -12139,48 +12087,39 @@
                                     params
                                 );
                             }
+                        });
 
-                            return submitNextStepFn(
-                                moduleConfig.formKey,
-                                state.nextStep,
-                                route,
-                                routeFormItems,
-                                params
+                        if (
+                            typeof applyTransitionButtonClass === "function"
+                        ) {
+                            applyTransitionButtonClass(
+                                `#${customButtonId}`,
+                                route
                             );
                         }
-                    });
-
-                    if (
-                        typeof applyTransitionButtonClass === "function"
-                    ) {
-                        applyTransitionButtonClass(
-                            `#${customButtonId}`,
-                            route
-                        );
                     }
                 }
             }
-        }
 
-        if (reload) {
-            cleanupDynamicButtons();
-        }
+            if (reload) {
+                cleanupDynamicButtons();
+            }
 
-        if (!guid) {
-            restoreWorkflowUiLockedGroups();
-            state.selectedGuid = null;
-            hideLoading(loadingClass, loadingHost);
+            if (!guid) {
+                restoreWorkflowUiLockedGroups();
+                state.selectedGuid = null;
+                hideLoading(loadingClass, loadingHost);
 
-            return $.Deferred()
-                .resolve()
-                .promise();
-        }
+                return $.Deferred()
+                    .resolve()
+                    .promise();
+            }
 
-        state.selectedGuid = guid;
-
+            state.selectedGuid = guid;
+            //End of lazy load workflow render 
         return ajaxGet(
             moduleConfig.workflowUrl(guid),
-            null
+            
         )
             .then(function (instance) {
                 state.workflowInstance =
@@ -12297,11 +12236,11 @@
                                             routeIndex
                                         );
                                     }
-
                                     buildNormalRouteButton({
                                         route: route,
                                         type: "return",
-                                        routeIndex: routeIndex
+                                        routeIndex: routeIndex,
+                                        ...params
                                     });
                                 }
 
@@ -12319,7 +12258,8 @@
                                     buildNormalRouteButton({
                                         route: route,
                                         type: "submit",
-                                        routeIndex: routeIndex
+                                        routeIndex: routeIndex,
+                                        ...params
                                     });
                                 }
                                 await buildCustomRoutes(

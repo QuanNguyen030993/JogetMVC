@@ -199,7 +199,6 @@
             ...itemsDelay
         )
             .then(async function (decisionContext) {
-
                 /*
                  * decisionContext hiện có:
                  *
@@ -283,7 +282,6 @@
                  * CUSTOM ROUTE
                  * =========================================================
                  */
-
                 var workflowResult =
                     await loadSelectedWorkflow({
 
@@ -293,7 +291,8 @@
 
                         guid: "@quotationGuid",
 
-                        reload: false
+                        reload: false,
+                        data: decisionContext
                     });
 
 
