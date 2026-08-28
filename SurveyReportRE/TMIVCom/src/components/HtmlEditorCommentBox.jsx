@@ -267,11 +267,12 @@ const HtmlEditor = forwardRef(({
     );
 
     const [comments, setComments] = useState(Array.isArray(items) ? items : []);
-    // const [disableComment, setDisableComment] = useState(Boolean(disableComment));
+//  const [disableComment, setDisableComment] = useState(Boolean(disableComment));
 
-    useEffect(() => {
-        setDisableComment(Boolean(disableComment));
-    }, [disableComment]);
+    // useEffect(() => {
+    //     console.log("Execute useEffect");
+    //     setDisableComment(Boolean(disableComment));
+    // }, [disableComment]);
 
     useEffect(() => {
         setComments(Array.isArray(items) ? items : []);
@@ -1324,7 +1325,7 @@ useEffect(() => {
                     if (arguments.length === 1) {
                         return disableComment;
                     }
-
+                    console.log("Execute disableComment params");
                     setDisableComment(Boolean(value));
                     return;
 

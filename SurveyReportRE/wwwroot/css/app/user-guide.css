@@ -21,7 +21,12 @@
     outline-offset: 2px;
 }
 
-.ug-tour { display: none; position: fixed; inset: 0; z-index: 2147483000; pointer-events: none; }
+.ug-tour {
+    display: none;
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+}
 .ug-tour.is-visible { display: block; }
 .ug-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, .5); pointer-events: auto; }
 .ug-highlight {
@@ -30,13 +35,13 @@
     border-radius: 9px;
     box-shadow: 0 0 0 5px rgba(99, 102, 241, .22), 0 10px 30px rgba(15, 23, 42, .25);
     background: rgba(255, 255, 255, .08);
-    z-index: 2;
+    
     transition: all .2s ease;
 }
 
 .ug-popover {
     position: fixed;
-    z-index: 3;
+    
     width: min(370px, calc(100vw - 24px));
     max-height: min(520px, calc(100vh - 24px));
     overflow: auto;
@@ -69,7 +74,7 @@
 .ug-icon-button { width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #64748b; font-size: 22px; cursor: pointer; }
 .ug-icon-button:hover { background: #f1f5f9; color: #0f172a; }
 
-.ug-studio { position: fixed; inset: 0; z-index: 1000; display: none; }
+.ug-studio { position: fixed; inset: 0;  display: none; }
 .ug-studio.is-visible { display: block; }
 .ug-studio-backdrop { position: absolute; inset: 0; background: rgba(15, 23, 42, .45); }
 .ug-studio-panel { position: inherit; top: 0; right: 0; display: flex; flex-direction: column; width: min(660px, 96vw); height: 100%; background: #fff; box-shadow: -16px 0 50px rgba(15, 23, 42, .22); color: #0f172a; }
@@ -110,9 +115,22 @@
 .ug-capture-active { cursor: crosshair !important; }
 .ug-capture-active * { cursor: crosshair !important; }
 .ug-capture-target { outline: 3px solid #f59e0b !important; outline-offset: 3px !important; background-color: rgba(251, 191, 36, .14) !important; }
-.ug-capture-active::after { content: "Click an element to capture it · Esc to cancel"; position: fixed; top: 12px; left: 50%; z-index: 2147483200; transform: translateX(-50%); padding: 8px 14px; border-radius: 999px; background: #0f172a; color: #fff; font-size: 12px; font-weight: 700; pointer-events: none; }
+.ug-capture-active::after {
+    content: "Click an element to capture it · Esc to cancel";
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #0f172a;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    pointer-events: none;
+}
 
-.ug-launcher-panel { position: fixed; top: 43px; right: 12px; z-index: 1000; display: none; width: 300px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; box-shadow: 0 16px 45px rgba(15, 23, 42, .2); }
+.ug-launcher-panel { position: fixed; top: 43px; right: 12px;  display: none; width: 300px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; box-shadow: 0 16px 45px rgba(15, 23, 42, .2); }
 .ug-launcher-panel.is-visible { display: block; }
 .ug-launcher-head { margin-bottom: 8px; color: #0f172a; font-size: 13px; }
 .ug-launcher-list { display: grid; gap: 6px; max-height: 320px; overflow: auto; margin-bottom: 9px; }

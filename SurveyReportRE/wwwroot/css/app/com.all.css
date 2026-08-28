@@ -4,7 +4,7 @@
     font-family: var(--driver-popover-font-family,"Helvetica Neue", Inter, ui-sans-serif, "Apple Color Emoji", Helvetica, Arial, sans-serif);
     box-sizing: border-box;
     color: #2d2d2d;
-    z-index: 1000000000;
+    
     background-color: #fff;
     border-radius: 5px;
     min-width: 250px;
@@ -31,7 +31,7 @@
     all: unset;
     cursor: pointer;
     color: #d2d2d2;
-    z-index: 1;
+    
     text-align: center;
     width: 32px;
     height: 28px;
@@ -394,7 +394,7 @@
     position: absolute;
     top: 50%;
     right: 34px;
-    z-index: 1;
+    
     transform: translateY(-50%);
 }
 
@@ -411,7 +411,7 @@
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
-    z-index: 10020;
+    
     width: min(320px, calc(100vw - 24px));
     box-sizing: border-box;
     padding: 14px;
@@ -713,7 +713,7 @@
     position: absolute;
     top: 50%;
     right: 34px;
-    z-index: 1;
+    
     transform: translateY(-50%);
 }
 
@@ -729,7 +729,7 @@
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
-    z-index: 10020;
+    
     width: min(300px, calc(100vw - 24px));
     box-sizing: border-box;
     padding: 16px;
@@ -842,7 +842,7 @@
 
 .tmivcom-timebox-dial button {
     position: absolute;
-    z-index: 2;
+    
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -874,7 +874,7 @@
 
 .tmivcom-timebox-hand {
     position: absolute;
-    z-index: 1;
+    
     bottom: 50%;
     left: calc(50% - 1px);
     width: 2px;
@@ -886,7 +886,7 @@
 
 .tmivcom-timebox-center {
     position: absolute;
-    z-index: 3;
+    
     top: calc(50% - 4px);
     left: calc(50% - 4px);
     width: 8px;
@@ -1451,7 +1451,7 @@
     width: 7px;
     height: 100%;
     cursor: col-resize;
-    z-index: 5;
+    
     touch-action: none;
 }
 
@@ -2256,7 +2256,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,.08);
     position: sticky;
     top: 0;
-    z-index: 10
+    
 }
 
 .layout {
@@ -2479,7 +2479,7 @@ textarea {
     position: fixed;
     border: 1px dashed #999;
     pointer-events: none;
-    z-index: 99999;
+    
 }
 
 .resize-t {
@@ -2529,7 +2529,7 @@ textarea {
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 12px;
-    z-index: 9999;
+    
     pointer-events: none;
 }
 
@@ -2541,7 +2541,7 @@ textarea {
     border: 2px solid white;
     border-radius: 2px;
     cursor: nwse-resize;
-    z-index: 9999;
+    
 }
 
 .resize-r {
@@ -2790,7 +2790,7 @@ textarea {
     position: absolute;
     top: 100%;
     left: 0;
-    z-index: 1000;
+    
     margin-top: 4px;
     background: #ffffff;
     border: 1px solid #cbd5e1;
@@ -2904,7 +2904,7 @@ textarea {
     position: absolute;
     top: 100%;
     left: 0;
-    z-index: 1000;
+    
     margin-top: 4px;
     background: #ffffff;
     border: 1px solid #cbd5e1;
@@ -2930,11 +2930,11 @@ textarea {
 }
 
     .grid-cell:focus-within {
-        z-index: 50 !important;
+        
     }
 
 .grid-row:hover {
-    z-index: 10 !important;
+    
 }
 
 .grid-toolbar {

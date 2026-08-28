@@ -133,7 +133,7 @@ body,
     width: 7px;
     height: 100%;
     cursor: col-resize;
-    z-index: 5;
+    
     touch-action: none;
 }
 

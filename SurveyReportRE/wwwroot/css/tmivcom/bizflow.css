@@ -2087,7 +2087,7 @@ font-size:12px;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
     max-height: 220px;
     overflow-y: auto;
-    z-index: 9999;
+    
     margin-top: 4px;
 }
 
@@ -2349,7 +2349,7 @@ font-size:12px;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     padding: 8px 10px;
-    z-index: 1000;
+    
     pointer-events: none;
     color: #1e293b;
     font-size: 11px;
@@ -2530,13 +2530,13 @@ font-size:12px;
     display: flex;
     align-items: center;
     padding: 0 6px;
-    z-index: 10;
+    
 }
 
 .block-item:hover {
     transform: translateY(-1px) scale(1.01);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-    z-index: 20;
+    
 }
 
 .block-inner {
@@ -2582,7 +2582,7 @@ font-size:12px;
     border-radius: 6px;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
     padding: 8px 10px;
-    z-index: 1000;
+    
     pointer-events: none;
     color: #1e293b;
     white-space: normal;
@@ -2799,7 +2799,7 @@ font-size:12px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 10px;
-  z-index: 10000;
+  
   white-space: normal;
   text-align: left;
   pointer-events: none;
@@ -2825,7 +2825,7 @@ font-size:12px;
   border-width: 7px;
   border-style: solid;
   border-color: #cbd5e1 transparent transparent transparent;
-  z-index: -1;
+  
 }
 
 .diagram-icon-hover-trigger:hover .diagram-tooltip-popup {
