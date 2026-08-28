@@ -149,7 +149,7 @@ Note:
         left: var(--sidebar-w);
         right: 0;
         bottom: 0;
-        z-index: 60;
+        z-index: var(--z-index-medium);
         background: var(--c-rgba-255-255-255-92);
         border-top: 1px solid var(--border);
         backdrop-filter: blur(6px);
@@ -178,7 +178,7 @@ Note:
         align-items: center;
         justify-content: flex-end;
         gap: 10px;
-        z-index: 1;
+        z-index: var(--z-index-low);
     }
 
     .dept-circle {
@@ -199,7 +199,7 @@ Note:
         cursor: pointer;
         user-select: none;
         transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-        z-index: 2;
+        z-index: var(--z-index-low);
     }
 
     .dept-node:hover .dept-circle {
@@ -249,7 +249,7 @@ Note:
         visibility: hidden;
         pointer-events: none;
         transition: opacity .12s ease, transform .12s ease, visibility .12s ease;
-        z-index: 3;
+        z-index: var(--z-index-low);
     }
 
         .dept-callout::after {
@@ -414,7 +414,7 @@ Note:
             background: var(--c-rgba-107-114-128-35);
             box-shadow: 0 0 0 1px var(--c-rgba-17-24-39-05);
             transition: background .15s ease, transform .15s ease;
-            z-index: 2;
+            z-index: var(--z-index-low);
         }
 
         .pane-splitter:hover::after,

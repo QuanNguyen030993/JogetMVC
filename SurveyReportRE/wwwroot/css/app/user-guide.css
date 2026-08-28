@@ -130,7 +130,19 @@
     pointer-events: none;
 }
 
-.ug-launcher-panel { position: fixed; top: 43px; right: 12px;  display: none; width: 300px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; box-shadow: 0 16px 45px rgba(15, 23, 42, .2); }
+.ug-launcher-panel {
+    position: fixed;
+    top: 43px;
+    right: 12px;
+    display: none;
+    width: 300px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 16px 45px rgba(15, 23, 42, .2);
+    z-index: var(--z-index-high);
+}
 .ug-launcher-panel.is-visible { display: block; }
 .ug-launcher-head { margin-bottom: 8px; color: #0f172a; font-size: 13px; }
 .ug-launcher-list { display: grid; gap: 6px; max-height: 320px; overflow: auto; margin-bottom: 9px; }

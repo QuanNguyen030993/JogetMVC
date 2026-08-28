@@ -2228,7 +2228,6 @@
                                             throw new Error("TMIVCom CommentEditorRoute is not loaded.");
                                         }
                                         var typeRequest = moduleKey == viewIdModulePrefix.quotation ? "Quotation" : "PolicyIssuance"; 
-                                        debugger
                                          var isdisableComment =  shouldDisableComment();
                                          try {
                                              const formItems = $(`[data-form-part='bodyForm'][data-form-dept='${dept}']`).dxForm("instance").option("formItems");
@@ -5927,7 +5926,6 @@
             }
 
             function getAttachmentPreviewPopup(title) {
-                debugger
                 let $host = $("#attachmentPreviewPopup");
                 if (!$host.length) {
                     $host = $('<div id="attachmentPreviewPopup"></div>').appendTo(document.body);
@@ -10457,8 +10455,8 @@
                 setTimeout(() => {
                     if (!statusId || !acceptDate) 
                     {
-                        console.log("Cannot load status from " + statusId, statusId);
-                        console.log("Cannot load acceptDate from " + statusId, acceptDate);
+                        // console.log("Cannot load status from " + statusId, statusId);
+                        // console.log("Cannot load acceptDate from " + statusId, acceptDate);
                     }
                     var statusLabel = defaultStatus;
                     if (acceptDate)
@@ -10798,7 +10796,7 @@
                         ) || {};
                         var pic = picObject[formDataClone.dept];
                         if (!pic) {
-                            console.log("No pic for "+ formDataClone.dept);
+                            // console.log("No pic for "+ formDataClone.dept);
                             return;
 
                         }
@@ -11078,7 +11076,6 @@
                 ))
                 .promise();
         }
-        console.log(params);
         const loadingClass = "actionRight";
         // const loadingHost = params.loadingHost;
         const loadingHost = $(`[aria-action-right='${params.stageDept}']`);
@@ -12063,7 +12060,6 @@
                         )
                             .appendTo($routeHost);
 
-                            console.log(customButtonId);
 
                     const formItems =
                         getFormItems(routeDept);

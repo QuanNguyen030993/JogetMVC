@@ -408,10 +408,19 @@
 .tmivcom-datebox.is-open .tmivcom-datebox-chevron { transform: rotate(180deg); }
 
 .tmivcom-datebox-popover {
-    position: absolute;
+    width: auto;
+    height: auto;
+    z-index: 1503;
+    margin: 0px;
+    left: 0px;
+    top: 0px;
+    transform: translate(0px, 26px);
+    transition: all;
+    visibility: visible;
+    opacity: 1;
+   /* position: absolute;
     top: calc(100% + 8px);
     left: 0;
-    
     width: min(320px, calc(100vw - 24px));
     box-sizing: border-box;
     padding: 14px;
@@ -419,7 +428,7 @@
     border-radius: 14px;
     background: #fff;
     box-shadow: 0 18px 45px rgba(16, 24, 40, .16), 0 2px 8px rgba(16, 24, 40, .08);
-    animation: tmiv-datebox-enter .14s ease-out;
+    animation: tmiv-datebox-enter .14s ease-out;*/
 }
 
 .tmivcom-datebox.is-inline {
@@ -623,7 +632,7 @@
 .tmivcom-datebox-actions button.is-primary:hover { background: #4338ca; }
 
 @media (max-width: 420px) {
-    .tmivcom-datebox-popover { padding: 12px; }
+    .tmivcom-datebox-popover { padding: 12px; z-index:30000; }
     .tmivcom-datebox-hint { display: none; }
     .tmivcom-datebox-footer { justify-content: flex-end; }
 }

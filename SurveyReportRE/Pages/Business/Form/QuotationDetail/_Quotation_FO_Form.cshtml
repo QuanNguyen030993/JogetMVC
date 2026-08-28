@@ -93,7 +93,6 @@
 
 
                 {itemType: "group",caption: "Request Date",colCount:2,items: [
-                /* LEGACY ROLLBACK - DevExtreme dxDateBox
                 {
                     dataField: "requestedDate",
                     editorType: "dxDateBox",
@@ -105,16 +104,17 @@
                     editorType: "dxDateBox",
                     editorOptions: { displayFormat: "dd/MM/yyyy" },
                     label: { template: labelTpl("DueDate - Due date") }
-                }
+                },
+                /* LEGACY ROLLBACK - DevExtreme dxDateBox
                 */
-                makeTmivDateBoxFormItem({
-                    dataField: "requestedDate",
-                    label: { template: labelTpl("RequestedDate - Ngày yêu cầu") }
-                }),
-                makeTmivDateBoxFormItem({
-                    dataField: "dueDate",
-                    label: { template: labelTpl("DueDate - Due date") }
-                })
+                // makeTmivDateBoxFormItem({
+                //     dataField: "requestedDate",
+                //     label: { template: labelTpl("RequestedDate - Ngày yêu cầu") }
+                // }),
+                // makeTmivDateBoxFormItem({
+                //     dataField: "dueDate",
+                //     label: { template: labelTpl("DueDate - Due date") }
+                // })
                 ]},
 
                  {itemType: "group",caption: "Client",colCount:2,items: [

@@ -41,11 +41,11 @@
 
 <!--App CSS: customized-->
 @* <link href="~/css/devextreme/dx-diagram.min.css" rel="stylesheet"> *@
-<link href="~/css/app/tabs.css" rel="stylesheet" type="text/css" asp-append-version="true" />
+<link href="~/css/app/tabs.css" rel="stylesheet" type="text/css"  />
 <link href="~/lib/AdminLTE/sidebar-menu.min.css" rel="stylesheet" />
 @* <link href="~/lib/AdminLTE/_all-skins.min.css" rel="stylesheet" /> *@
 <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
-<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/site.css"  />
 <!--JS library: common -->
 @* <script src="~/lib/devextreme-20.1.4/jquery.min.js"></script> *@
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
@@ -592,6 +592,10 @@
         c_rgba_74_112_255_13: "rgba(74,112,255,.13)"
     });
 
+
+    const _zIndexLow = 1000;
+    const _zIndexMedium = 10000;
+    const _zIndexHigh = 30000;
 
     //Control split group form elements 
     

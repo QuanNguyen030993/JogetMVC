@@ -193,6 +193,7 @@
             },
                 {itemType: "group",caption: "Request Date",colCount:2,items: [
             /* LEGACY ROLLBACK - DevExtreme dxDateBox
+            */
             {
                                   dataField: "requestedDate",
                                   editorType: "dxDateBox",
@@ -205,15 +206,14 @@
                                   editorOptions: { displayFormat: "dd/MM/yyyy" },
                                   label: { template: labelTpl("DueDate - Due date") }
                                 }
-            */
-            makeTmivDateBoxFormItem({
-                dataField: "requestedDate",
-                label: { template: labelTpl("RequestedDate - Ngày yêu cầu") }
-            }),
-            makeTmivDateBoxFormItem({
-                dataField: "dueDate",
-                label: { template: labelTpl("DueDate - Due date") }
-            })
+            // makeTmivDateBoxFormItem({
+            //     dataField: "requestedDate",
+            //     label: { template: labelTpl("RequestedDate - Ngày yêu cầu") }
+            // }),
+            // makeTmivDateBoxFormItem({
+            //     dataField: "dueDate",
+            //     label: { template: labelTpl("DueDate - Due date") }
+            // })
             ]},
 
                  {itemType: "group",caption: "Client",colCount:2,items: [
@@ -242,7 +242,7 @@
                 colCount: 3,
                 items: [
                 { dataField: "requestNo", label: { template: labelTpl("RequestNo - Mã Quotation Request") } },
-                {dataField: "policyNo",editorType: "dxTextBox",visible:true, validationRules: [{ type: "required" }],
+                    { dataField: "policyNo",editorType: "dxTextBox",visible:true, validationRules: [{ type: "required" }]},
                     { dataField: "requestRefNo",visible: false, label: { template: labelTpl("RequestRefNo - Refversion của request") } },
                     { dataField: "quotationCode", label: { template: labelTpl("QuotationCode - Mã quotation khi request vào xử lý (Joget)") } },
                      { dataField:"requestTypeId", editorType:"dxSelectBox", label:{text:"Request Type"}, editorOptions: makeSelectBoxEditorOptions(_enums.requestType),displayExpr: "value",
