@@ -2,10 +2,12 @@ import React, {
     forwardRef,
     useEffect,
     useImperativeHandle,
+    useLayoutEffect,
     useMemo,
     useRef,
     useState
 } from "react";
+import { createPortal } from "react-dom";
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const pad = value => String(value).padStart(2, "0");
@@ -55,6 +57,12 @@ const buildCalendarDays = viewDate => {
     });
 };
 
+const BodyPortal = ({ enabled, children }) => (
+    enabled && typeof document !== "undefined"
+        ? createPortal(children, document.body)
+        : children
+);
+
 const DateBox = forwardRef(({
     value = "",
     onChange,
@@ -93,6 +101,11 @@ const DateBox = forwardRef(({
     const [viewDate, setViewDate] = useState(initialRange[0] || initialSingle || new Date());
     const [opened, setOpened] = useState(false);
     const [calendarView, setCalendarView] = useState("days");
+    const [popoverPosition, setPopoverPosition] = useState({
+        top: 0,
+        left: 0,
+        visibility: "hidden"
+    });
 
     const minDate = useMemo(() => fromDateKey(min), [min]);
     const maxDate = useMemo(() => fromDateKey(max), [max]);
@@ -119,7 +132,9 @@ const DateBox = forwardRef(({
         if (!opened) return undefined;
 
         const closeOnOutsideClick = event => {
-            if (!containerRef.current?.contains(event.target)) setOpened(false);
+            const clickedTrigger = containerRef.current?.contains(event.target);
+            const clickedPopover = popoverRef.current?.contains(event.target);
+            if (!clickedTrigger && !clickedPopover) setOpened(false);
         };
         const closeOnEscape = event => {
             if (event.key === "Escape") setOpened(false);
@@ -132,6 +147,51 @@ const DateBox = forwardRef(({
             document.removeEventListener("keydown", closeOnEscape);
         };
     }, [opened]);
+
+    useLayoutEffect(() => {
+        if (!opened || inline) return undefined;
+
+        let animationFrameId;
+        const viewportMargin = 12;
+        const triggerGap = 8;
+
+        const updatePopoverPosition = () => {
+            window.cancelAnimationFrame(animationFrameId);
+            animationFrameId = window.requestAnimationFrame(() => {
+                const trigger = containerRef.current;
+                const popover = popoverRef.current;
+                if (!trigger || !popover) return;
+
+                const triggerRect = trigger.getBoundingClientRect();
+                const popoverRect = popover.getBoundingClientRect();
+                const popoverWidth = popoverRect.width || 320;
+                const popoverHeight = popoverRect.height || 390;
+
+                const maxLeft = Math.max(viewportMargin, window.innerWidth - popoverWidth - viewportMargin);
+                const left = Math.min(Math.max(triggerRect.left, viewportMargin), maxLeft);
+
+                const topBelow = triggerRect.bottom + triggerGap;
+                const topAbove = triggerRect.top - popoverHeight - triggerGap;
+                const canOpenBelow = topBelow + popoverHeight <= window.innerHeight - viewportMargin;
+                const canOpenAbove = topAbove >= viewportMargin;
+                const top = canOpenBelow || !canOpenAbove
+                    ? Math.min(topBelow, Math.max(viewportMargin, window.innerHeight - popoverHeight - viewportMargin))
+                    : topAbove;
+
+                setPopoverPosition({ top, left, visibility: "visible" });
+            });
+        };
+
+        updatePopoverPosition();
+        window.addEventListener("resize", updatePopoverPosition);
+        document.addEventListener("scroll", updatePopoverPosition, true);
+
+        return () => {
+            window.cancelAnimationFrame(animationFrameId);
+            window.removeEventListener("resize", updatePopoverPosition);
+            document.removeEventListener("scroll", updatePopoverPosition, true);
+        };
+    }, [opened, inline, calendarView, viewDate, startDate, endDate]);
 
     const createValue = (start, end) => isRange
         ? { startDate: toDateKey(start), endDate: toDateKey(end) }
@@ -171,7 +231,11 @@ const DateBox = forwardRef(({
         },
         getValue: () => currentValueRef.current,
         focus: () => containerRef.current?.querySelector(".tmivcom-datebox-trigger")?.focus(),
-        open: () => !disabled && !readOnly && setOpened(true),
+        open: () => {
+            if (disabled || readOnly) return;
+            setPopoverPosition(current => ({ ...current, visibility: "hidden" }));
+            setOpened(true);
+        },
         close: () => setOpened(false)
     }), [startDate, endDate, disabled, readOnly, isRange]);
 
@@ -283,10 +347,14 @@ const DateBox = forwardRef(({
                 disabled={disabled}
                 aria-haspopup="dialog"
                 aria-expanded={opened}
-                onClick={() => !readOnly && setOpened(current => {
-                    if (!current) setCalendarView("days");
-                    return !current;
-                })}
+                onClick={() => {
+                    if (readOnly) return;
+                    if (!opened) {
+                        setCalendarView("days");
+                        setPopoverPosition(current => ({ ...current, visibility: "hidden" }));
+                    }
+                    setOpened(current => !current);
+                }}
             >
                 <svg className="tmivcom-datebox-calendar-icon" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M7 3v3m10-3v3M4.5 9h15M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
@@ -312,12 +380,14 @@ const DateBox = forwardRef(({
             )}
 
             {(opened || inline) && (
-                <div
-                    ref={popoverRef}
-                    className={`tmivcom-datebox-popover ${inline ? "is-inline" : ""}`}
-                    role="dialog"
-                    aria-label={isRange ? "Choose date range" : "Choose date"}
-                >
+                <BodyPortal enabled={!inline}>
+                    <div
+                        ref={popoverRef}
+                        className={`tmivcom-datebox-popover ${inline ? "is-inline" : "is-portalled"}`}
+                        style={!inline ? popoverPosition : undefined}
+                        role="dialog"
+                        aria-label={isRange ? "Choose date range" : "Choose date"}
+                    >
                     <div className="tmivcom-datebox-header">
                         <button type="button" className="tmivcom-datebox-nav" onClick={() => moveCalendar(-1)} aria-label="Previous period">‹</button>
                         <button
@@ -415,7 +485,8 @@ const DateBox = forwardRef(({
                             <button type="button" className="is-primary" onClick={selectToday}>Today</button>
                         </div>
                     </div>}
-                </div>
+                    </div>
+                </BodyPortal>
             )}
         </div>
     );

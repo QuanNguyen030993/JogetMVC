@@ -8278,6 +8278,9 @@
                     devExtremeItem.control = createHtmlEditor($container, $element, devExtremeItem, editorOptions);
                     break;
                 case "dxDateBox":
+                    /*
+                     * LEGACY ROLLBACK - DevExtreme dxDateBox
+                     *
                     var dateBoxDataType = String(
                         devExtremeItem.dataType || editorOptions.dataType || editorOptions.type || "date"
                     ).trim().toLowerCase();
@@ -8287,6 +8290,21 @@
                         type: dateBoxType,
                         displayFormat: dateBoxType === "datetime" ? datetimeFormatter : dateFormatter
                     }).appendTo($container);
+                     */
+
+                    $element
+                        .addClass("tmiv-render-form-datebox")
+                        .appendTo($container)
+                        .datebox({
+                            ...editorOptions,
+                            placeholder: editorOptions.placeholder || "Select date",
+                            locale: editorOptions.locale || "en-GB",
+                            clearable: editorOptions.clearable !== false
+                                && editorOptions.showClearButton !== false,
+                            wheelNavigation: editorOptions.wheelNavigation !== false,
+                            showFooter: editorOptions.showFooter !== false,
+                            value: editorOptions.value ?? ""
+                        });
                     break;
                 case "dxCheckBox":
                     $element.dxCheckBox({

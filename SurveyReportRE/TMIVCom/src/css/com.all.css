@@ -421,6 +421,11 @@
     animation: tmiv-datebox-enter .14s ease-out;
 }
 
+.tmivcom-datebox-popover.is-portalled {
+    position: fixed;
+    z-index: 32020;
+}
+
 .tmivcom-datebox.is-inline {
     display: block;
     width: 100%;
