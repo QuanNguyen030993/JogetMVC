@@ -7,18 +7,21 @@ import {
   useRef,
   useState,
   type ForwardedRef,
+  type CSSProperties,
   type ReactElement,
   type ReactNode,
   type RefAttributes,
 } from 'react';
 import { ColumnHeader } from './columns/ColumnHeader';
+import { ColumnChooser } from './layout/ColumnChooser';
+import { buildBandRows, numericColumnWidth, responsiveHiddenFields, stickyColumnStyles } from './layout/layout';
 import {
   columnField,
   filterRows,
   getColumnValue,
   groupRows,
   nextSort,
-  normalizeColumns,
+  normalizeAllColumns,
   pageRows,
   resolveKey,
   searchRows,
@@ -58,6 +61,7 @@ const DEFAULT_MESSAGES = {
   selectAll: 'Select all rows',
   groupPanel: 'Drag a column here to group',
   add: 'Add row', edit: 'Edit', delete: 'Delete', save: 'Save', cancel: 'Cancel', saveAll: 'Save all', cancelAll: 'Cancel all',
+  columns: 'Columns', resetColumns: 'Reset columns',
 };
 
 const sizeStyle = (value: number | string | undefined) => value === undefined ? undefined : value;
@@ -82,6 +86,8 @@ function DataGridInner<T extends Record<string, unknown>>(
     groupPanel: groupPanelConfig = {},
     summary: summaryConfig = {},
     editing: editingConfig = {},
+    columnChooser: columnChooserConfig = {},
+    responsive: responsiveConfig = {},
     remoteOperations = false,
     plugins = [],
     locale = 'en',
@@ -120,9 +126,16 @@ function DataGridInner<T extends Record<string, unknown>>(
   const rootRef = useRef<HTMLDivElement>(null);
   const initializedRef = useRef(false);
   const newRowKeysRef = useRef<Set<GridKey>>(new Set());
+  const changesRef = useRef<GridChange<T>[]>([]);
+  const workingRowsRef = useRef<T[]>([]);
+  const committingCellRef = useRef<Promise<boolean> | null>(null);
   const lastSelectedIndexRef = useRef<number | null>(null);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
+  const [fixedColumns, setFixedColumns] = useState<Record<string, 'left' | 'right' | null>>({});
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [resizingField, setResizingField] = useState<string | null>(null);
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
   const [dropColumn, setDropColumn] = useState<string | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => new Set());
@@ -139,17 +152,27 @@ function DataGridInner<T extends Record<string, unknown>>(
 
   useEffect(() => { setLocalRows(null); setChanges([]); newRowKeysRef.current.clear(); }, [dataSource]);
 
-  const baseColumns = useMemo(() => normalizeColumns(columnDefinitions, data.rows), [columnDefinitions, data.rows]);
+  const baseColumns = useMemo(() => normalizeAllColumns(columnDefinitions, data.rows), [columnDefinitions, data.rows]);
   const pluginColumns = useMemo(() => plugins.reduce(
     (current, plugin) => plugin.transformColumns ? plugin.transformColumns(current) : current,
     baseColumns,
   ), [baseColumns, plugins]);
-  const columns = useMemo(() => {
+  const orderedColumns = useMemo(() => {
     if (!columnOrder.length) return pluginColumns;
     const positions = new Map(columnOrder.map((field, index) => [field, index]));
     return [...pluginColumns].sort((left, right) =>
       (positions.get(columnField(left)) ?? Number.MAX_SAFE_INTEGER) - (positions.get(columnField(right)) ?? Number.MAX_SAFE_INTEGER));
   }, [pluginColumns, columnOrder]);
+  const configuredColumns = useMemo(() => orderedColumns.map((column) => {
+    const fixed = fixedColumns[columnField(column)];
+    return fixed === undefined ? column : { ...column, fixed: fixed !== null, fixedPosition: fixed ?? undefined };
+  }), [orderedColumns, fixedColumns]);
+  const manuallyVisibleColumns = useMemo(() => configuredColumns.filter((column) =>
+    columnVisibility[columnField(column)] ?? column.visible !== false), [configuredColumns, columnVisibility]);
+  const responsiveHidden = useMemo(() => responsiveConfig.enabled && containerWidth > 0
+    ? responsiveHiddenFields(manuallyVisibleColumns, containerWidth, columnWidths, responsiveConfig.padding)
+    : new Set<string>(), [responsiveConfig.enabled, responsiveConfig.padding, containerWidth, manuallyVisibleColumns, columnWidths]);
+  const columns = useMemo(() => manuallyVisibleColumns.filter((column) => !responsiveHidden.has(columnField(column))), [manuallyVisibleColumns, responsiveHidden]);
   useEffect(() => {
     setColumnOrder((current) => {
       const fields = pluginColumns.map(columnField);
@@ -157,7 +180,21 @@ function DataGridInner<T extends Record<string, unknown>>(
       return next.join('|') === current.join('|') ? current : next;
     });
   }, [pluginColumns]);
+  useEffect(() => {
+    if (!responsiveConfig.enabled || !rootRef.current) return;
+    const updateWidth = () => setContainerWidth(rootRef.current?.clientWidth ?? 0);
+    updateWidth();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', updateWidth);
+      return () => window.removeEventListener('resize', updateWidth);
+    }
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(rootRef.current);
+    return () => observer.disconnect();
+  }, [responsiveConfig.enabled]);
   const workingRows = localRows ?? data.rows;
+  workingRowsRef.current = workingRows;
+  changesRef.current = changes;
   const pluginRows = useMemo(() => plugins.reduce(
     (current, plugin) => plugin.transformRows ? plugin.transformRows(current, { columns, rows: current }) : current,
     workingRows,
@@ -194,10 +231,12 @@ function DataGridInner<T extends Record<string, unknown>>(
   }, [state.setSelection, props.onSelectionChanged, data.rows, keyExpr]);
 
   const publishRows = useCallback((next: T[]) => {
+    workingRowsRef.current = next;
     setLocalRows(next);
   }, []);
 
   const publishChanges = useCallback((next: GridChange<T>[]) => {
+    changesRef.current = next;
     setChanges(next);
     props.onChangesChange?.(next);
   }, [props.onChangesChange]);
@@ -243,26 +282,29 @@ function DataGridInner<T extends Record<string, unknown>>(
     const row = draft as T;
     publishRows(editingConfig.newRowPosition === 'first' ? [row, ...workingRows] : [...workingRows, row]);
     publishChanges([...changes, { type: 'insert', key, data: row }]);
+    const firstEditableField = columns.find((column) => column.allowEditing !== false && columnField(column))?.field;
     setEditingRowKey(key);
-    setEditingCell(null);
+    setEditingCell((editingMode === 'cell' || editingMode === 'batch') && firstEditableField
+      ? { key, field: String(firstEditableField) }
+      : null);
     setEditDraft({ ...row });
     setValidationErrors({});
-  }, [editingConfig.allowAdding, editingConfig.newRowPosition, editingConfig.newRowKey, columns, keyExpr, publishRows, workingRows, publishChanges, changes]);
-
-  const applyDraftToRows = useCallback((key: GridKey, draft: Partial<T>) => workingRows.map((item) =>
-    resolveKey(item, keyExpr) === key ? ({ ...item, ...draft } as T) : item), [workingRows, keyExpr]);
+  }, [editingConfig.allowAdding, editingConfig.newRowPosition, editingConfig.newRowKey, columns, keyExpr, publishRows, workingRows, publishChanges, changes, editingMode]);
 
   const queueUpdate = useCallback((key: GridKey, draft: Partial<T>) => {
-    const existing = changes.find((change) => change.key === key);
-    const oldData = workingRows.find((item) => resolveKey(item, keyExpr) === key);
+    const currentChanges = changesRef.current;
+    const currentRows = workingRowsRef.current;
+    const existing = currentChanges.find((change) => change.key === key);
+    const oldData = currentRows.find((item) => resolveKey(item, keyExpr) === key);
     const next = existing?.type === 'insert'
-      ? changes.map((change) => change === existing ? { ...change, data: { ...change.data, ...draft } } : change)
+      ? currentChanges.map((change) => change === existing ? { ...change, data: { ...change.data, ...draft } } : change)
       : existing?.type === 'update'
-        ? changes.map((change) => change === existing ? { ...change, data: { ...change.data, ...draft } } : change)
-        : [...changes, { type: 'update' as const, key, data: draft, oldData }];
+        ? currentChanges.map((change) => change === existing ? { ...change, data: { ...change.data, ...draft } } : change)
+        : [...currentChanges, { type: 'update' as const, key, data: draft, oldData }];
+    const nextRows = currentRows.map((item) => resolveKey(item, keyExpr) === key ? ({ ...item, ...draft } as T) : item);
     publishChanges(next);
-    publishRows(applyDraftToRows(key, draft));
-  }, [changes, workingRows, keyExpr, publishChanges, publishRows, applyDraftToRows]);
+    publishRows(nextRows);
+  }, [keyExpr, publishChanges, publishRows]);
 
   const persistChanges = useCallback(async (pending: GridChange<T>[], committedRows?: T[]): Promise<boolean> => {
     if (!pending.length) return true;
@@ -315,7 +357,11 @@ function DataGridInner<T extends Record<string, unknown>>(
       publishChanges([]);
       setValidationErrors({});
       resetEdit();
-      if (Array.isArray(dataSource)) props.onRowsChange?.(committedRows ?? localRows ?? workingRows);
+      if (Array.isArray(dataSource)) {
+        const nextRows = committedRows ?? workingRowsRef.current;
+        publishRows(nextRows);
+        props.onRowsChange?.(nextRows);
+      }
       else { setLocalRows(null); await data.reload(); }
       return true;
     } catch (reason) {
@@ -332,7 +378,7 @@ function DataGridInner<T extends Record<string, unknown>>(
     } finally {
       setSaving(false);
     }
-  }, [columns, props.onValidationError, props.onSaving, props.onRowInserting, props.onRowInserted, props.onRowUpdating, props.onRowUpdated, props.onRowRemoving, props.onRowRemoved, props.onSaved, props.onRowsChange, props.onDataError, dataSource, keyExpr, publishChanges, resetEdit, localRows, workingRows, data.reload]);
+  }, [columns, props.onValidationError, props.onSaving, props.onRowInserting, props.onRowInserted, props.onRowUpdating, props.onRowUpdated, props.onRowRemoving, props.onRowRemoved, props.onSaved, props.onRowsChange, props.onDataError, dataSource, keyExpr, publishChanges, publishRows, resetEdit, data.reload]);
 
   const saveCurrentRow = useCallback(async () => {
     if (editingRowKey === null) return false;
@@ -340,33 +386,52 @@ function DataGridInner<T extends Record<string, unknown>>(
     if (!oldData) return false;
     const row = { ...oldData, ...editDraft } as T;
     const nextRows = workingRows.map((item) => resolveKey(item, keyExpr) === editingRowKey ? row : item);
-    setLocalRows(nextRows);
-    const existing = changes.find((change) => change.key === editingRowKey && change.type === 'insert');
+    const existing = changesRef.current.find((change) => change.key === editingRowKey && change.type === 'insert');
     const change: GridChange<T> = existing
       ? { ...existing, data: row }
       : { type: 'update', key: editingRowKey, data: editDraft, oldData };
     return persistChanges([change], nextRows);
-  }, [editingRowKey, workingRows, keyExpr, editDraft, changes, persistChanges]);
+  }, [editingRowKey, workingRows, keyExpr, editDraft, persistChanges]);
 
-  const commitCell = useCallback(async () => {
-    if (!editingCell) return;
-    const oldData = workingRows.find((row) => resolveKey(row, keyExpr) === editingCell.key);
-    if (!oldData) return;
-    const column = columns.find((item) => columnField(item) === editingCell.field);
-    const nextRow = { ...oldData, ...editDraft } as T;
-    if (column) {
-      const errors = await validateRow(nextRow, [column]);
-      if (Object.keys(errors).length) { setValidationErrors(errors); props.onValidationError?.(errors); return; }
-    }
-    const nextRows = applyDraftToRows(editingCell.key, editDraft);
-    setLocalRows(nextRows);
-    if (editingMode === 'batch') {
-      queueUpdate(editingCell.key, editDraft);
-      setEditingCell(null); setEditingRowKey(null); setEditDraft({}); setValidationErrors({});
-    } else {
-      await persistChanges([{ type: 'update', key: editingCell.key, data: editDraft, oldData }], nextRows);
-    }
-  }, [editingCell, workingRows, keyExpr, columns, editDraft, applyDraftToRows, editingMode, queueUpdate, persistChanges, props.onValidationError]);
+  const commitCell = useCallback((): Promise<boolean> => {
+    if (committingCellRef.current) return committingCellRef.current;
+    if (!editingCell) return Promise.resolve(true);
+    const run = (async () => {
+      const oldData = workingRowsRef.current.find((row) => resolveKey(row, keyExpr) === editingCell.key);
+      if (!oldData) return false;
+      const column = columns.find((item) => columnField(item) === editingCell.field);
+      const nextRow = { ...oldData, ...editDraft } as T;
+      if (column) {
+        const errors = await validateRow(nextRow, [column]);
+        if (Object.keys(errors).length) { setValidationErrors(errors); props.onValidationError?.(errors); return false; }
+      }
+      const nextRows = workingRowsRef.current.map((item) => resolveKey(item, keyExpr) === editingCell.key ? nextRow : item);
+      const existingInsert = changesRef.current.find((change) => change.key === editingCell.key && change.type === 'insert');
+      if (editingMode === 'batch') {
+        queueUpdate(editingCell.key, editDraft);
+        resetEdit();
+        return true;
+      }
+      const pending: GridChange<T> = existingInsert
+        ? { ...existingInsert, data: nextRow }
+        : { type: 'update', key: editingCell.key, data: editDraft, oldData };
+      return persistChanges([pending], nextRows);
+    })();
+    const guarded = run.finally(() => { if (committingCellRef.current === guarded) committingCellRef.current = null; });
+    committingCellRef.current = guarded;
+    return guarded;
+  }, [editingCell, keyExpr, columns, editDraft, editingMode, queueUpdate, persistChanges, props.onValidationError, resetEdit]);
+
+  const saveBatchChanges = useCallback(async () => {
+    if (!await commitCell()) return false;
+    return persistChanges(changesRef.current, workingRowsRef.current);
+  }, [commitCell, persistChanges]);
+
+  const startEditCell = useCallback(async (key: GridKey, field: string) => {
+    if (editingCell?.key === key && editingCell.field === field) return;
+    if (editingCell && !await commitCell()) return;
+    startEditRow(key, field);
+  }, [editingCell, commitCell, startEditRow]);
 
   const cancelChanges = useCallback(() => {
     setLocalRows(null);
@@ -467,10 +532,10 @@ function DataGridInner<T extends Record<string, unknown>>(
 
   const reorderColumn = useCallback((targetField: string) => {
     if (!draggedColumn || draggedColumn === targetField) return;
-    const fromIndex = columns.findIndex((column) => columnField(column) === draggedColumn);
-    const toIndex = columns.findIndex((column) => columnField(column) === targetField);
-    if (fromIndex < 0 || toIndex < 0 || columns[fromIndex].allowReordering === false || columns[toIndex].allowReordering === false) return;
-    const next = [...columns];
+    const fromIndex = orderedColumns.findIndex((column) => columnField(column) === draggedColumn);
+    const toIndex = orderedColumns.findIndex((column) => columnField(column) === targetField);
+    if (fromIndex < 0 || toIndex < 0 || orderedColumns[fromIndex].allowReordering === false || orderedColumns[toIndex].allowReordering === false) return;
+    const next = [...orderedColumns];
     const [moved] = next.splice(fromIndex, 1);
     next.splice(toIndex, 0, moved);
     setColumnOrder(next.map(columnField));
@@ -479,7 +544,56 @@ function DataGridInner<T extends Record<string, unknown>>(
     props.onColumnOrderChanged?.(next);
     setDraggedColumn(null);
     setDropColumn(null);
-  }, [draggedColumn, columns, props.onColumnReorder, props.onColumnOrderChanged]);
+  }, [draggedColumn, orderedColumns, props.onColumnReorder, props.onColumnOrderChanged]);
+
+  const changeColumnVisibility = useCallback((field: string, visible: boolean) => {
+    setColumnVisibility((current) => ({ ...current, [field]: visible }));
+    props.onColumnVisibilityChanged?.(field, visible);
+  }, [props.onColumnVisibilityChanged]);
+
+  const changeColumnFixed = useCallback((field: string, position: 'left' | 'right' | null) => {
+    setFixedColumns((current) => ({ ...current, [field]: position }));
+    props.onColumnFixedChanged?.(field, position);
+  }, [props.onColumnFixedChanged]);
+
+  const resetColumnLayout = useCallback(() => {
+    setColumnWidths({});
+    setColumnOrder(pluginColumns.map(columnField));
+    setColumnVisibility({});
+    setFixedColumns({});
+  }, [pluginColumns]);
+
+  const startColumnResize = useCallback((field: string, startX: number) => {
+    const column = columns.find((item) => columnField(item) === field);
+    if (!column || props.allowColumnResizing !== true || column.allowResizing === false) return;
+    const startWidth = numericColumnWidth(column, columnWidths[field]);
+    const columnIndex = columns.findIndex((item) => columnField(item) === field);
+    const nextColumn = columns.slice(columnIndex + 1).find((item) => item.allowResizing !== false);
+    const nextField = nextColumn ? columnField(nextColumn) : undefined;
+    const nextStartWidth = nextColumn ? numericColumnWidth(nextColumn, columnWidths[nextField!]) : 0;
+    let finalWidth = startWidth;
+    setResizingField(field);
+    const onMove = (event: PointerEvent) => {
+      const requested = startWidth + event.clientX - startX;
+      const width = Math.min(column.maxWidth ?? Number.MAX_SAFE_INTEGER, Math.max(column.minWidth ?? 48, requested));
+      finalWidth = width;
+      setColumnWidths((current) => {
+        const next = { ...current, [field]: width };
+        if (props.columnResizingMode === 'nextColumn' && nextColumn && nextField) {
+          next[nextField] = Math.min(nextColumn.maxWidth ?? Number.MAX_SAFE_INTEGER, Math.max(nextColumn.minWidth ?? 48, nextStartWidth - (width - startWidth)));
+        }
+        return next;
+      });
+    };
+    const onEnd = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onEnd);
+      setResizingField(null);
+      props.onColumnResized?.({ column, field, previousWidth: startWidth, width: finalWidth });
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onEnd);
+  }, [columns, columnWidths, props.allowColumnResizing, props.columnResizingMode, props.onColumnResized]);
 
   const autoFitColumn = useCallback((field: string) => {
     const column = columns.find((item) => columnField(item) === field);
@@ -544,13 +658,18 @@ function DataGridInner<T extends Record<string, unknown>>(
     },
     addRow,
     editRow: (key) => startEditRow(key),
-    editCell: (key, field) => startEditRow(key, field),
+    editCell: (key, field) => { void startEditCell(key, field); },
     deleteRow,
     getChanges: () => changes,
     saveChanges: () => persistChanges(changes, workingRows),
     cancelChanges,
     autoFitColumn,
     autoFitColumns: () => columns.forEach((column) => autoFitColumn(columnField(column))),
+    fixColumn: (field, position = 'left') => changeColumnFixed(field, position),
+    unfixColumn: (field) => changeColumnFixed(field, null),
+    showColumn: (field) => changeColumnVisibility(field, true),
+    hideColumn: (field) => changeColumnVisibility(field, false),
+    resetColumnLayout,
     navigateToCell,
     focus: () => rootRef.current?.focus(),
     getDataSource: () => dataSource,
@@ -577,6 +696,11 @@ function DataGridInner<T extends Record<string, unknown>>(
   const columnOffset = Number(showSelection) + Number(showRowNumber);
   const commandOffset = Number(editingEnabled);
   const bodyColSpan = columns.length + columnOffset + commandOffset;
+  const selectionStyle: CSSProperties | undefined = showSelection ? { position: 'sticky', left: 0, zIndex: 4 } : undefined;
+  const rowNumberStyle: CSSProperties | undefined = showRowNumber ? { position: 'sticky', left: showSelection ? 44 : 0, zIndex: 4 } : undefined;
+  const commandStyle: CSSProperties | undefined = editingEnabled ? { position: 'sticky', right: 0, zIndex: 4 } : undefined;
+  const columnStyles = useMemo(() => stickyColumnStyles(columns, columnWidths, (showSelection ? 44 : 0) + (showRowNumber ? 60 : 0), editingEnabled ? 150 : 0), [columns, columnWidths, showSelection, showRowNumber, editingEnabled]);
+  const bandRows = useMemo(() => buildBandRows(columns), [columns]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (props.disabled || !columns.length || !visibleRows.length) return;
@@ -620,7 +744,7 @@ function DataGridInner<T extends Record<string, unknown>>(
     const renderedRow = rowEditing ? ({ ...row, ...editDraft } as T) : row;
     const editableFields = new Set(columns.filter((column) => column.allowEditing !== false).map(columnField));
     const activeFields = new Set<string>();
-    if (rowEditing && (editingMode === 'row' || isNewRow)) editableFields.forEach((field) => activeFields.add(field));
+    if (rowEditing && editingMode === 'row') editableFields.forEach((field) => activeFields.add(field));
     if (editingCell?.key === rowKey) activeFields.add(editingCell.field);
     const rowChange = changes.find((change) => change.key === rowKey);
     const changedFields = new Set(Object.keys(rowChange?.data ?? {}));
@@ -649,13 +773,12 @@ function DataGridInner<T extends Record<string, unknown>>(
         showCommands={editingEnabled}
         canEdit={canUpdateRow(row) && editingMode !== 'cell' && editingMode !== 'batch'}
         canDelete={canDeleteRow(row)}
-        rowEditing={rowEditing && (editingMode === 'row' || isNewRow && editingMode !== 'batch')}
+        rowEditing={rowEditing && editingMode === 'row'}
         onValueChange={(field, value) => {
           const nextDraft = { ...editDraft, [field]: value } as Partial<T>;
           setEditDraft(nextDraft);
           if (editingMode === 'batch' && isNewRow) {
-            publishRows(applyDraftToRows(rowKey, nextDraft));
-            publishChanges(changes.map((change) => change.key === rowKey && change.type === 'insert' ? { ...change, data: nextDraft } : change));
+            queueUpdate(rowKey, { [field]: value } as Partial<T>);
           }
         }}
         onCommitCell={() => void commitCell()}
@@ -675,14 +798,18 @@ function DataGridInner<T extends Record<string, unknown>>(
           const column = columns[columnIndex];
           focusCell({ rowIndex, columnIndex, rowKey, field: columnField(column) });
           props.onCellClick?.({ data: row, key: rowKey, rowIndex, column, columnIndex, value: getColumnValue(row, column), event });
-          if ((editingMode === 'cell' || editingMode === 'batch') && editingConfig.startEditAction !== 'doubleClick' && column.allowEditing !== false) startEditRow(rowKey, columnField(column));
+          if ((editingMode === 'cell' || editingMode === 'batch') && editingConfig.startEditAction !== 'doubleClick' && column.allowEditing !== false) void startEditCell(rowKey, columnField(column));
         }}
         onCellDoubleClick={(columnIndex, event) => {
           const column = columns[columnIndex];
           props.onCellDoubleClick?.({ data: row, key: rowKey, rowIndex, column, columnIndex, value: getColumnValue(row, column), event });
-          if ((editingMode === 'cell' || editingMode === 'batch') && column.allowEditing !== false) startEditRow(rowKey, columnField(column));
+          if ((editingMode === 'cell' || editingMode === 'batch') && column.allowEditing !== false) void startEditCell(rowKey, columnField(column));
         }}
         onCellFocus={(columnIndex) => focusCell({ rowIndex, columnIndex, rowKey, field: columnField(columns[columnIndex]) })}
+        columnStyles={columnStyles}
+        selectionStyle={selectionStyle}
+        rowNumberStyle={rowNumberStyle}
+        commandStyle={commandStyle}
       />
     );
   };
@@ -736,11 +863,11 @@ function DataGridInner<T extends Record<string, unknown>>(
       style={{ width: sizeStyle(props.width), height: sizeStyle(props.height), minHeight: sizeStyle(props.minHeight), ...props.style }}
       onKeyDown={handleKeyDown}
     >
-      {(searchPanelConfig.visible || groupPanelConfig.visible || editingEnabled) && (
+      {(searchPanelConfig.visible || groupPanelConfig.visible || editingEnabled || columnChooserConfig.enabled) && (
         <div className="tmiv-grid__toolbar">
           {editingEnabled && <div className="tmiv-grid__editing-toolbar">
             {editingConfig.allowAdding === true && <button type="button" disabled={saving || editingRowKey !== null} onClick={addRow}>＋ {editingTexts.add}</button>}
-            {editingMode === 'batch' && <><button type="button" disabled={saving || !changes.length} onClick={() => void persistChanges(changes, workingRows)}>{editingTexts.saveAll}</button><button type="button" disabled={saving || !changes.length} onClick={cancelChanges}>{editingTexts.cancelAll}</button></>}
+            {editingMode === 'batch' && <><button type="button" disabled={saving || (!changes.length && editingCell === null)} onClick={() => void saveBatchChanges()}>{editingTexts.saveAll}</button><button type="button" disabled={saving || (!changes.length && editingCell === null)} onClick={cancelChanges}>{editingTexts.cancelAll}</button></>}
             {editError && <span role="alert" className="tmiv-grid__edit-error">{editError.message}</span>}
           </div>}
           {groupPanelConfig.visible && (
@@ -753,6 +880,16 @@ function DataGridInner<T extends Record<string, unknown>>(
             />
           )}
           {searchPanelConfig.visible && <SearchPanel config={searchPanelConfig} value={state.search} onChange={updateSearch} />}
+          {columnChooserConfig.enabled && <ColumnChooser
+            config={columnChooserConfig}
+            columns={orderedColumns}
+            visibleFields={new Set(orderedColumns.filter((column) => columnVisibility[columnField(column)] ?? column.visible !== false).map(columnField))}
+            buttonText={messages.columns}
+            resetText={messages.resetColumns}
+            onVisibilityChange={changeColumnVisibility}
+            onOrderChange={setColumnOrder}
+            onReset={resetColumnLayout}
+          />}
         </div>
       )}
       {(editingMode === 'form' || editingMode === 'popup') && editingRowKey !== null && (
@@ -782,9 +919,28 @@ function DataGridInner<T extends Record<string, unknown>>(
             {editingEnabled && <col style={{ width: 150 }} />}
           </colgroup>
           <thead className="tmiv-grid__head">
+            {bandRows.map((bandRow, bandIndex) => (
+              <tr role="row" className="tmiv-grid__band-row" key={`band-${bandIndex}`}>
+                {bandIndex === 0 && showSelection && <th rowSpan={bandRows.length + 1} role="columnheader" className="tmiv-grid__header-cell tmiv-grid__header-cell--selection tmiv-grid__cell--fixed-left" style={{ ...selectionStyle, zIndex: 7 }}>
+                  <input
+                    type="checkbox"
+                    aria-label={messages.selectAll}
+                    checked={visibleRows.length > 0 && keysForRows(visibleRows).every((key) => state.selection.includes(key))}
+                    onChange={() => {
+                      const pageKeys = keysForRows(visibleRows);
+                      const allSelected = pageKeys.every((key) => state.selection.includes(key));
+                      updateSelection(allSelected ? state.selection.filter((key) => !pageKeys.includes(key)) : [...new Set([...state.selection, ...pageKeys])]);
+                    }}
+                  />
+                </th>}
+                {bandIndex === 0 && showRowNumber && <th rowSpan={bandRows.length + 1} role="columnheader" className="tmiv-grid__header-cell tmiv-grid__header-cell--row-number tmiv-grid__cell--fixed-left" style={{ ...rowNumberStyle, zIndex: 7 }}>#</th>}
+                {bandRow.map((band, index) => <th key={`${band.caption}-${index}`} colSpan={band.colSpan} role="columnheader" className="tmiv-grid__header-cell tmiv-grid__header-cell--band">{band.caption}</th>)}
+                {bandIndex === 0 && editingEnabled && <th rowSpan={bandRows.length + 1} role="columnheader" className="tmiv-grid__header-cell tmiv-grid__header-cell--commands tmiv-grid__cell--fixed-right" style={{ ...commandStyle, zIndex: 7 }}>Actions</th>}
+              </tr>
+            ))}
             <tr role="row">
-              {showSelection && (
-                <th role="columnheader" className="tmiv-grid__header-cell tmiv-grid__header-cell--selection">
+              {!bandRows.length && showSelection && (
+                <th role="columnheader" className="tmiv-grid__header-cell tmiv-grid__header-cell--selection tmiv-grid__cell--fixed-left" style={{ ...selectionStyle, zIndex: 7 }}>
                   <input
                     type="checkbox"
                     aria-label={messages.selectAll}
@@ -799,7 +955,7 @@ function DataGridInner<T extends Record<string, unknown>>(
                   />
                 </th>
               )}
-              {showRowNumber && <th role="columnheader" className="tmiv-grid__header-cell tmiv-grid__header-cell--row-number">#</th>}
+              {!bandRows.length && showRowNumber && <th role="columnheader" className="tmiv-grid__header-cell tmiv-grid__header-cell--row-number tmiv-grid__cell--fixed-left" style={{ ...rowNumberStyle, zIndex: 7 }}>#</th>}
               {columns.map((column, columnIndex) => (
                 <ColumnHeader
                   key={columnField(column) || columnIndex}
@@ -821,12 +977,17 @@ function DataGridInner<T extends Record<string, unknown>>(
                   onDragEnd={() => { setDraggedColumn(null); setDropColumn(null); }}
                   onDragOver={() => setDropColumn(columnField(column))}
                   onDrop={() => reorderColumn(columnField(column))}
+                  resizable={props.allowColumnResizing === true && column.allowResizing !== false}
+                  resizing={resizingField === columnField(column)}
+                  layoutStyle={columnStyles[columnField(column)]}
+                  onResizeStart={(clientX) => startColumnResize(columnField(column), clientX)}
+                  onAutoFit={() => autoFitColumn(columnField(column))}
                 />
               ))}
-              {editingEnabled && <th role="columnheader" className="tmiv-grid__header-cell tmiv-grid__header-cell--commands">Actions</th>}
+              {!bandRows.length && editingEnabled && <th role="columnheader" className="tmiv-grid__header-cell tmiv-grid__header-cell--commands tmiv-grid__cell--fixed-right" style={{ ...commandStyle, zIndex: 7 }}>Actions</th>}
             </tr>
             {filterRowConfig.visible && (
-              <FilterRow columns={columns} filters={state.filters.filter((item) => item.operator !== 'in')} columnOffset={columnOffset} commandOffset={commandOffset} onChange={updateFilter} />
+              <FilterRow columns={columns} filters={state.filters.filter((item) => item.operator !== 'in')} columnOffset={columnOffset} commandOffset={commandOffset} columnStyles={columnStyles} offsetStyles={[selectionStyle, rowNumberStyle].filter(Boolean) as CSSProperties[]} commandStyle={commandStyle} onChange={updateFilter} />
             )}
           </thead>
           <tbody className="tmiv-grid__body">
@@ -847,7 +1008,7 @@ function DataGridInner<T extends Record<string, unknown>>(
             )}
             {!data.loading && !data.error && (state.groups.length ? renderGroupNodes(groupedNodes) : visibleRows.map(renderDataRow))}
           </tbody>
-          {!!summaryConfig.totalItems?.length && <SummaryFooter rows={sortedRows} columns={columns} items={summaryConfig.totalItems} columnOffset={columnOffset} commandOffset={commandOffset} locale={locale} />}
+          {!!summaryConfig.totalItems?.length && <SummaryFooter rows={sortedRows} columns={columns} items={summaryConfig.totalItems} columnOffset={columnOffset} commandOffset={commandOffset} locale={locale} columnStyles={columnStyles} offsetStyles={[selectionStyle, rowNumberStyle].filter(Boolean) as CSSProperties[]} commandStyle={commandStyle} />}
         </table>
       </div>
       {pagingEnabled && pagerConfig.visible !== false && (

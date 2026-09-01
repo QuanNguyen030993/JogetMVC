@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type CSSProperties } from 'react';
 import type { GridCellContext } from '../types/grid.types';
 import { formatValue } from '../core/GridEngine';
 import { CellEditor } from '../editing/CellEditor';
@@ -18,6 +18,7 @@ interface DataCellProps<T> extends GridCellContext<T> {
   onValueChange?: (value: unknown) => void;
   onCommitEdit?: () => void;
   onCancelEdit?: () => void;
+  layoutStyle?: CSSProperties;
 }
 
 const highlightText = (text: string, search: string) => {
@@ -59,6 +60,7 @@ const DataCellInner = <T,>({
   onValueChange,
   onCommitEdit,
   onCancelEdit,
+  layoutStyle,
 }: DataCellProps<T>) => {
   const context = { row, data: row, value, displayValue, column, rowIndex, columnIndex };
   const className = typeof column.cellClassName === 'function'
@@ -76,8 +78,8 @@ const DataCellInner = <T,>({
       tabIndex={focused ? 0 : -1}
       data-grid-row={rowIndex}
       data-grid-column={columnIndex}
-      className={`tmiv-grid__cell ${focused ? 'tmiv-grid__cell--focused' : ''} ${editing ? 'tmiv-grid__cell--editing' : ''} ${changed ? 'tmiv-grid__cell--modified' : ''} ${error ? 'tmiv-grid__cell--invalid' : ''} ${className}`.trim()}
-      style={{ textAlign: column.alignment }}
+      className={`tmiv-grid__cell ${focused ? 'tmiv-grid__cell--focused' : ''} ${editing ? 'tmiv-grid__cell--editing' : ''} ${changed ? 'tmiv-grid__cell--modified' : ''} ${error ? 'tmiv-grid__cell--invalid' : ''} ${column.fixed ? `tmiv-grid__cell--fixed-${column.fixedPosition === 'right' ? 'right' : 'left'}` : ''} ${className}`.trim()}
+      style={{ textAlign: column.alignment, ...layoutStyle }}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onFocus={onFocus}

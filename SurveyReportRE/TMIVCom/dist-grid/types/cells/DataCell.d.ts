@@ -1,3 +1,4 @@
+import { type CSSProperties } from 'react';
 import type { GridCellContext } from '../types/grid.types';
 interface DataCellProps<T> extends GridCellContext<T> {
     locale: string;
@@ -14,8 +15,9 @@ interface DataCellProps<T> extends GridCellContext<T> {
     onValueChange?: (value: unknown) => void;
     onCommitEdit?: () => void;
     onCancelEdit?: () => void;
+    layoutStyle?: CSSProperties;
 }
-declare const DataCellInner: <T>({ row, value, displayValue, column, rowIndex, columnIndex, locale, focused, onClick, onDoubleClick, onFocus, searchText, highlightSearchText, editing, changed, error, saving, onValueChange, onCommitEdit, onCancelEdit, }: DataCellProps<T>) => import("react/jsx-runtime").JSX.Element;
+declare const DataCellInner: <T>({ row, value, displayValue, column, rowIndex, columnIndex, locale, focused, onClick, onDoubleClick, onFocus, searchText, highlightSearchText, editing, changed, error, saving, onValueChange, onCommitEdit, onCancelEdit, layoutStyle, }: DataCellProps<T>) => import("react/jsx-runtime").JSX.Element;
 export declare const DataCell: typeof DataCellInner;
 export {};
 //# sourceMappingURL=DataCell.d.ts.map

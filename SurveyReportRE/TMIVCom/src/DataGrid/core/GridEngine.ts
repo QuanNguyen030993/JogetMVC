@@ -52,7 +52,13 @@ export const normalizeColumns = <T extends Record<string, unknown>>(
     ? columns
     : Object.keys(rows[0] ?? {}).map((field) => ({ field, caption: field } as GridColumn<T>));
 
-  return source
+  const flatten = (items: GridColumn<T>[], path: string[] = []): GridColumn<T>[] => items.flatMap((column) => {
+    const caption = column.caption ?? String(column.field ?? column.dataField ?? column.name ?? '');
+    if (column.columns?.length) return flatten(column.columns, [...path, caption]);
+    return [{ ...column, bandPath: column.bandPath ?? path }];
+  });
+
+  return flatten(source)
     .map((column, index) => ({
       ...column,
       field: column.field ?? column.dataField,
@@ -62,6 +68,27 @@ export const normalizeColumns = <T extends Record<string, unknown>>(
     }))
     .filter((column) => column.visible !== false)
     .sort((left, right) => (left.visibleIndex ?? 0) - (right.visibleIndex ?? 0));
+};
+
+export const normalizeAllColumns = <T extends Record<string, unknown>>(
+  columns: GridColumn<T>[] | undefined,
+  rows: T[],
+): GridColumn<T>[] => {
+  const source = columns?.length
+    ? columns
+    : Object.keys(rows[0] ?? {}).map((field) => ({ field, caption: field } as GridColumn<T>));
+  const flatten = (items: GridColumn<T>[], path: string[] = []): GridColumn<T>[] => items.flatMap((column) => {
+    const caption = column.caption ?? String(column.field ?? column.dataField ?? column.name ?? '');
+    if (column.columns?.length) return flatten(column.columns, [...path, caption]);
+    return [{ ...column, bandPath: column.bandPath ?? path }];
+  });
+  return flatten(source).map((column, index) => ({
+    ...column,
+    field: column.field ?? column.dataField,
+    caption: column.caption ?? String(column.field ?? column.dataField ?? column.name ?? ''),
+    visibleIndex: column.visibleIndex ?? index,
+    allowSorting: column.allowSorting !== false,
+  })).sort((left, right) => (left.visibleIndex ?? 0) - (right.visibleIndex ?? 0));
 };
 
 const compareValues = (left: unknown, right: unknown): number => {

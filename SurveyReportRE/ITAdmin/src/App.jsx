@@ -39,6 +39,7 @@ import './styles/turnAroundTimeAnalytics.css';
 import './styles/usermanagement.css';
 import { notify, ToastContainer } from '../../TMIVCom/src/components/Notification';
 import "./fonts/css/all.min.css";
+import './styles/admin-layout.css';
 
 // Override global window.alert to route through TMIVCom Notification (right bottom)
 if (typeof window !== 'undefined') {
@@ -594,7 +595,7 @@ function App() {
         </nav>
       </aside>
 
-      <main className="main-content">
+      <main className={`main-content section-${activeSection}`}>
         {content}
       </main>
       <ToastContainer />

@@ -5,6 +5,30 @@ import { DataGrid, GridCustomStore } from '../../../TMIVCom/src/DataGrid';
 
 const API_BASE_URL = appsettings.UrlConfig.Host;
 
+const normalizeDataType = (value) => {
+  const type = String(value || 'string').toLowerCase();
+  if (type.includes('datetime') || type.includes('timestamp')) return 'datetime';
+  if (type === 'date' || type.endsWith('.date')) return 'date';
+  if (type.includes('int') || type.includes('number') || type.includes('decimal') || type.includes('double') || type.includes('float')) return 'number';
+  if (type.includes('bool')) return 'boolean';
+  return 'string';
+};
+
+const formatBadgeValue = (value, dataType) => {
+  if (value === null || value === undefined || value === '') return '—';
+  if (dataType === 'number') {
+    const number = Number(value);
+    return Number.isFinite(number) ? new Intl.NumberFormat('vi-VN').format(number) : String(value);
+  }
+  if (dataType === 'date' || dataType === 'datetime') {
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) return new Intl.DateTimeFormat('vi-VN', dataType === 'datetime'
+      ? { dateStyle: 'short', timeStyle: 'short' }
+      : { dateStyle: 'short' }).format(date);
+  }
+  return String(value);
+};
+
 const parseJsonOption = (value, fallback = undefined) => {
   if (!value) return fallback;
   if (typeof value === 'object') return value;
@@ -20,12 +44,13 @@ const parseJsonOption = (value, fallback = undefined) => {
   }
 };
 
-const mapSchemaColumn = (column) => {
+const mapSchemaColumn = (column, index) => {
   const validationRules = parseJsonOption(column.validationRules, []);
+  const dataType = normalizeDataType(column.dataType);
   return {
     field: column.dataField || column.field,
     caption: column.caption || column.dataField || column.field,
-    dataType: String(column.dataType || 'string').toLowerCase(),
+    dataType,
     width: column.width || undefined,
     minWidth: column.minWidth || 90,
     visible: column.visible !== false,
@@ -34,13 +59,25 @@ const mapSchemaColumn = (column) => {
     allowFiltering: column.allowFiltering !== false,
     allowGrouping: column.allowGrouping !== false,
     allowReordering: column.allowReordering !== false,
+    allowResizing: column.allowResizing !== false,
     allowEditing: column.allowEditing !== false,
+    fixed: column.fixed === true,
+    fixedPosition: column.fixedPosition === 'right' ? 'right' : 'left',
+    hidingPriority: column.hidingPriority ?? 1000 - index,
+    minScreenWidth: column.minScreenWidth || undefined,
+    bandPath: parseJsonOption(column.bandPath, column.bandPath),
     alignment: column.alignment,
     format: column.format,
     lookup: parseJsonOption(column.lookup, column.lookup),
     editorType: column.editorType || column.editor,
     editorOptions: parseJsonOption(column.editorOptions, {}),
     validationRules: Array.isArray(validationRules) ? validationRules : [],
+    renderCell: ({ displayValue, value }) => {
+      if (!['string', 'date', 'datetime', 'number'].includes(dataType)) return String(displayValue ?? value ?? '');
+      const badgeType = dataType === 'date' ? 'datetime' : dataType;
+      const text = formatBadgeValue(displayValue ?? value, dataType);
+      return <span className={`itadmin-grid-value-badge itadmin-grid-value-badge--${badgeType}`} title={text}>{text}</span>;
+    },
   };
 };
 
@@ -61,6 +98,7 @@ const mutateDataGridConfig = async (path, method, key, values) => {
 
 export default function DataGridConfigList() {
   const [engine, setEngine] = useState('modular');
+  const [editMode, setEditMode] = useState('batch');
   const [columns, setColumns] = useState([]);
   const [schemaError, setSchemaError] = useState(null);
 
@@ -111,7 +149,7 @@ export default function DataGridConfigList() {
       <header className="itadmin-grid-list__header">
         <div>
           <h2>DataGrid List</h2>
-          <p>{engine === 'modular' ? 'TMIV modular DataGrid — Phase 3 batch editing & validation' : 'Legacy CustomGrid — batch editing'}</p>
+          <p>{engine === 'modular' ? `TMIV modular DataGrid — ${editMode} editing` : 'Legacy CustomGrid — batch editing'}</p>
         </div>
         <div className="itadmin-grid-list__engine" role="group" aria-label="Grid engine">
           <button type="button" className={engine === 'modular' ? 'is-active' : ''} onClick={() => setEngine('modular')}>
@@ -121,6 +159,11 @@ export default function DataGridConfigList() {
             Legacy edit
           </button>
         </div>
+        {engine === 'modular' && <div className="itadmin-grid-list__engine" role="group" aria-label="Editing mode">
+          {['batch', 'row', 'cell'].map((mode) => <button type="button" key={mode} className={editMode === mode ? 'is-active' : ''} onClick={() => setEditMode(mode)}>
+            {mode[0].toUpperCase() + mode.slice(1)}
+          </button>)}
+        </div>}
       </header>
 
       {engine === 'legacy' ? (
@@ -129,6 +172,7 @@ export default function DataGridConfigList() {
         <div className="itadmin-grid-list__error">{schemaError.message}</div>
       ) : (
         <DataGrid
+          key={`modular-${editMode}`}
           dataSource={store}
           keyExpr="id"
           columns={columns}
@@ -140,15 +184,18 @@ export default function DataGridConfigList() {
           hoverStateEnabled
           columnAutoWidth
           allowColumnReordering
+          allowColumnResizing
+          columnResizingMode="widget"
+          columnChooser={{ enabled: true, mode: 'dragAndDrop', searchable: true, allowSelectAll: true, title: 'Tùy chọn cột' }}
+          responsive={{ enabled: true, padding: 254 }}
           sorting={{ mode: 'multiple' }}
           searchPanel={{ visible: true, placeholder: 'Tìm trong DataGrid List...', width: 320, debounce: 250, highlightSearchText: true }}
           filterRow={{ visible: true, applyMode: 'auto' }}
           headerFilter={{ visible: true, searchable: true }}
           groupPanel={{ visible: true, allowColumnDragging: true, emptyText: 'Kéo cột vào đây để nhóm dữ liệu' }}
           grouping={{ autoExpandAll: true, allowCollapsing: true }}
-          summary={{ totalItems: [{ type: 'count', displayFormat: 'Tổng: {0} bản ghi' }] }}
           editing={{
-            mode: 'batch',
+            mode: editMode,
             allowAdding: true,
             allowUpdating: true,
             allowDeleting: true,
@@ -166,7 +213,7 @@ export default function DataGridConfigList() {
             showInfo: true,
           }}
           rowNumber={{ visible: true, mode: 'absolute' }}
-          messages={{ noData: 'Không có cấu hình DataGrid', loading: 'Đang tải DataGrid List...', retry: 'Tải lại' }}
+          messages={{ noData: 'Không có cấu hình DataGrid', loading: 'Đang tải DataGrid List...', retry: 'Tải lại', columns: 'Cột', resetColumns: 'Đặt lại cột' }}
         />
       )}
     </section>

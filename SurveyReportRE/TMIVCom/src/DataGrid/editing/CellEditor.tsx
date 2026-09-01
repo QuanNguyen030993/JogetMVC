@@ -25,6 +25,7 @@ export const CellEditor = <T,>({ row, column, value, error, disabled = false, au
       if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); onCommit?.(); }
       if (event.key === 'Tab') onCommit?.();
     },
+    onBlur: onCommit,
   };
   const setValue = (next: unknown) => onChange(coerceEditorValue(next, column));
   const context = { row, data: row, value, displayValue: value, column, rowIndex: -1, columnIndex: -1, setValue, error, disabled };
@@ -48,5 +49,5 @@ export const CellEditor = <T,>({ row, column, value, error, disabled = false, au
   const type = column.dataType === 'number' || editorType === 'numberbox' ? 'number'
     : column.dataType === 'date' || editorType === 'datebox' ? 'date'
       : column.dataType === 'datetime' || editorType === 'datetimebox' ? 'datetime-local' : 'text';
-  return <input {...common} type={type} value={String(value ?? '')} onChange={(event) => setValue(event.target.value)} onBlur={onCommit} />;
+  return <input {...common} type={type} value={String(value ?? '')} onChange={(event) => setValue(event.target.value)} />;
 };

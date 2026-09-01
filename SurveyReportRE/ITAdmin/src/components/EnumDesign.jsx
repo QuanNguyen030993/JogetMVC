@@ -310,7 +310,7 @@ export default function EnumDesign() {
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "320px 1fr 320px", gap: "20px", flex: 1, minHeight: "600px" }}>
+      <div className="dictionary-layout" style={{ display: "grid", gridTemplateColumns: "320px 1fr 320px", gap: "20px", flex: 1, minHeight: "600px" }}>
         
         {/* LEFT PANEL: ENUM MANAGEMENT */}
         <div className="panel" style={{ border: "1px solid #e2e8f0", padding: "15px", borderRadius: "12px", background: "white", display: "flex", flexDirection: "column", gap: "15px" }}>

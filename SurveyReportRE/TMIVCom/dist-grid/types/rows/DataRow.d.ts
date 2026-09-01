@@ -1,3 +1,4 @@
+import { type CSSProperties } from 'react';
 import type { GridColumn, GridFocusedCell, GridKey } from '../types/grid.types';
 interface DataRowProps<T> {
     row: T;
@@ -39,8 +40,12 @@ interface DataRowProps<T> {
     onCellClick: (columnIndex: number, event: React.MouseEvent<HTMLTableCellElement>) => void;
     onCellDoubleClick: (columnIndex: number, event: React.MouseEvent<HTMLTableCellElement>) => void;
     onCellFocus: (columnIndex: number) => void;
+    columnStyles?: Record<string, CSSProperties>;
+    selectionStyle?: CSSProperties;
+    rowNumberStyle?: CSSProperties;
+    commandStyle?: CSSProperties;
 }
-declare const DataRowInner: <T>({ row, rowKey, rowIndex, absoluteRowIndex, columns, locale, selected, focusedCell, showSelection, showRowNumber, searchText, highlightSearchText, editingFields, changedFields, errors, saving, showCommands, canEdit, canDelete, rowEditing, onValueChange, onCommitCell, onCancelCell, onEdit, onSave, onCancel, onDelete, commandTexts, onSelect, onRowClick, onRowDoubleClick, onCellClick, onCellDoubleClick, onCellFocus, }: DataRowProps<T>) => import("react/jsx-runtime").JSX.Element;
+declare const DataRowInner: <T>({ row, rowKey, rowIndex, absoluteRowIndex, columns, locale, selected, focusedCell, showSelection, showRowNumber, searchText, highlightSearchText, editingFields, changedFields, errors, saving, showCommands, canEdit, canDelete, rowEditing, onValueChange, onCommitCell, onCancelCell, onEdit, onSave, onCancel, onDelete, commandTexts, onSelect, onRowClick, onRowDoubleClick, onCellClick, onCellDoubleClick, onCellFocus, columnStyles, selectionStyle, rowNumberStyle, commandStyle, }: DataRowProps<T>) => import("react/jsx-runtime").JSX.Element;
 export declare const DataRow: typeof DataRowInner;
 export {};
 //# sourceMappingURL=DataRow.d.ts.map

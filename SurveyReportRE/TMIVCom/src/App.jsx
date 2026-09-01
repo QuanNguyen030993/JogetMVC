@@ -78,14 +78,17 @@ const defaultRows = [
 
 const gridColumns = [
   { dataField: 'id', caption: 'ID', dataType: 'number', visible: false, width: '60px' },
-  { dataField: 'name', caption: 'Name', dataType: 'string', validationRules: [{ type: 'required', message: 'Name is required' }, { type: 'stringLength', min: 2, max: 80 }] },
-  { dataField: 'role', caption: 'Role', dataType: 'string' },
-  { dataField: 'age', caption: 'Age', dataType: 'number', validationRules: [{ type: 'range', min: 18, max: 100, message: 'Age must be between 18 and 100' }] },
-  { dataField: 'active', caption: 'Active', dataType: 'boolean' },
+  { dataField: 'name', caption: 'Name', dataType: 'string', width: 170, minWidth: 120, fixed: true, bandPath: ['Identity'], validationRules: [{ type: 'required', message: 'Name is required' }, { type: 'stringLength', min: 2, max: 80 }] },
+  { dataField: 'role', caption: 'Role', dataType: 'string', width: 150, bandPath: ['Identity'], hidingPriority: 3 },
+  { dataField: 'age', caption: 'Age', dataType: 'number', width: 100, bandPath: ['Profile'], hidingPriority: 1, validationRules: [{ type: 'range', min: 18, max: 100, message: 'Age must be between 18 and 100' }] },
+  { dataField: 'active', caption: 'Active', dataType: 'boolean', width: 100, bandPath: ['Profile'], hidingPriority: 2 },
   { 
     dataField: 'deptId', 
     caption: 'Department (Enum)', 
     dataType: 'enum',
+    width: 210,
+    bandPath: ['Organization'],
+    hidingPriority: 4,
     lookup: {
       dataSource: departmentEnum,
       valueExpr: 'id',
@@ -532,7 +535,7 @@ function App() {
       </section>
 
       <section className="section">
-        <div className="section-title">CustomGrid Modular Engine — Phase 3 (Editing & Validation)</div>
+        <div className="section-title">CustomGrid Modular Engine — Phase 4 (Advanced Column Layout)</div>
         <CustomGrid
           architecture="modular"
           columns={gridColumns}
@@ -544,6 +547,10 @@ function App() {
           hoverStateEnabled
           columnAutoWidth
           allowColumnReordering
+          allowColumnResizing
+          columnResizingMode="widget"
+          columnChooser={{ enabled: true, mode: 'dragAndDrop', searchable: true, allowSelectAll: true, title: 'Choose columns' }}
+          responsive={{ enabled: true, padding: 254 }}
           sorting={{ mode: 'multiple' }}
           searchPanel={{ visible: true, placeholder: 'Search all columns...', debounce: 200, highlightSearchText: true }}
           filterRow={{ visible: true }}

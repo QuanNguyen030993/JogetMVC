@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type CSSProperties } from 'react';
 import { DataCell } from '../cells/DataCell';
 import { getColumnValue, getDisplayValue } from '../core/GridEngine';
 import type { GridColumn, GridFocusedCell, GridKey } from '../types/grid.types';
@@ -38,6 +38,10 @@ interface DataRowProps<T> {
   onCellClick: (columnIndex: number, event: React.MouseEvent<HTMLTableCellElement>) => void;
   onCellDoubleClick: (columnIndex: number, event: React.MouseEvent<HTMLTableCellElement>) => void;
   onCellFocus: (columnIndex: number) => void;
+  columnStyles?: Record<string, CSSProperties>;
+  selectionStyle?: CSSProperties;
+  rowNumberStyle?: CSSProperties;
+  commandStyle?: CSSProperties;
 }
 
 const DataRowInner = <T,>({
@@ -75,6 +79,10 @@ const DataRowInner = <T,>({
   onCellClick,
   onCellDoubleClick,
   onCellFocus,
+  columnStyles = {},
+  selectionStyle,
+  rowNumberStyle,
+  commandStyle,
 }: DataRowProps<T>) => (
   <tr
     role="row"
@@ -86,7 +94,7 @@ const DataRowInner = <T,>({
     onDoubleClick={onRowDoubleClick}
   >
     {showSelection && (
-      <td role="gridcell" className="tmiv-grid__cell tmiv-grid__cell--selection">
+      <td role="gridcell" className="tmiv-grid__cell tmiv-grid__cell--selection tmiv-grid__cell--fixed-left" style={selectionStyle}>
         <input
           type="checkbox"
           aria-label={`Select row ${absoluteRowIndex + 1}`}
@@ -97,7 +105,7 @@ const DataRowInner = <T,>({
       </td>
     )}
     {showRowNumber && (
-      <td role="gridcell" className="tmiv-grid__cell tmiv-grid__cell--row-number">
+      <td role="gridcell" className="tmiv-grid__cell tmiv-grid__cell--row-number tmiv-grid__cell--fixed-left" style={rowNumberStyle}>
         {absoluteRowIndex + 1}
       </td>
     )}
@@ -125,9 +133,10 @@ const DataRowInner = <T,>({
         onClick={(event) => onCellClick(columnIndex, event)}
         onDoubleClick={(event) => onCellDoubleClick(columnIndex, event)}
         onFocus={() => onCellFocus(columnIndex)}
+        layoutStyle={columnStyles[String(column.field ?? column.dataField ?? column.name ?? '')]}
       />
     ))}
-    {showCommands && <td role="gridcell" className="tmiv-grid__cell tmiv-grid__cell--commands" onClick={(event) => event.stopPropagation()}>
+    {showCommands && <td role="gridcell" className="tmiv-grid__cell tmiv-grid__cell--commands tmiv-grid__cell--fixed-right" style={commandStyle} onClick={(event) => event.stopPropagation()}>
       {rowEditing ? <><button type="button" disabled={saving} onClick={onSave}>{commandTexts.save}</button><button type="button" disabled={saving} onClick={onCancel}>{commandTexts.cancel}</button></> : <>{canEdit && <button type="button" disabled={saving} onClick={onEdit}>{commandTexts.edit}</button>}{canDelete && <button type="button" disabled={saving} onClick={onDelete}>{commandTexts.delete}</button>}</>}
     </td>}
   </tr>

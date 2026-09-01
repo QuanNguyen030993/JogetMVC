@@ -97,9 +97,9 @@ export default function AspLogViewer() {
   };
 
   return (
-    <div style={{ display: "flex", height: "calc(100vh - 120px)", gap: "20px", width: "100%" }}>
+    <div className="asp-log-viewer" style={{ display: "flex", height: "calc(100vh - 120px)", gap: "20px", width: "100%" }}>
       {/* LEFT: LOG FILES LIST */}
-      <div style={{
+      <div className="asp-log-files" style={{
         width: "320px",
         background: "white",
         borderRadius: "14px",
@@ -189,7 +189,7 @@ export default function AspLogViewer() {
       </div>
 
       {/* RIGHT: LOG TERMINAL */}
-      <div style={{
+      <div className="asp-log-terminal" style={{
         flex: 1,
         background: "#0f172a",
         borderRadius: "14px",

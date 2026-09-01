@@ -5,6 +5,7 @@ export declare const getColumnValue: <T>(row: T, column: GridColumn<T>) => unkno
 export declare const getDisplayValue: <T>(row: T, column: GridColumn<T>) => unknown;
 export declare const resolveKey: <T extends Record<string, unknown>>(row: T, keyExpr: keyof T | string | ((item: T) => GridKey)) => GridKey;
 export declare const normalizeColumns: <T extends Record<string, unknown>>(columns: GridColumn<T>[] | undefined, rows: T[]) => GridColumn<T>[];
+export declare const normalizeAllColumns: <T extends Record<string, unknown>>(columns: GridColumn<T>[] | undefined, rows: T[]) => GridColumn<T>[];
 export declare const sortRows: <T>(rows: T[], columns: GridColumn<T>[], sort: GridSortDescriptor[]) => T[];
 export declare const pageRows: <T>(rows: T[], pageIndex: number, pageSize: number) => T[];
 export declare const matchesFilter: <T>(row: T, column: GridColumn<T>, filter: GridFilterDescriptor) => boolean;

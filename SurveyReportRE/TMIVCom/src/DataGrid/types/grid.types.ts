@@ -122,6 +122,12 @@ export interface GridColumn<T> {
   allowEditing?: boolean;
   allowResizing?: boolean;
   allowReordering?: boolean;
+  fixed?: boolean;
+  fixedPosition?: 'left' | 'right';
+  hidingPriority?: number;
+  minScreenWidth?: number;
+  columns?: GridColumn<T>[];
+  bandPath?: string[];
   filterOperation?: GridFilterOperator;
   alignment?: 'left' | 'center' | 'right';
   format?: string | ((value: unknown, row: T) => string);
@@ -216,6 +222,26 @@ export interface GridColumnReorderEvent<T> {
   columns: GridColumn<T>[];
 }
 
+export interface GridColumnResizeEvent<T> {
+  column: GridColumn<T>;
+  field: string;
+  previousWidth: number;
+  width: number;
+}
+
+export interface GridColumnChooserConfig {
+  enabled?: boolean;
+  mode?: 'select' | 'dragAndDrop';
+  searchable?: boolean;
+  allowSelectAll?: boolean;
+  title?: string;
+}
+
+export interface GridResponsiveConfig {
+  enabled?: boolean;
+  padding?: number;
+}
+
 export type GridEditMode = 'cell' | 'row' | 'batch' | 'form' | 'popup';
 
 export interface GridEditingConfig<T> {
@@ -305,6 +331,11 @@ export interface DataGridHandle<T> {
   cancelChanges(): void;
   autoFitColumn(field: string): void;
   autoFitColumns(): void;
+  fixColumn(field: string, position?: 'left' | 'right'): void;
+  unfixColumn(field: string): void;
+  showColumn(field: string): void;
+  hideColumn(field: string): void;
+  resetColumnLayout(): void;
   navigateToCell(rowKey: GridKey, field: string): void;
   focus(): void;
   getDataSource(): T[] | GridDataSource<T>;
@@ -350,6 +381,10 @@ export interface DataGridProps<T extends Record<string, unknown>> {
   summary?: GridSummaryConfig<T>;
   editing?: GridEditingConfig<T>;
   allowColumnReordering?: boolean;
+  allowColumnResizing?: boolean;
+  columnResizingMode?: 'nextColumn' | 'widget';
+  columnChooser?: GridColumnChooserConfig;
+  responsive?: GridResponsiveConfig;
   paging?: GridPagingConfig;
   pager?: GridPagerConfig;
   remoteOperations?: boolean | GridRemoteOperations;
@@ -363,6 +398,9 @@ export interface DataGridProps<T extends Record<string, unknown>> {
   onGroupingChanged?: (group: GridGroupDescriptor[]) => void;
   onColumnReorder?: (event: GridColumnReorderEvent<T>) => void;
   onColumnOrderChanged?: (columns: GridColumn<T>[]) => void;
+  onColumnResized?: (event: GridColumnResizeEvent<T>) => void;
+  onColumnVisibilityChanged?: (field: string, visible: boolean) => void;
+  onColumnFixedChanged?: (field: string, position: 'left' | 'right' | null) => void;
   onRowsChange?: (rows: T[]) => void;
   onChangesChange?: (changes: GridChange<T>[]) => void;
   onRowInserting?: (event: GridRowMutationEvent<T>) => void | Promise<void>;
@@ -407,5 +445,7 @@ export interface DataGridProps<T extends Record<string, unknown>> {
     cancel: string;
     saveAll: string;
     cancelAll: string;
+    columns: string;
+    resetColumns: string;
   }>;
 }
