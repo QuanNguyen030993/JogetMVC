@@ -29,12 +29,15 @@ export default defineConfig(({ mode }) => {
       '../wwwroot/lib/tmivcom'
     ),
 
-    // rollupOptions:{
+    rollupOptions:{
+        output: {
+            exports: 'named'
+        }
     //     external:[
     //         "react",
     //         "react-dom"
     //     ]
-    // },
+    },
     emptyOutDir:false
   },define: {
       'process.env': env,

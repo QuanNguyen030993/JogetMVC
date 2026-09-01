@@ -18,6 +18,7 @@ import PreviewOffice from "../components/PreviewOffice.jsx";
 import FileUploader from "../components/FileUploader.jsx";
 import Notification, { notify } from "../components/Notification.jsx";
 import React from "react";
+import { DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore } from "../DataGrid";
 
 import { createRoot } from "react-dom/client";
 // import {CustomGrid} from "./CustomGrid.jsx";
@@ -1451,6 +1452,11 @@ register(
 );
 
 register(
+    "DataGrid",
+    DataGrid
+);
+
+register(
     "CommentEditor",
     CommentEditor
 );
@@ -1523,6 +1529,10 @@ register(
 window.TMIVCom.notify = notify;
 window.TMIVCom.startTour = startTour;
 window.TMIVCom.exportTour = exportTour;
+window.TMIVCom.DataGrid = DataGrid;
+window.TMIVCom.DxCompatibleDataGrid = DxCompatibleDataGrid;
+window.TMIVCom.GridArrayStore = GridArrayStore;
+window.TMIVCom.GridCustomStore = GridCustomStore;
 
 const jqueryInstances = [window.jQuery, window.$].filter(
     (instance, index, instances) => instance && instances.indexOf(instance) === index
@@ -1550,4 +1560,5 @@ if (typeof window !== "undefined") {
     //}, 5000);
 }
 
-export default { DateBox, TimeBox, HtmlEditor, HtmlEditorCommentBox, CustomGrid, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify, TourGuide, startTour, exportTour };
+export { DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore };
+export default { DateBox, TimeBox, HtmlEditor, HtmlEditorCommentBox, CustomGrid, DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify, TourGuide, startTour, exportTour };

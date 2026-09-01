@@ -78,9 +78,9 @@ const defaultRows = [
 
 const gridColumns = [
   { dataField: 'id', caption: 'ID', dataType: 'number', visible: false, width: '60px' },
-  { dataField: 'name', caption: 'Name', dataType: 'string' },
+  { dataField: 'name', caption: 'Name', dataType: 'string', validationRules: [{ type: 'required', message: 'Name is required' }, { type: 'stringLength', min: 2, max: 80 }] },
   { dataField: 'role', caption: 'Role', dataType: 'string' },
-  { dataField: 'age', caption: 'Age', dataType: 'number' },
+  { dataField: 'age', caption: 'Age', dataType: 'number', validationRules: [{ type: 'range', min: 18, max: 100, message: 'Age must be between 18 and 100' }] },
   { dataField: 'active', caption: 'Active', dataType: 'boolean' },
   { 
     dataField: 'deptId', 
@@ -529,6 +529,35 @@ function App() {
             showCommandsColumn={true}
           />
         </div>
+      </section>
+
+      <section className="section">
+        <div className="section-title">CustomGrid Modular Engine — Phase 3 (Editing & Validation)</div>
+        <CustomGrid
+          architecture="modular"
+          columns={gridColumns}
+          rows={rows}
+          keyExpr="id"
+          height={320}
+          showBorders
+          rowAlternationEnabled
+          hoverStateEnabled
+          columnAutoWidth
+          allowColumnReordering
+          sorting={{ mode: 'multiple' }}
+          searchPanel={{ visible: true, placeholder: 'Search all columns...', debounce: 200, highlightSearchText: true }}
+          filterRow={{ visible: true }}
+          headerFilter={{ visible: true, searchable: true }}
+          groupPanel={{ visible: true, allowColumnDragging: true }}
+          grouping={{ autoExpandAll: true, allowCollapsing: true }}
+          summary={{ totalItems: [{ type: 'count', displayFormat: 'Total: {0} rows' }] }}
+          editing={{ mode: 'batch', allowAdding: true, allowUpdating: true, allowDeleting: true, confirmDelete: false, newRowPosition: 'first' }}
+          onRowsChange={setRows}
+          selection={{ mode: 'multiple', showCheckBoxes: true, selectAllMode: 'allPages' }}
+          paging={{ pageSize: 2 }}
+          pager={{ allowedPageSizes: [2, 10, 20, 50], showPageSizeSelector: true, showInfo: true }}
+          rowNumber={{ visible: true, mode: 'absolute' }}
+        />
       </section>
 
       <section className="section" id="tour-handsomgrid-section">

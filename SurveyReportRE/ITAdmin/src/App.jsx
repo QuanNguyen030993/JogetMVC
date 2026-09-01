@@ -8,6 +8,7 @@ import Flow from './components/Flow';
 import SerilogViewer from './components/SerilogViewer';
 import SysTable from './components/SysTable';
 import DataGridFieldDesigner from './components/DataGridFieldDesigner';
+import DataGridConfigList from './components/DataGridConfigList';
 import MenuDesigner from './components/MenuDesigner';
 import UserManagement from './components/UserManagement';
 import OverviewPanel from './components/OverviewPanel';
@@ -497,7 +498,7 @@ function App() {
           </div>
         );
       case 'datagridconfig-grid':
-        return <CustomGrid modelName="DataGridConfig" gridType="System" apiBaseUrl={appsettings.UrlConfig.Host} editMode="batch" />;
+        return <DataGridConfigList />;
       case 'menudesigner':
         return <MenuDesigner />;
       case 'menu-grid':
