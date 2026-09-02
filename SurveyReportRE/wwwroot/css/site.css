@@ -31320,6 +31320,42 @@ aside {
     box-shadow: 0 7px 20px rgba(15, 23, 42, .08);
 }
 
+/* Overview loading now uses the same compact indicator as a department
+   section. The overlay is mounted inside .cardBody so the overview toolbar,
+   including Refresh, remains available while content is re-rendering. */
+.qt-loader-panel.overview-section-loader,
+.pi-loader-panel.overview-section-loader {
+    display: flex;
+    width: auto;
+    padding: 0;
+    align-items: center;
+    flex-direction: column;
+    gap: 9px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.qt-loader-panel.overview-section-loader .qt-loader-message,
+.pi-loader-panel.overview-section-loader .pi-loader-message {
+    margin: 0;
+    color: var(--theme-text);
+}
+
+.pane-right.qt-render-loading > .card > .cardBody,
+.pane-right.pi-render-loading > .card > .cardBody {
+    pointer-events: none;
+    user-select: none;
+}
+
+.pane-right.qt-render-loading .qt-render-overlay,
+.pane-right.pi-render-loading .pi-render-overlay {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
 .dept-section-action-overlay.is-success .dept-section-action-loader span {
     animation: none;
     background: #16a34a;
@@ -35559,6 +35595,17 @@ textarea {
     animation: dept-admin-refresh-spin .75s linear infinite;
 }
 
+.overview-refresh-button.is-refreshing .dx-icon {
+    animation: dept-admin-refresh-spin .75s linear infinite;
+}
+
+.overview-refresh-button.is-refreshing,
+.overview-refresh-button.dx-state-disabled.is-refreshing {
+    cursor: wait;
+    opacity: .72;
+    pointer-events: none;
+}
+
 @keyframes dept-admin-refresh-spin {
     to { transform: rotate(360deg); }
 }
@@ -37571,13 +37618,12 @@ body.skin-re .dx-popup-wrapper.dx-rtl > .dx-overlay-content > .dx-popup-title.dx
         display: none;
     }
 }
-#pi-overviewRoot_@(ViewData["Id"]) {
+.pane-right[id^="pi-overviewRoot_"] {
     position: relative;
     height: calc(90vh);
 }
 
-    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .cardBody,
-    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .pi-cardHeader {
+    .pane-right.pi-render-loading > .card > .cardBody {
         pointer-events: none;
         user-select: none;
     }
@@ -37585,7 +37631,7 @@ body.skin-re .dx-popup-wrapper.dx-rtl > .dx-overlay-content > .dx-popup-title.dx
 .pi-render-overlay {
     position: absolute;
     inset: 0;
-    
+    z-index: var(--z-index-medium);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -37599,7 +37645,7 @@ body.skin-re .dx-popup-wrapper.dx-rtl > .dx-overlay-content > .dx-popup-title.dx
     transition: opacity .28s ease, visibility .28s ease;
 }
 
-#pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .pi-render-overlay {
+.pane-right.pi-render-loading .pi-render-overlay {
     opacity: 1;
     visibility: visible;
 }

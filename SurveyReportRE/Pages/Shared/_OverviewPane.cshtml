@@ -188,8 +188,37 @@
             icon: "refresh",
             hint: "Refresh",
             stylingMode: "text",
-            onClick: function (e) {
-                window.reloadOverviewViewComponents("@moduleCode", @quotationId, e.element, true);
+            elementAttr: {
+                class: "overview-refresh-button",
+                "aria-label": "Refresh overview"
+            },
+            onClick: async function (e) {
+                const button = e.component;
+                const $buttonElement = $(e.element);
+                if (button.option("disabled")) return;
+
+                button.option("disabled", true);
+                $buttonElement
+                    .addClass("is-refreshing")
+                    .attr("aria-busy", "true");
+
+                try {
+                    await Promise.resolve(
+                        window.reloadOverviewViewComponents(
+                            "@moduleCode",
+                            @quotationId,
+                            e.element,
+                            true
+                        )
+                    );
+                } finally {
+                    $buttonElement
+                        .removeClass("is-refreshing")
+                        .removeAttr("aria-busy");
+                    try {
+                        button.option("disabled", false);
+                    } catch (error) {}
+                }
             }
         });
 

@@ -23,8 +23,7 @@ Note:
         height: calc(90vh);
     }
 
-    #qt-overviewRoot_@(ViewData["Id"]).qt-render-loading .cardBody,
-    #qt-overviewRoot_@(ViewData["Id"]).qt-render-loading .qt-cardHeader {
+    #qt-overviewRoot_@(ViewData["Id"]).qt-render-loading .cardBody {
         pointer-events: none;
         user-select: none;
     }
@@ -226,20 +225,27 @@ Note:
             var sequence = 0;
             var startedAt = 0;
             var $root = $(`#${quotationOverviewRootId}`);
-            var $overlay = $root.children(".qt-render-overlay");
+            var $loadingHost = $root.find("> .card > .cardBody.overview-wrap").first();
+            var $overlay = $loadingHost.children(".qt-render-overlay");
 
             if (!$overlay.length) {
                 $overlay = $(`
                     <div id="${formModuleKeyQt}-renderOverlay_${quotationViewInstanceId}" class="qt-render-overlay" role="status" aria-live="polite" aria-busy="true">
-                        <div class="qt-loader-panel">
+                        <div class="qt-loader-panel overview-section-loader">
+                            <div class="dept-section-action-loader" aria-hidden="true">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <div class="qt-loader-message dept-section-action-message">Please wait…</div>
+                            <!-- LEGACY OVERVIEW INDICATOR - rollback when needed:
                             <div class="qt-loader-icon-host" aria-hidden="true">
                                 <div class="qt-loader-default-icon"></div>
                             </div>
                             <div class="qt-loader-message">Please wait…</div>
                             <div class="qt-render-progress"><span></span></div>
+                            -->
                         </div>
                     </div>
-                `).appendTo($root);
+                `).appendTo($loadingHost);
             }
 
             function setLoadingIcon(source, options) {
@@ -278,7 +284,9 @@ Note:
 
             function setPhase(_message, progress) {
                 progress = Math.max(0, Math.min(100, Number(progress) || 0));
-                $overlay.find(".qt-render-progress > span").css("width", `${Math.max(progress, 8)}%`);
+                $overlay.find(".qt-loader-message").first().text(_message || "Please wait…");
+                // LEGACY OVERVIEW PROGRESS:
+                // $overlay.find(".qt-render-progress > span").css("width", `${Math.max(progress, 8)}%`);
             }
 
             function resetProgressiveContent() {
