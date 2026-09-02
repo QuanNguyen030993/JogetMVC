@@ -458,7 +458,7 @@ Note:
         async function renderQuotationPersonInCharge() {
             const q = getSelectedModel();
             if (!q) return;
-            renderDeptCallouts(PIC_JSON);
+            renderDeptCallouts(PIC_JSON, document.getElementById(quotationOverviewRootId));
             let stageName = "";
             try {
                 stageName = stageAccount && stageAccount !== "(Unassigned)"
@@ -1289,21 +1289,25 @@ Note:
         }
 
         function applyNodeHighlights() {
-            $(".dept-node").removeClass("status focus");
+            const $tree = $(`#${QuotationIdManager.deptTree(@ViewData["Id"])}`);
+            $tree.find(".dept-node").removeClass("status focus");
             // if (stageDept == "")
             //    $(`.dept-node[data-key='${workflowStatus}']`).addClass("status")
             // else 
-            $(`.dept-node[data-key='${stageDept}']`).addClass("status");
-            $(`.dept-node[data-key='${focusDept}']`).addClass("focus");
+            $tree.find(`.dept-node[data-key='${stageDept}']`).addClass("status");
+            $tree.find(`.dept-node[data-key='${focusDept}']`).addClass("focus");
         }
 
         function applySectionFocusHighlight() {
-            $(".dept-section").removeClass("focused");
+            $(`#${quotationOverviewRootId}`).find(".dept-section").removeClass("focused");
             $(`#${formModuleKeyQt}-sec_${focusDept}_@ViewData["Id"]`).addClass("focused");
         }
 
         function setupDeptTree() {
-            $(`.${formModuleKeyQt}-dept-tree.dept-node`).off("click.tree").on("click.tree", function (event) {
+            const $tree = $(`#${QuotationIdManager.deptTree(@ViewData["Id"])}`);
+            $tree.find(`.${formModuleKeyQt}-dept-tree.dept-node`)
+                .off("click.tree")
+                .on("click.tree", function (event) {
                 if ($(event.target).closest(".dept-subnode").length) return;
                 const key = $(this).data("key");
                 focusDept = key;
@@ -1314,7 +1318,7 @@ Note:
                 updateHints();
                 scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" });
                 setSectionCollapsed(focusDept, false);
-            });
+                });
             bindDeptTreeScrollSpy(formModuleKeyQt, "@ViewData["Id"]");
         }
 

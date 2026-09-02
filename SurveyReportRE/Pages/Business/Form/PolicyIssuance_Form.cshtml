@@ -395,7 +395,7 @@ Note:
         async function renderPolicyIssuancePersonInCharge() {
             const q = getSelectedModel();
             if (!q) return;
-            renderDeptCallouts(PIC_JSON);
+            renderDeptCallouts(PIC_JSON, document.getElementById(policyIssuanceOverviewRootId));
             let stageName = "";
             try {
                 stageName = stageAccount && stageAccount !== "(Unassigned)"
@@ -1107,18 +1107,22 @@ Note:
         }
 
         function applyNodeHighlights() {
-            $(".dept-node").removeClass("status focus");
-            $(`.dept-node[data-key='${stageDept}']`).addClass("status");
-            $(`.dept-node[data-key='${state.focusDept}']`).addClass("focus");
+            const $tree = $(`#${PolicyIssuanceIdManager.deptTree(@ViewData["Id"])}`);
+            $tree.find(".dept-node").removeClass("status focus");
+            $tree.find(`.dept-node[data-key='${stageDept}']`).addClass("status");
+            $tree.find(`.dept-node[data-key='${state.focusDept}']`).addClass("focus");
         }
 
         function applySectionFocusHighlight() {
-            $(".dept-section").removeClass("focused");
+            $(`#${policyIssuanceOverviewRootId}`).find(".dept-section").removeClass("focused");
             $(`#${formModuleKeyPi}-sec_${state.focusDept}_@ViewData["Id"]`).addClass("focused");
         }
 
         function setupDeptTree() {
-            $(`.${formModuleKeyPi}-dept-tree.dept-node`).off("click.tree").on("click.tree", function (event) {
+            const $tree = $(`#${PolicyIssuanceIdManager.deptTree(@ViewData["Id"])}`);
+            $tree.find(`.${formModuleKeyPi}-dept-tree.dept-node`)
+                .off("click.tree")
+                .on("click.tree", function (event) {
                 if ($(event.target).closest(".dept-subnode").length) return;
                 const key = $(this).data("key");
                 state.focusDept = key;
@@ -1129,7 +1133,7 @@ Note:
                 updateHints();
                 scrollToDept(formModuleKeyPi, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
                 setSectionCollapsed(state.focusDept, false);
-            });
+                });
             bindDeptTreeScrollSpy(formModuleKeyPi, "@ViewData["Id"]");
         }
 

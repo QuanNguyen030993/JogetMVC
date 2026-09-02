@@ -1073,6 +1073,83 @@
     container-type: inline-size;
 }
 
+/* HtmlEditorCommentBox disabled/read-only state. The content stays visible and
+   selectable while every editing, routing and submit affordance is muted. */
+.jira-comment-box.is-comment-disabled .jira-comment-editor-wrap {
+    overflow: hidden;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #f8fafc;
+    box-shadow: inset 3px 0 0 #94a3b8;
+}
+
+.tmiv-comment-disabled-status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 32px;
+    padding: 6px 11px;
+    border-bottom: 1px solid #dbe3ec;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: .01em;
+}
+
+.tmiv-comment-disabled-status .fa {
+    color: #64748b;
+    font-size: 12px;
+}
+
+.jira-comment-box.is-comment-disabled .tmiv-html-editor-route {
+    background: #f8fafc;
+}
+
+.jira-comment-box.is-comment-disabled .tmiv-comment-toolbar,
+.jira-comment-box.is-comment-disabled .comment-editor-actions {
+    pointer-events: none;
+    user-select: none;
+    filter: grayscale(.25);
+    opacity: .58;
+}
+
+.jira-comment-box.is-comment-disabled .tmiv-comment-toolbar {
+    background: #f1f5f9;
+}
+
+.jira-comment-box.is-comment-disabled .tmiv-html-content,
+.jira-comment-box.is-comment-disabled .tmiv-html-source {
+    background: #f8fafc !important;
+    color: #64748b;
+    cursor: not-allowed;
+    caret-color: transparent;
+}
+
+.jira-comment-box.is-comment-disabled .tmiv-html-content {
+    user-select: text;
+}
+
+.jira-comment-box.is-comment-disabled .comment-editor-actions {
+    background: #f1f5f9;
+}
+
+.jira-comment-box.is-comment-disabled .comment-send-btn,
+.jira-comment-box.is-comment-disabled .comment-custom-btn {
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.jira-comment-box.is-comment-disabled .comment-send-btn {
+    background: #94a3b8 !important;
+}
+
+.jira-comment-box.is-comment-disabled .tmiv-html-editor-route:focus-within,
+.jira-comment-box.is-comment-disabled .tmiv-html-editor:focus-within {
+    box-shadow: none;
+}
+
 .tmiv-comment-toolbar {
     width: 100%;
     min-width: 0;

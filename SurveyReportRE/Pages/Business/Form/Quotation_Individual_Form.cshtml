@@ -744,7 +744,12 @@ Note:
 
                 return ajaxGet(`/api/Quotation/GetQuotationWorkflow/${state.selectedGuid}`, null)
                     .then(instance => {
-                        loadAndApplyQuotationScreenConditions(instance?.currentStep, state.selectedId);
+                        loadAndApplyQuotationScreenConditions(
+                            instance?.currentStep,
+                            state.selectedId,
+                            instance,
+                            { stageDept: stageDept, state: state }
+                        );
                         return ajaxGet(`/api/StepsWorkflow/GetNextStep/${instance?.workflowDefinitionId ?? "00000000-0000-0000-0000-000000000000"}/${instance?.currentStep ?? 0}`, null)
                             .then(data => {
                                 state.nextStep.instanceWorkflow = instance;

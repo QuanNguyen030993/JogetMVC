@@ -69,6 +69,7 @@ window.PolicyIssuanceIdManager = {
     },
 
     // Tree navigation
+    deptTree: function (quotationId) { return `${this.prefix}-deptTree_${quotationId}`; },
     treeStack: function (quotationId) { return `${this.prefix}-treeStack_${quotationId}`; },
     treeVLine: function (quotationId) { return `${this.prefix}-treeVLine_${quotationId}`; },
 

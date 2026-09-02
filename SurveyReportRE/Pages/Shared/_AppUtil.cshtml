@@ -3429,6 +3429,11 @@
             }
             if (!container || !treeStack) return null;
 
+            if (treeStack.deptTreeScrollSpy?.destroy) {
+                treeStack.deptTreeScrollSpy.destroy();
+                treeStack.deptTreeScrollSpy = null;
+            }
+
             var $container = $(container);
             var $treeStack = $(treeStack);
             var $nodes = $(treeStack).find(".dept-node[data-key]");
@@ -3747,7 +3752,7 @@
                 "lowerbody",
                 "footer"
             ]);
-            return {
+            var scrollSpy = {
                 refresh: requestUpdate,
                 destroy: function () {
                     $container.off("scroll.deptTreeSpy");
@@ -3774,6 +3779,8 @@
                     $treeStack.removeAttr("data-dept-tree-ready");
                 }
             };
+            treeStack.deptTreeScrollSpy = scrollSpy;
+            return scrollSpy;
         }
 
             async function persistDepartmentAssignment(schemeName, recordId, dept, store, values, formId) {
@@ -3810,7 +3817,10 @@
 
                     if (values?.pIC) {
                         PIC_JSON = values.pIC;
-                        renderDeptCallouts(PIC_JSON);
+                        var assignmentOverviewRoot = document.getElementById(
+                            `${moduleCode}-overviewRoot_${recordId}`
+                        );
+                        renderDeptCallouts(PIC_JSON, assignmentOverviewRoot);
                     }
 
                     // The assignment picker updates the section immediately, but the
@@ -4939,9 +4949,18 @@
                     const itemPath = parentPath && itemKey
                         ? `${parentPath}.${itemKey}`
                         : (itemKey || parentPath || "");
+                    const itemType = String(item.itemType || "").trim().toLowerCase();
 
                     try {
-                        if (itemPath) formInstance.itemOption(itemPath, "disabled", disabled);
+                        // A group is only a layout/collapse container. Keep it enabled so
+                        // its caption can still expand/collapse while its child controls lock.
+                        if (itemPath) {
+                            formInstance.itemOption(
+                                itemPath,
+                                "disabled",
+                                itemType === "group" ? false : disabled
+                            );
+                        }
                     } catch (error) {}
 
                     if (item.dataField) {
@@ -4985,7 +5004,9 @@
                         });
 
                         try {
-                            formInstance.itemOption(itemPath, "disabled", !(isExactTarget || containsTarget));
+                            // Never disable the group container itself: DevExtreme would
+                            // also disable its clickable expand/collapse caption.
+                            formInstance.itemOption(itemPath, "disabled", false);
                         } catch (error) {}
 
                         if (isExactTarget) {
@@ -5011,7 +5032,7 @@
                 applyGroups(items, "");
             }
 
-            function enableScreenConditionGroups(moduleCode, recordId, rule) {
+            function enableScreenConditionGroups(moduleCode, recordId, stageDept, rule) {
                 const manager = moduleCode === viewIdModulePrefix.policyIssuance
                     ? window.PolicyIssuanceIdManager
                     : window.QuotationIdManager;
@@ -5020,28 +5041,34 @@
                     : qtDeptModuleCode;
                 if (!manager || typeof manager.form !== "function") return;
 
+                const normalizedStageDept = String(stageDept || "").trim().toUpperCase();
+                const normalizedRuleDept = String(rule?.department ?? rule?.Department ?? "")
+                    .trim()
+                    .toUpperCase();
+                const validDepartments = Array.isArray(departments) ? departments : [];
+                if (!normalizedStageDept || !validDepartments.includes(normalizedStageDept)) return;
+                if (normalizedRuleDept && normalizedRuleDept !== normalizedStageDept) return;
+
                 const groupNames = getScreenConditionGroupNames(rule);
-                (Array.isArray(departments) ? departments : []).forEach(function (department) {
-                        const formId = manager.form(department, recordId);
-                        let formInstance = null;
-                        try {
-                            formInstance = formId ? $(`#${formId}`).dxForm("instance") : null;
-                        } catch (error) {}
-                        if (!formInstance) return;
+                const formId = manager.form(normalizedStageDept, recordId);
+                let formInstance = null;
+                try {
+                    formInstance = formId ? $(`#${formId}`).dxForm("instance") : null;
+                } catch (error) {}
+                if (!formInstance) return;
 
-                        const formItems = formInstance.option("items") || [];
-                        const targetMatches = groupNames
-                            .map(function (groupName) {
-                                return findScreenConditionFormItem(formItems, groupName, "");
-                            })
-                            .filter(Boolean);
-                        if (!targetMatches.length) return;
+                const formItems = formInstance.option("items") || [];
+                const targetMatches = groupNames
+                    .map(function (groupName) {
+                        return findScreenConditionFormItem(formItems, groupName, "");
+                    })
+                    .filter(Boolean);
+                if (!targetMatches.length) return;
 
-                        applyEnableOnlyGroupToForm(formInstance, targetMatches);
-                });
+                applyEnableOnlyGroupToForm(formInstance, targetMatches);
             }
 
-            function applyQuotationScreenConditions(quotationId, screenConditions) {
+            function applyQuotationScreenConditions(quotationId, screenConditions, stageDept) {
                 const $sections = $("[data-quotation-screen-section]").filter(function () {
                     return String($(this).attr("data-quotation-id")) === String(quotationId);
                 });
@@ -5051,7 +5078,12 @@
                 (Array.isArray(screenConditions) ? screenConditions : []).forEach(rule => {
                     const trigger = String(rule?.trigger || "").trim().toLowerCase();
                     if (trigger === "enableonlygroup") {
-                        enableScreenConditionGroups(viewIdModulePrefix.quotation, quotationId, rule);
+                        enableScreenConditionGroups(
+                            viewIdModulePrefix.quotation,
+                            quotationId,
+                            stageDept,
+                            rule
+                        );
                         return;
                     }
                     const sectionId = String(rule?.sectionId || "").trim();
@@ -5068,7 +5100,11 @@
 
 
 
-            function loadAndApplyQuotationScreenConditions(currentNodeCode, quotationId) {
+            function loadAndApplyQuotationScreenConditions(currentNodeCode, quotationId, workflowInstance, requestParams) {
+                const stageDept = requestParams?.stageDept
+                    ?? requestParams?.state?.stageDept
+                    ?? workflowInstance?.stageDept
+                    ?? workflowInstance?.StageDept;
                 applyQuotationScreenConditions(quotationId, []);
                 publishOverviewNodeInstruction(viewIdModulePrefix.quotation, quotationId, null);
                 if (!currentNodeCode || !quotationId) return $.Deferred().resolve([]).promise();
@@ -5081,9 +5117,9 @@
                         const node = Array.isArray(result) ? result[0] : result;
                         const conditions = parseWorkflowNodeScreenConditions(node);
                         publishOverviewNodeInstruction(viewIdModulePrefix.quotation, quotationId, node);
-                        applyQuotationScreenConditions(quotationId, conditions);
+                        applyQuotationScreenConditions(quotationId, conditions, stageDept);
                         // Some nested partial controls complete rendering after the workflow request.
-                        setTimeout(() => applyQuotationScreenConditions(quotationId, conditions), 100);
+                        setTimeout(() => applyQuotationScreenConditions(quotationId, conditions, stageDept), 100);
                         return conditions;
                     })
                     .fail(() => {
@@ -5092,7 +5128,11 @@
                     });
             }
 
-            function loadAndApplyPolicyIssuanceScreenConditions(currentNodeCode, policyIssuanceId) {
+            function loadAndApplyPolicyIssuanceScreenConditions(currentNodeCode, policyIssuanceId, workflowInstance, requestParams) {
+                const stageDept = requestParams?.stageDept
+                    ?? requestParams?.state?.stageDept
+                    ?? workflowInstance?.stageDept
+                    ?? workflowInstance?.StageDept;
                 applyPolicyIssuanceScreenConditions(policyIssuanceId, []);
                 publishOverviewNodeInstruction(viewIdModulePrefix.policyIssuance, policyIssuanceId, null);
                 if (!currentNodeCode || !policyIssuanceId) return $.Deferred().resolve([]).promise();
@@ -5105,9 +5145,9 @@
                         const node = Array.isArray(result) ? result[0] : result;
                         const conditions = parseWorkflowNodeScreenConditions(node);
                         publishOverviewNodeInstruction(viewIdModulePrefix.policyIssuance, policyIssuanceId, node);
-                        applyPolicyIssuanceScreenConditions(policyIssuanceId, conditions);
+                        applyPolicyIssuanceScreenConditions(policyIssuanceId, conditions, stageDept);
                         // Some nested partial controls complete rendering after the workflow request.
-                        setTimeout(() => applyPolicyIssuanceScreenConditions(policyIssuanceId, conditions), 100);
+                        setTimeout(() => applyPolicyIssuanceScreenConditions(policyIssuanceId, conditions, stageDept), 100);
                         return conditions;
                     })
                     .fail(() => {
@@ -5117,7 +5157,7 @@
             }
 
 
-             function applyPolicyIssuanceScreenConditions(policyIssuanceId, screenConditions) {
+             function applyPolicyIssuanceScreenConditions(policyIssuanceId, screenConditions, stageDept) {
                 const $sections = $("[data-policyIssuance-screen-section]").filter(function () {
                     return String($(this).attr("data-policyIssuance-id")) === String(policyIssuanceId);
                 });
@@ -5127,7 +5167,12 @@
                 (Array.isArray(screenConditions) ? screenConditions : []).forEach(rule => {
                     const trigger = String(rule?.trigger || "").trim().toLowerCase();
                     if (trigger === "enableonlygroup") {
-                        enableScreenConditionGroups(viewIdModulePrefix.policyIssuance, policyIssuanceId, rule);
+                        enableScreenConditionGroups(
+                            viewIdModulePrefix.policyIssuance,
+                            policyIssuanceId,
+                            stageDept,
+                            rule
+                        );
                         return;
                     }
                     const sectionId = String(rule?.sectionId || "").trim();
@@ -10077,9 +10122,10 @@
                 return promise;
             }
              //Popup hover
-                function renderDeptCallouts(picJson) {
+                function renderDeptCallouts(picJson, scope) {
                     const picMap = parsePicMap(picJson);
-                    $(".dept-node").each(function () {
+                    const $scope = scope ? $(scope) : $(document);
+                    $scope.find(".dept-node").each(function () {
                         const dept = normalizeDeptKey($(this).data("key"));
                         const $co = $(this).find(".dept-callout");
                         if (!$co.length) return;
@@ -12005,14 +12051,22 @@
                 if (condition === "false") return;
 
                 const configuredDepartment = String(rule.department ?? rule.Department ?? "").trim();
-                const department = normalizeDept(configuredDepartment || stageDept);
+                const trigger = String(rule.trigger ?? rule.Trigger ?? "").trim().toLowerCase();
+                const normalizedStageDept = normalizeDept(stageDept);
+                const normalizedRuleDept = normalizeDept(configuredDepartment);
+                if (trigger === "enableonlygroup"
+                    && (!normalizedStageDept || (normalizedRuleDept && normalizedRuleDept !== normalizedStageDept))) {
+                    return;
+                }
+                const department = trigger === "enableonlygroup"
+                    ? normalizedStageDept
+                    : normalizeDept(configuredDepartment || stageDept);
                 if (!department) return;
                 const formId = moduleConfig.getFormId(department, id);
                 const formInstance = formId ? $(`#${formId}`).dxForm("instance") : null;
                 if (!formInstance) return;
 
                 const targetList = getWorkflowRuleGroupTargets(rule);
-                const trigger = String(rule.trigger ?? rule.Trigger ?? "").trim().toLowerCase();
                 if (trigger === "samedepartmentreturn") {
                     const accountRole = normalizeDept(
                         typeof _role !== "undefined" ? _role : window._role
