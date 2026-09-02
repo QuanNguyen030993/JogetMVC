@@ -1008,6 +1008,7 @@ Note:
         }
 
         window.OverviewViewRegistry[quotationViewInstanceKey].reload = reloadQuotationInstance;
+        window.OverviewViewRegistry[quotationViewInstanceKey].reloadWorkflow = selfLoadSelectedWorkflow;
         var quotationDepartmentRefreshes = {};
         function refreshQuotationDepartment(dept) {
             dept = String(dept || "").trim().toUpperCase();

@@ -879,6 +879,7 @@ Note:
         }
 
         window.OverviewViewRegistry[policyIssuanceViewInstanceKey].reload = reloadPolicyIssuanceInstance;
+        window.OverviewViewRegistry[policyIssuanceViewInstanceKey].reloadWorkflow = selfLoadSelectedWorkflow;
         var policyIssuanceDepartmentRefreshes = {};
         function refreshPolicyIssuanceDepartment(dept) {
             dept = String(dept || "").trim().toUpperCase();

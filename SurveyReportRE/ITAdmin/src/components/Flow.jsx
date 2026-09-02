@@ -228,6 +228,16 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
             } catch (e) {}
         }
         const rawNodeData = parsedNodeData.rawNode || {};
+        const nodeInstruction = node.nodeInstruction
+            ?? parsedNodeData.nodeInstruction
+            ?? rawNodeData.nodeInstruction
+            ?? node.instruction
+            ?? parsedNodeData.instruction
+            ?? rawNodeData.instruction
+            ?? node.assignLabel
+            ?? parsedNodeData.assignLabel
+            ?? rawNodeData.assignLabel
+            ?? '';
         const jumpStepNo = node.jumpStepNo ?? parsedNodeData.jumpStepNo ?? rawNodeData.jumpStepNo ?? '';
         const jumpCondition = node.jumpCondition ?? parsedNodeData.jumpCondition ?? rawNodeData.jumpCondition ?? '';
         const jumpTargetNodeId = node.jumpTargetNodeId ?? parsedNodeData.jumpTargetNodeId ?? rawNodeData.jumpTargetNodeId ?? '';
@@ -258,8 +268,8 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
                 laneId: node.laneId || '',
                 shape: node.shape || 'rectangle',
                 styleColor: node.styleColor || 'blue',
-                assignLabel: node.assignLabel || '',
-                orderLabel: node.orderLabel || '',
+                nodeInstruction,
+                orderLabel: node.orderLabel ?? parsedNodeData.orderLabel ?? rawNodeData.orderLabel ?? '',
                 code,
                 flowType: node.flowType || node.nodeStatus || 'Both',
                 stepRole: node.stepRole || '',
@@ -826,7 +836,7 @@ function Flow({ id: propId }) {
                     posY: originalY,
                     x: originalX,
                     y: originalY,
-                    assignLabel: node.data.assignLabel || '',
+                    nodeInstruction: node.data.nodeInstruction ?? node.data.instruction ?? node.data.assignLabel ?? '',
                     orderLabel: node.data.orderLabel || '',
                     departmentName: node.data.departmentName || '',
                     description: node.data.description || '',
@@ -993,11 +1003,13 @@ function Flow({ id: propId }) {
                             levelNo: node.data?.levelNo,
                             jumpEnabled: !!node.data?.jumpEnabled,
                             jumpDefinitions: node.data?.jumpDefinitions || [],
+                            nodeInstruction: node.data?.nodeInstruction ?? node.data?.instruction ?? node.data?.assignLabel ?? '',
                             x: origX,
                             y: origY,
                             screenConditions: node.data?.screenConditions || []
                         },
                         screenConditions: node.data?.screenConditions || [],
+                        nodeInstruction: node.data?.nodeInstruction ?? node.data?.instruction ?? node.data?.assignLabel ?? '',
                         jumpEnabled: !!node.data?.jumpEnabled,
                         jumpDefinitions: node.data?.jumpDefinitions || [],
                         jumpTransitionMap: Object.fromEntries(
@@ -1310,6 +1322,7 @@ function Flow({ id: propId }) {
                     nodeType: 'task',
                     departmentName: '',
                     description: '',
+                    nodeInstruction: '',
                     manualPositioned: false,
                     code: id,
                     flowType: 'Both',
@@ -2058,19 +2071,12 @@ const updateSelectedEdge = useCallback(
                     </select>
                 </label>
                 <label>
-                    <span>Assign Label (Nhãn phân công)</span>
-                    <input
-                        value={selectedNode.data.assignLabel || ''}
-                        onChange={(event) => updateSelectedNode('assignLabel', event.target.value)}
-                        placeholder="e.g. Assign to me"
-                    />
-                </label>
-                <label>
-                    <span>Order Label (Nhãn chỉ đạo)</span>
-                    <input
-                        value={selectedNode.data.orderLabel || ''}
-                        onChange={(event) => updateSelectedNode('orderLabel', event.target.value)}
-                        placeholder="e.g. Ý chỉ"
+                    <span>Node Instruction (Hướng dẫn)</span>
+                    <textarea
+                        rows={3}
+                        value={selectedNode.data.nodeInstruction ?? selectedNode.data.instruction ?? selectedNode.data.assignLabel ?? ''}
+                        onChange={(event) => updateSelectedNode('nodeInstruction', event.target.value)}
+                        placeholder="Nhập chú thích hoặc hướng dẫn khi workflow đọc tới node này"
                     />
                 </label>
                 <label>

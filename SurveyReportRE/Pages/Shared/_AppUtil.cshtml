@@ -4717,14 +4717,21 @@
                             return ajaxPost(`/api/InstanceWorkflow/${flowName}SubmitNextStep`, sendData, {processData: true,
                         onSuccess: function (response) {
                             appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
-                            // reloadWorkflowViewComponents(flowName, formItems.id, null, true)
-                            //     .then(function (reloaded) {
-                            //         if (!reloaded) failWorkflowViewLoading(loadingContext, "Workflow refresh unavailable");
-                            //     })
-                            //     .catch(function (err) {
-                            //         failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
-                            //         console.error("Submit route reload failed", err);
-                            //     });
+                            var refreshRequest = {
+                                type: flowName,
+                                id: formItems.id,
+                                action: "submit",
+                                fromDepartment: findRoute.fromNodeId,
+                                toDepartment: findRoute.toNodeId,
+                                refreshScope: "view"
+                            };
+                            var refreshPromise = typeof window.dispatchWorkflowRefresh === "function"
+                                ? window.dispatchWorkflowRefresh(refreshRequest)
+                                : reloadWorkflowViewComponents(flowName, formItems.id, null, false);
+                            Promise.resolve(refreshPromise).catch(function (err) {
+                                failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
+                                console.error("Submit route reload failed", err);
+                            });
                         },
                         onError: function (err) {
                             failWorkflowViewLoading(loadingContext, "Submit failed");
@@ -4770,11 +4777,18 @@
                         return ajaxPost(`/api/InstanceWorkflow/${flowName}ReturnToStep`, sendData, {
                         onSuccess: function (response) {
                             appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
-                            reloadWorkflowViewComponents(flowName, formItems.id, null, true)
-                                .then(function (reloaded) {
-                                    if (!reloaded) failWorkflowViewLoading(loadingContext, "Workflow refresh unavailable");
-                                })
-                                .catch(function (err) {
+                            var refreshRequest = {
+                                type: flowName,
+                                id: formItems.id,
+                                action: "return",
+                                fromDepartment: findRoute.fromNodeId,
+                                toDepartment: findRoute.toNodeId,
+                                refreshScope: "view"
+                            };
+                            var refreshPromise = typeof window.dispatchWorkflowRefresh === "function"
+                                ? window.dispatchWorkflowRefresh(refreshRequest)
+                                : reloadWorkflowViewComponents(flowName, formItems.id, null, false);
+                            Promise.resolve(refreshPromise).catch(function (err) {
                                     failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
                                     console.error("Return route reload failed", err);
                                 });
@@ -7317,6 +7331,9 @@
                 button.classList.add("is-refreshing");
                 try {
                     await entry.refreshDepartment(dept);
+                    if (typeof entry.reloadWorkflow === "function") {
+                        await entry.reloadWorkflow();
+                    }
                     finishDepartmentSectionLoading(loadingContext, `${dept} section refreshed`, false);
                 } catch (error) {
                     console.error(`${dept} section refresh failed`, error);
@@ -7577,10 +7594,6 @@
                     refreshSource = document.getElementById(viewInstance.rootId);
                 }
 
-                if (refreshSource && reloadCurrentTabView(refreshSource)) {
-                    return Promise.resolve(true);
-                }
-
                 if (typeof viewInstance?.reload === "function") {
                     return Promise.resolve(viewInstance.reload());
                 }
@@ -7591,6 +7604,10 @@
 
                 if (typeof reloadComponents === "function") {
                     return Promise.resolve(reloadComponents(recordId));
+                }
+
+                if (refreshSource && reloadCurrentTabView(refreshSource)) {
+                    return Promise.resolve(true);
                 }
 
                 console.warn(`Reload handler is not available for ${viewInstanceKey}.`);

@@ -989,6 +989,7 @@ Note:
         }
 
         window.OverviewViewRegistry[policyIssuanceViewInstanceKey].reload = reloadPolicyIssuanceInstance;
+        window.OverviewViewRegistry[policyIssuanceViewInstanceKey].reloadWorkflow = loadSelectedWorkflow;
         window.reloadPolicyIssuanceComponents = function(instanceId) {
             var registry = window.OverviewViewRegistry || {};
             if (instanceId !== undefined && instanceId !== null) {

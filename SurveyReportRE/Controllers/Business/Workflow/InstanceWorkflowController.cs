@@ -274,7 +274,17 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         PICAttributes pICAttributes = new PICAttributes();
         pICAttributes = JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
         string accountName = Util.PICPicker(pICAttributes, submitRequest.StepsWorkflow.ToNodeId);
-        ControllerHelper.SignalRResponse(_usersSessionRepository,"R_ItemSubmitted", new { id = quotation.Id, type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        await ControllerHelper.DistributeWorkflowRefresh(
+            _usersSessionRepository,
+            nameof(Quotation),
+            quotation.Id,
+            "submit",
+            ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration),
+            accountName,
+            submitRequest.StepsWorkflow.FromNodeId,
+            submitRequest.StepsWorkflow.ToNodeId,
+            DOMAIN_NAME,
+            data: new { quotation.WorkflowStatus, quotation.StatusId, quotation.StageDept });
         await SendAttachedWorkflowMailAsync(submitRequest, quotation);
 
         dynamic transferObject = new
@@ -472,7 +482,17 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         //    "PM" => pICAttributes.PM,
         //    _ => null
         //};
-        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = quotation.Id, type = "PolicyIssuance" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        await ControllerHelper.DistributeWorkflowRefresh(
+            _usersSessionRepository,
+            nameof(PolicyIssuance),
+            quotation.Id,
+            "submit",
+            ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration),
+            accountName,
+            submitRequest.StepsWorkflow.FromNodeId,
+            submitRequest.StepsWorkflow.ToNodeId,
+            DOMAIN_NAME,
+            data: new { quotation.WorkflowStatus, quotation.StatusId, quotation.StageDept });
         await PISendAttachedWorkflowMailAsync(submitRequest, quotation);
         long? notificationCloneId = await ControllerUtil.ResolvePolicyIssuanceCloneIdAsync(
             _quotationRepository,
@@ -884,7 +904,17 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         //    "PM" => pICAttributes.PM,
         //    _ => null
         //};
-        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = quotation.Id,  type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        await ControllerHelper.DistributeWorkflowRefresh(
+            _usersSessionRepository,
+            nameof(Quotation),
+            quotation.Id,
+            "return",
+            ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration),
+            accountName,
+            submitRequest.StepsWorkflow.FromNodeId,
+            submitRequest.StepsWorkflow.ToNodeId,
+            DOMAIN_NAME,
+            data: new { quotation.WorkflowStatus, quotation.StatusId, quotation.StageDept });
         bool attachedMailSent = await SendAttachedWorkflowMailAsync(submitRequest, quotation);
         if (!attachedMailSent)
         {
@@ -970,12 +1000,17 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
         PICAttributes picAttributes = JsonConvert.DeserializeObject<PICAttributes>(policyIssuance.PIC);
         string accountName = Util.PICPicker(picAttributes, submitRequest.StepsWorkflow.ToNodeId);
-        ControllerHelper.SignalRResponse(
+        await ControllerHelper.DistributeWorkflowRefresh(
             _usersSessionRepository,
-            "R_ItemSubmitted",
-            new { id = policyIssuance.Id, type = "PolicyIssuance" },
+            nameof(PolicyIssuance),
+            policyIssuance.Id,
+            "return",
             ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration),
-            DOMAIN_NAME);
+            accountName,
+            submitRequest.StepsWorkflow.FromNodeId,
+            submitRequest.StepsWorkflow.ToNodeId,
+            DOMAIN_NAME,
+            data: new { policyIssuance.WorkflowStatus, policyIssuance.StatusId, policyIssuance.StageDept });
 
         bool attachedMailSent = await PISendAttachedWorkflowMailAsync(submitRequest, policyIssuance);
         if (!attachedMailSent)
