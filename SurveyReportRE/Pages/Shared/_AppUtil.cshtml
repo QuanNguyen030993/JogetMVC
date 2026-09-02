@@ -4826,6 +4826,68 @@
                 return [];
             }
 
+            function extractWorkflowNodeInstruction(node) {
+                const candidates = [node, node?.data, node?.Data];
+
+                for (let candidate of candidates) {
+                    if (!candidate) continue;
+                    if (typeof candidate === "string") {
+                        try { candidate = JSON.parse(candidate); } catch { continue; }
+                    }
+
+                    let rawNode = candidate?.rawNode ?? candidate?.RawNode;
+                    if (typeof rawNode === "string") {
+                        try { rawNode = JSON.parse(rawNode); } catch { rawNode = null; }
+                    }
+
+                    const instruction = candidate?.nodeInstruction
+                        ?? candidate?.NodeInstruction
+                        ?? rawNode?.nodeInstruction
+                        ?? rawNode?.NodeInstruction;
+                    if (String(instruction || "").trim()) return String(instruction).trim();
+                }
+
+                return "";
+            }
+
+            function extractWorkflowNodeLabel(node) {
+                const candidates = [node, node?.data, node?.Data];
+
+                for (let candidate of candidates) {
+                    if (!candidate) continue;
+                    if (typeof candidate === "string") {
+                        try { candidate = JSON.parse(candidate); } catch { continue; }
+                    }
+
+                    let rawNode = candidate?.rawNode ?? candidate?.RawNode;
+                    if (typeof rawNode === "string") {
+                        try { rawNode = JSON.parse(rawNode); } catch { rawNode = null; }
+                    }
+
+                    const label = candidate?.text
+                        ?? candidate?.Text
+                        ?? rawNode?.text
+                        ?? rawNode?.Text
+                        ?? candidate?.code
+                        ?? candidate?.Code
+                        ?? rawNode?.code
+                        ?? rawNode?.Code;
+                    if (String(label || "").trim()) return String(label).trim();
+                }
+
+                return "Current node";
+            }
+
+            function publishOverviewNodeInstruction(moduleCode, recordId, node) {
+                $(document).trigger("overviewNodeInstructionChanged", [{
+                    moduleCode: String(moduleCode || "").trim().toLowerCase(),
+                    recordId: recordId,
+                    instruction: extractWorkflowNodeInstruction(node),
+                    nodeLabel: extractWorkflowNodeLabel(node),
+                    node: node || null
+                }]);
+            }
+
             function applyQuotationScreenConditions(quotationId, screenConditions) {
                 const $sections = $("[data-quotation-screen-section]").filter(function () {
                     return String($(this).attr("data-quotation-id")) === String(quotationId);
@@ -4850,6 +4912,7 @@
 
             function loadAndApplyQuotationScreenConditions(currentNodeCode, quotationId) {
                 applyQuotationScreenConditions(quotationId, []);
+                publishOverviewNodeInstruction(viewIdModulePrefix.quotation, quotationId, null);
                 if (!currentNodeCode || !quotationId) return $.Deferred().resolve([]).promise();
 
                 const params = new URLSearchParams();
@@ -4859,16 +4922,21 @@
                     .then(result => {
                         const node = Array.isArray(result) ? result[0] : result;
                         const conditions = parseWorkflowNodeScreenConditions(node);
+                        publishOverviewNodeInstruction(viewIdModulePrefix.quotation, quotationId, node);
                         applyQuotationScreenConditions(quotationId, conditions);
                         // Some nested partial controls complete rendering after the workflow request.
                         setTimeout(() => applyQuotationScreenConditions(quotationId, conditions), 100);
                         return conditions;
                     })
-                    .fail(() => applyQuotationScreenConditions(quotationId, []));
+                    .fail(() => {
+                        publishOverviewNodeInstruction(viewIdModulePrefix.quotation, quotationId, null);
+                        applyQuotationScreenConditions(quotationId, []);
+                    });
             }
 
             function loadAndApplyPolicyIssuanceScreenConditions(currentNodeCode, policyIssuanceId) {
                 applyPolicyIssuanceScreenConditions(policyIssuanceId, []);
+                publishOverviewNodeInstruction(viewIdModulePrefix.policyIssuance, policyIssuanceId, null);
                 if (!currentNodeCode || !policyIssuanceId) return $.Deferred().resolve([]).promise();
 
                 const params = new URLSearchParams();
@@ -4878,12 +4946,16 @@
                     .then(result => {
                         const node = Array.isArray(result) ? result[0] : result;
                         const conditions = parseWorkflowNodeScreenConditions(node);
+                        publishOverviewNodeInstruction(viewIdModulePrefix.policyIssuance, policyIssuanceId, node);
                         applyPolicyIssuanceScreenConditions(policyIssuanceId, conditions);
                         // Some nested partial controls complete rendering after the workflow request.
                         setTimeout(() => applyPolicyIssuanceScreenConditions(policyIssuanceId, conditions), 100);
                         return conditions;
                     })
-                    .fail(() => applyPolicyIssuanceScreenConditions(policyIssuanceId, []));
+                    .fail(() => {
+                        publishOverviewNodeInstruction(viewIdModulePrefix.policyIssuance, policyIssuanceId, null);
+                        applyPolicyIssuanceScreenConditions(policyIssuanceId, []);
+                    });
             }
 
 

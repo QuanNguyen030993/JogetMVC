@@ -722,13 +722,6 @@
                         <i class="fa fa-compass" aria-hidden="true"></i>
                     </button>
                 }
-                <button id="tmivTourGuideLauncher"
-                        class="ug-guide-launcher"
-                        type="button"
-                        title="Start UI tour"
-                        aria-label="Start UI tour">
-                    <i class="fa fa-map-signs" aria-hidden="true"></i>
-                </button>
                 <button id="notificationBtn" class="notif-wrapper square-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="30" height="30" viewBox="0 0 256 256" xml:space="preserve">
                     <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
@@ -760,6 +753,11 @@
                             <span id="roleLabel">Phòng ban chưa chọn</span>
                         </div>
                     </div>
+                    <button id="tmivTourGuideLauncher" class="user-settings-entry" type="button">
+                        <span class="user-settings-icon"><i class="fa fa-map-signs"></i></span>
+                        <span><strong>Start UI Tour</strong><small>Open the interactive guide for this screen</small></span>
+                        <i class="fa fa-angle-right"></i>
+                    </button>
                     <button id="openUserSettings" class="user-settings-entry" type="button">
                         <span class="user-settings-icon"><i class="fa fa-cog"></i></span>
                         <span><strong>Settings</strong><small>Role, theme and notifications</small></span>
@@ -773,21 +771,6 @@
         </div>
 
         @await Html.PartialAsync("_SPAReference")
-        <script>
-            if (managementUserGuideEnabled) {
-            window.UserGuide?.bindLauncher("#userGuideLauncher", {
-                adminOnly: true,
-                allowManage: true,
-                autoStart: false
-            });
-            window.UserGuide?.bindLauncher("#tmivTourGuideLauncher", {
-                allowManage: false,
-                autoStart: true
-            });
-             } else {
-                    $("#userGuideLauncher, #tmivTourGuideLauncher").hide();
-                }
-        </script>
         <div id="mainPopup"></div>
         <div id="outlinePopup"></div>
         <div id="loadingPopup"></div>
@@ -860,6 +843,27 @@
                 </footer>
             </section>
         </div>
+        <script>
+            if (managementUserGuideEnabled) {
+                window.UserGuide?.bindLauncher("#userGuideLauncher", {
+                    adminOnly: true,
+                    allowManage: true,
+                    autoStart: false
+                });
+
+                const tourLauncher = document.getElementById("tmivTourGuideLauncher");
+                tourLauncher?.addEventListener("click", function () {
+                    $("#dropdown-menu").hide();
+                    $("#userAccountTrigger").attr("aria-expanded", "false");
+                });
+                window.UserGuide?.bindLauncher(tourLauncher, {
+                    allowManage: false,
+                    autoStart: true
+                });
+            } else {
+                $("#userGuideLauncher, #tmivTourGuideLauncher").hide();
+            }
+        </script>
 
     </header>
     @await Html.PartialAsync("_MenuPartial")

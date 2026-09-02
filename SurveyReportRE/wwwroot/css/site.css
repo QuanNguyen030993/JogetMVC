@@ -131,9 +131,11 @@
 
 .user-settings-entry {
     width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     padding: 10px;
     display: grid;
-    grid-template-columns: 35px 1fr auto;
+    grid-template-columns: 35px minmax(0, 1fr) 12px;
     align-items: center;
     gap: 10px;
     color: var(--theme-text);
@@ -141,6 +143,8 @@
     background: transparent;
     border: 0;
     border-radius: 11px;
+    overflow: hidden;
+    cursor: pointer;
 }
 
     .user-settings-entry:hover {
@@ -148,13 +152,30 @@
     }
 
     .user-settings-entry span:nth-child(2) {
+        min-width: 0;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
+    }
+
+    .user-settings-entry span:nth-child(2) strong,
+    .user-settings-entry span:nth-child(2) small {
+        display: block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .user-settings-entry small {
         margin-top: 2px;
         color: var(--theme-muted);
+    }
+
+    .user-settings-entry > i:last-child {
+        width: 12px;
+        color: var(--theme-muted);
+        text-align: center;
     }
 
 .user-settings-icon {
@@ -1654,8 +1675,7 @@
 
 .management-header-actions .square-btn,
 .management-header-actions #notificationBtn,
-.management-header-actions #userGuideLauncher,
-.management-header-actions #tmivTourGuideLauncher {
+.management-header-actions #userGuideLauncher {
     width: var(--management-header-control-height) !important;
     height: var(--management-header-control-height) !important;
     min-width: var(--management-header-control-height);
@@ -1670,8 +1690,7 @@
     justify-content: center;
 }
 
-.management-header-actions #userGuideLauncher,
-.management-header-actions #tmivTourGuideLauncher {
+.management-header-actions #userGuideLauncher {
     display: inline-flex;
 }
 
@@ -37687,4 +37706,94 @@ body.skin-re .dx-popup-wrapper.dx-rtl > .dx-overlay-content > .dx-popup-title.dx
     align-items: center;
     gap: 8px;
     margin-top: 8px;
+}
+
+.overview-node-help-content {
+    padding: 5px;
+    color: var(--theme-text);
+}
+
+.overview-node-help-header {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 2px 2px 12px;
+    border-bottom: 1px solid var(--theme-border);
+}
+
+.overview-node-help-icon {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 38px;
+    color: var(--theme-primary);
+    background: var(--theme-primary-soft);
+    border-radius: 11px;
+    font-size: 18px;
+}
+
+.overview-node-help-heading {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.overview-node-help-kicker {
+    color: var(--theme-primary);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .11em;
+}
+
+.overview-node-help-title {
+    overflow: hidden;
+    color: var(--theme-text-strong);
+    font-size: 14px;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.overview-node-help-message {
+    position: relative;
+    margin-top: 12px;
+    padding: 14px 14px 14px 38px;
+    background: linear-gradient(135deg, var(--theme-primary-soft), var(--theme-surface-muted));
+    border: 1px solid color-mix(in srgb, var(--theme-primary) 18%, var(--theme-border));
+    border-radius: 12px;
+}
+
+.overview-node-help-message > i {
+    position: absolute;
+    top: 15px;
+    left: 14px;
+    color: var(--theme-primary);
+    font-size: 13px;
+    opacity: .75;
+}
+
+.overview-node-help-text {
+    color: var(--theme-text);
+    font-size: 12.5px;
+    font-weight: 550;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.overview-node-help-footer {
+    margin-top: 10px;
+    padding: 0 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--theme-muted);
+    font-size: 10.5px;
+}
+
+.overview-node-help-footer i {
+    color: var(--theme-primary);
 }

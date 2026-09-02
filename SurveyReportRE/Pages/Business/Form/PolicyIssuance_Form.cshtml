@@ -1471,7 +1471,9 @@ Note:
     var toggleHideWorkflow = false;
 
     $(`#${window.PolicyIssuanceIdManager.panelHoverInFlow(@ViewData["Id"])}`).dxButton({
-        text: "Workflow",
+        icon: "fas fa-project-diagram",
+        hint: "Workflow",
+        elementAttr: { "aria-label": "Workflow" },
         readOnly: true,
         type: "normal",
         stylingMode: "contained",
