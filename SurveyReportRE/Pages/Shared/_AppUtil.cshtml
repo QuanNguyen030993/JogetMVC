@@ -4888,6 +4888,159 @@
                 }]);
             }
 
+            function getScreenConditionGroupNames(rule) {
+                const names = [];
+                const seen = new Set();
+
+                function append(value) {
+                    const name = String(value?.name ?? value?.Name ?? value ?? "").trim();
+                    if (!name || seen.has(name.toLowerCase())) return;
+                    seen.add(name.toLowerCase());
+                    names.push(name);
+                }
+
+                const targets = rule?.targets ?? rule?.Targets;
+                (Array.isArray(targets) ? targets : []).forEach(function (target) {
+                    const itemType = String(target?.itemType ?? target?.ItemType ?? "group").toLowerCase();
+                    if (itemType === "group") append(target);
+                });
+
+                const groupNames = rule?.groupNames ?? rule?.GroupNames;
+                (Array.isArray(groupNames)
+                    ? groupNames
+                    : String(groupNames || "").split(",")
+                ).forEach(append);
+
+                if (!names.length) append(rule?.sectionId ?? rule?.SectionId);
+                return names;
+            }
+
+            function findScreenConditionFormItem(items, targetName, parentPath) {
+                const normalizedTarget = String(targetName || "").trim().toLowerCase();
+                for (const item of (Array.isArray(items) ? items : [])) {
+                    if (!item) continue;
+                    const itemKey = item.name || item.dataField || item.caption || "";
+                    const itemPath = parentPath && itemKey
+                        ? `${parentPath}.${itemKey}`
+                        : (itemKey || parentPath || "");
+                    if (String(item.name || "").trim().toLowerCase() === normalizedTarget) {
+                        return { item: item, path: itemPath || targetName };
+                    }
+                    const nested = findScreenConditionFormItem(item.items, targetName, itemPath);
+                    if (nested) return nested;
+                }
+                return null;
+            }
+
+            function setScreenConditionFormItemTreeDisabled(formInstance, items, parentPath, disabled) {
+                (Array.isArray(items) ? items : []).forEach(function (item) {
+                    if (!item) return;
+                    const itemKey = item.name || item.dataField || item.caption || "";
+                    const itemPath = parentPath && itemKey
+                        ? `${parentPath}.${itemKey}`
+                        : (itemKey || parentPath || "");
+
+                    try {
+                        if (itemPath) formInstance.itemOption(itemPath, "disabled", disabled);
+                    } catch (error) {}
+
+                    if (item.dataField) {
+                        try {
+                            formInstance.getEditor(item.dataField)?.option("disabled", disabled);
+                        } catch (error) {}
+                    }
+                    setScreenConditionFormItemTreeDisabled(
+                        formInstance,
+                        item.items,
+                        itemPath,
+                        disabled
+                    );
+                });
+            }
+
+            function applyEnableOnlyGroupToForm(formInstance, targetMatches) {
+                const items = formInstance.option("items") || [];
+                const targetPaths = targetMatches.map(function (match) {
+                    return String(match.path || "").toLowerCase();
+                });
+
+                function applyGroups(groupItems, parentPath) {
+                    (Array.isArray(groupItems) ? groupItems : []).forEach(function (item) {
+                        if (!item) return;
+                        const itemKey = item.name || item.dataField || item.caption || "";
+                        const itemPath = parentPath && itemKey
+                            ? `${parentPath}.${itemKey}`
+                            : (itemKey || parentPath || "");
+                        const itemType = String(item.itemType || "").trim().toLowerCase();
+
+                        if (itemType !== "group") {
+                            applyGroups(item.items, itemPath);
+                            return;
+                        }
+
+                        const normalizedPath = String(itemPath).toLowerCase();
+                        const isExactTarget = targetPaths.includes(normalizedPath);
+                        const containsTarget = targetPaths.some(function (targetPath) {
+                            return targetPath.startsWith(`${normalizedPath}.`);
+                        });
+
+                        try {
+                            formInstance.itemOption(itemPath, "disabled", !(isExactTarget || containsTarget));
+                        } catch (error) {}
+
+                        if (isExactTarget) {
+                            setScreenConditionFormItemTreeDisabled(
+                                formInstance,
+                                item.items,
+                                itemPath,
+                                false
+                            );
+                        } else if (containsTarget) {
+                            applyGroups(item.items, itemPath);
+                        } else {
+                            setScreenConditionFormItemTreeDisabled(
+                                formInstance,
+                                item.items,
+                                itemPath,
+                                true
+                            );
+                        }
+                    });
+                }
+
+                applyGroups(items, "");
+            }
+
+            function enableScreenConditionGroups(moduleCode, recordId, rule) {
+                const manager = moduleCode === viewIdModulePrefix.policyIssuance
+                    ? window.PolicyIssuanceIdManager
+                    : window.QuotationIdManager;
+                const departments = moduleCode === viewIdModulePrefix.policyIssuance
+                    ? piDeptModuleCode
+                    : qtDeptModuleCode;
+                if (!manager || typeof manager.form !== "function") return;
+
+                const groupNames = getScreenConditionGroupNames(rule);
+                (Array.isArray(departments) ? departments : []).forEach(function (department) {
+                        const formId = manager.form(department, recordId);
+                        let formInstance = null;
+                        try {
+                            formInstance = formId ? $(`#${formId}`).dxForm("instance") : null;
+                        } catch (error) {}
+                        if (!formInstance) return;
+
+                        const formItems = formInstance.option("items") || [];
+                        const targetMatches = groupNames
+                            .map(function (groupName) {
+                                return findScreenConditionFormItem(formItems, groupName, "");
+                            })
+                            .filter(Boolean);
+                        if (!targetMatches.length) return;
+
+                        applyEnableOnlyGroupToForm(formInstance, targetMatches);
+                });
+            }
+
             function applyQuotationScreenConditions(quotationId, screenConditions) {
                 const $sections = $("[data-quotation-screen-section]").filter(function () {
                     return String($(this).attr("data-quotation-id")) === String(quotationId);
@@ -4896,6 +5049,11 @@
                 // Screen-controlled sections are hidden unless the reached node explicitly shows them.
                 $sections.hide();
                 (Array.isArray(screenConditions) ? screenConditions : []).forEach(rule => {
+                    const trigger = String(rule?.trigger || "").trim().toLowerCase();
+                    if (trigger === "enableonlygroup") {
+                        enableScreenConditionGroups(viewIdModulePrefix.quotation, quotationId, rule);
+                        return;
+                    }
                     const sectionId = String(rule?.sectionId || "").trim();
                     if (!sectionId) return;
 
@@ -4967,6 +5125,11 @@
                 // Screen-controlled sections are hidden unless the reached node explicitly shows them.
                 $sections.hide();
                 (Array.isArray(screenConditions) ? screenConditions : []).forEach(rule => {
+                    const trigger = String(rule?.trigger || "").trim().toLowerCase();
+                    if (trigger === "enableonlygroup") {
+                        enableScreenConditionGroups(viewIdModulePrefix.policyIssuance, policyIssuanceId, rule);
+                        return;
+                    }
                     const sectionId = String(rule?.sectionId || "").trim();
                     if (!sectionId) return;
 
@@ -11485,6 +11648,27 @@
             return null;
         }
 
+        function collectWorkflowFormGroups(items, parentPath, result) {
+            result = result || [];
+            (Array.isArray(items) ? items : []).forEach(function (item) {
+                if (!item) return;
+                const itemKey = item.name || item.dataField || item.caption || "";
+                const itemPath = parentPath && itemKey
+                    ? `${parentPath}.${itemKey}`
+                    : (itemKey || parentPath || "");
+                const itemType = String(item.itemType || "").trim().toLowerCase();
+
+                if (itemType === "group" && item.name) {
+                    result.push({
+                        name: String(item.name),
+                        path: itemPath || String(item.name)
+                    });
+                }
+                collectWorkflowFormGroups(item.items, itemPath, result);
+            });
+            return result;
+        }
+
         function restoreWorkflowUiLockedGroups() {
             $(
                 `.workflow-ui-lock-group[data-workflow-ui-locked='true']` +
@@ -11526,6 +11710,22 @@
                     $uploader
                         .removeAttr("data-workflow-ui-lock-tmiv")
                         .removeData("workflowUiLockTmivDisabled");
+                });
+
+                $group.find("[data-workflow-ui-lock-tmiv-control]").each(function () {
+                    const $control = $(this);
+                    const pluginName = $control.attr("data-workflow-ui-lock-tmiv-control");
+                    const originalDisabled = $control.data("workflowUiLockTmivControlDisabled");
+                    try {
+                        if (pluginName === "datebox") {
+                            $control.datebox({ disabled: !!originalDisabled });
+                        } else if (pluginName) {
+                            $control[pluginName]("option", "disabled", !!originalDisabled);
+                        }
+                    } catch (error) {}
+                    $control
+                        .removeAttr("data-workflow-ui-lock-tmiv-control")
+                        .removeData("workflowUiLockTmivControlDisabled");
                 });
 
                 $group
@@ -11662,6 +11862,21 @@
                 } catch (error) {}
             });
 
+            $group.find(".tmiv-render-form-datebox").each(function () {
+                const $dateBox = $(this);
+                if (!$dateBox.attr("data-workflow-ui-lock-tmiv-control")) {
+                    const originalDisabled = $dateBox
+                        .find(".tmivcom-datebox")
+                        .hasClass("is-disabled");
+                    $dateBox
+                        .attr("data-workflow-ui-lock-tmiv-control", "datebox")
+                        .data("workflowUiLockTmivControlDisabled", originalDisabled);
+                }
+                try {
+                    $dateBox.datebox({ disabled: true });
+                } catch (error) {}
+            });
+
             $group.find("input, textarea, select").filter(function () {
                 return !$(this).closest(".dx-widget").length;
             }).each(function () {
@@ -11684,6 +11899,104 @@
             return true;
         }
 
+        function enableOnlyWorkflowFormGroup(formInstance, target, rule) {
+            const targetName = target?.name ?? target?.Name;
+            if (!formInstance || !targetName) return false;
+
+            const items = formInstance.option("items") || [];
+            const targetMatch = findWorkflowFormItem(items, targetName, "");
+            if (!targetMatch) return false;
+
+            const targetPath = String(targetMatch.path || targetName).toLowerCase();
+            const disabledRule = $.extend({}, rule, { mode: "Disabled" });
+            collectWorkflowFormGroups(items, "", []).forEach(function (group) {
+                const groupPath = String(group.path || group.name).toLowerCase();
+                const isTargetBranch = groupPath === targetPath
+                    || groupPath.startsWith(`${targetPath}.`)
+                    || targetPath.startsWith(`${groupPath}.`);
+                if (isTargetBranch) return;
+                lockWorkflowFormGroup(
+                    formInstance,
+                    { itemType: "group", name: group.name },
+                    disabledRule
+                );
+            });
+            return true;
+        }
+
+        function getWorkflowRuleGroupTargets(rule) {
+            const result = [];
+            const seen = new Set();
+            const configuredTargets = rule.targets ?? rule.Targets;
+            const groupNames = rule.groupNames ?? rule.GroupNames;
+
+            function appendTarget(target) {
+                if (typeof target === "string") {
+                    target = { itemType: "group", name: target };
+                }
+                const name = String(target?.name ?? target?.Name ?? "").trim();
+                const itemType = String(target?.itemType ?? target?.ItemType ?? "group").trim().toLowerCase();
+                if (!name || itemType !== "group") return;
+                const key = name.toLowerCase();
+                if (seen.has(key)) return;
+                seen.add(key);
+                result.push({ itemType: "group", name: name });
+            }
+
+            (Array.isArray(configuredTargets) ? configuredTargets : []).forEach(appendTarget);
+            (Array.isArray(groupNames)
+                ? groupNames
+                : String(groupNames || "").split(",")
+            ).forEach(appendTarget);
+
+            if (!result.length) {
+                appendTarget(rule.sectionId ?? rule.SectionId);
+            }
+            return result;
+        }
+
+        function disableAllWorkflowFormGroups(formInstance, rule) {
+            const disabledRule = $.extend({}, rule, { mode: "Disabled" });
+            collectWorkflowFormGroups(formInstance.option("items") || [], "", []).forEach(function (group) {
+                lockWorkflowFormGroup(
+                    formInstance,
+                    { itemType: "group", name: group.name },
+                    disabledRule
+                );
+            });
+        }
+
+        function enableOnlyWorkflowFormGroups(formInstance, targets, rule) {
+            const items = formInstance.option("items") || [];
+            const targetPaths = (Array.isArray(targets) ? targets : [])
+                .map(function (target) {
+                    const match = findWorkflowFormItem(items, target?.name, "");
+                    return match ? String(match.path || target.name).toLowerCase() : "";
+                })
+                .filter(Boolean);
+            if (!targetPaths.length) {
+                disableAllWorkflowFormGroups(formInstance, rule);
+                return false;
+            }
+
+            const disabledRule = $.extend({}, rule, { mode: "Disabled" });
+            collectWorkflowFormGroups(items, "", []).forEach(function (group) {
+                const groupPath = String(group.path || group.name).toLowerCase();
+                const belongsToEnabledBranch = targetPaths.some(function (targetPath) {
+                    return groupPath === targetPath
+                        || groupPath.startsWith(`${targetPath}.`)
+                        || targetPath.startsWith(`${groupPath}.`);
+                });
+                if (belongsToEnabledBranch) return;
+                lockWorkflowFormGroup(
+                    formInstance,
+                    { itemType: "group", name: group.name },
+                    disabledRule
+                );
+            });
+            return true;
+        }
+
         function applyWorkflowUiLockRules(workflowPayload) {
             restoreWorkflowUiLockedGroups();
             const rules = collectWorkflowUiLockRules(workflowPayload);
@@ -11691,16 +12004,31 @@
                 const condition = String(rule.condition ?? rule.Condition ?? "").trim().toLowerCase();
                 if (condition === "false") return;
 
-                const department = normalizeDept(rule.department ?? rule.Department ?? stageDept);
+                const configuredDepartment = String(rule.department ?? rule.Department ?? "").trim();
+                const department = normalizeDept(configuredDepartment || stageDept);
                 if (!department) return;
                 const formId = moduleConfig.getFormId(department, id);
                 const formInstance = formId ? $(`#${formId}`).dxForm("instance") : null;
                 if (!formInstance) return;
 
-                const targets = rule.targets ?? rule.Targets;
-                (Array.isArray(targets) ? targets : []).forEach(function (target) {
-                    lockWorkflowFormGroup(formInstance, target, rule);
-                });
+                const targetList = getWorkflowRuleGroupTargets(rule);
+                const trigger = String(rule.trigger ?? rule.Trigger ?? "").trim().toLowerCase();
+                if (trigger === "samedepartmentreturn") {
+                    const accountRole = normalizeDept(
+                        typeof _role !== "undefined" ? _role : window._role
+                    );
+                    if (accountRole && accountRole === department) {
+                        enableOnlyWorkflowFormGroups(formInstance, targetList, rule);
+                    } else {
+                        disableAllWorkflowFormGroups(formInstance, rule);
+                    }
+                } else if (trigger === "enableonlygroup") {
+                    if (targetList[0]) enableOnlyWorkflowFormGroup(formInstance, targetList[0], rule);
+                } else {
+                    targetList.forEach(function (target) {
+                        lockWorkflowFormGroup(formInstance, target, rule);
+                    });
+                }
             });
             return rules;
         }
