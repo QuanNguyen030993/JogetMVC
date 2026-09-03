@@ -11,6 +11,7 @@ import TextBox from "../components/TextBox.jsx";
 import NumberBox from "../components/NumberBox.jsx";
 import CheckBox from "../components/CheckBox.jsx";
 import SelectBox from "../components/SelectBox.jsx";
+import TagBox from "../components/TagBox.jsx";
 import DropDownBox from "../components/DropDownBox.jsx";
 import CustomForm from "../components/CustomForm.jsx";
 import PreviewOffice from "../components/PreviewOffice.jsx";
@@ -383,38 +384,34 @@ function createJQueryPlugin(pluginName, componentName) {
     $.fn[pluginName] = function(arg1, arg2, arg3) {
         if (typeof arg1 === "string") {
             if (arg1 === "option") {
-                if (arg2 === "value") {
-                    if (arguments.length >= 3) {
-                        this.each(function() {
-                            const instance = roots.get(this);
-                            if (!instance) return;
-                            if (instance.ref?.current) {
-                                instance.ref.current.option("value", arg3);
-                            } else {
-                                instance.options.value = arg3;
-                                const Component = controls[instance.name];
-                                instance.root.render(
-                                    <Component ref={instance.ref} {...instance.options}/>
-                                );
-                            }
-                        });
-                        return this;
-                    }
-                    if (this.length === 1) {
-                        const el = this[0];
-                        const instance = roots.get(el);
-                        if (!instance) return null;
-                        const controlInstance = instance.ref?.current;
-                        return controlInstance?.value?.() ?? instance.options.value ?? null;
-                    }
-                    return this.map(function() {
+                if (arguments.length >= 3) {
+                    this.each(function() {
                         const instance = roots.get(this);
-                        if (!instance) return null;
-                        const controlInstance = instance.ref?.current;
-                        return controlInstance?.value?.() ?? instance.options.value ?? null;
-                    }).get();
+                        if (!instance) return;
+                        instance.options[arg2] = arg3;
+                        if (instance.ref?.current?.option) {
+                            instance.ref.current.option(arg2, arg3);
+                        }
+                        const Component = controls[instance.name];
+                        instance.root.render(
+                            <Component ref={instance.ref} {...instance.options}/>
+                        );
+                    });
+                    return this;
                 }
-                return undefined;
+                if (this.length === 1) {
+                    const instance = roots.get(this[0]);
+                    if (!instance) return null;
+                    return instance.ref?.current?.option?.(arg2)
+                        ?? instance.options?.[arg2]
+                        ?? null;
+                }
+                return this.map(function() {
+                    const instance = roots.get(this);
+                    return instance?.ref?.current?.option?.(arg2)
+                        ?? instance?.options?.[arg2]
+                        ?? null;
+                }).get();
             }
         }
 
@@ -426,21 +423,19 @@ function createJQueryPlugin(pluginName, componentName) {
                     option(name, value) {
                         const instance = roots.get(el);
                         if (!instance) return;
-                        if (instance.ref?.current) {
-                            if (arguments.length === 1) {
-                                return instance.ref.current.option(name);
-                            }
-                            instance.ref.current.option(name, value);
-                        } else {
-                            if (arguments.length === 1) {
-                                return instance.options[name];
-                            }
-                            instance.options[name] = value;
-                            const Component = controls[instance.name];
-                            instance.root.render(
-                                <Component ref={instance.ref} {...instance.options}/>
-                            );
+                        if (arguments.length === 1) {
+                            return instance.ref?.current?.option?.(name)
+                                ?? instance.options?.[name];
                         }
+                        instance.options[name] = value;
+                        if (instance.ref?.current) {
+                            instance.ref.current.option(name, value);
+                        }
+                        const Component = controls[instance.name];
+                        instance.root.render(
+                            <Component ref={instance.ref} {...instance.options}/>
+                        );
+                        return this;
                     },
                     value() {
                         const instance = roots.get(el);
@@ -461,21 +456,19 @@ function createJQueryPlugin(pluginName, componentName) {
                     option(name, value) {
                         const instance = roots.get(el);
                         if (!instance) return;
-                        if (instance.ref?.current) {
-                            if (arguments.length === 1) {
-                                return instance.ref.current.option(name);
-                            }
-                            instance.ref.current.option(name, value);
-                        } else {
-                            if (arguments.length === 1) {
-                                return instance.options[name];
-                            }
-                            instance.options[name] = value;
-                            const Component = controls[instance.name];
-                            instance.root.render(
-                                <Component ref={instance.ref} {...instance.options}/>
-                            );
+                        if (arguments.length === 1) {
+                            return instance.ref?.current?.option?.(name)
+                                ?? instance.options?.[name];
                         }
+                        instance.options[name] = value;
+                        if (instance.ref?.current) {
+                            instance.ref.current.option(name, value);
+                        }
+                        const Component = controls[instance.name];
+                        instance.root.render(
+                            <Component ref={instance.ref} {...instance.options}/>
+                        );
+                        return this;
                     },
                     value() {
                         const instance = roots.get(el);
@@ -497,7 +490,9 @@ createJQueryPlugin("textbox", "TextBox");
 createJQueryPlugin("numberbox", "NumberBox");
 createJQueryPlugin("checkbox", "CheckBox");
 createJQueryPlugin("selectbox", "SelectBox");
+createJQueryPlugin("tagbox", "TagBox");
 createJQueryPlugin("dropdownbox", "DropDownBox");
+$.fn.tmivtagbox = $.fn.tagbox;
 
 
 $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
@@ -1482,6 +1477,11 @@ register(
 );
 
 register(
+    "TagBox",
+    TagBox
+);
+
+register(
     "DropDownBox",
     DropDownBox
 );
@@ -1533,6 +1533,7 @@ window.TMIVCom.DataGrid = DataGrid;
 window.TMIVCom.DxCompatibleDataGrid = DxCompatibleDataGrid;
 window.TMIVCom.GridArrayStore = GridArrayStore;
 window.TMIVCom.GridCustomStore = GridCustomStore;
+window.TMIVCom.TagBox = TagBox;
 
 const jqueryInstances = [window.jQuery, window.$].filter(
     (instance, index, instances) => instance && instances.indexOf(instance) === index
@@ -1560,5 +1561,5 @@ if (typeof window !== "undefined") {
     //}, 5000);
 }
 
-export { DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore };
-export default { DateBox, TimeBox, HtmlEditor, HtmlEditorCommentBox, CustomGrid, DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify, TourGuide, startTour, exportTour };
+export { TagBox, DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore };
+export default { DateBox, TimeBox, HtmlEditor, HtmlEditorCommentBox, CustomGrid, DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, TagBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify, TourGuide, startTour, exportTour };
