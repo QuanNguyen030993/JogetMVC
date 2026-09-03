@@ -460,8 +460,8 @@ margin-bottom:10px;
 
 
 
-input,
-select{
+.field-builder input,
+.field-builder select{
 
 height:32px;
 
@@ -475,7 +475,7 @@ padding:0 8px;
 
 
 
-label{
+.field-builder label{
 
 display:block;
 
@@ -621,8 +621,8 @@ margin-bottom:10px;
 
 
 
-input,
-select{
+.field-builder input,
+.field-builder select{
 
 height:32px;
 
@@ -636,7 +636,7 @@ padding:0 8px;
 
 
 
-label{
+.field-builder label{
 
 display:block;
 
