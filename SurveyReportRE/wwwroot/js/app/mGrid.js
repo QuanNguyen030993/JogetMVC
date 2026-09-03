@@ -1295,6 +1295,10 @@ var MGridOption = class MGridOption {
                 e.component.expandRow(e.key);
         }
     }
+
+    onRowDblClick(e) {
+
+    }
 };
 
 var MDropDownDataSource = class MDropDownDataSource {
