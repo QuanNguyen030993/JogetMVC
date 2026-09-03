@@ -140,7 +140,7 @@ const DropDownBox = forwardRef(({
                                 style={{ ...defaultRowProps.style, cursor: 'pointer' }}
                             >
                                 {columns.map((column) => (
-                                    <td key={column.field || `col-${column.caption}`} className="grid-cell dx-cell">
+                                    <td key={column.field || `col-${column.caption}`} className="grid-cell tmivcom-grid-cell">
                                         <div className="grid-cell-content">
                                             {row[column.field] ?? ''}
                                         </div>

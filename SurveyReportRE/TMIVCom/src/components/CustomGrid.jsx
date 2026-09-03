@@ -1852,7 +1852,7 @@ const LegacyCustomGrid = forwardRef(({
 
   const renderRow = (node) => {
     const rowId = getRowKey(node, keyExpr);
-    const rowClasses = `grid-row dx-data-row ${selectedRowId === rowId ? 'dx-selection' : ''} ${String(draggedRowKey) === String(rowId) ? 'row-dragging' : ''}`;
+    const rowClasses = `grid-row tmivcom-grid-row ${selectedRowId === rowId ? 'tmivcom-grid-selection' : ''} ${String(draggedRowKey) === String(rowId) ? 'row-dragging' : ''}`;
     const rowProps = {
       className: rowClasses,
       onClick: () => {
@@ -1941,7 +1941,7 @@ const LegacyCustomGrid = forwardRef(({
           return (
             <td 
               key={column.field || `col-${column.caption}`} 
-              className={`grid-cell dx-cell ${column.cssClass || ''} ${isEditing ? 'editing-cell' : ''}`}
+              className={`grid-cell tmivcom-grid-cell ${column.cssClass || ''} ${isEditing ? 'editing-cell' : ''}`}
               tabIndex={0}
               onFocus={() => setFocusedCell({ rowKey: rowId, field: column.field })}
               onClick={(event) => {
@@ -2056,7 +2056,7 @@ const LegacyCustomGrid = forwardRef(({
   return (
     <div
       ref={gridElementRef}
-      className={`custom-grid dx-datagrid custom-grid-${theme}`}
+      className={`tmivcom-custom-grid tmivcom-custom-grid-${theme}`}
       role="grid"
       aria-rowcount={filteredRows.length}
       aria-colcount={renderingColumns.length}
@@ -2145,7 +2145,7 @@ const LegacyCustomGrid = forwardRef(({
           </colgroup>
 
           <thead className="grid-header">
-            <tr className="dx-header-row">
+            <tr className="tmivcom-grid-header-row">
               {renderingColumns.map((column) => {
                 if (column.field === 'row-selection-checkbox') {
                   return (

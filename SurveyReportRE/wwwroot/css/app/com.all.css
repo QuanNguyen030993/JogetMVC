@@ -1337,7 +1337,7 @@
 }
 
 /* Light mode variables */
-.custom-grid-light {
+.tmivcom-custom-grid-light {
     --grid-bg: #ffffff;
     --grid-border: #cbd5e1;
     --grid-header-bg: #f8fafc;
@@ -1370,7 +1370,7 @@
 }
 
 /* Dark mode variables - matching mockup exactly */
-.custom-grid-dark {
+.tmivcom-custom-grid-dark {
     --grid-bg: #222933;
     --grid-border: #2f3846;
     --grid-header-bg: #2e3541;
@@ -1402,7 +1402,7 @@
     --grid-command-save-color: #ffffff;
 }
 
-.custom-grid {
+.tmivcom-custom-grid {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-size: 13px;
     color: var(--grid-row-color);
@@ -1490,7 +1490,7 @@
 .grid-table .grid-row,
 .grid-table .grid-header,
 .grid-table .grid-body,
-.grid-table .dx-header-row,
+.grid-table .tmivcom-grid-header-row,
 .grid-table tr {
     height: auto;
 }
@@ -1640,8 +1640,8 @@
     background: var(--grid-row-hover);
 }
 
-.grid-row.dx-selection,
-.grid-row.dx-selection td {
+.grid-row.tmivcom-grid-selection,
+.grid-row.tmivcom-grid-selection td {
     background: var(--grid-row-selected) !important;
     color: var(--grid-row-selected-color) !important;
 }
@@ -1907,7 +1907,7 @@
             background: #eff6ff;
         }
 
-.custom-grid-dark .command-btn.view-btn:hover {
+.tmivcom-custom-grid-dark .command-btn.view-btn:hover {
     background: #1e3a8a;
 }
 
@@ -1921,7 +1921,7 @@
         background: #fffbeb;
     }
 
-.custom-grid-dark .command-btn.edit-btn:hover {
+.tmivcom-custom-grid-dark .command-btn.edit-btn:hover {
     background: #78350f;
 }
 
@@ -1936,7 +1936,7 @@
         border-color: #fee2e2;
     }
 
-.custom-grid-dark .command-btn.delete-btn:hover {
+.tmivcom-custom-grid-dark .command-btn.delete-btn:hover {
     background: #450a0a;
     border-color: #7f1d1d;
 }
@@ -3316,7 +3316,7 @@ textarea {
 }
 
 /* Allow grid popups to render outside containers */
-.custom-grid {
+.tmivcom-custom-grid {
     overflow: visible !important;
 }
 
@@ -3426,7 +3426,7 @@ textarea {
 }
 
 /* Custom Grid Header premium styling */
-.custom-grid .grid-header {
+.tmivcom-custom-grid .grid-header {
     background: #1e293b !important; /* Sleek dark slate blue */
     border-bottom: 1px solid #334155 !important;
 }
