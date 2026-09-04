@@ -555,3 +555,78 @@ VALUES
 (N'Yemen', N'Yemen', 1, NULL, NEWID(), NULL, GETDATE(), NULL, NULL, 0, NULL, NULL, 194, NULL, NULL),
 (N'Zambia', N'Zambia', 1, NULL, NEWID(), NULL, GETDATE(), NULL, NULL, 0, NULL, NULL, 195, NULL, NULL),
 (N'Zimbabwe', N'Zimbabwe', 1, NULL, NEWID(), NULL, GETDATE(), NULL, NULL, 0, NULL, NULL, 196, NULL, NULL)
+
+
+DECLARE @PolicyIssuanceId BIGINT = 59;
+
+WITH Q AS
+(
+    SELECT *
+    FROM
+    (
+        VALUES
+        ('PPPPPP','QT-000381',1128,N'DAO DUY THANG'),
+        ('PPPPPP','QT-000433',1128,N'DAO DUY THANG'),
+        ('DEMO-1784166047382','QT-000448',1128,N'DAO DUY THANG'),
+        ('DEMO-1784558065768','QT-000505',1128,N'DAO DUY THANG'),
+        ('DEMO-1784770837586','QT-000529',1128,N'DAO DUY THANG'),
+        ('DEMO-1786526300398','QT-000556',1121,N'TRAN MANH HUNG'),
+        ('DEMO-1787661592380','QT-000627',1128,N'DAO DUY THANG')
+    ) X
+    (
+        PolicyNo,
+        QuotationCode,
+        ClientId,
+        ClientName
+    )
+),
+R AS
+(
+    SELECT 'R1' Renew
+    UNION ALL SELECT 'R2'
+    UNION ALL SELECT 'R3'
+),
+E AS
+(
+    SELECT NULL Endorsement
+    UNION ALL SELECT 'E1'
+    UNION ALL SELECT 'E2'
+    UNION ALL SELECT 'E3'
+)
+INSERT INTO dbo.PolicyIssuanceSubDetails
+(
+    PolicyIssuanceId,
+    TranNo,
+    Renew,
+    Guid,
+    CreatedBy,
+    CreatedDate,
+    Deleted,
+    RowOrder,
+    PolicyNo,
+    QuotationCode,
+    ClientId,
+    ClientName,
+    Endorsement
+)
+SELECT
+    @PolicyIssuanceId,
+    ROW_NUMBER() OVER(ORDER BY Q.QuotationCode,R.Renew,E.Endorsement),
+    R.Renew,
+    NEWID(),
+    'System',
+    GETDATE(),
+    0,
+    ROW_NUMBER() OVER(ORDER BY Q.QuotationCode,R.Renew,E.Endorsement),
+    Q.PolicyNo,
+    Q.QuotationCode,
+    Q.ClientId,
+    Q.ClientName,
+    E.Endorsement
+FROM Q
+CROSS JOIN R
+CROSS JOIN E
+ORDER BY
+    Q.QuotationCode,
+    R.Renew,
+    E.Endorsement;

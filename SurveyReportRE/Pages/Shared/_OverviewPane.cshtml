@@ -135,14 +135,14 @@
                 $("<i>").addClass("fa fa-quote-left").attr("aria-hidden", "true").appendTo($message);
                 $("<div>")
                     .addClass("overview-node-help-text")
-                    .text(instruction || "No instruction is configured for this node.")
+                    .html(instruction || "No instruction is configured for this node.")
                     .appendTo($message);
 
-                $("<div>")
-                    .addClass("overview-node-help-footer")
-                    .append($("<i>").addClass("fa fa-info-circle").attr("aria-hidden", "true"))
-                    .append($("<span>").text("Instruction configured in the workflow node."))
-                    .appendTo($content);
+                // $("<div>")
+                //     .addClass("overview-node-help-footer")
+                //     .append($("<i>").addClass("fa fa-info-circle").attr("aria-hidden", "true"))
+                //     .append($("<span>")//.text("Instruction configured in the workflow node."))
+                //     .appendTo($content);
                 $content.appendTo(contentElement);
             }
         }).dxPopover("instance");

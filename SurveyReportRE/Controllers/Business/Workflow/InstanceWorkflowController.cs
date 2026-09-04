@@ -1576,7 +1576,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 DataTable query = DataUtil.ExecuteSelectQuery(
                     _BaseRepository._connectionString,
                     notificationTemplate.NotificationQuery,
-                    ("", ""));
+                    (fallbackType + "Id", fallbackTransferObject.Id));
                 if (query.Rows.Count > 0)
                 {
                     templateData = Util.MakeQueryIntoDirectory(query.Rows[0]);
@@ -1621,6 +1621,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         templateData["PerformedBy"] = performedBy;
         templateData["Comment"] = comment;
 
+
+
         string moduleName = fallbackTransferObject.ModuleName?.ToString() ?? nameof(Quotation);
         string recordCode = fallbackTransferObject.Code?.ToString() ?? "";
         string titleTemplate = MailUtil.TitleContentHandle(notificationTemplate.Title, templateData).Trim();
@@ -1646,10 +1648,10 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
         string contentTemplate = notificationTemplate.Content ?? "";
         string message = comment;
-        if (contentTemplate.Contains("<comment>", StringComparison.OrdinalIgnoreCase))
+        if (contentTemplate.Contains(_businessConfig.CurrentValue.HardCodeObject.Comment, StringComparison.OrdinalIgnoreCase))
         {
             contentTemplate = contentTemplate.Replace(
-                "<comment>",
+                _businessConfig.CurrentValue.HardCodeObject.Comment,
                 comment,
                 StringComparison.OrdinalIgnoreCase);
             message = MailUtil.BodyContentHandle(contentTemplate, templateData).Trim();
@@ -1659,7 +1661,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         {
             DOMAIN_NAME,
             Title = title,
-            Message = message,
+            Message = contentTemplate,
             Resource = fallbackTransferObject.Resource,
             Guid = fallbackTransferObject.Guid,
             ReceivedBy = fallbackTransferObject.ReceivedBy,
@@ -1674,13 +1676,14 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 submitRequest.StepsWorkflow,
                 submitRequest.InstanceWorkflow,
                 fallbackType);
-
         if (submitRequest.isEmail ?? false)
         {
             Notification notification = await ControllerUtil.NotifySameEmail(
                 new Notification(),
                 transferObject,
                 notificationTypeId);
+            notification.Title = title;
+            notification.Message = contentTemplate;
             await _notificationRepository.InsertData(notification);
             return notification;
         }
@@ -1699,7 +1702,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 callerName: nameof(SendWorkflowNotificationAsync)
                 );
 
-
+            Notification.Title = title;
+            Notification.Message = message;
             notification.Notification = Notification;
             notification.connectionId = item;
             notification.tabPublicUrl = ControllerUtil.NotificationURLObjectMaking(transferObject);

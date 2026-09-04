@@ -1606,7 +1606,7 @@
 
         onEditorPreparing(e) {
             $.each(qtDeptModuleCode,function (itemInd, item){
-
+                if (item === _role) return;
                 if (e.dataField === `pic${item}` && e.parentType === "dataRow") {
                  var rowData = e.row.data; // <-- row hiện tại
                  // e.editorOptions.onValueChanged = function(ev) {
@@ -1722,10 +1722,11 @@
 
             $.each(columns, function (colIndex, col) {
 
-                       $.each(qtDeptModuleCode,function (itemInd, item){
-
-                     col.allowEditing = true;
+                 $.each(qtDeptModuleCode,function (itemInd, item){
+                   
+                        col.allowEditing = true;
                         if (col.dataField === `pic${item}`) {
+                             if (item === _role) col.visible = false;
                         col.cellTemplate = function (container, options) {
                             col.value = tryParseJSON(options.data.pic, "PIC Load Problem From Grid")[item];
                             return $(`<div>`).text(tryParseJSON(options.data.pic, "PIC Load Problem  From Grid")[item]).appendTo(container);

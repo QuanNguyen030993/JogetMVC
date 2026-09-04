@@ -523,7 +523,7 @@
                                     }
                                 },
                         { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd/MM/yyyy" } },
-                        { dataField: "policyNo",name: "policyNo", visible: shouldShow ,label: { text: "Policy No" }, editorType: "dxTextBox", validationRules: [{ type: "required" }]
+                        { dataField: "policyNo",name: "policyNo", visible: shouldShow ,label: { text: "Policy No" }, editorType: "dxSelectBox", validationRules: [{ type: "required" }]
                         , editorOptions: {
                             onValueChanged: function (e){
                                 that.formInstance = that.dxForm("instance");
