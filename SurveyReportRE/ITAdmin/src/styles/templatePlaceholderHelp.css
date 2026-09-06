@@ -1,0 +1,30 @@
+.template-placeholder-help { position: relative; margin-left: auto; }
+.template-placeholder-label { display: flex; align-items: center; gap: 6px; }
+.template-placeholder-help > summary { display: grid; width: 18px; height: 18px; padding: 0; place-items: center; border: 1px solid #94a3b8; border-radius: 50%; background: #fff; color: #475569; font-size: 11px; font-weight: 800; cursor: pointer; list-style: none; user-select: none; }
+.template-placeholder-help > summary::-webkit-details-marker { display: none; }
+.template-placeholder-help[open] > summary { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
+.template-placeholder-popover { position: fixed; z-index: 10000; top: 82px; right: 24px; width: min(520px, 72vw); max-height: min(580px, 72vh); padding: 12px; overflow: auto; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; color: #334155; box-shadow: 0 14px 35px rgba(15, 23, 42, .2); font-size: 11px; font-weight: 400; line-height: 1.4; }
+.template-placeholder-popover > strong { display: block; color: #0f172a; font-size: 13px; }
+.template-placeholder-popover > p { margin: 5px 0 9px; color: #64748b; }
+.template-placeholder-popover code { padding: 1px 4px; border-radius: 4px; background: #f1f5f9; color: #7c3aed; font: 600 10px ui-monospace, SFMono-Regular, Consolas, monospace; }
+.template-placeholder-types { display: grid; gap: 7px; }
+.template-placeholder-type { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 8px; padding: 8px; border: 1px solid #e2e8f0; border-radius: 7px; background: #f8fafc; }
+.template-placeholder-type code { align-self: start; text-align: center; }
+.template-placeholder-type b, .template-placeholder-type span { display: block; }
+.template-placeholder-type b { margin-bottom: 2px; color: #0f172a; }
+.template-placeholder-type span { color: #64748b; }
+.template-placeholder-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 9px; }
+.template-placeholder-stats span { padding: 3px 7px; border-radius: 10px; background: #e2e8f0; color: #475569; }
+.template-placeholder-stats .has-warning { background: #fff7ed; color: #c2410c; }
+.template-placeholder-table-wrap { overflow: auto; border: 1px solid #e2e8f0; border-radius: 7px; }
+.template-placeholder-table-wrap table { width: 100%; border-collapse: collapse; }
+.template-placeholder-table-wrap th, .template-placeholder-table-wrap td { padding: 6px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: top; }
+.template-placeholder-table-wrap th { position: sticky; top: 0; background: #f8fafc; color: #475569; font-size: 10px; }
+.template-placeholder-table-wrap tr:last-child td { border-bottom: 0; }
+.template-placeholder-table-wrap tr.is-used { background: #f0fdf4; }
+.template-placeholder-table-wrap td:first-child { white-space: nowrap; }
+.template-placeholder-table-wrap td small { display: block; margin-top: 3px; color: #15803d; font-size: 9px; }
+.template-sql-parameters, .template-special-token { margin-top: 8px; padding: 7px; border-radius: 6px; background: #f8fafc; }
+.template-sql-parameters code { display: inline-block; margin-left: 4px; }
+.template-sql-parameters small { display: block; margin-top: 4px; color: #64748b; }
+@media (max-width: 700px) { .template-placeholder-popover { position: fixed; top: 70px; right: 12px; left: 12px; width: auto; } }

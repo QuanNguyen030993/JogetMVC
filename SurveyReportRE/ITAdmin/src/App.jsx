@@ -20,7 +20,6 @@ import AspLogViewer from './components/AspLogViewer';
 import CustomGrid from '../../TMIVCom/src/components/CustomGrid'
 import NotificationHub from './components/NotificationHub';
 import SqlStoredProcedure from './components/SqlStoredProcedure';
-import NotificationTemplate from './components/NotificationTemplate';
 import NotificationTemplateDesigner from './components/NotificationTemplateDesigner';
 import DatabaseManagement from './components/DatabaseManagement';
 import ReportBuilder from './components/ReportBuilder';
@@ -416,7 +415,6 @@ function App() {
     { id: 'asplog', label: 'ASP.NET Local log' },
     { id: 'datagridfielddesigner', label: 'DataGrid' },
     { id: 'datagridconfig-grid', label: 'DataGrid List' },
-    { id: 'notification-template', label: 'Notification Template' },
     { id: 'notification-designer', label: 'Notification Design' },
     { id: 'notification-grid', label: 'Notification Queue List' },
     { id: 'notification-hub', label: 'Notification Queue Detail' },
@@ -519,8 +517,6 @@ function App() {
         return <CustomGrid modelName="Notification" gridType="System" apiBaseUrl={appsettings.UrlConfig.Host} editMode="batch" />;
       case 'notification-hub':
         return <NotificationHub />;
-      case 'notification-template':
-        return <NotificationTemplate />;
       case 'notification-designer':
         return <NotificationTemplateDesigner />;
       case 'sladesigner':

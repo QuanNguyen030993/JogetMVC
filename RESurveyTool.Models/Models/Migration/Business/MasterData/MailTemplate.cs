@@ -7,6 +7,7 @@ namespace ERPCore.Models.Migration.Business.MasterData
     {
         public string TemplateName { get; set; } = "";
         public string TemplateContent { get; set; } = "";
+        public string ClearContent { get; set; } = "";
         public string TemplateMailTitle { get; set; } = "";
         public string CC { get; set; } = "";
         public string To { get; set; } = "";// Ẩn UI 

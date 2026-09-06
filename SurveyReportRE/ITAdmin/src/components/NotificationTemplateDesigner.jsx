@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import appsettings from '../../../host.json';
 import grapesjs from "grapesjs";
 import { notify } from "../../../TMIVCom/src/components/Notification";
+import TemplatePlaceholderControl from "./TemplatePlaceholderControl";
+import { registerTemplatePlaceholder, serializeTemplateContent } from "./templatePlaceholderUtils";
 import "../styles/notificationTemplateDesigner.css";
 import "grapesjs/dist/css/grapes.min.css";
 
@@ -143,6 +145,7 @@ function NotificationTemplateDesigner() {
                 templateName: name,
                 title: name,
                 content: `<div class="notification-content"><h3>${name}</h3><p>Nội dung thông báo mới</p></div>`,
+                clearContent: `${name}\nNội dung thông báo mới`,
                 typeId: notificationTypeEnums[0]?.id || notificationTypeEnums[0]?.Id || null,
                 isActive: true,
                 notificationQuery: ""
@@ -176,19 +179,15 @@ function NotificationTemplateDesigner() {
                 return;
             }
 
-            let html = editor.getHtml();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
-            const notiContent = doc.querySelector(".notification-content");
-            if (notiContent) {
-                html = notiContent.innerHTML;
-            }
+            const serialized = serializeTemplateContent(editor.getHtml(), ".notification-content");
+            const html = serialized.html;
 
             const updatedTemplate = {
                 id: selectedTemplate.id || selectedTemplate.Id,
                 templateName: templateName,
                 title: title,
                 content: html,
+                clearContent: serialized.clearContent,
                 typeId: typeId ? parseInt(typeId) : null,
                 notificationQuery: sqlQuery,
                 isActive: isActive
@@ -309,11 +308,21 @@ function NotificationTemplateDesigner() {
                         border-radius: 5px;
                         color: #1677ff;
                     }
+                    .tmiv-placeholder {
+                        display: inline;
+                        border: 1px dashed #7c3aed;
+                        border-radius: 4px;
+                        background: #f3e8ff;
+                        color: #6d28d9;
+                        padding: 1px 4px;
+                        white-space: nowrap;
+                    }
                 `
             }
         });
 
         editorInstance.current = editor;
+        registerTemplatePlaceholder(editor);
 
         // Custom field component
         editor.DomComponents.addType("tmiv-field", {
@@ -414,15 +423,17 @@ function NotificationTemplateDesigner() {
                     <div ref={editorRef} className="grapesjs-container" />
 
                     {/* Right side: Block Manager */}
-                    <aside className="tool-panel">
+                    <aside className="template-designer-inspector">
+                    <section className="tool-panel">
                         <div className="tool-title">
                             Components
                         </div>
+                        <TemplatePlaceholderControl editorInstance={editorInstance} />
                         <div id="gjs-notification-blocks" />
-                    </aside>
+                    </section>
 
                     {/* Control Element Panel: Template Settings, TypeId (EnumData), SQL Query */}
-                    <div className="sql-box">
+                    <section className="sql-box">
                         <div className="panel-header" style={{ padding: "0 0 10px 0", fontSize: "14px", fontWeight: "600", color: "#1e293b" }}>
                             ⚙️ Control Element Settings
                         </div>
@@ -497,7 +508,8 @@ function NotificationTemplateDesigner() {
                                 placeholder="SELECT RecordNo AS RefNo, CustomerName AS Client, Department AS Dept FROM..."
                             />
                         </div>
-                    </div>
+                    </section>
+                    </aside>
                 </div>
             </div>
         </div>

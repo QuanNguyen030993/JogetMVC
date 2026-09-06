@@ -1,0 +1,14 @@
+.template-placeholder-control { margin: 8px; padding: 9px; border: 1px solid #dbeafe; border-radius: 9px; background: linear-gradient(145deg, #f8fbff, #eef6ff); box-shadow: 0 3px 10px rgba(37, 99, 235, .07); }
+.template-placeholder-control__title { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; color: #1e3a5f; font-size: 11px; font-weight: 800; }
+.template-placeholder-control.is-editing { border-color: #93c5fd; background: #eff6ff; }
+.template-placeholder-control label { display: grid; grid-template-columns: 58px minmax(0, 1fr); align-items: center; gap: 5px; margin-top: 6px; color: #475569; font-size: 9px; font-weight: 700; }
+.template-placeholder-control select, .template-placeholder-control input { width: 100%; height: 29px; box-sizing: border-box; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #334155; font-size: 10px; outline: none; }
+.template-placeholder-control select { padding: 0 6px; }
+.template-placeholder-control input { min-width: 0; padding: 0 7px; }
+.template-placeholder-control select:focus, .template-placeholder-control input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, .12); }
+.template-placeholder-control__input { display: grid; grid-template-columns: minmax(0, 1fr) 30px; gap: 5px; }
+.template-placeholder-control__input button { display: grid; width: 30px; height: 29px; padding: 0; place-items: center; border: 0; border-radius: 6px; background: #2563eb; color: #fff; font-size: 17px; font-weight: 700; cursor: pointer; }
+.template-placeholder-control__input button:disabled { opacity: .45; cursor: not-allowed; }
+.template-placeholder-control__preview { display: block; margin-top: 6px; padding: 4px 6px; overflow: hidden; border-radius: 5px; background: #fff; color: #7c3aed; font: 700 10px ui-monospace, SFMono-Regular, Consolas, monospace; text-overflow: ellipsis; white-space: nowrap; }
+.template-placeholder-control small { display: block; margin-top: 6px; color: #64748b; font-size: 9px; line-height: 1.35; }
+.template-placeholder-control small.has-message { color: #1d4ed8; }

@@ -11,6 +11,7 @@ namespace ERPCore.Models.Migration.Business.MasterData
         public string Title { get; set; } = "";
 
         public string Content { get; set; } = "";
+        public string ClearContent { get; set; } = "";
 
         public long? TypeId { get; set; }
         public EnumData? TypeEnum { get; set; }

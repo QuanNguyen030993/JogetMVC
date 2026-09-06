@@ -522,3 +522,130 @@ th, td { vertical-align: middle; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Mail / Notification designer workspace */
+.mail-template-designer .designer-container,
+.notification-template-designer .designer-container {
+  min-width: 0;
+  background: #eef2f7;
+}
+.mail-template-designer .field-panel,
+.notification-template-designer .field-panel {
+  width: 210px !important;
+  min-width: 210px !important;
+  border-right: 1px solid #dbe3ee;
+  background: #fff;
+  box-shadow: 4px 0 14px rgba(15, 23, 42, .035);
+  z-index: 2;
+}
+.mail-template-designer .panel-header,
+.notification-template-designer .panel-header,
+.mail-template-designer .tool-title,
+.notification-template-designer .tool-title {
+  min-height: 40px;
+  height: auto;
+  box-sizing: border-box;
+  padding: 9px 11px;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #fff, #f8fafc);
+  color: #172033;
+  letter-spacing: .01em;
+}
+.mail-template-designer .fields-list,
+.notification-template-designer .fields-list { padding: 9px; }
+.mail-template-designer .field-item,
+.notification-template-designer .field-item {
+  min-height: 32px;
+  height: auto;
+  padding: 6px 9px;
+  box-sizing: border-box;
+  border-color: #e2e8f0;
+  border-radius: 7px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .035);
+}
+.mail-template-designer .field-item.selected,
+.notification-template-designer .field-item.selected {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+  box-shadow: inset 3px 0 #2563eb;
+  font-weight: 700;
+}
+.mail-template-designer .panel-actions,
+.notification-template-designer .panel-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 9px;
+  background: #f8fafc;
+}
+.mail-template-designer .panel-actions .btn,
+.notification-template-designer .panel-actions .btn { height: 32px; margin: 0; border-radius: 7px; }
+.mail-template-designer .panel-actions .primary,
+.notification-template-designer .panel-actions .primary { grid-column: 1 / -1; }
+.mail-template-designer .editor-wrapper,
+.notification-template-designer .editor-wrapper {
+  display: grid;
+  grid-template-columns: minmax(520px, 1fr) 300px;
+  min-width: 0;
+  height: 100% !important;
+  overflow: hidden;
+}
+.mail-template-designer .grapesjs-container,
+.notification-template-designer .grapesjs-container {
+  min-width: 0;
+  height: 100% !important;
+  border: 8px solid #eef2f7;
+  border-radius: 12px;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: #fff;
+}
+.template-designer-inspector {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  border-left: 1px solid #dbe3ee;
+  background: #fff;
+  box-shadow: -4px 0 14px rgba(15, 23, 42, .035);
+}
+.mail-template-designer .template-designer-inspector .tool-panel,
+.notification-template-designer .template-designer-inspector .tool-panel {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 260px;
+  flex: 1 1 52%;
+  border: 0;
+  border-bottom: 1px solid #dbe3ee;
+  overflow: hidden;
+}
+.mail-template-designer .template-designer-inspector .sql-box,
+.notification-template-designer .template-designer-inspector .sql-box {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  max-height: 48%;
+  flex: 1 1 48%;
+  padding: 10px;
+  border: 0;
+  background: #fff;
+}
+.mail-template-designer #gjs-blocks,
+.notification-template-designer #gjs-notification-blocks {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  padding: 8px;
+}
+.mail-template-designer .gjs-title,
+.notification-template-designer .gjs-title { color: #475569 !important; }
+.mail-template-designer .gjs-block,
+.notification-template-designer .gjs-block { border-color: #e2e8f0 !important; box-shadow: 0 2px 5px rgba(15, 23, 42, .06) !important; }
+
+@media (max-width: 1180px) {
+  .mail-template-designer .field-panel,
+  .notification-template-designer .field-panel { width: 180px !important; min-width: 180px !important; }
+  .mail-template-designer .editor-wrapper,
+  .notification-template-designer .editor-wrapper { grid-template-columns: minmax(500px, 1fr) 270px; overflow-x: auto; }
+}
