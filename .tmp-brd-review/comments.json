@@ -1,0 +1,1363 @@
+{
+  "file": "D:\\Folder drive\\BRD_Workflow Managermentt v1.0 3 updated.docx",
+  "comment_count": 59,
+  "comments": [
+    {
+      "id": "7",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:11:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "Đoạn này ko chính xác, mà TS chủ yếu có trách nhiệm đảm bảo quote theo chuẩn TMIV, k?",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": ""
+            },
+            {
+              "where": "end",
+              "text": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "author": "To Thi Thu Hien MKT",
+      "date": "2026-06-04T10:25:00Z",
+      "initials": "TM",
+      "resolved": false,
+      "text": "Đoạn này mình nên ghi là: FO được quyết định tự xử lý báo giá hoặc gửi request cho TS. Tương tự đối với các TH endor kê khai, hệ thống cho phép TS tự xử lý báo giá. TS có trách nhiệm thực hiện yêu cầu theo đúng thông tin và các hướng dẫn/ biểu mẫu của TMIV.",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": ""
+            },
+            {
+              "where": "end",
+              "text": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:12:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "Với các endorsement hoặc một số Q ko cần MNG ký, chưa thấy có bước skip MNG",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Quotation cần được phê duyệt bởi cấp quản lý (MKT/MGR). Riêng Với các endorsement hoặc một số Quatation ko cần MGR ký"
+            },
+            {
+              "where": "end",
+              "text": "Quotation cần được phê duyệt bởi cấp quản lý (MKT/MGR). Riêng Với các endorsement hoặc một số Quatation ko cần MGR ký"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "author": "To Thi Thu Hien MKT",
+      "date": "2026-06-04T11:04:00Z",
+      "initials": "TM",
+      "resolved": false,
+      "text": "Vân xem lại luồng, chị cũng chưa nhìn ra trên sơ đồ các TH quotation cho endor nên ko cần ký",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Quotation cần được phê duyệt bởi cấp quản lý (MKT/MGR). Riêng Với các endorsement hoặc một số Quatation ko cần MGR ký"
+            },
+            {
+              "where": "end",
+              "text": "Quotation cần được phê duyệt bởi cấp quản lý (MKT/MGR). Riêng Với các endorsement hoặc một số Quatation ko cần MGR ký"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "16",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:15:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "Sau khi submit Q thì việc revise Q chỗ này chưa thấy được thể hiện (submit kí đi lại nhiều lần)",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Từ chối hoặc không phản hồi → quotation được đóng lại hoặc là được revise làm lại với một số trường hợp"
+            },
+            {
+              "where": "end",
+              "text": "Từ chối hoặc không phản hồi → quotation được đóng lại hoặc là được revise làm lại với một số trường hợp"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "18",
+      "author": "To Thi Thu Hien MKT",
+      "date": "2026-06-04T18:10:00Z",
+      "initials": "TM",
+      "resolved": false,
+      "text": "TH TS đã gửi rq từ FO sang PM nhưng PM trả về vì thiếu thông tin, đòi hỏi FO phải thu thập thêm, hiện giờ PM trả về nó nằm chỗ TS, TS ko đẩy sang cho FO đc. Luồng này đã cho phép trả lại FO trong TH này chưa?",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Quy trình bắt đầu khi bộ phận MKT Front Office (FO) hoặc Technical Support (TS) tạo mới một yêu cầu dựa trên báo giá đã được phê duyệt và kí từ khách hàng. Hệ thống quản lý theo từng yêu cầu riêng lẽ,"
+            },
+            {
+              "where": "end",
+              "text": "Quy trình bắt đầu khi bộ phận MKT Front Office (FO) hoặc Technical Support (TS) tạo mới một yêu cầu dựa trên báo giá đã được phê duyệt và kí từ khách hàng. Hệ thống quản lý theo từng yêu cầu riêng lẽ,"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "22",
+      "author": "To Thi Thu Hien MKT",
+      "date": "2026-06-05T10:07:00Z",
+      "initials": "TM",
+      "resolved": false,
+      "text": "câu này không rõ nghĩa, có phải ý là: Upload đính kèm báo giá đúng như quy định trả lại user khởi tạo và hệ thống sinh ra số quotation???",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Upload đính kèm báo giá đúng như quy định để tạo code báo giá cho TS, quy định như sau:"
+            },
+            {
+              "where": "end",
+              "text": "Upload đính kèm báo giá đúng như quy định để tạo code báo giá cho TS, quy định như sau:"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "23",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:19:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "Khi click client confirm yes thì cho attach file để lưu confirmation",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Pending – In Progress – Quotation confirmed (có trường lưu)"
+            },
+            {
+              "where": "end",
+              "text": "Pending – In Progress – Quotation confirmed (có trường lưu)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "26",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T16:49:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "em thấy chỗ vẽ từ sau khi UW PIC get approval từ higher level rồi trả cho MKT chưa đúng ạ",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Tại giai đoạn này, Underwriting đã nhận được yêu cầu mang tính chất xem / đánh giá dựa trên mẫu báo giá đã được soạn thảo hoàn thành, tùy vào authority FO sẽ nhận biết báo giá này có cần được refer ha"
+            },
+            {
+              "where": "end",
+              "text": "Tại giai đoạn này, Underwriting đã nhận được yêu cầu mang tính chất xem / đánh giá dựa trên mẫu báo giá đã được soạn thảo hoàn thành, tùy vào authority FO sẽ nhận biết báo giá này có cần được refer ha"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "27",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T16:54:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "đoạn này em thấy bị confuse, UW chỉ xem những điểm vượt MKT's Authority, các điểm trong MKT's Authority thì MKT phải chịu trách nhiệm. Ngoài ra, khi UW trả kết quả và yêu cầu điều chỉnh T&Cs thì MKT cần phải follow",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Tại giai đoạn này, Underwriting đã nhận được yêu cầu mang tính chất xem / đánh giá dựa trên mẫu báo giá đã được soạn thảo hoàn thành, tùy vào authority FO sẽ nhận biết báo giá này có cần được refer ha"
+            },
+            {
+              "where": "end",
+              "text": "Tại giai đoạn này, Underwriting đã nhận được yêu cầu mang tính chất xem / đánh giá dựa trên mẫu báo giá đã được soạn thảo hoàn thành, tùy vào authority FO sẽ nhận biết báo giá này có cần được refer ha"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "28",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T16:56:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "Approve/Decline/No need to refer/Need More Info",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Status: UW Approve / UW Decline / No need to refer / Need More Info"
+            },
+            {
+              "where": "end",
+              "text": "Status: UW Approve / UW Decline / No need to refer / Need More Info"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "31",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:35:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "Là ntn? FO bắt buộc phải review trước khi gửi đi ah?",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Review bản ký trả gửi từ (trường hợp Broker) PM"
+            },
+            {
+              "where": "end",
+              "text": "Review bản ký trả gửi từ (trường hợp Broker) PM"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "32",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:36:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "TS làm nhiệm vụ này là chính, chỉ cần Cc FO thôi",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Gửi khách hàng và nhận bản kí trả  (trường hợp Broker)"
+            },
+            {
+              "where": "end",
+              "text": "Gửi khách hàng và nhận bản kí trả  (trường hợp Broker)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "33",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:37:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "????",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Hệ thống auto assign task theo rule:"
+            },
+            {
+              "where": "end",
+              "text": "Hệ thống auto assign task theo rule:"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "36",
+      "author": "Duong Thuc Nguyen PM",
+      "date": "2026-06-01T14:00:00Z",
+      "initials": "DP",
+      "resolved": false,
+      "text": "thêm 2 status này",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "In Progress – Submit – Submit but follow up - Complete"
+            },
+            {
+              "where": "end",
+              "text": "In Progress – Submit – Submit but follow up - Complete"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "38",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T16:58:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "điểm này em hiểu là hỗ trợ cho MKT mà k có UW đúng k ạ",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Hỗ trợ ký số điện tử"
+            },
+            {
+              "where": "end",
+              "text": "Hỗ trợ ký số điện tử"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "39",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T17:00:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "đề nghị bỏ câu này, refer theo guideline",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Refer với lý do cần thiết,  Các phòng sẽ follow theo status của UW sau khi UW đã hoàn tất"
+            },
+            {
+              "where": "end",
+              "text": "Refer với lý do cần thiết,  Các phòng sẽ follow theo status của UW sau khi UW đã hoàn tất"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "40",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T17:01:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "câu này em đang ko hiểu, nếu không phải refer thì từ phía MKT được quyền chủ động mà ko cần đến bước refer UW",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": ""
+            },
+            {
+              "where": "end",
+              "text": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "41",
+      "author": "Duong Thuc Nguyen PM",
+      "date": "2026-06-01T14:00:00Z",
+      "initials": "DP",
+      "resolved": false,
+      "text": "thực hiện checklist trước khi Accept",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "PM thực hiện checklist trước khi Accept request"
+            },
+            {
+              "where": "end",
+              "text": "PM thực hiện checklist trước khi Accept request"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "42",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:41:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "Ở các bước quyết định, thông báo với những người đang trực tiếp liên quan, và phần Cc để cho user tự input nếu cần . Input từ đầu flow hoặc edit trg quá trình (Như outlook)",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Email"
+            },
+            {
+              "where": "end",
+              "text": "Email"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "43",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:43:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "Quan trọng là step refer UW  cần được nhiều bên liên quan nắm thông tin. Với các case refer UW, khi client confirmed cần có email báo UW ở bước này (quan trọng nhất)",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Email"
+            },
+            {
+              "where": "end",
+              "text": "Email"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "44",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T17:03:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "đề nghị thống nhất format tên email cần có các thông tin để nhận biết như: tên khách hàng, số đơn, LoB, UY,...",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Email"
+            },
+            {
+              "where": "end",
+              "text": "Email"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "45",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T16:22:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "Ở mọi bước liên quan đến UW, auto cc các group email UW và user có thế tự điều chỉnh, input thêm nếu cần",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Core"
+            },
+            {
+              "where": "end",
+              "text": "Core"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "46",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:46:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "Notification pop up ở trg web hay là hình cái chuông bên phải phía trên (như outlook)",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Notification"
+            },
+            {
+              "where": "end",
+              "text": "Notification"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "47",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T17:05:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "chức năng này cho phép paste ảnh, bảng biểu",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Sử dụng chức năng này để update thông tin trong trường hợp không muốn upload lại file , mang ý nghĩa ( giống Jira sharing comment )"
+            },
+            {
+              "where": "end",
+              "text": "Sử dụng chức năng này để update thông tin trong trường hợp không muốn upload lại file , mang ý nghĩa ( giống Jira sharing comment )"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "51",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:22:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "FO/TS/UW/PM process",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "PM Process"
+            },
+            {
+              "where": "end",
+              "text": "PM Process"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "52",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:23:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "Pending khi chưa có user take action? Ghi rõ chỗ nào pending để lọc cho dễ",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Pending"
+            },
+            {
+              "where": "end",
+              "text": "Pending"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "53",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:24:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "Quotation confirmed",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Quotation confirmed"
+            },
+            {
+              "where": "end",
+              "text": "Quotation confirmed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "54",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:24:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "UW declined",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "UW Declined"
+            },
+            {
+              "where": "end",
+              "text": "UW Declined"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "55",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:24:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "Quotation refused",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Quotation refused"
+            },
+            {
+              "where": "end",
+              "text": "Quotation refused"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "60",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T16:26:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "Completed do UW ko cần phải involve nếu ko cần refer",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Completed"
+            },
+            {
+              "where": "end",
+              "text": "Completed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "61",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T17:07:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "Điều chỉnh thành Approve",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "UW Approve"
+            },
+            {
+              "where": "end",
+              "text": "UW Approve"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "62",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T17:07:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "Điều chỉnh thành Decline",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "UW Decline"
+            },
+            {
+              "where": "end",
+              "text": "UW Decline"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "63",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T17:09:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "thừa",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Decline → flow đi tiếp về FO"
+            },
+            {
+              "where": "end",
+              "text": "Decline → flow đi tiếp về FO"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "64",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T17:08:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "điều chỉnh như comment trên",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": ""
+            },
+            {
+              "where": "end",
+              "text": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "65",
+      "author": "Duong Thuc Nguyen PM",
+      "date": "2026-06-01T14:04:00Z",
+      "initials": "DP",
+      "resolved": false,
+      "text": "can be 2 status Submit or Submit but follow up, depend on user's decision",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Endors => Submit"
+            },
+            {
+              "where": "end",
+              "text": "New / renew => Submit but follow up"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "69",
+      "author": "Nguyen Truong Bao Thu MKT",
+      "date": "2026-06-01T15:05:00Z",
+      "initials": "NM",
+      "resolved": false,
+      "text": "Trường hợp nhận nhiều request trong 1 lúc thì tính TAT như thế nào",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "TS: Sẽ được tính dựa trên Accepted Date và Complete Date, cùng với số lần đã xử lý báo giá. Nếu báo giá chưa được sửa đổi (revise), TAT sẽ được tính theo khoảng thời gian từ ngày nhận đến ngày hoàn th"
+            },
+            {
+              "where": "end",
+              "text": "TS: Sẽ được tính dựa trên Accepted Date và Complete Date, cùng với số lần đã xử lý báo giá. Nếu báo giá chưa được sửa đổi (revise), TAT sẽ được tính theo khoảng thời gian từ ngày nhận đến ngày hoàn th"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "70",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T16:29:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "UW có thể return cho MKT khi đã accept, TAT sẽ tính dựa trên accepted date cuối cùng đến ngày make decision",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "UW: UW có thể return cho MKT khi đã accept, TAT sẽ tính dựa trên accepted date cuối cùng đến ngày make decision"
+            },
+            {
+              "where": "end",
+              "text": "UW: UW có thể return cho MKT khi đã accept, TAT sẽ tính dựa trên accepted date cuối cùng đến ngày make decision"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "71",
+      "author": "Duong Thuc Nguyen PM",
+      "date": "2026-06-01T14:06:00Z",
+      "initials": "DP",
+      "resolved": false,
+      "text": "PM có thể return task ngay cả khi đã accept, TAT sẽ tính dựa trên accepted date cuối cùng đến ngày submit đầu tiên",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "PM: Sẽ được tính tương tự, dựa trên ngày Accepted Date cuối cùng và Submit  Date đầu tiên."
+            },
+            {
+              "where": "end",
+              "text": "PM: Sẽ được tính tương tự, dựa trên ngày Accepted Date cuối cùng và Submit  Date đầu tiên."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "73",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T17:12:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "trừ thời gian đợi thông tin từ MKT sẽ ko bị tính TAT, em đang thấy chỗ này chưa rõ ạ",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": ""
+            },
+            {
+              "where": "end",
+              "text": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "74",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T17:15:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "IT có thể làm rõ công thức tính Assessment Time & Waiting for Info này ntnao & cho ví dụ giúp em với ạ",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": ""
+            },
+            {
+              "where": "end",
+              "text": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "79",
+      "author": "Nguyen Truong Bao Thu MKT",
+      "date": "2026-06-01T15:30:00Z",
+      "initials": "NM",
+      "resolved": false,
+      "text": "Trường hợp cancel báo giá hoặc báo giá không tái tục có thêm trường để ghi nhận reason và có thể re-open cho năm tiếp theo và có thể biết được history của quote này",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "FO"
+            },
+            {
+              "where": "end",
+              "text": "FO"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "80",
+      "author": "Nguyen Truong Bao Thu MKT",
+      "date": "2026-06-01T15:28:00Z",
+      "initials": "NM",
+      "resolved": false,
+      "text": "1. Hệ thống chạy tự động renewal list, FO sẽ chủ động action renew\n2. Renewal list: cho phép user prepare/review : input/revise name of PIC both TS and FO",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "FO"
+            },
+            {
+              "where": "end",
+              "text": "FO"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "81",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:53:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "Chưa hiểu muốn gì? Thay đổi thì trao đỏi trg comment với TS điều chỉnh, có thể chỉ bị lệch khi thống kê LoB. Việc phải end hiện trên JG đang bị là khi thay đổi PIC cho từng KH, thì user làm lại cho nhanh",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Update thông tin khách hàng khi chờ TS làm báo giá"
+            },
+            {
+              "where": "end",
+              "text": "Update thông tin khách hàng khi chờ TS làm báo giá"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "82",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:54:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "????",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Xây dựng thêm flow tự động cho việc khách hàng đồng ý mua sp TMIV sang cấp đơn"
+            },
+            {
+              "where": "end",
+              "text": "Vẫn giữ việc chủ động request cấp đơn nếu khách hàng có thời gian hold => không để tự động ảnh hưởng TAT PM"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "83",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T15:50:00Z",
+      "initials": "NT",
+      "resolved": false,
+      "text": "Thống kê báo giá theo tháng/ quý/ năm theo các status theo PIC/ LoB",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "FO không có nhu cầu tính TAT, nhu cần làm xuất báo cáo thống kê theo status request / báo giá"
+            },
+            {
+              "where": "end",
+              "text": "FO không có nhu cầu tính TAT, nhu cần làm xuất báo cáo thống kê theo status request / báo giá"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "85",
+      "author": "Nguyen Truong Bao Thu MKT",
+      "date": "2026-06-01T15:31:00Z",
+      "initials": "NM",
+      "resolved": false,
+      "text": "Chưa thấy mô tả về trao đổi chat box",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "TS"
+            },
+            {
+              "where": "end",
+              "text": "TS"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "86",
+      "author": "Nguyen Truong Bao Thu MKT",
+      "date": "2026-06-01T15:26:00Z",
+      "initials": "NM",
+      "resolved": false,
+      "text": "Thêm thông tin thể hiện signed back quotation và signed back schedule (có chỗ tick và đính kèm file để dễ lấy file và báo cáo)",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "TS"
+            },
+            {
+              "where": "end",
+              "text": "TS"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "88",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T17:17:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "ko liên quan đến function UW",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "- Nếu hỗ trợ thêm flow bypass từ báo giá tạo xong và duyệt sang cấp đơn, sẽ có rủi ro\n- Phụ thuộc vào authority FO sẽ kiểm soát về việc refer sang UW và tạo request cấp đơn (với báo giá được phê duyệt"
+            },
+            {
+              "where": "end",
+              "text": "- Nếu hỗ trợ thêm flow bypass từ báo giá tạo xong và duyệt sang cấp đơn, sẽ có rủi ro\n- Phụ thuộc vào authority FO sẽ kiểm soát về việc refer sang UW và tạo request cấp đơn (với báo giá được phê duyệt"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "89",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T16:34:00Z",
+      "initials": "NU",
+      "resolved": false,
+      "text": "em thấy phía trên có mention đến chatbox để trao đổi vs MKT trong TH cần thiết nhưng em k thấy mô tả ở đâu và cách sử dụng ạ",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Ngày accept date bị nới khi FO không cung cấp đủ thông tin, lúc sau back lại cho UW thì được không tính"
+            },
+            {
+              "where": "end",
+              "text": "Ngày accept date bị nới khi FO không cung cấp đủ thông tin, lúc sau back lại cho UW thì được không tính"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "91",
+      "author": "Duong Thuc Nguyen PM",
+      "date": "2026-06-01T14:07:00Z",
+      "initials": "DP",
+      "resolved": false,
+      "text": "checklist được làm trước khi accept task",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Hiện tại Joget chưa có tính năng này, mong muốn bổ sung vào hệ thống mới,checklist từng line, buộc phải thực hiện trước mới cho phép Accept request"
+            },
+            {
+              "where": "end",
+              "text": "Hiện tại Joget chưa có tính năng này, mong muốn bổ sung vào hệ thống mới,checklist từng line, buộc phải thực hiện trước mới cho phép Accept request"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "92",
+      "author": "Duong Thuc Nguyen PM",
+      "date": "2026-06-01T14:07:00Z",
+      "initials": "DP",
+      "resolved": false,
+      "text": "không tính nghỉ lễ, tết, cuối tuần",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Không tính ngày lễ, cuối tuần"
+            },
+            {
+              "where": "end",
+              "text": "Không tính ngày lễ, cuối tuần"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "93",
+      "author": "Duong Thuc Nguyen PM",
+      "date": "2026-06-01T14:10:00Z",
+      "initials": "DP",
+      "resolved": false,
+      "text": "cho hiện rõ status decision của UW (reject hay approved) và các attachment của UW. Các detail khác sẽ ở bên trong (màn hình thu nhỏ, hoặc link...), PM cần xem detail sẽ vào trong xem",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "=> cho hiện luôn status của UW (Rejected/Approved) và detail để PM vào xem nếu cần"
+            },
+            {
+              "where": "end",
+              "text": "=> cho hiện luôn status của UW (Rejected/Approved) và detail để PM vào xem nếu cần"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "41477627",
+      "author": "Nguyen Thi Bao Chau UWRI",
+      "date": "2026-06-02T10:09:00",
+      "initials": "NU",
+      "resolved": false,
+      "text": "thừa",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "No need to refer / Need more info → flow đi tiếp về FO"
+            },
+            {
+              "where": "end",
+              "text": "No need to refer / Need more info → flow đi tiếp về FO"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1091679306",
+      "author": "Nguyen Hong Quan IT",
+      "date": "2026-06-05T13:42:13",
+      "initials": "NI",
+      "resolved": false,
+      "text": "Ở mục này đang nói mục hình cái chuông nhé chị Thảo",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Notification"
+            },
+            {
+              "where": "end",
+              "text": "Notification"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1465508827",
+      "author": "Nguyen Hong Quan IT",
+      "date": "2026-06-05T10:58:11",
+      "initials": "NI",
+      "resolved": false,
+      "text": "Em có cập nhật bản vẽ thêm 1 đường từ ý chí sang cấp đơn ở trên rồi ạ",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Quotation cần được phê duyệt bởi cấp quản lý (MKT/MGR). Riêng Với các endorsement hoặc một số Quatation ko cần MGR ký"
+            },
+            {
+              "where": "end",
+              "text": "Quotation cần được phê duyệt bởi cấp quản lý (MKT/MGR). Riêng Với các endorsement hoặc một số Quatation ko cần MGR ký"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1479611684",
+      "author": "Nguyen Phuong Thao MKT",
+      "date": "2026-06-02T08:35:00",
+      "initials": "NM",
+      "resolved": false,
+      "text": "Là ntn? FO bắt buộc phải review trước khi gửi đi ah?",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Gửi khách hàng và nhận bản kí trả  (trường hợp Broker)"
+            },
+            {
+              "where": "end",
+              "text": "Gửi khách hàng và nhận bản kí trả  (trường hợp Broker)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1492742970",
+      "author": "Nguyen Hong Quan IT",
+      "date": "2026-06-10T10:18:15",
+      "initials": "NI",
+      "resolved": false,
+      "text": "Mục TAT em vừa có update bên dưới nhé chị Thư",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "TS: Sẽ được tính dựa trên Accepted Date và Complete Date, cùng với số lần đã xử lý báo giá. Nếu báo giá chưa được sửa đổi (revise), TAT sẽ được tính theo khoảng thời gian từ ngày nhận đến ngày hoàn th"
+            },
+            {
+              "where": "end",
+              "text": "TS: Sẽ được tính dựa trên Accepted Date và Complete Date, cùng với số lần đã xử lý báo giá. Nếu báo giá chưa được sửa đổi (revise), TAT sẽ được tính theo khoảng thời gian từ ngày nhận đến ngày hoàn th"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1964619563",
+      "author": "Nguyen Hong Quan IT",
+      "date": "2026-06-05T13:36:05",
+      "initials": "NI",
+      "resolved": false,
+      "text": "Mục này là tính năng chung của hệ thống đó Châu, dành cho MKT MGR",
+      "anchors": [
+        {
+          "part": "word/document.xml",
+          "paragraphs": [
+            {
+              "where": "start",
+              "text": "Hỗ trợ ký số điện tử"
+            },
+            {
+              "where": "end",
+              "text": "Hỗ trợ ký số điện tử"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
