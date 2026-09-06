@@ -2228,7 +2228,6 @@
                                             throw new Error("TMIVCom CommentEditorRoute is not loaded.");
                                         }
                                         var typeRequest = moduleKey == viewIdModulePrefix.quotation ? "Quotation" : "PolicyIssuance"; 
-                                        debugger
                                          var isdisableComment =  shouldDisableComment();
                                          try {
                                              const formItems = $(`[data-form-part='bodyForm'][data-form-dept='${dept}']`).dxForm("instance").option("formItems");
@@ -3430,6 +3429,11 @@
             }
             if (!container || !treeStack) return null;
 
+            if (treeStack.deptTreeScrollSpy?.destroy) {
+                treeStack.deptTreeScrollSpy.destroy();
+                treeStack.deptTreeScrollSpy = null;
+            }
+
             var $container = $(container);
             var $treeStack = $(treeStack);
             var $nodes = $(treeStack).find(".dept-node[data-key]");
@@ -3748,7 +3752,7 @@
                 "lowerbody",
                 "footer"
             ]);
-            return {
+            var scrollSpy = {
                 refresh: requestUpdate,
                 destroy: function () {
                     $container.off("scroll.deptTreeSpy");
@@ -3775,6 +3779,8 @@
                     $treeStack.removeAttr("data-dept-tree-ready");
                 }
             };
+            treeStack.deptTreeScrollSpy = scrollSpy;
+            return scrollSpy;
         }
 
             async function persistDepartmentAssignment(schemeName, recordId, dept, store, values, formId) {
@@ -3811,7 +3817,10 @@
 
                     if (values?.pIC) {
                         PIC_JSON = values.pIC;
-                        renderDeptCallouts(PIC_JSON);
+                        var assignmentOverviewRoot = document.getElementById(
+                            `${moduleCode}-overviewRoot_${recordId}`
+                        );
+                        renderDeptCallouts(PIC_JSON, assignmentOverviewRoot);
                     }
 
                     // The assignment picker updates the section immediately, but the
@@ -4718,14 +4727,21 @@
                             return ajaxPost(`/api/InstanceWorkflow/${flowName}SubmitNextStep`, sendData, {processData: true,
                         onSuccess: function (response) {
                             appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
-                            // reloadWorkflowViewComponents(flowName, formItems.id, null, true)
-                            //     .then(function (reloaded) {
-                            //         if (!reloaded) failWorkflowViewLoading(loadingContext, "Workflow refresh unavailable");
-                            //     })
-                            //     .catch(function (err) {
-                            //         failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
-                            //         console.error("Submit route reload failed", err);
-                            //     });
+                            var refreshRequest = {
+                                type: flowName,
+                                id: formItems.id,
+                                action: "submit",
+                                fromDepartment: findRoute.fromNodeId,
+                                toDepartment: findRoute.toNodeId,
+                                refreshScope: "view"
+                            };
+                            var refreshPromise = typeof window.dispatchWorkflowRefresh === "function"
+                                ? window.dispatchWorkflowRefresh(refreshRequest)
+                                : reloadWorkflowViewComponents(flowName, formItems.id, null, false);
+                            Promise.resolve(refreshPromise).catch(function (err) {
+                                failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
+                                console.error("Submit route reload failed", err);
+                            });
                         },
                         onError: function (err) {
                             failWorkflowViewLoading(loadingContext, "Submit failed");
@@ -4771,11 +4787,18 @@
                         return ajaxPost(`/api/InstanceWorkflow/${flowName}ReturnToStep`, sendData, {
                         onSuccess: function (response) {
                             appNotifySuccess(`Submitted to ${findRoute.toNodeId}`, false);
-                            reloadWorkflowViewComponents(flowName, formItems.id, null, true)
-                                .then(function (reloaded) {
-                                    if (!reloaded) failWorkflowViewLoading(loadingContext, "Workflow refresh unavailable");
-                                })
-                                .catch(function (err) {
+                            var refreshRequest = {
+                                type: flowName,
+                                id: formItems.id,
+                                action: "return",
+                                fromDepartment: findRoute.fromNodeId,
+                                toDepartment: findRoute.toNodeId,
+                                refreshScope: "view"
+                            };
+                            var refreshPromise = typeof window.dispatchWorkflowRefresh === "function"
+                                ? window.dispatchWorkflowRefresh(refreshRequest)
+                                : reloadWorkflowViewComponents(flowName, formItems.id, null, false);
+                            Promise.resolve(refreshPromise).catch(function (err) {
                                     failWorkflowViewLoading(loadingContext, "Workflow refresh failed");
                                     console.error("Return route reload failed", err);
                                 });
@@ -4813,7 +4836,239 @@
                 return [];
             }
 
-            function applyQuotationScreenConditions(quotationId, screenConditions) {
+            function extractWorkflowNodeInstruction(node) {
+                const candidates = [node, node?.data, node?.Data];
+
+                for (let candidate of candidates) {
+                    if (!candidate) continue;
+                    if (typeof candidate === "string") {
+                        try { candidate = JSON.parse(candidate); } catch { continue; }
+                    }
+
+                    let rawNode = candidate?.rawNode ?? candidate?.RawNode;
+                    if (typeof rawNode === "string") {
+                        try { rawNode = JSON.parse(rawNode); } catch { rawNode = null; }
+                    }
+
+                    const instruction = candidate?.nodeInstruction
+                        ?? candidate?.NodeInstruction
+                        ?? rawNode?.nodeInstruction
+                        ?? rawNode?.NodeInstruction;
+                    if (String(instruction || "").trim()) return String(instruction).trim();
+                }
+
+                return "";
+            }
+
+            function extractWorkflowNodeLabel(node) {
+                const candidates = [node, node?.data, node?.Data];
+
+                for (let candidate of candidates) {
+                    if (!candidate) continue;
+                    if (typeof candidate === "string") {
+                        try { candidate = JSON.parse(candidate); } catch { continue; }
+                    }
+
+                    let rawNode = candidate?.rawNode ?? candidate?.RawNode;
+                    if (typeof rawNode === "string") {
+                        try { rawNode = JSON.parse(rawNode); } catch { rawNode = null; }
+                    }
+
+                    const label = candidate?.text
+                        ?? candidate?.Text
+                        ?? rawNode?.text
+                        ?? rawNode?.Text
+                        ?? candidate?.code
+                        ?? candidate?.Code
+                        ?? rawNode?.code
+                        ?? rawNode?.Code;
+                    if (String(label || "").trim()) return String(label).trim();
+                }
+
+                return "Current node";
+            }
+
+            function publishOverviewNodeInstruction(moduleCode, recordId, node) {
+                $(document).trigger("overviewNodeInstructionChanged", [{
+                    moduleCode: String(moduleCode || "").trim().toLowerCase(),
+                    recordId: recordId,
+                    instruction: extractWorkflowNodeInstruction(node),
+                    nodeLabel: extractWorkflowNodeLabel(node),
+                    node: node || null
+                }]);
+            }
+
+            function getScreenConditionGroupNames(rule) {
+                const names = [];
+                const seen = new Set();
+
+                function append(value) {
+                    const name = String(value?.name ?? value?.Name ?? value ?? "").trim();
+                    if (!name || seen.has(name.toLowerCase())) return;
+                    seen.add(name.toLowerCase());
+                    names.push(name);
+                }
+
+                const targets = rule?.targets ?? rule?.Targets;
+                (Array.isArray(targets) ? targets : []).forEach(function (target) {
+                    const itemType = String(target?.itemType ?? target?.ItemType ?? "group").toLowerCase();
+                    if (itemType === "group") append(target);
+                });
+
+                const groupNames = rule?.groupNames ?? rule?.GroupNames;
+                (Array.isArray(groupNames)
+                    ? groupNames
+                    : String(groupNames || "").split(",")
+                ).forEach(append);
+
+                if (!names.length) append(rule?.sectionId ?? rule?.SectionId);
+                return names;
+            }
+
+            function findScreenConditionFormItem(items, targetName, parentPath) {
+                const normalizedTarget = String(targetName || "").trim().toLowerCase();
+                for (const item of (Array.isArray(items) ? items : [])) {
+                    if (!item) continue;
+                    const itemKey = item.name || item.dataField || item.caption || "";
+                    const itemPath = parentPath && itemKey
+                        ? `${parentPath}.${itemKey}`
+                        : (itemKey || parentPath || "");
+                    if (String(item.name || "").trim().toLowerCase() === normalizedTarget) {
+                        return { item: item, path: itemPath || targetName };
+                    }
+                    const nested = findScreenConditionFormItem(item.items, targetName, itemPath);
+                    if (nested) return nested;
+                }
+                return null;
+            }
+
+            function setScreenConditionFormItemTreeDisabled(formInstance, items, parentPath, disabled) {
+                (Array.isArray(items) ? items : []).forEach(function (item) {
+                    if (!item) return;
+                    const itemKey = item.name || item.dataField || item.caption || "";
+                    const itemPath = parentPath && itemKey
+                        ? `${parentPath}.${itemKey}`
+                        : (itemKey || parentPath || "");
+                    const itemType = String(item.itemType || "").trim().toLowerCase();
+
+                    try {
+                        // A group is only a layout/collapse container. Keep it enabled so
+                        // its caption can still expand/collapse while its child controls lock.
+                        if (itemPath) {
+                            formInstance.itemOption(
+                                itemPath,
+                                "disabled",
+                                itemType === "group" ? false : disabled
+                            );
+                        }
+                    } catch (error) {}
+
+                    if (item.dataField) {
+                        try {
+                            formInstance.getEditor(item.dataField)?.option("disabled", disabled);
+                        } catch (error) {}
+                    }
+                    setScreenConditionFormItemTreeDisabled(
+                        formInstance,
+                        item.items,
+                        itemPath,
+                        disabled
+                    );
+                });
+            }
+
+            function applyEnableOnlyGroupToForm(formInstance, targetMatches) {
+                const items = formInstance.option("items") || [];
+                const targetPaths = targetMatches.map(function (match) {
+                    return String(match.path || "").toLowerCase();
+                });
+
+                function applyGroups(groupItems, parentPath) {
+                    (Array.isArray(groupItems) ? groupItems : []).forEach(function (item) {
+                        if (!item) return;
+                        const itemKey = item.name || item.dataField || item.caption || "";
+                        const itemPath = parentPath && itemKey
+                            ? `${parentPath}.${itemKey}`
+                            : (itemKey || parentPath || "");
+                        const itemType = String(item.itemType || "").trim().toLowerCase();
+
+                        if (itemType !== "group") {
+                            applyGroups(item.items, itemPath);
+                            return;
+                        }
+
+                        const normalizedPath = String(itemPath).toLowerCase();
+                        const isExactTarget = targetPaths.includes(normalizedPath);
+                        const containsTarget = targetPaths.some(function (targetPath) {
+                            return targetPath.startsWith(`${normalizedPath}.`);
+                        });
+
+                        try {
+                            // Never disable the group container itself: DevExtreme would
+                            // also disable its clickable expand/collapse caption.
+                            formInstance.itemOption(itemPath, "disabled", false);
+                        } catch (error) {}
+
+                        if (isExactTarget) {
+                            setScreenConditionFormItemTreeDisabled(
+                                formInstance,
+                                item.items,
+                                itemPath,
+                                false
+                            );
+                        } else if (containsTarget) {
+                            applyGroups(item.items, itemPath);
+                        } else {
+                            setScreenConditionFormItemTreeDisabled(
+                                formInstance,
+                                item.items,
+                                itemPath,
+                                true
+                            );
+                        }
+                    });
+                }
+
+                applyGroups(items, "");
+            }
+
+            function enableScreenConditionGroups(moduleCode, recordId, stageDept, rule) {
+                const manager = moduleCode === viewIdModulePrefix.policyIssuance
+                    ? window.PolicyIssuanceIdManager
+                    : window.QuotationIdManager;
+                const departments = moduleCode === viewIdModulePrefix.policyIssuance
+                    ? piDeptModuleCode
+                    : qtDeptModuleCode;
+                if (!manager || typeof manager.form !== "function") return;
+
+                const normalizedStageDept = String(stageDept || "").trim().toUpperCase();
+                const normalizedRuleDept = String(rule?.department ?? rule?.Department ?? "")
+                    .trim()
+                    .toUpperCase();
+                const validDepartments = Array.isArray(departments) ? departments : [];
+                if (!normalizedStageDept || !validDepartments.includes(normalizedStageDept)) return;
+                if (normalizedRuleDept && normalizedRuleDept !== normalizedStageDept) return;
+
+                const groupNames = getScreenConditionGroupNames(rule);
+                const formId = manager.form(normalizedStageDept, recordId);
+                let formInstance = null;
+                try {
+                    formInstance = formId ? $(`#${formId}`).dxForm("instance") : null;
+                } catch (error) {}
+                if (!formInstance) return;
+
+                const formItems = formInstance.option("items") || [];
+                const targetMatches = groupNames
+                    .map(function (groupName) {
+                        return findScreenConditionFormItem(formItems, groupName, "");
+                    })
+                    .filter(Boolean);
+                if (!targetMatches.length) return;
+
+                applyEnableOnlyGroupToForm(formInstance, targetMatches);
+            }
+
+            function applyQuotationScreenConditions(quotationId, screenConditions, stageDept) {
                 const $sections = $("[data-quotation-screen-section]").filter(function () {
                     return String($(this).attr("data-quotation-id")) === String(quotationId);
                 });
@@ -4821,6 +5076,16 @@
                 // Screen-controlled sections are hidden unless the reached node explicitly shows them.
                 $sections.hide();
                 (Array.isArray(screenConditions) ? screenConditions : []).forEach(rule => {
+                    const trigger = String(rule?.trigger || "").trim().toLowerCase();
+                    if (trigger === "enableonlygroup") {
+                        enableScreenConditionGroups(
+                            viewIdModulePrefix.quotation,
+                            quotationId,
+                            stageDept,
+                            rule
+                        );
+                        return;
+                    }
                     const sectionId = String(rule?.sectionId || "").trim();
                     if (!sectionId) return;
 
@@ -4835,8 +5100,13 @@
 
 
 
-            function loadAndApplyQuotationScreenConditions(currentNodeCode, quotationId) {
+            function loadAndApplyQuotationScreenConditions(currentNodeCode, quotationId, workflowInstance, requestParams) {
+                const stageDept = requestParams?.stageDept
+                    ?? requestParams?.state?.stageDept
+                    ?? workflowInstance?.stageDept
+                    ?? workflowInstance?.StageDept;
                 applyQuotationScreenConditions(quotationId, []);
+                publishOverviewNodeInstruction(viewIdModulePrefix.quotation, quotationId, null);
                 if (!currentNodeCode || !quotationId) return $.Deferred().resolve([]).promise();
 
                 const params = new URLSearchParams();
@@ -4846,16 +5116,25 @@
                     .then(result => {
                         const node = Array.isArray(result) ? result[0] : result;
                         const conditions = parseWorkflowNodeScreenConditions(node);
-                        applyQuotationScreenConditions(quotationId, conditions);
+                        publishOverviewNodeInstruction(viewIdModulePrefix.quotation, quotationId, node);
+                        applyQuotationScreenConditions(quotationId, conditions, stageDept);
                         // Some nested partial controls complete rendering after the workflow request.
-                        setTimeout(() => applyQuotationScreenConditions(quotationId, conditions), 100);
+                        setTimeout(() => applyQuotationScreenConditions(quotationId, conditions, stageDept), 100);
                         return conditions;
                     })
-                    .fail(() => applyQuotationScreenConditions(quotationId, []));
+                    .fail(() => {
+                        publishOverviewNodeInstruction(viewIdModulePrefix.quotation, quotationId, null);
+                        applyQuotationScreenConditions(quotationId, []);
+                    });
             }
 
-            function loadAndApplyPolicyIssuanceScreenConditions(currentNodeCode, policyIssuanceId) {
+            function loadAndApplyPolicyIssuanceScreenConditions(currentNodeCode, policyIssuanceId, workflowInstance, requestParams) {
+                const stageDept = requestParams?.stageDept
+                    ?? requestParams?.state?.stageDept
+                    ?? workflowInstance?.stageDept
+                    ?? workflowInstance?.StageDept;
                 applyPolicyIssuanceScreenConditions(policyIssuanceId, []);
+                publishOverviewNodeInstruction(viewIdModulePrefix.policyIssuance, policyIssuanceId, null);
                 if (!currentNodeCode || !policyIssuanceId) return $.Deferred().resolve([]).promise();
 
                 const params = new URLSearchParams();
@@ -4865,16 +5144,20 @@
                     .then(result => {
                         const node = Array.isArray(result) ? result[0] : result;
                         const conditions = parseWorkflowNodeScreenConditions(node);
-                        applyPolicyIssuanceScreenConditions(policyIssuanceId, conditions);
+                        publishOverviewNodeInstruction(viewIdModulePrefix.policyIssuance, policyIssuanceId, node);
+                        applyPolicyIssuanceScreenConditions(policyIssuanceId, conditions, stageDept);
                         // Some nested partial controls complete rendering after the workflow request.
-                        setTimeout(() => applyPolicyIssuanceScreenConditions(policyIssuanceId, conditions), 100);
+                        setTimeout(() => applyPolicyIssuanceScreenConditions(policyIssuanceId, conditions, stageDept), 100);
                         return conditions;
                     })
-                    .fail(() => applyPolicyIssuanceScreenConditions(policyIssuanceId, []));
+                    .fail(() => {
+                        publishOverviewNodeInstruction(viewIdModulePrefix.policyIssuance, policyIssuanceId, null);
+                        applyPolicyIssuanceScreenConditions(policyIssuanceId, []);
+                    });
             }
 
 
-             function applyPolicyIssuanceScreenConditions(policyIssuanceId, screenConditions) {
+             function applyPolicyIssuanceScreenConditions(policyIssuanceId, screenConditions, stageDept) {
                 const $sections = $("[data-policyIssuance-screen-section]").filter(function () {
                     return String($(this).attr("data-policyIssuance-id")) === String(policyIssuanceId);
                 });
@@ -4882,6 +5165,16 @@
                 // Screen-controlled sections are hidden unless the reached node explicitly shows them.
                 $sections.hide();
                 (Array.isArray(screenConditions) ? screenConditions : []).forEach(rule => {
+                    const trigger = String(rule?.trigger || "").trim().toLowerCase();
+                    if (trigger === "enableonlygroup") {
+                        enableScreenConditionGroups(
+                            viewIdModulePrefix.policyIssuance,
+                            policyIssuanceId,
+                            stageDept,
+                            rule
+                        );
+                        return;
+                    }
                     const sectionId = String(rule?.sectionId || "").trim();
                     if (!sectionId) return;
 
@@ -5927,7 +6220,6 @@
             }
 
             function getAttachmentPreviewPopup(title) {
-                debugger
                 let $host = $("#attachmentPreviewPopup");
                 if (!$host.length) {
                     $host = $('<div id="attachmentPreviewPopup"></div>').appendTo(document.body);
@@ -7319,6 +7611,9 @@
                 button.classList.add("is-refreshing");
                 try {
                     await entry.refreshDepartment(dept);
+                    if (typeof entry.reloadWorkflow === "function") {
+                        await entry.reloadWorkflow();
+                    }
                     finishDepartmentSectionLoading(loadingContext, `${dept} section refreshed`, false);
                 } catch (error) {
                     console.error(`${dept} section refresh failed`, error);
@@ -7579,10 +7874,6 @@
                     refreshSource = document.getElementById(viewInstance.rootId);
                 }
 
-                if (refreshSource && reloadCurrentTabView(refreshSource)) {
-                    return Promise.resolve(true);
-                }
-
                 if (typeof viewInstance?.reload === "function") {
                     return Promise.resolve(viewInstance.reload());
                 }
@@ -7593,6 +7884,10 @@
 
                 if (typeof reloadComponents === "function") {
                     return Promise.resolve(reloadComponents(recordId));
+                }
+
+                if (refreshSource && reloadCurrentTabView(refreshSource)) {
+                    return Promise.resolve(true);
                 }
 
                 console.warn(`Reload handler is not available for ${viewInstanceKey}.`);
@@ -8280,6 +8575,9 @@
                     devExtremeItem.control = createHtmlEditor($container, $element, devExtremeItem, editorOptions);
                     break;
                 case "dxDateBox":
+                    /*
+                     * LEGACY ROLLBACK - DevExtreme dxDateBox
+                     *
                     var dateBoxDataType = String(
                         devExtremeItem.dataType || editorOptions.dataType || editorOptions.type || "date"
                     ).trim().toLowerCase();
@@ -8289,6 +8587,21 @@
                         type: dateBoxType,
                         displayFormat: dateBoxType === "datetime" ? datetimeFormatter : dateFormatter
                     }).appendTo($container);
+                     */
+
+                    $element
+                        .addClass("tmiv-render-form-datebox")
+                        .appendTo($container)
+                        .datebox({
+                            ...editorOptions,
+                            placeholder: editorOptions.placeholder || "Select date",
+                            locale: editorOptions.locale || "en-GB",
+                            clearable: editorOptions.clearable !== false
+                                && editorOptions.showClearButton !== false,
+                            wheelNavigation: editorOptions.wheelNavigation !== false,
+                            showFooter: editorOptions.showFooter !== false,
+                            value: editorOptions.value ?? ""
+                        });
                     break;
                 case "dxCheckBox":
                     $element.dxCheckBox({
@@ -8392,6 +8705,104 @@
                 .appendTo(e.cellElement);
         }
         //START FORM ELEMENT HANDLE
+
+    function makeTmivDateBoxFormItem(config) {
+        config = config || {};
+        var editorOptions = { ...(config.editorOptions || {}) };
+        var dataField = config.dataField;
+        var defaultValue = editorOptions.value ?? config.defaultValue ?? "";
+        var userOnValueChanged = editorOptions.onValueChanged;
+        var userOnChange = editorOptions.onChange;
+        var dateBoxOptions = {
+            placeholder: editorOptions.placeholder || "Select date",
+            locale: editorOptions.locale || "en-GB",
+            min: editorOptions.min,
+            max: editorOptions.max,
+            clearable: editorOptions.clearable !== false && editorOptions.showClearButton !== false,
+            wheelNavigation: editorOptions.wheelNavigation !== false,
+            showFooter: editorOptions.showFooter !== false,
+            width: editorOptions.width ?? config.width,
+            disabled: editorOptions.disabled === true,
+            readOnly: editorOptions.readOnly === true
+        };
+        var formItem = { ...config };
+
+        // A dxForm template hosts the TMIVCom React control; no DevExtreme date
+        // editor is created for this item.
+        delete formItem.editorType;
+        delete formItem.editorOptions;
+        formItem.template = function (data, itemElement) {
+            var form = data.component;
+            var $host = $("<div>")
+                .addClass("tmiv-render-form-datebox")
+                .attr("data-field", dataField)
+                .appendTo(itemElement);
+            var syncingFromForm = false;
+
+            function getFormValue() {
+                var formData = form.option("formData") || {};
+                return formData[dataField] ?? defaultValue;
+            }
+
+            function mountDateBox(value) {
+                $host.datebox({
+                    ...dateBoxOptions,
+                    value: value ?? "",
+                    disabled: dateBoxOptions.disabled || form.option("disabled") === true,
+                    readOnly: dateBoxOptions.readOnly || form.option("readOnly") === true,
+                    onChange: function (nextValue) {
+                        if (syncingFromForm) return;
+                        form.updateData(dataField, nextValue || null);
+                        if (typeof userOnChange === "function") userOnChange(nextValue);
+                    },
+                    onValueChanged: function (eventArgs) {
+                        if (syncingFromForm || typeof userOnValueChanged !== "function") return;
+                        userOnValueChanged({
+                            ...eventArgs,
+                            component: {
+                                option: function (optionName, optionValue) {
+                                    if (optionName !== "value") return undefined;
+                                    if (arguments.length === 1) {
+                                        return $host.datebox("option", "value");
+                                    }
+                                    $host.datebox("option", "value", optionValue);
+                                    return optionValue;
+                                }
+                            },
+                            element: $host
+                        });
+                    }
+                });
+            }
+
+            mountDateBox(getFormValue());
+
+            var fieldChangedHandler = function (eventArgs) {
+                if (!document.documentElement.contains($host.get(0))) {
+                    form.off("fieldDataChanged", fieldChangedHandler);
+                    return;
+                }
+                if (eventArgs?.dataField !== dataField) return;
+                syncingFromForm = true;
+                $host.datebox("option", "value", eventArgs.value ?? "");
+                syncingFromForm = false;
+            };
+            var optionChangedHandler = function (eventArgs) {
+                if (!document.documentElement.contains($host.get(0))) {
+                    form.off("optionChanged", optionChangedHandler);
+                    return;
+                }
+                if (eventArgs?.name !== "readOnly" && eventArgs?.name !== "disabled") return;
+                mountDateBox(getFormValue());
+            };
+
+            form.on("fieldDataChanged", fieldChangedHandler);
+            form.on("optionChanged", optionChangedHandler);
+        };
+
+        return formItem;
+    }
+    window.makeTmivDateBoxFormItem = makeTmivDateBoxFormItem;
 
 
 
@@ -8800,6 +9211,9 @@
            else if (item.editorType == "dxDataGrid") {
            }
            else if (item.editorType == "dxDateBox") {
+                /*
+                 * LEGACY ROLLBACK - DevExtreme dxDateBox
+                 *
                 var itemDateDataType = String(
                     item.dataType || additionalEditorOptions.type || "date"
                 ).trim().toLowerCase();
@@ -8840,6 +9254,29 @@
                    visible: item.visible
 
                };
+                */
+
+                itemOptions = makeTmivDateBoxFormItem({
+                    formGroupName: item.formGroupName,
+                    dataField: item.dataField,
+                    customEditorOptions: customEditorOptions,
+                    editorOptions: {
+                        width: item.width,
+                        value: item.defaultValue ?? "",
+                        ...additionalEditorOptions
+                    },
+                    label: {
+                        location: formInstanceProps.labelLocation,
+                        text: item.caption,
+                        visible: true,
+                        template: function (text) { }
+                    },
+                    formItem: item.formItem,
+                    validationRules: item.validationRules,
+                    outlineObject: item.outlineObject,
+                    visible: item.visible
+                });
+                item.template = itemOptions.template;
            }
            else {
                itemOptions = {
@@ -9685,9 +10122,10 @@
                 return promise;
             }
              //Popup hover
-                function renderDeptCallouts(picJson) {
+                function renderDeptCallouts(picJson, scope) {
                     const picMap = parsePicMap(picJson);
-                    $(".dept-node").each(function () {
+                    const $scope = scope ? $(scope) : $(document);
+                    $scope.find(".dept-node").each(function () {
                         const dept = normalizeDeptKey($(this).data("key"));
                         const $co = $(this).find(".dept-callout");
                         if (!$co.length) return;
@@ -9912,94 +10350,27 @@
                 { disabled: ruleDisabled }
             );
         rendered.setDisabled(ruleDisabled);
-
         return {
             formProps: formProps,
-
+            formItems: decisionFormItems,
+            tatObject: decisionTatObject,
             formId: formProps.formId,
-
             dept: delayObject.dept,
-
             groupName: decisionGroupName,
-
             registryKey: decisionRegistryKey,
-
             params: params,
-
             status: rendered.status,
-
             actionHost: rendered.actionHost,
-
             buttons: rendered.buttons,
-
             primaryButton: rendered.primaryButton,
-
             enable: rendered.enable,
-
             disable: rendered.disable,
-
             setDisabled: rendered.setDisabled,
-
             getButton: rendered.getButton,
-
             ruleDisabled: ruleDisabled
         };
     }
-                //Comment out 2026-08-10
-        // function ensureDecisionCommonStatus(statusId, buttonId) {
-        //     if (!statusId) return $();
-
-        //     var $status = $(`#${statusId}`);
-        //     var $button = buttonId ? $(`#${buttonId}`) : $();
-        //     if (!$status.length) {
-        //         $status = $(`<span id="${statusId}_labelStatus" role="status" aria-live="polite"></span>`);
-        //     }
-
-        //     var $fieldItem = $button.length ? $button.closest(".dx-field-item") : $status.closest(".dx-field-item");
-        //     var $content = $button.length
-        //         ? $button.closest(".dx-field-item-content")
-        //         : $fieldItem.find(".dx-field-item-content").first();
-
-        //     if ($content.length) {
-        //         var $actionRow = $content.children(".decision-action-row").first();
-        //         var $statusRow = $content.children(".decision-status-row").first();
-        //         if (!$statusRow.length) {
-        //             $statusRow = $('<div class="decision-status-row" aria-live="polite"></div>').prependTo($content);
-        //         }
-        //         if (!$actionRow.length) {
-        //             $actionRow = $('<div class="decision-action-row"></div>').appendTo($content);
-        //         }
-        //         if (!$status.parent().is($statusRow)) {
-        //             $status.detach().appendTo($statusRow);
-        //         }
-        //         if ($button.length && !$button.parent().is($actionRow)) {
-        //             $button.detach().appendTo($actionRow);
-        //         }
-        //     } else if (!$status.parent().length && $button.length) {
-        //         $status.prependTo($button.parent());
-        //     }
-
-        //     $status
-        //     .addClass("decision-common-status decision-status-button")
-        //     .attr({ role: "status", "aria-live": "polite" })
-        //     .removeAttr("aria-disabled")
-        //     .css({
-        //         display: "inline-flex",
-        //         alignItems: "center",
-        //         justifyContent: "center",
-        //         gap: "5px",
-        //         minHeight: "20px",
-        //         padding: "2px 8px",
-        //         borderRadius: "999px",
-        //         fontSize: "var(--management-font-body, 10px)",
-        //         fontWeight: "600",
-        //         lineHeight: "16px",
-        //         boxSizing: "border-box",
-        //         width: "fit-content"
-        //     });
-
-        //     return $status;
-        // }
+        
 
         function setDecisionCommonStatus(statusId, typeRender, state) {
 
@@ -10333,8 +10704,8 @@
                 setTimeout(() => {
                     if (!statusId || !acceptDate) 
                     {
-                        console.log("Cannot load status from " + statusId, statusId);
-                        console.log("Cannot load acceptDate from " + statusId, acceptDate);
+                        // console.log("Cannot load status from " + statusId, statusId);
+                        // console.log("Cannot load acceptDate from " + statusId, acceptDate);
                     }
                     var statusLabel = defaultStatus;
                     if (acceptDate)
@@ -10674,7 +11045,7 @@
                         ) || {};
                         var pic = picObject[formDataClone.dept];
                         if (!pic) {
-                            console.log("No pic for "+ formDataClone.dept);
+                            // console.log("No pic for "+ formDataClone.dept);
                             return;
 
                         }
@@ -10941,8 +11312,8 @@
                                         }
 
     function loadSelectedWorkflow(params) {
+        //start render workflowc lazy load, all view department with decision load first , second time in QT or PI  _Form 
         params = params || {};
-
         const moduleCode = String(params.moduleCode || "")
             .trim()
             .toLowerCase();
@@ -10954,7 +11325,6 @@
                 ))
                 .promise();
         }
-        console.log(params);
         const loadingClass = "actionRight";
         // const loadingHost = params.loadingHost;
         const loadingHost = $(`[aria-action-right='${params.stageDept}']`);
@@ -11324,6 +11694,27 @@
             return null;
         }
 
+        function collectWorkflowFormGroups(items, parentPath, result) {
+            result = result || [];
+            (Array.isArray(items) ? items : []).forEach(function (item) {
+                if (!item) return;
+                const itemKey = item.name || item.dataField || item.caption || "";
+                const itemPath = parentPath && itemKey
+                    ? `${parentPath}.${itemKey}`
+                    : (itemKey || parentPath || "");
+                const itemType = String(item.itemType || "").trim().toLowerCase();
+
+                if (itemType === "group" && item.name) {
+                    result.push({
+                        name: String(item.name),
+                        path: itemPath || String(item.name)
+                    });
+                }
+                collectWorkflowFormGroups(item.items, itemPath, result);
+            });
+            return result;
+        }
+
         function restoreWorkflowUiLockedGroups() {
             $(
                 `.workflow-ui-lock-group[data-workflow-ui-locked='true']` +
@@ -11365,6 +11756,22 @@
                     $uploader
                         .removeAttr("data-workflow-ui-lock-tmiv")
                         .removeData("workflowUiLockTmivDisabled");
+                });
+
+                $group.find("[data-workflow-ui-lock-tmiv-control]").each(function () {
+                    const $control = $(this);
+                    const pluginName = $control.attr("data-workflow-ui-lock-tmiv-control");
+                    const originalDisabled = $control.data("workflowUiLockTmivControlDisabled");
+                    try {
+                        if (pluginName === "datebox") {
+                            $control.datebox({ disabled: !!originalDisabled });
+                        } else if (pluginName) {
+                            $control[pluginName]("option", "disabled", !!originalDisabled);
+                        }
+                    } catch (error) {}
+                    $control
+                        .removeAttr("data-workflow-ui-lock-tmiv-control")
+                        .removeData("workflowUiLockTmivControlDisabled");
                 });
 
                 $group
@@ -11501,6 +11908,21 @@
                 } catch (error) {}
             });
 
+            $group.find(".tmiv-render-form-datebox").each(function () {
+                const $dateBox = $(this);
+                if (!$dateBox.attr("data-workflow-ui-lock-tmiv-control")) {
+                    const originalDisabled = $dateBox
+                        .find(".tmivcom-datebox")
+                        .hasClass("is-disabled");
+                    $dateBox
+                        .attr("data-workflow-ui-lock-tmiv-control", "datebox")
+                        .data("workflowUiLockTmivControlDisabled", originalDisabled);
+                }
+                try {
+                    $dateBox.datebox({ disabled: true });
+                } catch (error) {}
+            });
+
             $group.find("input, textarea, select").filter(function () {
                 return !$(this).closest(".dx-widget").length;
             }).each(function () {
@@ -11523,6 +11945,104 @@
             return true;
         }
 
+        function enableOnlyWorkflowFormGroup(formInstance, target, rule) {
+            const targetName = target?.name ?? target?.Name;
+            if (!formInstance || !targetName) return false;
+
+            const items = formInstance.option("items") || [];
+            const targetMatch = findWorkflowFormItem(items, targetName, "");
+            if (!targetMatch) return false;
+
+            const targetPath = String(targetMatch.path || targetName).toLowerCase();
+            const disabledRule = $.extend({}, rule, { mode: "Disabled" });
+            collectWorkflowFormGroups(items, "", []).forEach(function (group) {
+                const groupPath = String(group.path || group.name).toLowerCase();
+                const isTargetBranch = groupPath === targetPath
+                    || groupPath.startsWith(`${targetPath}.`)
+                    || targetPath.startsWith(`${groupPath}.`);
+                if (isTargetBranch) return;
+                lockWorkflowFormGroup(
+                    formInstance,
+                    { itemType: "group", name: group.name },
+                    disabledRule
+                );
+            });
+            return true;
+        }
+
+        function getWorkflowRuleGroupTargets(rule) {
+            const result = [];
+            const seen = new Set();
+            const configuredTargets = rule.targets ?? rule.Targets;
+            const groupNames = rule.groupNames ?? rule.GroupNames;
+
+            function appendTarget(target) {
+                if (typeof target === "string") {
+                    target = { itemType: "group", name: target };
+                }
+                const name = String(target?.name ?? target?.Name ?? "").trim();
+                const itemType = String(target?.itemType ?? target?.ItemType ?? "group").trim().toLowerCase();
+                if (!name || itemType !== "group") return;
+                const key = name.toLowerCase();
+                if (seen.has(key)) return;
+                seen.add(key);
+                result.push({ itemType: "group", name: name });
+            }
+
+            (Array.isArray(configuredTargets) ? configuredTargets : []).forEach(appendTarget);
+            (Array.isArray(groupNames)
+                ? groupNames
+                : String(groupNames || "").split(",")
+            ).forEach(appendTarget);
+
+            if (!result.length) {
+                appendTarget(rule.sectionId ?? rule.SectionId);
+            }
+            return result;
+        }
+
+        function disableAllWorkflowFormGroups(formInstance, rule) {
+            const disabledRule = $.extend({}, rule, { mode: "Disabled" });
+            collectWorkflowFormGroups(formInstance.option("items") || [], "", []).forEach(function (group) {
+                lockWorkflowFormGroup(
+                    formInstance,
+                    { itemType: "group", name: group.name },
+                    disabledRule
+                );
+            });
+        }
+
+        function enableOnlyWorkflowFormGroups(formInstance, targets, rule) {
+            const items = formInstance.option("items") || [];
+            const targetPaths = (Array.isArray(targets) ? targets : [])
+                .map(function (target) {
+                    const match = findWorkflowFormItem(items, target?.name, "");
+                    return match ? String(match.path || target.name).toLowerCase() : "";
+                })
+                .filter(Boolean);
+            if (!targetPaths.length) {
+                disableAllWorkflowFormGroups(formInstance, rule);
+                return false;
+            }
+
+            const disabledRule = $.extend({}, rule, { mode: "Disabled" });
+            collectWorkflowFormGroups(items, "", []).forEach(function (group) {
+                const groupPath = String(group.path || group.name).toLowerCase();
+                const belongsToEnabledBranch = targetPaths.some(function (targetPath) {
+                    return groupPath === targetPath
+                        || groupPath.startsWith(`${targetPath}.`)
+                        || targetPath.startsWith(`${groupPath}.`);
+                });
+                if (belongsToEnabledBranch) return;
+                lockWorkflowFormGroup(
+                    formInstance,
+                    { itemType: "group", name: group.name },
+                    disabledRule
+                );
+            });
+            return true;
+        }
+
         function applyWorkflowUiLockRules(workflowPayload) {
             restoreWorkflowUiLockedGroups();
             const rules = collectWorkflowUiLockRules(workflowPayload);
@@ -11530,16 +12050,39 @@
                 const condition = String(rule.condition ?? rule.Condition ?? "").trim().toLowerCase();
                 if (condition === "false") return;
 
-                const department = normalizeDept(rule.department ?? rule.Department ?? stageDept);
+                const configuredDepartment = String(rule.department ?? rule.Department ?? "").trim();
+                const trigger = String(rule.trigger ?? rule.Trigger ?? "").trim().toLowerCase();
+                const normalizedStageDept = normalizeDept(stageDept);
+                const normalizedRuleDept = normalizeDept(configuredDepartment);
+                if (trigger === "enableonlygroup"
+                    && (!normalizedStageDept || (normalizedRuleDept && normalizedRuleDept !== normalizedStageDept))) {
+                    return;
+                }
+                const department = trigger === "enableonlygroup"
+                    ? normalizedStageDept
+                    : normalizeDept(configuredDepartment || stageDept);
                 if (!department) return;
                 const formId = moduleConfig.getFormId(department, id);
                 const formInstance = formId ? $(`#${formId}`).dxForm("instance") : null;
                 if (!formInstance) return;
 
-                const targets = rule.targets ?? rule.Targets;
-                (Array.isArray(targets) ? targets : []).forEach(function (target) {
-                    lockWorkflowFormGroup(formInstance, target, rule);
-                });
+                const targetList = getWorkflowRuleGroupTargets(rule);
+                if (trigger === "samedepartmentreturn") {
+                    const accountRole = normalizeDept(
+                        typeof _role !== "undefined" ? _role : window._role
+                    );
+                    if (accountRole && accountRole === department) {
+                        enableOnlyWorkflowFormGroups(formInstance, targetList, rule);
+                    } else {
+                        disableAllWorkflowFormGroups(formInstance, rule);
+                    }
+                } else if (trigger === "enableonlygroup") {
+                    if (targetList[0]) enableOnlyWorkflowFormGroup(formInstance, targetList[0], rule);
+                } else {
+                    targetList.forEach(function (target) {
+                        lockWorkflowFormGroup(formInstance, target, rule);
+                    });
+                }
             });
             return rules;
         }
@@ -11638,7 +12181,7 @@
         function buildNormalRouteButton(options) {
             const route = options.route;
             const isReturn = options.type === "return";
-
+            const isReturnNeedAccepted = options.route.isReturnNeedAccepted || false;
             const buttonHostId =
                 isReturn
                     ? moduleConfig.getReturnButtonId(stageDept, id)
@@ -11691,13 +12234,19 @@
             ).appendTo($host);
 
             const buttonFormItems = getFormItems(stageDept);
-            const buttonDisabled = shouldDisableWorkflowButton({
+            var buttonDisabled = shouldDisableWorkflowButton({
                 dept: stageDept,
                 stageDept: buttonFormItems.stageDept || stageDept,
                 formItems: buttonFormItems,
                 type: "route",
                 items: $button
-            });
+                });
+
+                    if (isReturn && isReturnNeedAccepted) {
+                        if (!(options.data.tatObject[buttonFormItems.stageDept].AcceptDate) && options.data.tatObject[buttonFormItems.stageDept].AcceptDate == ""){
+                            buttonDisabled = false;
+                        }
+                }
 
             $button.dxButton({
                 disabled: buttonDisabled,
@@ -11792,226 +12341,234 @@
             }
         }
 
-        async function buildCustomRoutes(customRoutes) {
-            for (
-                const [deptIndex, deptItem]
-                of deptCodes.entries()
-            ) {
+            async function buildCustomRoutes(customRoutes) {
+                for (
+                    const [deptIndex, deptItem]
+                    of deptCodes.entries()
+                ) {
                 
-                const normalizedDept =
-                    normalizeDept(deptItem);
+                    const normalizedDept =
+                        normalizeDept(deptItem);
 
-                const customRoutesInDept =
-                    customRoutes.filter(function (route) {
-                        const routeKeys =
-                            getRouteGroupKeys(route);
+                    const customRoutesInDept =
+                        customRoutes.filter(function (route) {
+                            const routeKeys =
+                                getRouteGroupKeys(route);
 
-                        const deptKey =
-                            normalizeGroupKey(deptItem);
+                            const deptKey =
+                                normalizeGroupKey(deptItem);
 
-                        const isDeptMatch =
-                            routeKeys.some(function (routeKey) {
-                                return (
-                                    routeKey === deptKey ||
-                                    routeKey.indexOf(deptKey) >= 0 ||
-                                    deptKey.indexOf(routeKey) >= 0
-                                );
-                            });
+                            const isDeptMatch =
+                                routeKeys.some(function (routeKey) {
+                                    return (
+                                        routeKey === deptKey ||
+                                        routeKey.indexOf(deptKey) >= 0 ||
+                                        deptKey.indexOf(routeKey) >= 0
+                                    );
+                                });
 
-                        const routeData =
-                            String(route?.data || "");
+                            const routeData =
+                                String(route?.data || "");
 
-                        var groupMatch =
-                            !routeData ||
-                            routeData.includes(
-                                `decision${deptItem}Group`
-                            );
-
-                            if (deptItem == "FO")
-                            {
-                                 groupMatch =
+                            var groupMatch =
                                 !routeData ||
                                 routeData.includes(
-                                    `decisionClientGroup`
+                                    `decision${deptItem}Group`
                                 );
-                            }
+
+                                if (deptItem == "FO")
+                                {
+                                     groupMatch =
+                                    !routeData ||
+                                    routeData.includes(
+                                        `decisionClientGroup`
+                                    );
+                                }
                            
 
-                        return isDeptMatch && groupMatch;
-                    });
+                            return isDeptMatch && groupMatch;
+                        });
 
-                if (!customRoutesInDept.length) {
-                    continue;
-                }
-
-                for (
-                    const [routeIndex, route]
-                    of customRoutesInDept.entries()
-                ) {
-                    if (formStages?.pace) {
-                        await formStages.pace(routeIndex);
-                    }
-                    const routeDept =
-                        getRouteDept(
-                            route,
-                            normalizedDept
-                        );
-
-                    let $routeHost =
-                        typeof params.resolveCustomRouteHost === "function"
-                            ? params.resolveCustomRouteHost({
-                                moduleCode: moduleCode,
-                                dept: routeDept,
-                                deptItem: deptItem,
-                                route: route,
-                                id: id,
-                                prefix: prefix
-                            })
-                            : $();
-
-                    if (
-                        !$routeHost?.length &&
-                        moduleCode === viewIdModulePrefix.quotation
-                    ) {
-                        $routeHost =
-                            $(
-                                `#decision-actions-qt-form_${deptItem}_${id}-${deptItem}`
-                            )
-                                .first();
-                    }
-
-                    if (
-                        !$routeHost?.length &&
-                        moduleCode === viewIdModulePrefix.policyIssuance
-                    ) {
-                        $routeHost =
-                            $(
-                                `#decision-actions-pi-form_${deptItem}_${id}-${deptItem}`
-                            )
-                                .first();
-                    }
-
-                    if (!$routeHost.length) {
-                        console.warn(
-                            "Custom route host not found",
-                            {
-                                moduleCode: moduleCode,
-                                deptItem: deptItem,
-                                routeDept: routeDept,
-                                route: route
-                            }
-                        );
-
+                    if (!customRoutesInDept.length) {
                         continue;
                     }
 
-                    const rawRouteKey =
-                        route?.routeId ||
-                        route?.id ||
-                        route?.actionCode ||
-                        routeIndex;
+                    for (
+                        const [routeIndex, route]
+                        of customRoutesInDept.entries()
+                    ) {
+                        if (formStages?.pace) {
+                            await formStages.pace(routeIndex);
+                        }
+                        const routeDept =
+                            getRouteDept(
+                                route,
+                                normalizedDept
+                            );
 
-                    const customButtonId =
-                        `${moduleCode}-custom-route-` +
-                        `${id}-` +
-                        `${routeDept}-` +
-                        `${safeKey(rawRouteKey)}-` +
-                        `${routeIndex}`;
+                        let $routeHost =
+                            typeof params.resolveCustomRouteHost === "function"
+                                ? params.resolveCustomRouteHost({
+                                    moduleCode: moduleCode,
+                                    dept: routeDept,
+                                    deptItem: deptItem,
+                                    route: route,
+                                    id: id,
+                                    prefix: prefix
+                                })
+                                : $();
 
-                    const $old =
-                        $(`#${customButtonId}`);
-
-                    if ($old.length) {
-                        try {
-                            $old.dxButton("instance")?.dispose();
-                        } catch (e) {}
-
-                        $old.remove();
-                    }
-
-                    const $customButton =
-                        $(
-                            `<div
-                                id="${customButtonId}"
-                                data-workflow-record-id="${id}"
-                                data-custom-route-button="true">
-                            </div>`
-                        )
-                            .appendTo($routeHost);
-
-                            console.log(customButtonId);
-
-                    const formItems =
-                        getFormItems(routeDept);
-
-                    const latestTatObject =
-                        typeof tryParseJSON === "function"
-                            ? (
-                                tryParseJSON(
-                                    formItems.turnAroundTimeAttributes,
-                                    "TAT Load Button Problem"
-                                ) || {}
-                            )
-                            : {};
-
-                    var disabled = shouldDisableWorkflowButton({
-                        dept: routeDept,
-                        stageDept: formItems.stageDept || stageDept,
-                        formItems: formItems,
-                        tatObject: latestTatObject,
-                        type: "custom",
-                        items: $customButton
-                    });
-
-
-                    $customButton.dxButton({
-                        disabled: disabled,
-
-                        text:
-                            route?.displayStatus ||
-                            route?.actionName ||
-                            route?.actionCode ||
-                            "Custom action",
-
-                        icon:
-                            typeof getTransitionButtonIcon === "function"
-                                ? getTransitionButtonIcon(
-                                    route,
-                                    route?.isReturn
-                                        ? "undo"
-                                        : ""
+                        if (
+                            !$routeHost?.length &&
+                            moduleCode === viewIdModulePrefix.quotation
+                        ) {
+                            $routeHost =
+                                $(
+                                    `#decision-actions-qt-form_${deptItem}_${id}-${deptItem}`
                                 )
-                                : undefined,
+                                    .first();
+                        }
 
-                        type:
-                            route?.isReturn
-                                ? "danger"
-                                : "info",
+                        if (
+                            !$routeHost?.length &&
+                            moduleCode === viewIdModulePrefix.policyIssuance
+                        ) {
+                            $routeHost =
+                                $(
+                                    `#decision-actions-pi-form_${deptItem}_${id}-${deptItem}`
+                                )
+                                    .first();
+                        }
 
-                        onClick: function () {
-                            const routeFormItems =
-                                getFormItems(routeDept);
+                        if (!$routeHost.length) {
+                            console.warn(
+                                "Custom route host not found",
+                                {
+                                    moduleCode: moduleCode,
+                                    deptItem: deptItem,
+                                    routeDept: routeDept,
+                                    route: route
+                                }
+                            );
 
-                            const content =
-                                getRemark(routeDept);
+                            continue;
+                        }
 
-                            if (
-                                route?.isReturn &&
-                                !content
-                            ) {
-                                appNotifyWarning(
-                                    "Please put your reason to remarks!",
-                                    false
-                                );
+                        const rawRouteKey =
+                            route?.routeId ||
+                            route?.id ||
+                            route?.actionCode ||
+                            routeIndex;
 
-                                return;
-                            }
+                        const customButtonId =
+                            `${moduleCode}-custom-route-` +
+                            `${id}-` +
+                            `${routeDept}-` +
+                            `${safeKey(rawRouteKey)}-` +
+                            `${routeIndex}`;
 
-                            routeFormItems.comment =
-                                content || "";
+                        const $old =
+                            $(`#${customButtonId}`);
 
-                            if (route?.isReturn) {
-                                return returnToStepFn(
+                        if ($old.length) {
+                            try {
+                                $old.dxButton("instance")?.dispose();
+                            } catch (e) {}
+
+                            $old.remove();
+                        }
+
+                        const $customButton =
+                            $(
+                                `<div
+                                    id="${customButtonId}"
+                                    data-workflow-record-id="${id}"
+                                    data-custom-route-button="true">
+                                </div>`
+                            )
+                                .appendTo($routeHost);
+
+
+                        const formItems =
+                            getFormItems(routeDept);
+
+                        const latestTatObject =
+                            typeof tryParseJSON === "function"
+                                ? (
+                                    tryParseJSON(
+                                        formItems.turnAroundTimeAttributes,
+                                        "TAT Load Button Problem"
+                                    ) || {}
+                                )
+                                : {};
+
+                        var disabled = shouldDisableWorkflowButton({
+                            dept: routeDept,
+                            stageDept: formItems.stageDept || stageDept,
+                            formItems: formItems,
+                            tatObject: latestTatObject,
+                            type: "custom",
+                            items: $customButton
+                        });
+
+
+                        $customButton.dxButton({
+                            disabled: disabled,
+
+                            text:
+                                route?.displayStatus ||
+                                route?.actionName ||
+                                route?.actionCode ||
+                                "Custom action",
+
+                            icon:
+                                typeof getTransitionButtonIcon === "function"
+                                    ? getTransitionButtonIcon(
+                                        route,
+                                        route?.isReturn
+                                            ? "undo"
+                                            : ""
+                                    )
+                                    : undefined,
+
+                            type:
+                                route?.isReturn
+                                    ? "danger"
+                                    : "info",
+
+                            onClick: function () {
+                                const routeFormItems =
+                                    getFormItems(routeDept);
+
+                                const content =
+                                    getRemark(routeDept);
+
+                                if (
+                                    route?.isReturn &&
+                                    !content
+                                ) {
+                                    appNotifyWarning(
+                                        "Please put your reason to remarks!",
+                                        false
+                                    );
+
+                                    return;
+                                }
+
+                                routeFormItems.comment =
+                                    content || "";
+
+                                if (route?.isReturn) {
+                                    return returnToStepFn(
+                                        moduleConfig.formKey,
+                                        state.nextStep,
+                                        route,
+                                        routeFormItems,
+                                        params
+                                    );
+                                }
+
+                                return submitNextStepFn(
                                     moduleConfig.formKey,
                                     state.nextStep,
                                     route,
@@ -12019,48 +12576,39 @@
                                     params
                                 );
                             }
+                        });
 
-                            return submitNextStepFn(
-                                moduleConfig.formKey,
-                                state.nextStep,
-                                route,
-                                routeFormItems,
-                                params
+                        if (
+                            typeof applyTransitionButtonClass === "function"
+                        ) {
+                            applyTransitionButtonClass(
+                                `#${customButtonId}`,
+                                route
                             );
                         }
-                    });
-
-                    if (
-                        typeof applyTransitionButtonClass === "function"
-                    ) {
-                        applyTransitionButtonClass(
-                            `#${customButtonId}`,
-                            route
-                        );
                     }
                 }
             }
-        }
 
-        if (reload) {
-            cleanupDynamicButtons();
-        }
+            if (reload) {
+                cleanupDynamicButtons();
+            }
 
-        if (!guid) {
-            restoreWorkflowUiLockedGroups();
-            state.selectedGuid = null;
-            hideLoading(loadingClass, loadingHost);
+            if (!guid) {
+                restoreWorkflowUiLockedGroups();
+                state.selectedGuid = null;
+                hideLoading(loadingClass, loadingHost);
 
-            return $.Deferred()
-                .resolve()
-                .promise();
-        }
+                return $.Deferred()
+                    .resolve()
+                    .promise();
+            }
 
-        state.selectedGuid = guid;
-
+            state.selectedGuid = guid;
+            //End of lazy load workflow render 
         return ajaxGet(
             moduleConfig.workflowUrl(guid),
-            null
+            
         )
             .then(function (instance) {
                 state.workflowInstance =
@@ -12177,11 +12725,11 @@
                                             routeIndex
                                         );
                                     }
-
                                     buildNormalRouteButton({
                                         route: route,
                                         type: "return",
-                                        routeIndex: routeIndex
+                                        routeIndex: routeIndex,
+                                        ...params
                                     });
                                 }
 
@@ -12199,7 +12747,8 @@
                                     buildNormalRouteButton({
                                         route: route,
                                         type: "submit",
-                                        routeIndex: routeIndex
+                                        routeIndex: routeIndex,
+                                        ...params
                                     });
                                 }
                                 await buildCustomRoutes(

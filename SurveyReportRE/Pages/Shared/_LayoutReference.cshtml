@@ -41,7 +41,7 @@
 
 <!--App CSS: customized-->
 @* <link href="~/css/devextreme/dx-diagram.min.css" rel="stylesheet"> *@
-<link href="~/css/app/tabs.css" rel="stylesheet" type="text/css" asp-append-version="true" />
+<link href="~/css/app/tabs.css" rel="stylesheet" type="text/css"  />
 <link href="~/lib/AdminLTE/sidebar-menu.min.css" rel="stylesheet" />
 @* <link href="~/lib/AdminLTE/_all-skins.min.css" rel="stylesheet" /> *@
 <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
@@ -113,12 +113,12 @@
 @* <script src="~/lib/tmivcom/datebox.js"></script>
 <script src="~/lib/tmivcom/htmleditor.js"></script> *@
 @* <script src="~/lib/tmivcom/datagrid.js"></script> *@
-<script src="~/lib/tmivcom/core.js"></script>
-<script src="~/lib/tmivcom/bizform.js"></script>
+<script src="~/lib/tmivcom/core.js" asp-append-version="true"></script>
+<script src="~/lib/tmivcom/bizform.js" asp-append-version="true"></script>
 <script src="~/js/app/userGuide.js" asp-append-version="true"></script>
-<link rel="stylesheet" href="~/css/tmivcom/com.all.css"/>
-<link rel="stylesheet" href="~/css/tmivcom/bizflow.css"/>
-<link rel="stylesheet" href="~/css/tmivcom/react.css"/>
+ <link rel="stylesheet" href="~/css/tmivcom/com.all.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/tmivcom/bizflow.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/tmivcom/react.css" asp-append-version="true" /> 
 
 <!--Test ReactJS com-->
 
@@ -592,6 +592,10 @@
         c_rgba_74_112_255_13: "rgba(74,112,255,.13)"
     });
 
+
+    const _zIndexLow = 1000;
+    const _zIndexMedium = 10000;
+    const _zIndexHigh = 30000;
 
     //Control split group form elements 
     

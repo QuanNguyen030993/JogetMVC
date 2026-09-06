@@ -8,6 +8,7 @@ import NumberBox from './NumberBox';
 import DateBox from './Datebox';
 import { notify } from './Notification';
 import * as XLSX from 'xlsx';
+import { DxCompatibleDataGrid } from '../DataGrid';
 
 const API_BASE_URL = CONFIG.API_URL || 'https://localhost:7254';
 
@@ -198,7 +199,7 @@ const InlineCellEditor = ({ value, onChange, onFocus, onBlur }) => {
   );
 };
 
-const CustomGrid = forwardRef(({
+const LegacyCustomGrid = forwardRef(({
   modelName,
   gridType = 'User',
   gridOption = {},
@@ -1851,9 +1852,8 @@ const CustomGrid = forwardRef(({
 
   const renderRow = (node) => {
     const rowId = getRowKey(node, keyExpr);
-    const rowClasses = `grid-row dx-data-row ${selectedRowId === rowId ? 'dx-selection' : ''} ${String(draggedRowKey) === String(rowId) ? 'row-dragging' : ''}`;
+    const rowClasses = `grid-row tmivcom-grid-row ${selectedRowId === rowId ? 'tmivcom-grid-selection' : ''} ${String(draggedRowKey) === String(rowId) ? 'row-dragging' : ''}`;
     const rowProps = {
-      key: rowId,
       className: rowClasses,
       onClick: () => {
         handleSelectRow(rowId);
@@ -1865,7 +1865,7 @@ const CustomGrid = forwardRef(({
     };
 
     return (
-      <tr {...rowProps}>
+      <tr key={rowId} {...rowProps}>
         {renderingColumns.map((column) => {
           if (column.field === 'row-drag-handle') {
             return (
@@ -1941,7 +1941,7 @@ const CustomGrid = forwardRef(({
           return (
             <td 
               key={column.field || `col-${column.caption}`} 
-              className={`grid-cell dx-cell ${column.cssClass || ''} ${isEditing ? 'editing-cell' : ''}`}
+              className={`grid-cell tmivcom-grid-cell ${column.cssClass || ''} ${isEditing ? 'editing-cell' : ''}`}
               tabIndex={0}
               onFocus={() => setFocusedCell({ rowKey: rowId, field: column.field })}
               onClick={(event) => {
@@ -2056,7 +2056,7 @@ const CustomGrid = forwardRef(({
   return (
     <div
       ref={gridElementRef}
-      className={`custom-grid dx-datagrid custom-grid-${theme}`}
+      className={`tmivcom-custom-grid tmivcom-custom-grid-${theme}`}
       role="grid"
       aria-rowcount={filteredRows.length}
       aria-colcount={renderingColumns.length}
@@ -2145,7 +2145,7 @@ const CustomGrid = forwardRef(({
           </colgroup>
 
           <thead className="grid-header">
-            <tr className="dx-header-row">
+            <tr className="tmivcom-grid-header-row">
               {renderingColumns.map((column) => {
                 if (column.field === 'row-selection-checkbox') {
                   return (
@@ -2498,4 +2498,13 @@ const CustomGrid = forwardRef(({
   );
 });
 
+const CustomGrid = forwardRef((props, ref) => {
+  if (props.architecture === 'modular' || props.engine === 'v2') {
+    return <DxCompatibleDataGrid ref={ref} {...props} />;
+  }
+
+  return <LegacyCustomGrid ref={ref} {...props} />;
+});
+
+export { DxCompatibleDataGrid };
 export default CustomGrid;

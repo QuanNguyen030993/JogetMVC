@@ -22,8 +22,7 @@ Note:
         height: calc(90vh);
     }
 
-    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .cardBody,
-    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .pi-cardHeader {
+    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .cardBody {
         pointer-events: none;
         user-select: none;
     }
@@ -31,7 +30,7 @@ Note:
     .pi-render-overlay {
         position: absolute;
         inset: 0;
-        z-index: 120;
+        z-index: var(--z-index-medium);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -268,20 +267,27 @@ Note:
             var sequence = 0;
             var startedAt = 0;
             var $root = $(`#${policyIssuanceOverviewRootId}`);
-            var $overlay = $root.children(".pi-render-overlay");
+            var $loadingHost = $root.find("> .card > .cardBody.overview-wrap").first();
+            var $overlay = $loadingHost.children(".pi-render-overlay");
 
             if (!$overlay.length) {
                 $overlay = $(`
                     <div id="${formModuleKeyPi}-renderOverlay_${policyIssuanceViewInstanceId}" class="pi-render-overlay" role="status" aria-live="polite" aria-busy="true">
-                        <div class="pi-loader-panel">
+                        <div class="pi-loader-panel overview-section-loader">
+                            <div class="dept-section-action-loader" aria-hidden="true">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <div class="pi-loader-message dept-section-action-message">Please wait…</div>
+                            <!-- LEGACY OVERVIEW INDICATOR - rollback when needed:
                             <div class="pi-loader-icon-host" aria-hidden="true">
                                 <div class="pi-loader-default-icon"></div>
                             </div>
                             <div class="pi-loader-message">Please wait…</div>
                             <div class="pi-render-progress"><span></span></div>
+                            -->
                         </div>
                     </div>
-                `).appendTo($root);
+                `).appendTo($loadingHost);
             }
 
             function setLoadingIcon(source, options) {
@@ -320,7 +326,9 @@ Note:
 
             function setPhase(_message, progress) {
                 progress = Math.max(0, Math.min(100, Number(progress) || 0));
-                $overlay.find(".pi-render-progress > span").css("width", `${Math.max(progress, 8)}%`);
+                $overlay.find(".pi-loader-message").first().text(_message || "Please wait…");
+                // LEGACY OVERVIEW PROGRESS:
+                // $overlay.find(".pi-render-progress > span").css("width", `${Math.max(progress, 8)}%`);
             }
 
             function resetProgressiveContent() {
@@ -512,7 +520,7 @@ Note:
         async function renderPolicyIssuancePersonInCharge() {
             const q = getSelectedModel();
             if (!q) return;
-            renderDeptCallouts(PIC_JSON);
+            renderDeptCallouts(PIC_JSON, document.getElementById(policyIssuanceOverviewRootId));
             let stageName = "";
             try {
                 stageName = stageAccount && stageAccount !== "(Unassigned)"
@@ -989,6 +997,7 @@ Note:
         }
 
         window.OverviewViewRegistry[policyIssuanceViewInstanceKey].reload = reloadPolicyIssuanceInstance;
+        window.OverviewViewRegistry[policyIssuanceViewInstanceKey].reloadWorkflow = loadSelectedWorkflow;
         window.reloadPolicyIssuanceComponents = function(instanceId) {
             var registry = window.OverviewViewRegistry || {};
             if (instanceId !== undefined && instanceId !== null) {
@@ -1138,18 +1147,22 @@ Note:
         }
 
         function applyNodeHighlights() {
-            $(".dept-node").removeClass("status focus");
-            $(`.dept-node[data-key='${stageDept}']`).addClass("status");
-            $(`.dept-node[data-key='${state.focusDept}']`).addClass("focus");
+            const $tree = $(`#${PolicyIssuanceIdManager.deptTree(@ViewData["Id"])}`);
+            $tree.find(".dept-node").removeClass("status focus");
+            $tree.find(`.dept-node[data-key='${stageDept}']`).addClass("status");
+            $tree.find(`.dept-node[data-key='${state.focusDept}']`).addClass("focus");
         }
 
         function applySectionFocusHighlight() {
-            $(".dept-section").removeClass("focused");
+            $(`#${policyIssuanceOverviewRootId}`).find(".dept-section").removeClass("focused");
             $(`#${formModuleKeyPi}-sec_${state.focusDept}_@ViewData["Id"]`).addClass("focused");
         }
 
         function setupDeptTree() {
-            $(`.${formModuleKeyPi}-dept-tree.dept-node`).off("click.tree").on("click.tree", function (event) {
+            const $tree = $(`#${PolicyIssuanceIdManager.deptTree(@ViewData["Id"])}`);
+            $tree.find(`.${formModuleKeyPi}-dept-tree.dept-node`)
+                .off("click.tree")
+                .on("click.tree", function (event) {
                 if ($(event.target).closest(".dept-subnode").length) return;
                 const key = $(this).data("key");
                 state.focusDept = key;
@@ -1160,7 +1173,7 @@ Note:
                 updateHints();
                 scrollToDept(formModuleKeyPi, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
                 setSectionCollapsed(state.focusDept, false);
-            });
+                });
             bindDeptTreeScrollSpy(formModuleKeyPi, "@ViewData["Id"]");
         }
 

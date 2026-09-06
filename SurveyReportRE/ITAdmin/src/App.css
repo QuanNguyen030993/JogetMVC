@@ -132,7 +132,7 @@ button {
 
 .admin-context-menu {
   position: absolute;
-  z-index: 1000;
+  
   top: calc(100% + 7px);
   right: 0;
   display: flex;
@@ -703,7 +703,7 @@ button {
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   padding: 10px;
-  z-index: 10000;
+  
   white-space: normal;
   text-align: left;
   pointer-events: none;
@@ -729,7 +729,7 @@ button {
   border-width: 7px;
   border-style: solid;
   border-color: #cbd5e1 transparent transparent transparent;
-  z-index: -1;
+  
 }
 
 .diagram-icon-hover-trigger:hover .diagram-tooltip-popup {

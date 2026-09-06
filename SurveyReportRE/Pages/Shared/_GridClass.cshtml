@@ -113,6 +113,10 @@
             e.component.element()
                 .off("paste.employeeExcelPaste")
                 .on("paste.employeeExcelPaste", function (event) {
+                    if (!that.mGridInstance?.isExcelPasteMode ||
+                        e.component.option("editing.mode") !== "batch") {
+                        return;
+                    }
                     that.pasteEmployeeCells(event, e.component);
                 });
         }
@@ -979,10 +983,13 @@
                 }
             });
         }
-        onRowClick(e) {
+        onRowDblClick(e) {
             callElementView(`/Business/MasterData/Client_Form/${e.data.id}`, `form_Client_Form_${e.data.id}`, `Client ${e.data.clientCode}`);
         }
-        onToolbarPreparing(e) {
+
+        
+
+          onToolbarPreparing(e) {
             super.onToolbarPreparing(e);    
             var that = this;
             e.toolbarOptions.items.unshift({
@@ -1596,6 +1603,9 @@
 
         async makeGridOptions(mGridConfigInstance = null) {
             const options = await super.makeGridOptions(mGridConfigInstance);
+            if (options.editing?.allowUpdating === true && !options.editing.mode) {
+                options.editing.mode = "batch";
+            }
             configureStatusExcelExport(options, ["workflowStatus"]);
             return options;
         }
@@ -1603,7 +1613,7 @@
 
         onEditorPreparing(e) {
             $.each(qtDeptModuleCode,function (itemInd, item){
-
+                if (item === _role) return;
                 if (e.dataField === `pic${item}` && e.parentType === "dataRow") {
                  var rowData = e.row.data; // <-- row hiện tại
                  // e.editorOptions.onValueChanged = function(ev) {
@@ -1715,14 +1725,15 @@
             onCustomizeColumns(columns) {
             var that = this;
             super.onCustomizeColumns(columns);
-            this.hyperLinkCode(columns, "Business/Form", "Quotation", "id", "quotationCode");
+            // this.hyperLinkCode(columns, "Business/Form", "Quotation", "id", "quotationCode");
 
             $.each(columns, function (colIndex, col) {
 
-                       $.each(qtDeptModuleCode,function (itemInd, item){
-
-                     col.allowEditing = true;
+                 $.each(qtDeptModuleCode,function (itemInd, item){
+                   
+                        col.allowEditing = true;
                         if (col.dataField === `pic${item}`) {
+                             if (item === _role) col.visible = false;
                         col.cellTemplate = function (container, options) {
                             col.value = tryParseJSON(options.data.pic, "PIC Load Problem From Grid")[item];
                             return $(`<div>`).text(tryParseJSON(options.data.pic, "PIC Load Problem  From Grid")[item]).appendTo(container);
@@ -1826,28 +1837,31 @@
           
            
         }
-        hyperLinkCode(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
-            $.each(columns, function (i, col) {
-                if (col.dataField == (specificLinkField != null ? specificLinkField : "Code")) {
-                    col.cellTemplate = function (container, options) {
-                        var selectedValue = options.data[propertyName];
-                        var selectedGuid = options.data["guid"];
-                        $('<a>').addClass('dx-link dx-link-edit')
-                            .text(options.text)
-                            .css({ color: window.AppColors.c_337ab7, textDecoration: "underline", cursor: "pointer" })
-                            .on('dxclick', function () {
-                                if (Object.keys(options.key).length > 0)
-                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
-                                else
-                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${options.key}`, `${controllerName} ${options.text}`);
-                                //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
-                            })
-                            .appendTo(container);
-                    }
-                } else {
+        // hyperLinkCode(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
+        //     $.each(columns, function (i, col) {
+        //         if (col.dataField == (specificLinkField != null ? specificLinkField : "Code")) {
+        //             col.cellTemplate = function (container, options) {
+        //                 var selectedValue = options.data[propertyName];
+        //                 var selectedGuid = options.data["guid"];
+        //                 $('<a>').addClass('dx-link dx-link-edit')
+        //                     .text(options.text)
+        //                     .css({ color: window.AppColors.c_337ab7, textDecoration: "underline", cursor: "pointer" })
+        //                     .on('dxclick', function () {
+        //                         if (Object.keys(options.key).length > 0)
+        //                             callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
+        //                         else
+        //                             callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${options.key}`, `${controllerName} ${options.text}`);
+        //                         //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
+        //                     })
+        //                     .appendTo(container);
+        //             }
+        //         } else {
 
-                }
-            });
+        //         }
+        //     });
+        // }
+        onRowDblClick(e) {
+            callElementView(`/Business/Form/Quotation_Form/${e.data.id}/${e.data.guid}`, `form_Quotation_Form_${e.data.id}`, `Quotation ${e.data.quotationCode}`);
         }
 
          onToolbarPreparing(e) {
@@ -2009,7 +2023,7 @@
             super.onCustomizeColumns(columns);
 
 
-            super.hyperLinkCode(columns, "Business/Form", "Quotation", "oldQuotationId", "oldQuotationCode");
+            // super.hyperLinkCode(columns, "Business/Form", "Quotation", "oldQuotationId", "oldQuotationCode");
             $.each(columns, function (colIndex, col) {
                 col.allowEditing = false;
                  $.each(qtDeptModuleCode,function (itemInd, item){
@@ -2116,82 +2130,98 @@
             configureStatusExcelExport(options, ["workflowStatus", "policyIssuanceStatus"]);
             return options;
         }
-        hyperLinkCode(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
-            $.each(columns, function (i, col) {
-                if (col.dataField  == (specificLinkField != null ? specificLinkField : "Code")) {
-                    col.cellTemplate = function (container, options) {
-                        var selectedValue = options.data[propertyName];
-                        var selectedCloneId = options.data["quotationId"];
-                        var selectedGuid = options.data["guid"];
-                        var selectedCopyGuid = options.data["copyFromGuid"];
-                        var requestTypeName = _enums.requestType.find(f => f.value == "Endorsement");
-                        if (options.data.requestTypeId != requestTypeName.id)
-                        $('<a>').addClass('dx-link dx-link-edit')
-                            .text(options.text)
-                            .css({ color: window.AppColors.c_337ab7, textDecoration: "underline", cursor: "pointer" })
-                            .on('dxclick', function () {
-                                if (Object.keys(options.key).length > 0)
-                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}/${selectedCloneId}/${selectedCopyGuid}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
-                                else
-                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}/${selectedCloneId}/${selectedCopyGuid}`, `form_${controllerName}_Form_${options.key}`, `${controllerName} ${options.text}`);
-                                //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
-                            })
-                            .appendTo(container);
-                        if (options.data.requestTypeId == requestTypeName.id)
-                            $('<a>').addClass('dx-link dx-link-edit')
-                            .text(options.text)
-                            .css({ color: window.AppColors.c_337ab7, textDecoration: "underline", cursor: "pointer" })
-                            .on('dxclick', function () {
-                                if (Object.keys(options.key).length > 0)
-                                    callElementView(`/${moduleName}/${controllerName}_Endorsement_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Endorsement_Form_${options.key.id}`, `${controllerName} ${options.text}`);
-                                else                                                 
-                                    callElementView(`/${moduleName}/${controllerName}_Endorsement_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Endorsement_Form_${options.key}`, `${controllerName} ${options.text}`);
-                                //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
-                            })
-                            .appendTo(container);
-                    }
-                } 
-                if (col.dataField == "quotationCode") {
-                    col.cellTemplate = function (container, options) {
-                        var selectedValue = options.data["quotationId"];
-                        var selectedGuid = options.data["copyFromGuid"];
-                        $('<a>').addClass('dx-link dx-link-edit')
-                            .text(options.text)
-                            .css({ color: window.AppColors.c_337ab7, textDecoration: "underline", cursor: "pointer" })
-                            .on('dxclick', function () {
-                                if (Object.keys(options.key).length > 0)
-                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${selectedValue}`, `${controllerName} ${options.text}`);
-                                else
-                                    callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${selectedValue}`, `${controllerName} ${options.text}`);
-                                //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
-                            })
-                            .appendTo(container);
-                    }
-                }
-                 if (col.dataField === "workflowStatus")
-                    {
-                        col.cellTemplate = function (container, options) {
-                        var raw = options.value;
 
-                        var st = normalizeStatus(raw); // dùng lại hàm bạn đã có
-
-                        var html = `
-                            <div class="statusTag ${st.css}">
-                                ${st.text}
-                            </div>
-                        `;
-
-                        $(container).append(html);
-                        };
-                    }
-                
-            });
+        onRowDblClick(e) {
+            var requestTypeName = _enums.requestType.find(f => f.value == "Endorsement");
+                var selectedValue = e.data["id"];
+                var selectedCloneId = e.data["quotationId"];
+                var selectedGuid = e.data["guid"];
+                var selectedCopyGuid = e.data["copyFromGuid"];
+            if (e.data.requestTypeId != requestTypeName.id) {
+                callElementView(`/Business/Form/PolicyIssuance_Form/${selectedValue}/${selectedGuid}/${selectedCloneId}/${selectedCopyGuid}`, `form_PolicyIssuance_Form_Form_${e.data.id}`, `PolicyIssuance ${e.data.policyIssuanceCode}`);
+            }
+             if (e.data.requestTypeId == requestTypeName.id) {
+                 callElementView(`/Business/Form/PolicyIssuance_Endorsement_Form/${selectedValue}/${selectedGuid}`, `form_PolicyIssuance_Endorsement_Form_${e.data.id}`, `PolicyIssuance ${e.data.policyIssuanceCode}`);
+            }
         }
+
+
+        // hyperLinkCode(columns, moduleName, controllerName, propertyName, specificLinkField = null) {
+        //     $.each(columns, function (i, col) {
+        //         if (col.dataField  == (specificLinkField != null ? specificLinkField : "Code")) {
+        //             col.cellTemplate = function (container, options) {
+        //                 var selectedValue = options.data[propertyName];
+        //                 var selectedCloneId = options.data["quotationId"];
+        //                 var selectedGuid = options.data["guid"];
+        //                 var selectedCopyGuid = options.data["copyFromGuid"];
+        //                 var requestTypeName = _enums.requestType.find(f => f.value == "Endorsement");
+        //                 if (options.data.requestTypeId != requestTypeName.id)
+        //                 $('<a>').addClass('dx-link dx-link-edit')
+        //                     .text(options.text)
+        //                     .css({ color: window.AppColors.c_337ab7, textDecoration: "underline", cursor: "pointer" })
+        //                     .on('dxclick', function () {
+        //                         if (Object.keys(options.key).length > 0)
+        //                             callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}/${selectedCloneId}/${selectedCopyGuid}`, `form_${controllerName}_Form_${options.key.id}`, `${controllerName} ${options.text}`);
+        //                         else
+        //                             callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}/${selectedCloneId}/${selectedCopyGuid}`, `form_${controllerName}_Form_${options.key}`, `${controllerName} ${options.text}`);
+        //                         //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
+        //                     })
+        //                     .appendTo(container);
+        //                 if (options.data.requestTypeId == requestTypeName.id)
+        //                     $('<a>').addClass('dx-link dx-link-edit')
+        //                     .text(options.text)
+        //                     .css({ color: window.AppColors.c_337ab7, textDecoration: "underline", cursor: "pointer" })
+        //                     .on('dxclick', function () {
+        //                         if (Object.keys(options.key).length > 0)
+        //                             callElementView(`/${moduleName}/${controllerName}_Endorsement_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Endorsement_Form_${options.key.id}`, `${controllerName} ${options.text}`);
+        //                         else                                                 
+        //                             callElementView(`/${moduleName}/${controllerName}_Endorsement_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Endorsement_Form_${options.key}`, `${controllerName} ${options.text}`);
+        //                         //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
+        //                     })
+        //                     .appendTo(container);
+        //             }
+        //         } 
+        //         if (col.dataField == "quotationCode") {
+        //             col.cellTemplate = function (container, options) {
+        //                 var selectedValue = options.data["quotationId"];
+        //                 var selectedGuid = options.data["copyFromGuid"];
+        //                 $('<a>').addClass('dx-link dx-link-edit')
+        //                     .text(options.text)
+        //                     .css({ color: window.AppColors.c_337ab7, textDecoration: "underline", cursor: "pointer" })
+        //                     .on('dxclick', function () {
+        //                         if (Object.keys(options.key).length > 0)
+        //                             callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${selectedValue}`, `${controllerName} ${options.text}`);
+        //                         else
+        //                             callElementView(`/${moduleName}/${controllerName}_Form/${selectedValue}/${selectedGuid}`, `form_${controllerName}_Form_${selectedValue}`, `${controllerName} ${options.text}`);
+        //                         //callElementView(`/Business/MasterData/Client_Form/2`, `${controllerName}_Form`, `${controllerName} ${options.text}`);
+        //                     })
+        //                     .appendTo(container);
+        //             }
+        //         }
+        //          if (col.dataField === "workflowStatus")
+        //             {
+        //                 col.cellTemplate = function (container, options) {
+        //                 var raw = options.value;
+
+        //                 var st = normalizeStatus(raw); // dùng lại hàm bạn đã có
+
+        //                 var html = `
+        //                     <div class="statusTag ${st.css}">
+        //                         ${st.text}
+        //                     </div>
+        //                 `;
+
+        //                 $(container).append(html);
+        //                 };
+        //             }
+                
+        //     });
+        // }
         onCustomizeColumns(columns) {
             var that = this;
             super.onCustomizeColumns(columns);
-            this.hyperLinkCode(columns, "Business/Form", "PolicyIssuance", "id", "policyIssuanceCode");
-            this.hyperLinkCode(columns, "Business/Form", "Quotation", "quotationId", "quotationCode");
+            // this.hyperLinkCode(columns, "Business/Form", "PolicyIssuance", "id", "policyIssuanceCode");
+            // this.hyperLinkCode(columns, "Business/Form", "Quotation", "quotationId", "quotationCode");
             $.each(columns, function (colIndex, col) {
                 $.each(piDeptModuleCode, function (itemInd, item) {
                     if (col.dataField === `pic${item}`) {

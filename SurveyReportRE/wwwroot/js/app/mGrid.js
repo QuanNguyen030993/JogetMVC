@@ -15,6 +15,7 @@ var MGrid = class MGrid {
             //! Phủ định and Và or Hoặc
             this.isAllowRowMenu = true;
             this.isBulkMode = false; // NEW
+            this.isExcelPasteMode = false;
             // Layout editor mode properties
             this.isEditLayoutMode = false;
             this.gridIndexVisible = {}; // Stores visible column indexes
@@ -118,52 +119,12 @@ var MGrid = class MGrid {
                 // Initialize grid index visible
                 this.updateGridIndexVisible();
 
-                // Attach Excel paste listener
-                this.container.on("paste", (htmlEvent) => {
-                    const clipboardData = htmlEvent.originalEvent.clipboardData || window.clipboardData;
-                    const pastedData = clipboardData.getData("text");
-                    if (!pastedData) return;
-                    
-                    const rows = pastedData.split(/\r?\n/).map(row => row.split("\t"));
-                    if (rows.length === 0 || (rows.length === 1 && rows[0].length === 1 && rows[0][0] === "")) return;
-                    
-                    const gridInstance = this.component;
-                    const lastCell = this.mGridOption.focusData;
-                    if (!lastCell || lastCell.rowIndex === undefined) return;
-                    
-                    htmlEvent.preventDefault();
-                    
-                    const visibleColumns = gridInstance.getVisibleColumns();
-                    const startColIndex = visibleColumns.findIndex(c => c.dataField === lastCell.column.dataField);
-                    if (startColIndex === -1) return;
-                    
-                    gridInstance.beginUpdate();
-                    
-                    for (let r = 0; r < rows.length; r++) {
-                        const rowData = rows[r];
-                        const targetRowIndex = lastCell.rowIndex + r;
-                        if (rowData.length === 1 && rowData[0] === "" && r === rows.length - 1) continue;
-                        
-                        for (let c = 0; c < rowData.length; c++) {
-                            const val = rowData[c];
-                            const targetColIndex = startColIndex + c;
-                            if (targetColIndex >= visibleColumns.length) continue;
-                            
-                            const col = visibleColumns[targetColIndex];
-                            if (col && col.allowEditing !== false && col.dataField) {
-                                let typedVal = val;
-                                if (col.dataType === "number") {
-                                    typedVal = val === "" ? null : Number(val);
-                                } else if (col.dataType === "boolean") {
-                                    typedVal = val.toLowerCase() === "true" || val === "1" || val.toLowerCase() === "yes";
-                                }
-                                gridInstance.cellValue(targetRowIndex, col.dataField, typedVal);
-                            }
-                        }
-                    }
-                    
-                    gridInstance.endUpdate();
-                });
+                // OFF keeps the editor's normal single-cell paste behavior.
+                this.container
+                    .off("paste.mGridExcelPaste")
+                    .on("paste.mGridExcelPaste", (htmlEvent) => {
+                        this.pasteExcelCells(htmlEvent);
+                    });
 
             }).catch(err => {
 
@@ -180,6 +141,200 @@ var MGrid = class MGrid {
                 'Library error: call renderGrid was failed.',
                 err
             );
+        }
+    }
+
+    toggleExcelPasteMode() {
+        try {
+            if (!this.component || this.component.option("editing.mode") !== "batch") {
+                this.isExcelPasteMode = false;
+                appNotifyWarning("Excel paste is only available in batch edit mode", false);
+                return false;
+            }
+
+            this.isExcelPasteMode = !this.isExcelPasteMode;
+            this.container.toggleClass("mgrid-excel-paste-mode", this.isExcelPasteMode);
+            appNotifyInfo(this.isExcelPasteMode
+                ? "Excel paste mode ON - select a starting cell and paste"
+                : "Excel paste mode OFF");
+            return this.isExcelPasteMode;
+        } catch (err) {
+            appErrorHandling("toggleExcelPasteMode error", err);
+            return false;
+        }
+    }
+
+    parseExcelClipboard(text) {
+        const rows = [];
+        let row = [];
+        let cell = "";
+        let inQuotes = false;
+
+        for (let index = 0; index < text.length; index++) {
+            const character = text[index];
+            if (inQuotes) {
+                if (character === '"') {
+                    if (text[index + 1] === '"') {
+                        cell += '"';
+                        index++;
+                    } else {
+                        inQuotes = false;
+                    }
+                } else {
+                    cell += character;
+                }
+            } else if (character === '"' && cell.length === 0) {
+                inQuotes = true;
+            } else if (character === "\t") {
+                row.push(cell);
+                cell = "";
+            } else if (character === "\r" || character === "\n") {
+                if (character === "\r" && text[index + 1] === "\n") index++;
+                row.push(cell);
+                rows.push(row);
+                row = [];
+                cell = "";
+            } else {
+                cell += character;
+            }
+        }
+
+        row.push(cell);
+        rows.push(row);
+        if (rows.length > 1 && rows[rows.length - 1].every(value => value === "")) {
+            rows.pop();
+        }
+        return rows;
+    }
+
+    canPasteExcelColumn(column) {
+        if (!column || !column.dataField || column.command || column.type) return false;
+        if (column.allowEditing === false || column.editorOptions?.readOnly === true) return false;
+        if (column.calculateCellValue && !column.setCellValue) return false;
+        return this.component.option("editing.allowUpdating") === true;
+    }
+
+    convertExcelPastedValue(value, column) {
+        if (value === "") return null;
+        const normalizedValue = typeof value === "string" ? value.trim() : value;
+
+        switch (column.dataType) {
+            case "number": {
+                const numberValue = Number(normalizedValue);
+                return Number.isNaN(numberValue) ? value : numberValue;
+            }
+            case "boolean": {
+                const booleanValue = String(normalizedValue).toLowerCase();
+                if (["true", "1", "yes", "y", "x", "có"].includes(booleanValue)) return true;
+                if (["false", "0", "no", "n", "không"].includes(booleanValue)) return false;
+                return value;
+            }
+            case "date":
+            case "datetime": {
+                const dateValue = new Date(normalizedValue);
+                return Number.isNaN(dateValue.getTime()) ? value : dateValue;
+            }
+            default:
+                return value;
+        }
+    }
+
+    pasteExcelCells(event) {
+        if (!this.isExcelPasteMode || !this.component) return;
+        if (this.component.option("editing.mode") !== "batch") return;
+
+        const nativeEvent = event.originalEvent || event;
+        const clipboardData = nativeEvent.clipboardData || window.clipboardData;
+        const anchor = this.mGridOption.focusData;
+        if (!clipboardData || !anchor || anchor.rowIndex === undefined || !anchor.column?.dataField) return;
+
+        const text = clipboardData.getData("text/plain") || clipboardData.getData("Text");
+        if (!text) return;
+
+        this.pasteExcelText(text, nativeEvent);
+    }
+
+    pasteExcelText(text, nativeEvent = null) {
+        if (!this.component || this.component.option("editing.mode") !== "batch") return false;
+
+        const pastedRows = this.parseExcelClipboard(text);
+        if (pastedRows.length === 0) return false;
+
+        const visibleColumns = this.component.getVisibleColumns();
+        const startColumnIndex = visibleColumns.findIndex(column =>
+            column.dataField === anchor.column.dataField
+        );
+        const dataRows = this.component.getVisibleRows().filter(row => row.rowType === "data");
+        const startRowIndex = dataRows.findIndex(row => row.rowIndex === anchor.rowIndex);
+        if (startColumnIndex < 0 || startRowIndex < 0) return false;
+
+        nativeEvent?.preventDefault?.();
+        nativeEvent?.stopPropagation?.();
+        this.component.closeEditCell();
+
+        let updatedCellCount = 0;
+        let truncated = false;
+        this.component.beginUpdate();
+        try {
+            pastedRows.forEach((pastedRow, rowOffset) => {
+                const targetRow = dataRows[startRowIndex + rowOffset];
+                if (!targetRow) {
+                    truncated = true;
+                    return;
+                }
+
+                pastedRow.forEach((value, columnOffset) => {
+                    const targetColumn = visibleColumns[startColumnIndex + columnOffset];
+                    if (!targetColumn) {
+                        truncated = true;
+                        return;
+                    }
+                    if (!this.canPasteExcelColumn(targetColumn)) return;
+
+                    this.component.cellValue(
+                        targetRow.rowIndex,
+                        targetColumn.dataField,
+                        this.convertExcelPastedValue(value, targetColumn)
+                    );
+                    updatedCellCount++;
+                });
+            });
+        } finally {
+            this.component.endUpdate();
+        }
+
+        if (updatedCellCount > 0) {
+            appNotifySuccess(`Pasted ${updatedCellCount} cell(s) from Excel. Please save the grid to apply changes.`, false);
+        } else {
+            appNotifyWarning("No editable cell was found for the pasted data.", false);
+        }
+        if (truncated) {
+            appNotifyWarning("Some Excel cells are outside the current grid page and were skipped.", false);
+        }
+        return updatedCellCount > 0;
+    }
+
+    async pasteExcelFromClipboard() {
+        if (!this.component || this.component.option("editing.mode") !== "batch") {
+            appNotifyWarning("Paste Special is only available in batch edit mode", false);
+            return false;
+        }
+
+        if (!navigator.clipboard?.readText) {
+            appNotifyWarning("Clipboard access is unavailable. Enable Excel paste mode, select a cell, then press Ctrl+V.", false);
+            return false;
+        }
+
+        try {
+            const text = await navigator.clipboard.readText();
+            if (!text) {
+                appNotifyWarning("The clipboard does not contain Excel data.", false);
+                return false;
+            }
+            return this.pasteExcelText(text);
+        } catch (err) {
+            appNotifyWarning("Clipboard permission was blocked. Enable Excel paste mode, select a cell, then press Ctrl+V.", false);
+            return false;
         }
     }
 
@@ -694,6 +849,37 @@ var MGridOption = class MGridOption {
             }
         });
 
+        if (dtGrid.option("editing.mode") === "batch" &&
+            dtGrid.option("editing.allowUpdating") === true) {
+            e.toolbarOptions.items.unshift({
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    icon: "paste",
+                    hint: "Enable Excel paste mode",
+                    elementAttr: {
+                        "aria-label": "Enable Excel paste mode"
+                    },
+                    onClick: function (buttonEvent) {
+                        if (!that.mGridInstance) return;
+
+                        const isOn = that.mGridInstance.toggleExcelPasteMode();
+                        buttonEvent.component.option(isOn ? {
+                            type: "success",
+                            icon: "paste",
+                            hint: "Disable Excel paste mode",
+                            elementAttr: { "aria-label": "Disable Excel paste mode" }
+                        } : {
+                            type: "default",
+                            icon: "paste",
+                            hint: "Enable Excel paste mode",
+                            elementAttr: { "aria-label": "Enable Excel paste mode" }
+                        });
+                    }
+                }
+            });
+        }
+
         if (mGridIsSuperUser()) {
             // Add Edit Layout button (always visible)
             e.toolbarOptions.items.unshift({
@@ -854,11 +1040,47 @@ var MGridOption = class MGridOption {
         };
 
 
-        if (that.isAllowRowMenu)
-            if (e.row != undefined && e.row.rowType === "data") {
+        if (e.row != undefined && e.row.rowType === "data") {
+            const canUsePasteSpecial = e.target === "content" &&
+                e.column?.dataField &&
+                editorOptions?.mode === "batch" &&
+                editorOptions?.allowUpdating === true;
+
+            if (that.isAllowRowMenu || canUsePasteSpecial) {
                 e.items = [];
+            }
+
+            if (that.isAllowRowMenu) {
                 e.items.push(cloneItem);
             }
+
+            if (canUsePasteSpecial) {
+                that.focusData = {
+                    rowIndex: e.row.rowIndex ?? dataGrid.getRowIndexByKey(e.row.key),
+                    columnIndex: e.columnIndex,
+                    column: e.column,
+                    data: e.row.data
+                };
+
+                e.items.push({
+                    text: "Paste Special (Excel)",
+                    icon: "paste",
+                    disabled: e.column.allowEditing === false || e.column.editorOptions?.readOnly === true,
+                    onItemClick: function () {
+                        that.mGridInstance?.pasteExcelFromClipboard();
+                    }
+                });
+                e.items.push({
+                    text: that.mGridInstance?.isExcelPasteMode
+                        ? "Disable Excel Paste Mode"
+                        : "Enable Excel Paste Mode",
+                    icon: "paste",
+                    onItemClick: function () {
+                        that.mGridInstance?.toggleExcelPasteMode();
+                    }
+                });
+            }
+        }
     }
 
     //    onRowExpanding(e) {
@@ -1240,6 +1462,7 @@ var MGridOption = class MGridOption {
                     selection: (Object.keys(selection).length > 0) ? selection : defaultSelection,
                     //onCellHoverChanged: tryExecute(this.onCellHoverChanged.bind(this)),
                     onRowClick: tryExecute(this.onRowClick.bind(this)),
+                    onRowDblClick: tryExecute(this.onRowDblClick.bind(this)),
                     //editing: {
                     //    ...((Object.keys(gridEditorOptions).length > 0) ? gridEditorOptions.edit : defaultEditing.edit)
                     //},
@@ -1293,6 +1516,10 @@ var MGridOption = class MGridOption {
             else
                 e.component.expandRow(e.key);
         }
+    }
+
+    onRowDblClick(e) {
+
     }
 };
 

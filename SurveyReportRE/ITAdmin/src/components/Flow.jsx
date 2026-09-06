@@ -94,17 +94,23 @@ const getUiConditionGroupNames = (rule = {}) => {
 };
 
 const normalizeScreenConditionRule = (rule = {}, index = 0) => {
-    const groupNames = getUiConditionGroupNames(rule);
+    const trigger = rule.trigger || 'sameDepartmentReturn';
+    const parsedGroupNames = getUiConditionGroupNames(rule);
+    const groupNames = trigger === 'enableOnlyGroup' ? parsedGroupNames.slice(0, 1) : parsedGroupNames;
     return {
         ...rule,
         id: rule.id || `ui-lock-${Date.now()}-${index}`,
         type: rule.type || 'uiLock',
-        trigger: rule.trigger || 'sameDepartmentReturn',
+        trigger,
         department: rule.department || '',
         targetItemType: 'group',
         groupNames,
+        groupNamesText: trigger === 'enableOnlyGroup'
+            ? (groupNames[0] || '')
+            : (rule.groupNamesText ?? groupNames.join('\n')),
         targets: groupNames.map((name) => ({ itemType: 'group', name })),
-        mode: rule.mode || 'ReadOnly',
+        mode: trigger === 'enableOnlyGroup' ? 'Enabled' : (rule.mode || 'ReadOnly'),
+        sectionId: groupNames[0] || '',
     };
 };
 
@@ -228,6 +234,16 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
             } catch (e) {}
         }
         const rawNodeData = parsedNodeData.rawNode || {};
+        const nodeInstruction = node.nodeInstruction
+            ?? parsedNodeData.nodeInstruction
+            ?? rawNodeData.nodeInstruction
+            ?? node.instruction
+            ?? parsedNodeData.instruction
+            ?? rawNodeData.instruction
+            ?? node.assignLabel
+            ?? parsedNodeData.assignLabel
+            ?? rawNodeData.assignLabel
+            ?? '';
         const jumpStepNo = node.jumpStepNo ?? parsedNodeData.jumpStepNo ?? rawNodeData.jumpStepNo ?? '';
         const jumpCondition = node.jumpCondition ?? parsedNodeData.jumpCondition ?? rawNodeData.jumpCondition ?? '';
         const jumpTargetNodeId = node.jumpTargetNodeId ?? parsedNodeData.jumpTargetNodeId ?? rawNodeData.jumpTargetNodeId ?? '';
@@ -258,8 +274,8 @@ const mapWorkflowNodes = (workflowNodes = [], scaleX = 1.0, scaleY = 1.0) =>
                 laneId: node.laneId || '',
                 shape: node.shape || 'rectangle',
                 styleColor: node.styleColor || 'blue',
-                assignLabel: node.assignLabel || '',
-                orderLabel: node.orderLabel || '',
+                nodeInstruction,
+                orderLabel: node.orderLabel ?? parsedNodeData.orderLabel ?? rawNodeData.orderLabel ?? '',
                 code,
                 flowType: node.flowType || node.nodeStatus || 'Both',
                 stepRole: node.stepRole || '',
@@ -342,6 +358,7 @@ const parseJsonToRulesState = (jsonStr) => {
 const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) =>
     workflowTransitions.map((transition, index) => {
         const isReturn = transition.isReturn === true || String(transition.isReturn) === 'true' || transition.flowType === 'Return';
+        const isReturnNeedAccepted = transition.isReturnNeedAccepted === true || String(transition.isReturnNeedAccepted) === 'true' || transition.flowType === 'Return';
         const legacyExitTransition = transition.isExitTransition === true || String(transition.isExitTransition).toLowerCase() === 'true';
         const transitionType = legacyExitTransition
             ? 'Exit'
@@ -395,6 +412,7 @@ const mapWorkflowEdges = (workflowTransitions = [], scaleX = 1.0, scaleY = 1.0) 
                 uiLockRules,
                 isExitTransition: isExit,
                 isReturn: isReturn,
+                isReturnNeedAccepted: isReturnNeedAccepted,
                 statusId: transition.statusId || '',
                 statusName: transition.statusName || '',
                 transitionScript: normalizeTransitionScript(transition.transitionScript || (() => {
@@ -551,6 +569,7 @@ function Flow({ id: propId }) {
         { dataField: 'stepNo', caption: 'Step No', width: 90 },
         { dataField: 'transitionType', caption: 'Flow Type', width: 110 },
         { dataField: 'isReturn', caption: 'Is Return', width: 90 },
+        { dataField: 'isReturnNeedAccepted', caption: "Is Return Need Accepted", width: 90},
         { dataField: 'isLoop', caption: 'Is Loop', width: 90 },
         { dataField: 'loopGroup', caption: 'Loop Group', width: 110 },
         { dataField: 'loopExitMode', caption: 'Loop Exit Mode', width: 130 },
@@ -604,6 +623,7 @@ function Flow({ id: propId }) {
                 stepNo: edge.data?.stepNo || '',
                 transitionType: edge.data?.transitionType || 'Normal',
                 isReturn: edge.data?.isReturn ? 'Yes' : 'No',
+                isReturnNeedAccepted: edge.data?.isReturnNeedAccepted ? 'Yes' : 'No',
                 isLoop: edge.data?.isLoop ? 'Yes' : 'No',
                 loopGroup: edge.data?.loopGroup || '',
                 loopExitMode: edge.data?.loopExitMode || 'None',
@@ -672,6 +692,7 @@ function Flow({ id: propId }) {
                     uiLockRules: [],
                     isExitTransition: false,
                     isReturn: false,
+                    isReturnNeedAccepted: false,
                     statusId: '',
                     statusName: '',
                     icon: '',
@@ -821,13 +842,13 @@ function Flow({ id: propId }) {
                     posY: originalY,
                     x: originalX,
                     y: originalY,
-                    assignLabel: node.data.assignLabel || '',
+                    nodeInstruction: node.data.nodeInstruction ?? node.data.instruction ?? node.data.assignLabel ?? '',
                     orderLabel: node.data.orderLabel || '',
                     departmentName: node.data.departmentName || '',
                     description: node.data.description || '',
                     sortOrder: index + 1,
                     orderNo: index + 1,
-                    screenConditions: node.data.screenConditions || [],
+                    screenConditions: (node.data.screenConditions || []).map(normalizeScreenConditionRule),
                     custom: node.data.custom || ''
                 };
             });
@@ -871,6 +892,7 @@ function Flow({ id: propId }) {
                     },
                     isExitTransition: edge.data?.transitionType === 'Exit',
                     isReturn: edge.data?.isReturn === true,
+                    isReturnNeedAccepted: edge.data?.isReturnNeedAccepted === true,
                     statusId: edge.data?.statusId || '',
                     statusName: edge.data?.statusName || '',
                     icon: edge.data?.icon || '',
@@ -955,6 +977,23 @@ function Flow({ id: propId }) {
                 const origY = Math.round(node.position.y / scaleY);
                 const incomingEdge = edges.find((e) => e.target === node.id);
                 const parentNodeId = incomingEdge ? incomingEdge.source : null;
+                const nodeInstruction = node.data?.nodeInstruction ?? node.data?.instruction ?? node.data?.assignLabel ?? '';
+                const screenConditions = (node.data?.screenConditions || []).map(normalizeScreenConditionRule);
+                const jumpDefinitions = node.data?.jumpDefinitions || [];
+                const jumpEnabled = !!node.data?.jumpEnabled || jumpDefinitions.length > 0;
+                const compiledNodeData = {};
+
+                if (nodeInstruction) compiledNodeData.nodeInstruction = nodeInstruction;
+                if (screenConditions.length) compiledNodeData.screenConditions = screenConditions;
+                if (jumpEnabled) {
+                    compiledNodeData.jumpEnabled = true;
+                    compiledNodeData.jumpDefinitions = jumpDefinitions;
+                    compiledNodeData.jumpTransitionMap = Object.fromEntries(
+                        jumpDefinitions
+                            .filter((definition) => (definition.propertyKey || definition.conditionName) && definition.transitionId)
+                            .map((definition) => [definition.propertyKey || definition.conditionName, definition.transitionId])
+                    );
+                }
 
                 return {
                     workflowDefinitionId: workflowDefinitionId,
@@ -973,51 +1012,7 @@ function Flow({ id: propId }) {
                     posY: origY,
                     sortOrder: index + 1,
                     isActive: true,
-                    data: JSON.stringify({
-                        rawNode: {
-                            id: node.id,
-                            text: node.data?.label || "",
-                            type: node.data?.nodeType || "",
-                            flowType: node.data?.flowType || "Both",
-                            allowLoop: node.data?.allowLoop,
-                            loopGroup: node.data?.loopGroup,
-                            code: node.data?.code,
-                            stepRole: node.data?.stepRole,
-                            departmentName: node.data?.departmentName,
-                            levelNo: node.data?.levelNo,
-                            jumpEnabled: !!node.data?.jumpEnabled,
-                            jumpDefinitions: node.data?.jumpDefinitions || [],
-                            x: origX,
-                            y: origY,
-                            screenConditions: node.data?.screenConditions || []
-                        },
-                        screenConditions: node.data?.screenConditions || [],
-                        jumpEnabled: !!node.data?.jumpEnabled,
-                        jumpDefinitions: node.data?.jumpDefinitions || [],
-                        jumpTransitionMap: Object.fromEntries(
-                            (node.data?.jumpDefinitions || [])
-                                .filter((definition) => (definition.propertyKey || definition.conditionName) && definition.transitionId)
-                                .map((definition) => [definition.propertyKey || definition.conditionName, definition.transitionId])
-                        ),
-                        jump: node.data?.jumpEnabled ? {
-                            definitions: node.data?.jumpDefinitions || [],
-                            transitionMap: Object.fromEntries(
-                                (node.data?.jumpDefinitions || [])
-                                    .filter((definition) => (definition.propertyKey || definition.conditionName) && definition.transitionId)
-                                    .map((definition) => [definition.propertyKey || definition.conditionName, definition.transitionId])
-                            )
-                        } : null,
-                        condition: (() => {
-                            const conditionObj = {};
-                            (node.data?.screenConditions || []).forEach(rule => {
-                                getUiConditionGroupNames(rule).forEach((groupName) => {
-                                    conditionObj[groupName] = rule.mode || 'ReadOnly';
-                                });
-                            });
-                            return conditionObj;
-                        })(),
-                        nodetype: node.data?.nodeType || "task"
-                    })
+                    data: JSON.stringify(compiledNodeData)
                 };
             });
 
@@ -1041,7 +1036,7 @@ function Flow({ id: propId }) {
                 const isStart = fromNode.data?.nodeType === 'start' || incomingEdgesCount === 0;
                 const isEnd = edge.data?.transitionType === 'Exit' || !edge.target;
                 const isReturn = edge.data?.isReturn === true || false; 
-
+                const isReturnNeedAccepted = edge.data?.isReturnNeedAccepted === true || false;
                 let uiMode = "Start";
                 const actionCode = edge.data?.actionCode || "";
                 if (actionCode.startsWith("SUBMIT")) uiMode = "Forward";
@@ -1121,6 +1116,7 @@ function Flow({ id: propId }) {
                     isEnd: isEnd,
                     isStart: isStart,
                     isReturn : isReturn,
+                    isReturnNeedAccepted : isReturnNeedAccepted,
                     levelNo: fromNode.data?.levelNo ? parseInt(fromNode.data.levelNo) : null,
                     loopGroup: edge.data?.loopGroup || null,
                     parentStepId: null,
@@ -1303,6 +1299,7 @@ function Flow({ id: propId }) {
                     nodeType: 'task',
                     departmentName: '',
                     description: '',
+                    nodeInstruction: '',
                     manualPositioned: false,
                     code: id,
                     flowType: 'Both',
@@ -1500,44 +1497,6 @@ function Flow({ id: propId }) {
         [selectedNode, setNodes],
     );
 
-    // const updateSelectedEdge = useCallback(
-    //     (field, value) => {
-    //         if (!selectedEdge) {
-    //             return;
-    //         }
-
-    //         const matched = edges.find((e) => e.id === selectedEdge.id);
-    //         const dataToUse = matched ? matched.data : selectedEdge.data;
-    //         const nextData = {
-    //             ...dataToUse,
-    //             [field]: value,
-    //         };
-    //         const isReturn = nextData.isReturn === true || String(nextData.isReturn) === 'true';
-    //         const hasCommand = nextData.command && nextData.command !== 'None' && nextData.command !== '0';
-
-    //         const nextEdge = {
-    //             ...(matched || selectedEdge),
-    //             label: formatTransitionLabel(nextData.actionName, nextData.statusName || nextData.statusId, nextData.command),
-    //             data: nextData,
-    //             animated: !hasCommand,
-    //             style: isReturn
-    //                 ? { stroke: '#dc2626', strokeWidth: 3 }
-    //                 : { stroke: '#2563eb', strokeWidth: 2 },
-    //             markerEnd: {
-    //                 type: MarkerType.ArrowClosed,
-    //                 width: 16,
-    //                 height: 16,
-    //                 color: isReturn ? '#dc2626' : '#2563eb',
-    //             },
-    //         };
-
-    //         setEdges((currentEdges) =>
-    //             currentEdges.map((edge) => (edge.id === selectedEdge.id ? nextEdge : edge))
-    //         );
-    //         setSelectedEdge(nextEdge);
-    //     },
-    //     [selectedEdge, edges, setEdges],
-    // );
 const updateSelectedEdge = useCallback(
    (fieldOrValues, value) => {
        if (!selectedEdge) return;
@@ -1558,6 +1517,11 @@ const updateSelectedEdge = useCallback(
                const isReturn =
                    nextData.isReturn === true ||
                    String(nextData.isReturn) === 'true';
+
+            const isReturnNeedAccepted =
+                   nextData.isReturnNeedAccepted === true ||
+                   String(nextData.isReturnNeedAccepted) === 'true';
+
                const isJump = String(nextData.transitionType || '').toLowerCase() === 'jump';
                const isExit = String(nextData.transitionType || '').toLowerCase() === 'exit';
                const hasCommand =
@@ -1702,14 +1666,19 @@ const updateSelectedEdge = useCallback(
 
     const buildUiLockConditionJson = useCallback((rules = []) => {
         if (!rules.length) return '{}';
-        const toJsonRule = (rule) => ({
-            type: 'uiLock',
-            trigger: rule.trigger || 'sameDepartmentReturn',
-            department: rule.department || '',
-            targets: getUiConditionGroupNames(rule).map((name) => ({ itemType: 'group', name })),
-            mode: rule.mode || 'ReadOnly',
-            condition: rule.condition || ''
-        });
+        const toJsonRule = (rule) => {
+            const trigger = rule.trigger || 'sameDepartmentReturn';
+            const groupNames = getUiConditionGroupNames(rule);
+            const effectiveGroupNames = trigger === 'enableOnlyGroup' ? groupNames.slice(0, 1) : groupNames;
+            return {
+                type: 'uiLock',
+                trigger,
+                department: rule.department || '',
+                targets: effectiveGroupNames.map((name) => ({ itemType: 'group', name })),
+                mode: trigger === 'enableOnlyGroup' ? 'Enabled' : (rule.mode || 'ReadOnly'),
+                condition: rule.condition || ''
+            };
+        };
         if (rules.length === 1) return JSON.stringify(toJsonRule(rules[0]), null, 2);
         return JSON.stringify({ type: 'uiLockGroup', children: rules.map(toJsonRule) }, null, 2);
     }, []);
@@ -1729,10 +1698,13 @@ const updateSelectedEdge = useCallback(
 
     const addUiLockRule = useCallback(() => {
         if (!selectedEdge) return;
-        const groupNames = uiLockGroupNames
+        const parsedGroupNames = uiLockGroupNames
             .split(/[\n,]/)
             .map((name) => name.trim())
             .filter(Boolean);
+        const groupNames = uiLockTrigger === 'enableOnlyGroup'
+            ? parsedGroupNames.slice(0, 1)
+            : parsedGroupNames;
         if (!groupNames.length) {
             notify('Nhập ít nhất một dxForm group name.', 'warning');
             return;
@@ -1744,7 +1716,7 @@ const updateSelectedEdge = useCallback(
             department: uiLockDepartment,
             groupNames,
             targets: groupNames.map((name) => ({ itemType: 'group', name })),
-            mode: uiLockMode
+            mode: uiLockTrigger === 'enableOnlyGroup' ? 'Enabled' : uiLockMode
         });
         const nextRules = [...(selectedEdge.data?.uiLockRules || []), newRule];
         const conditionRulesState = selectedEdge.data?.conditionRulesState || { rootOperator: 'AND', rules: [] };
@@ -2084,19 +2056,12 @@ const updateSelectedEdge = useCallback(
                     </select>
                 </label>
                 <label>
-                    <span>Assign Label (Nhãn phân công)</span>
-                    <input
-                        value={selectedNode.data.assignLabel || ''}
-                        onChange={(event) => updateSelectedNode('assignLabel', event.target.value)}
-                        placeholder="e.g. Assign to me"
-                    />
-                </label>
-                <label>
-                    <span>Order Label (Nhãn chỉ đạo)</span>
-                    <input
-                        value={selectedNode.data.orderLabel || ''}
-                        onChange={(event) => updateSelectedNode('orderLabel', event.target.value)}
-                        placeholder="e.g. Ý chỉ"
+                    <span>Node Instruction (Hướng dẫn)</span>
+                    <textarea
+                        rows={3}
+                        value={selectedNode.data.nodeInstruction ?? selectedNode.data.instruction ?? selectedNode.data.assignLabel ?? ''}
+                        onChange={(event) => updateSelectedNode('nodeInstruction', event.target.value)}
+                        placeholder="Nhập chú thích hoặc hướng dẫn khi workflow đọc tới node này"
                     />
                 </label>
                 <label>
@@ -2199,7 +2164,21 @@ const updateSelectedEdge = useCallback(
                                             value={rule.trigger || 'sameDepartmentReturn'}
                                             onChange={(e) => {
                                                 const currentRules = [...(selectedNode.data?.screenConditions || [])];
-                                                currentRules[idx] = { ...currentRules[idx], type: 'uiLock', trigger: e.target.value };
+                                                const trigger = e.target.value;
+                                                const groupNames = getUiConditionGroupNames(currentRules[idx]);
+                                                const effectiveGroupNames = trigger === 'enableOnlyGroup' ? groupNames.slice(0, 1) : groupNames;
+                                                currentRules[idx] = {
+                                                    ...currentRules[idx],
+                                                    type: 'uiLock',
+                                                    trigger,
+                                                    mode: trigger === 'enableOnlyGroup' ? 'Enabled' : currentRules[idx].mode,
+                                                    groupNames: effectiveGroupNames,
+                                                    groupNamesText: trigger === 'enableOnlyGroup'
+                                                        ? (effectiveGroupNames[0] || '')
+                                                        : currentRules[idx].groupNamesText,
+                                                    targets: effectiveGroupNames.map((name) => ({ itemType: 'group', name })),
+                                                    sectionId: effectiveGroupNames[0] || ''
+                                                };
                                                 updateSelectedNode('screenConditions', currentRules);
                                             }}
                                             style={{ padding: '4px 6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: 'white' }}
@@ -2207,6 +2186,7 @@ const updateSelectedEdge = useCallback(
                                             <option value="sameDepartmentReturn">Quay lại cùng department</option>
                                             <option value="enterDepartment">Đi vào department</option>
                                             <option value="always">Luôn áp dụng tại node</option>
+                                            <option value="enableOnlyGroup">Chỉ enable một group, disable các group còn lại</option>
                                         </select>
                                     </label>
 
@@ -2227,22 +2207,31 @@ const updateSelectedEdge = useCallback(
                                 </div>
 
                                 <label style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.75rem', marginBottom: '8px' }}>
-                                    <span>Tên dxForm group (mỗi dòng hoặc phân cách bằng dấu phẩy)</span>
+                                    <span>
+                                        {rule.trigger === 'enableOnlyGroup'
+                                            ? 'Tên dxForm group duy nhất được enable'
+                                            : 'Tên dxForm group (mỗi dòng hoặc phân cách bằng dấu phẩy)'}
+                                    </span>
                                     <textarea
                                         rows={3}
                                         value={rule.groupNamesText ?? getUiConditionGroupNames(rule).join('\n')}
                                         onChange={(e) => {
                                             const groupNamesText = e.target.value;
-                                            const groupNames = groupNamesText
+                                            const parsedGroupNames = groupNamesText
                                                 .split(/[\n,]/)
                                                 .map((name) => name.trim())
                                                 .filter(Boolean);
+                                            const groupNames = rule.trigger === 'enableOnlyGroup'
+                                                ? parsedGroupNames.slice(0, 1)
+                                                : parsedGroupNames;
                                             const currentRules = [...(selectedNode.data?.screenConditions || [])];
                                             currentRules[idx] = {
                                                 ...currentRules[idx],
                                                 type: 'uiLock',
                                                 targetItemType: 'group',
-                                                groupNamesText,
+                                                groupNamesText: rule.trigger === 'enableOnlyGroup'
+                                                    ? (groupNames[0] || '')
+                                                    : groupNamesText,
                                                 groupNames,
                                                 targets: groupNames.map((name) => ({ itemType: 'group', name })),
                                                 // Keep the first target readable by the legacy section consumer.
@@ -2259,7 +2248,8 @@ const updateSelectedEdge = useCallback(
                                     <label style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.75rem' }}>
                                         <span>Lock mode</span>
                                         <select
-                                            value={rule.mode || 'ReadOnly'}
+                                            value={rule.trigger === 'enableOnlyGroup' ? 'Enabled' : (rule.mode || 'ReadOnly')}
+                                            disabled={rule.trigger === 'enableOnlyGroup'}
                                             onChange={(e) => {
                                                 const currentRules = [...(selectedNode.data?.screenConditions || [])];
                                                 currentRules[idx] = { ...currentRules[idx], mode: e.target.value };
@@ -2267,6 +2257,7 @@ const updateSelectedEdge = useCallback(
                                             }}
                                             style={{ padding: '4px 6px', fontSize: '0.8rem', borderRadius: '4px', border: '1px solid #cbd5e1', background: 'white' }}
                                         >
+                                            <option value="Enabled">Enabled (Cho phép thao tác)</option>
                                             <option value="ReadOnly">ReadOnly (Chỉ đọc)</option>
                                             <option value="Disabled">Disabled (Vô hiệu hóa)</option>
                                             <option value="Hide">Hide (Ẩn)</option>
@@ -2380,6 +2371,7 @@ const updateSelectedEdge = useCallback(
                         onChange={(event) => updateSelectedEdge('actionName', event.target.value)}
                     />
                 </label>
+                
                 <label>
                     <span>Action code</span>
                     <input
@@ -2545,6 +2537,14 @@ const updateSelectedEdge = useCallback(
                         onChange={(event) => updateSelectedEdge('isReturn', event.target.checked)}
                     />
                     <span>Return transition (Quay lại)</span>
+                </label>
+                <label className="flow-checkbox">
+                    <input
+                        type="checkbox"
+                        checked={Boolean(selectedEdge.data?.isReturnNeedAccepted)}
+                        onChange={(event) => updateSelectedEdge('isReturnNeedAccepted', event.target.checked)}
+                    />
+                    <span>Is Return Accepted Needed</span>
                 </label>
                 <label>
                     <span>System Command (Lệnh hệ thống)</span>
@@ -2771,6 +2771,7 @@ const updateSelectedEdge = useCallback(
                                     <option value="sameDepartmentReturn">Quay lại cùng department</option>
                                     <option value="enterDepartment">Đi vào department</option>
                                     <option value="always">Luôn áp dụng</option>
+                                    <option value="enableOnlyGroup">Chỉ enable một group, disable các group còn lại</option>
                                 </select>
                             </label>
                             <label>
@@ -2782,7 +2783,7 @@ const updateSelectedEdge = useCallback(
                                 />
                             </label>
                             <label>
-                                <span>dxForm group names</span>
+                                <span>{uiLockTrigger === 'enableOnlyGroup' ? 'dxForm group duy nhất được enable' : 'dxForm group names'}</span>
                                 <textarea
                                     rows={3}
                                     value={uiLockGroupNames}
@@ -2792,7 +2793,12 @@ const updateSelectedEdge = useCallback(
                             </label>
                             <label>
                                 <span>Lock mode</span>
-                                <select value={uiLockMode} onChange={(e) => setUiLockMode(e.target.value)}>
+                                <select
+                                    value={uiLockTrigger === 'enableOnlyGroup' ? 'Enabled' : uiLockMode}
+                                    disabled={uiLockTrigger === 'enableOnlyGroup'}
+                                    onChange={(e) => setUiLockMode(e.target.value)}
+                                >
+                                    <option value="Enabled">Enabled (Cho phép thao tác)</option>
                                     <option value="ReadOnly">ReadOnly (Chỉ đọc)</option>
                                     <option value="Disabled">Disabled (Vô hiệu hóa)</option>
                                     <option value="Hide">Hide (Ẩn)</option>

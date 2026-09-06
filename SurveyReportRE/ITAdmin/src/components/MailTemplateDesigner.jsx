@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import appsettings from '../../../host.json';
 import grapesjs from "grapesjs";
 import { notify } from "../../../TMIVCom/src/components/Notification";
+import TemplatePlaceholderControl from "./TemplatePlaceholderControl";
+import { registerTemplatePlaceholder, serializeTemplateContent } from "./templatePlaceholderUtils";
 import "../styles/mailTemplateDesigner.css";
 import "grapesjs/dist/css/grapes.min.css";
 
@@ -134,6 +136,7 @@ const createTemplate = async () => {
             cc: "",
             active: true,
             templateContent: "",
+            clearContent: "",
             mailQuery: ""
         };
 
@@ -299,6 +302,16 @@ const loadTemplate = (template) => {
 
         }
 
+        .tmiv-placeholder {
+            display:inline;
+            border:1px dashed #7c3aed;
+            border-radius:4px;
+            background:#f3e8ff;
+            color:#6d28d9;
+            padding:1px 4px;
+            white-space:nowrap;
+        }
+
         `
 
     }
@@ -309,6 +322,7 @@ const loadTemplate = (template) => {
 
 
         editorInstance.current = editor;
+        registerTemplatePlaceholder(editor);
 
 
 
@@ -593,23 +607,14 @@ const saveTemplate = async () => {
         const editor = editorInstance.current;
         if (!editor || !selectedTemplate) return;
 
-        let html = editor.getHtml();
-        // ✅ remove wrapper div.mail-content
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
-
-        const mailContent = doc.querySelector(".mail-content");
-
-        if (mailContent) {
-            html = mailContent.innerHTML; // ✅ chỉ lấy nội dung bên trong
-        }
-        // convert {{}} → @@
-        html = html.replace(/\{\{(.*?)\}\}/g, (_, key) => `@@${key}`);
+        const serialized = serializeTemplateContent(editor.getHtml(), ".mail-content");
+        const html = serialized.html;
 
 
         const formItems = {
             ...selectedTemplate,
             templateContent: html,
+            clearContent: serialized.clearContent,
             mailQuery: sqlQuery ,  // ✅ thêm dòng này
             templateMailTitle: title,     // ✅ thêm
                 prefixTitleMail: prefix,   // ✅ thêm
@@ -786,7 +791,7 @@ const saveTemplate = async () => {
                         {templates.map(t => (
                             <div
                                 key={t.id}
-                                className="field-item"
+                                className={`field-item ${(selectedTemplate?.id || selectedTemplate?.Id) === (t.id || t.Id) ? "selected" : ""}`}
                                 onClick={() => loadTemplate(t)}
                             >
                                 {t.templateName}
@@ -843,23 +848,25 @@ const saveTemplate = async () => {
             />
 
 
-            <aside className="tool-panel">
+            <aside className="template-designer-inspector">
+            <section className="tool-panel">
 
                 <div className="tool-title">
                     Components
                 </div>
 
+                <TemplatePlaceholderControl editorInstance={editorInstance} />
 
                 <div id="gjs-blocks"></div>
 
 
-            </aside>
+            </section>
 
 
 
 
 
-            <div className="sql-box">
+            <section className="sql-box">
                 {/* TITLE */}
                 <input
                     
@@ -911,7 +918,8 @@ const saveTemplate = async () => {
                                 Kích hoạt Mẫu (Active)
                             </label>
                         </div>
-            </div>
+            </section>
+            </aside>
 
         </div>
                     </div>

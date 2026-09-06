@@ -296,7 +296,7 @@ const handleBlur = () => {
         
         <div className="comment-compose">
 
-                <div class="tmiv-mini-toolbar">
+                <div className="tmiv-mini-toolbar">
 
 <div
         className="tmiv-tool-item"
@@ -434,7 +434,7 @@ const handleBlur = () => {
         🔗
     </div>
       </div>
-        <div class="tmiv-mini-editor"
+        <div className="tmiv-mini-editor"
                 ref={editorRef}
                 contentEditable="true"
                 suppressContentEditableWarning

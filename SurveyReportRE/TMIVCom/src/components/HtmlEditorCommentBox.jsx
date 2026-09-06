@@ -221,7 +221,9 @@ const HtmlEditor = forwardRef(({
     onFocus,
     onBlur,
 
-    disableComment = false,
+    disableComment: disableCommentProp = false,
+    disabled = false,
+    disabledText = "Commenting is disabled",
 
     showSendButton = true,
     sendLabel = "Send Comment",
@@ -267,11 +269,13 @@ const HtmlEditor = forwardRef(({
     );
 
     const [comments, setComments] = useState(Array.isArray(items) ? items : []);
-    // const [disableComment, setDisableComment] = useState(Boolean(disableComment));
+    const [disableComment, setDisableComment] = useState(
+        Boolean(disableCommentProp || disabled)
+    );
 
     useEffect(() => {
-        setDisableComment(Boolean(disableComment));
-    }, [disableComment]);
+        setDisableComment(Boolean(disableCommentProp || disabled));
+    }, [disableCommentProp, disabled]);
 
     useEffect(() => {
         setComments(Array.isArray(items) ? items : []);
@@ -693,10 +697,12 @@ const cropperRef =
     };
 
     const focusEditor = () => {
+        if (disableComment) return;
         editorRef.current?.focus();
     };
 
     const insertHtml = (html) => {
+        if (disableComment) return;
         focusEditor();
         document.execCommand(
             "insertHTML",
@@ -707,6 +713,7 @@ const cropperRef =
     };
 
     const command = (cmd, param = null) => {
+        if (disableComment) return;
 
         focusEditor();
 
@@ -1321,10 +1328,10 @@ useEffect(() => {
                     return;
 
                 case "disableComment":
+                case "disabled":
                     if (arguments.length === 1) {
                         return disableComment;
                     }
-
                     setDisableComment(Boolean(value));
                     return;
 
@@ -1429,9 +1436,18 @@ useEffect(() => {
     }));
 
     return (
-        <div className="jira-comment-box">
-            {!disableComment && (
+        <div
+            className={`jira-comment-box ${disableComment ? "is-comment-disabled" : ""}`}
+            aria-disabled={disableComment}
+        >
             <div className="jira-comment-editor-wrap">
+
+                {disableComment && (
+                    <div className="tmiv-comment-disabled-status" role="status">
+                        <i className="fa fa-lock" aria-hidden="true" />
+                        <span>{disabledText}</span>
+                    </div>
+                )}
 
                 <div className="tmiv-html-editor-route">
 
@@ -1839,6 +1855,8 @@ useEffect(() => {
                         <textarea
                             className={`tmiv-html-source ${isFocused ? "is-focused" : ""}`}
                             value={sourceHtml}
+                            readOnly={disableComment}
+                            aria-readonly={disableComment}
                             onFocus={handleFocusIn}
                             onBlur={handleFocusOut}
                             onChange={(e) => {
@@ -1867,7 +1885,8 @@ useEffect(() => {
 
                     <div
                         ref={editorRef}
-                        contentEditable
+                        contentEditable={!disableComment}
+                        aria-readonly={disableComment}
                         suppressContentEditableWarning
                         onFocus={handleFocusIn}
                         onBlur={handleFocusOut}
@@ -1883,7 +1902,7 @@ useEffect(() => {
                                 update();
                             }
                         }}
-                        className={`tmiv-html-content ${isFocused ? "is-focused" : ""}`}
+                        className={`tmiv-html-content ${isFocused ? "is-focused" : ""} ${disableComment ? "is-disabled" : ""}`}
                         style={{
                             minHeight: height,
                             height: height,
@@ -1894,7 +1913,7 @@ useEffect(() => {
                         }}
                     />
 
-                    {!showSource && selectedImage && imageRect && (
+                    {!disableComment && !showSource && selectedImage && imageRect && (
                         <div
                             className="tmiv-image-overlay"
                             style={{
@@ -1998,6 +2017,7 @@ useEffect(() => {
                                     type="button"
                                     className="comment-send-btn"
                                     title={sendLabel || "Send"}
+                                    disabled={disableComment}
                                     onClick={addComment}
                                     style={{
                                         position: "static",
@@ -2030,7 +2050,6 @@ useEffect(() => {
      
 
             </div>
-            )}
         </div>
     );
 });

@@ -23,8 +23,7 @@ Note:
         height: calc(90vh);
     }
 
-    #qt-overviewRoot_@(ViewData["Id"]).qt-render-loading .cardBody,
-    #qt-overviewRoot_@(ViewData["Id"]).qt-render-loading .qt-cardHeader {
+    #qt-overviewRoot_@(ViewData["Id"]).qt-render-loading .cardBody {
         pointer-events: none;
         user-select: none;
     }
@@ -32,7 +31,7 @@ Note:
     .qt-render-overlay {
         position: absolute;
         inset: 0;
-        z-index: 120;
+        z-index: var(--z-index-low);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -218,27 +217,35 @@ Note:
 
         var deptData = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
         var remarkBoxs = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
-
+        var quotationData = new Object();
+        var tatObject = new Object();
         state.quoteDetails = {};
 
         const quotationRenderGate = (function () {
             var sequence = 0;
             var startedAt = 0;
             var $root = $(`#${quotationOverviewRootId}`);
-            var $overlay = $root.children(".qt-render-overlay");
+            var $loadingHost = $root.find("> .card > .cardBody.overview-wrap").first();
+            var $overlay = $loadingHost.children(".qt-render-overlay");
 
             if (!$overlay.length) {
                 $overlay = $(`
                     <div id="${formModuleKeyQt}-renderOverlay_${quotationViewInstanceId}" class="qt-render-overlay" role="status" aria-live="polite" aria-busy="true">
-                        <div class="qt-loader-panel">
+                        <div class="qt-loader-panel overview-section-loader">
+                            <div class="dept-section-action-loader" aria-hidden="true">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <div class="qt-loader-message dept-section-action-message">Please wait…</div>
+                            <!-- LEGACY OVERVIEW INDICATOR - rollback when needed:
                             <div class="qt-loader-icon-host" aria-hidden="true">
                                 <div class="qt-loader-default-icon"></div>
                             </div>
                             <div class="qt-loader-message">Please wait…</div>
                             <div class="qt-render-progress"><span></span></div>
+                            -->
                         </div>
                     </div>
-                `).appendTo($root);
+                `).appendTo($loadingHost);
             }
 
             function setLoadingIcon(source, options) {
@@ -277,7 +284,9 @@ Note:
 
             function setPhase(_message, progress) {
                 progress = Math.max(0, Math.min(100, Number(progress) || 0));
-                $overlay.find(".qt-render-progress > span").css("width", `${Math.max(progress, 8)}%`);
+                $overlay.find(".qt-loader-message").first().text(_message || "Please wait…");
+                // LEGACY OVERVIEW PROGRESS:
+                // $overlay.find(".qt-render-progress > span").css("width", `${Math.max(progress, 8)}%`);
             }
 
             function resetProgressiveContent() {
@@ -449,7 +458,7 @@ Note:
         async function renderQuotationPersonInCharge() {
             const q = getSelectedModel();
             if (!q) return;
-            renderDeptCallouts(PIC_JSON);
+            renderDeptCallouts(PIC_JSON, document.getElementById(quotationOverviewRootId));
             let stageName = "";
             try {
                 stageName = stageAccount && stageAccount !== "(Unassigned)"
@@ -468,7 +477,7 @@ Note:
             );
         }
 
-        function loadSelectedWorkflow() {
+        function selfLoadSelectedWorkflow() {
             return window.WorkflowLoader.load({
                 moduleCode: viewIdModulePrefix.quotation,
                 id: @ViewData["Id"],
@@ -484,7 +493,11 @@ Note:
                 submitNextStep: submitNextStep,
                 returnToStep: returnToStep,
                 formModuleKey: formModuleKeyQt,
-                reload: true
+                reload: true,
+                data: {
+                    formItems: quotationData,
+                    tatObject: tatObject
+                }
             });
             // if (!state.selectedGuid) return $.Deferred().resolve().promise();
 
@@ -914,7 +927,8 @@ Note:
                     contentType: "application/json"
                 });
                 quotationRenderGate.setPhase("Quotation data received…", 38);
-
+                quotationData = data[0];
+                tatObject = tryParseJSON(quotationData.turnAroundTimeAttributes, "Submit Button Problem") || {};
                 const rows = Array.isArray(data)
                     ? data.map(item => ({ ...item, pIC: item.pic }))
                     : [];
@@ -990,7 +1004,7 @@ Note:
                 await quotationRenderGate.complete(renderToken);
                 await quotationFormStages.enter("personInCharge");
                 await renderQuotationPersonInCharge();
-                await loadSelectedWorkflow();
+                await selfLoadSelectedWorkflow();
                 invalidateSectionCommentCache(state.selectedGuid);
                 await quotationFormStages.enter("comments");
                 await loadQuotationSectionComments();
@@ -1002,6 +1016,7 @@ Note:
         }
 
         window.OverviewViewRegistry[quotationViewInstanceKey].reload = reloadQuotationInstance;
+        window.OverviewViewRegistry[quotationViewInstanceKey].reloadWorkflow = selfLoadSelectedWorkflow;
         var quotationDepartmentRefreshes = {};
         function refreshQuotationDepartment(dept) {
             dept = String(dept || "").trim().toUpperCase();
@@ -1032,7 +1047,7 @@ Note:
                 PIC_JSON = q.pIC || "{}";
                 var picMap = parsePicMap(PIC_JSON);
                 stageAccount = picMap[stageDept] || "(Unassigned)";
-
+                quotationData = q;
                 deptData[dept] = { ...q, id: q.id, sectionName: dept, code: q.quotationCode };
                 var formId = window.QuotationIdManager.form(dept, @ViewData["Id"]);
                 var form = $(`#${formId}`).dxForm("instance");
@@ -1274,21 +1289,25 @@ Note:
         }
 
         function applyNodeHighlights() {
-            $(".dept-node").removeClass("status focus");
+            const $tree = $(`#${QuotationIdManager.deptTree(@ViewData["Id"])}`);
+            $tree.find(".dept-node").removeClass("status focus");
             // if (stageDept == "")
             //    $(`.dept-node[data-key='${workflowStatus}']`).addClass("status")
             // else 
-            $(`.dept-node[data-key='${stageDept}']`).addClass("status");
-            $(`.dept-node[data-key='${focusDept}']`).addClass("focus");
+            $tree.find(`.dept-node[data-key='${stageDept}']`).addClass("status");
+            $tree.find(`.dept-node[data-key='${focusDept}']`).addClass("focus");
         }
 
         function applySectionFocusHighlight() {
-            $(".dept-section").removeClass("focused");
+            $(`#${quotationOverviewRootId}`).find(".dept-section").removeClass("focused");
             $(`#${formModuleKeyQt}-sec_${focusDept}_@ViewData["Id"]`).addClass("focused");
         }
 
         function setupDeptTree() {
-            $(`.${formModuleKeyQt}-dept-tree.dept-node`).off("click.tree").on("click.tree", function (event) {
+            const $tree = $(`#${QuotationIdManager.deptTree(@ViewData["Id"])}`);
+            $tree.find(`.${formModuleKeyQt}-dept-tree.dept-node`)
+                .off("click.tree")
+                .on("click.tree", function (event) {
                 if ($(event.target).closest(".dept-subnode").length) return;
                 const key = $(this).data("key");
                 focusDept = key;
@@ -1299,7 +1318,7 @@ Note:
                 updateHints();
                 scrollToDept(formModuleKeyQt, { id: `${focusDept}`, keyId: "@ViewData["Id"]" });
                 setSectionCollapsed(focusDept, false);
-            });
+                });
             bindDeptTreeScrollSpy(formModuleKeyQt, "@ViewData["Id"]");
         }
 
@@ -1681,7 +1700,9 @@ Note:
                 var toggleHideWorkflow = false;
 
                 $(`#${window.QuotationIdManager.panelHoverInFlow(@ViewData["Id"])}`).dxButton({
-                    text: "Workflow",
+                    icon: "fas fa-project-diagram",
+                    hint: "Workflow",
+                    elementAttr: { "aria-label": "Workflow" },
                     readOnly: true,
                     type: "normal",
                     stylingMode: "contained",
@@ -1899,7 +1920,7 @@ Note:
             firstRender = false;
             await quotationFormStages.enter("personInCharge");
             await renderQuotationPersonInCharge();
-            await loadSelectedWorkflow();
+            await selfLoadSelectedWorkflow();
             invalidateSectionCommentCache(state.selectedGuid);
             await quotationFormStages.enter("comments");
             await loadQuotationSectionComments();

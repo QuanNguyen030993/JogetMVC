@@ -8,6 +8,7 @@ import Flow from './components/Flow';
 import SerilogViewer from './components/SerilogViewer';
 import SysTable from './components/SysTable';
 import DataGridFieldDesigner from './components/DataGridFieldDesigner';
+import DataGridConfigList from './components/DataGridConfigList';
 import MenuDesigner from './components/MenuDesigner';
 import UserManagement from './components/UserManagement';
 import OverviewPanel from './components/OverviewPanel';
@@ -22,6 +23,7 @@ import SqlStoredProcedure from './components/SqlStoredProcedure';
 import NotificationTemplate from './components/NotificationTemplate';
 import NotificationTemplateDesigner from './components/NotificationTemplateDesigner';
 import DatabaseManagement from './components/DatabaseManagement';
+import ReportBuilder from './components/ReportBuilder';
 import './styles/flow.css';
 import './styles/com.all.css';
 import './styles/serilogs.css';
@@ -36,8 +38,10 @@ import './styles/notificationTemplateDesigner.css';
 import './styles/databasemanagement.css';
 import './styles/turnAroundTimeAnalytics.css';
 import './styles/usermanagement.css';
+import './styles/reportbuilder.css';
 import { notify, ToastContainer } from '../../TMIVCom/src/components/Notification';
 import "./fonts/css/all.min.css";
+import './styles/admin-layout.css';
 
 // Override global window.alert to route through TMIVCom Notification (right bottom)
 if (typeof window !== 'undefined') {
@@ -138,6 +142,7 @@ const loginContextValue = (key) => {
 };
 
 function App() {
+  const reportPreviewMode = import.meta.env.DEV && new URLSearchParams(window.location.search).get('preview') === 'report';
   const [loginStats,setLoginStats]=useState([]);
   const [disk,setDisk]=useState(0);
   const [ticketData,setTicketData]=useState([]);
@@ -151,13 +156,14 @@ function App() {
   const [currentDepartment, setCurrentDepartment] = useState(() => String(loginContextValue('_role') || '').trim());
   const [isImpersonating, setIsImpersonating] = useState(() => String(loginContextValue('_isDebugMode') || '').toLowerCase() === 'true');
   const [returningAccount, setReturningAccount] = useState(false);
-  const [adminAccess, setAdminAccess] = useState('checking');
+  const [adminAccess, setAdminAccess] = useState(reportPreviewMode ? 'allowed' : 'checking');
   const [serverRole, setServerRole] = useState('');
   const [serverEnvironment, setServerEnvironment] = useState('');
   const [jogetEnvironment, setJogetEnvironment] = useState('');
 //  const [appsettings, setAppsettings] = useState(null);
 
   useEffect(() => {
+    if (reportPreviewMode) return undefined;
     let cancelled = false;
     const loadLoginContext = async () => {
       try {
@@ -195,7 +201,7 @@ function App() {
     };
     loadLoginContext();
     return () => { cancelled = true; };
-  }, []);
+  }, [reportPreviewMode]);
 
   const returnToAdminAccount = async () => {
     setReturningAccount(true);
@@ -389,7 +395,7 @@ function App() {
     detail: onlineUsers.length ? 'SignalR sessions currently online' : 'No active SignalR session'
   }), [onlineUsers]);
 
-  const [activeSection, setActiveSection] = useState('dashboard');
+  const [activeSection, setActiveSection] = useState(reportPreviewMode ? 'report-builder' : 'dashboard');
   const [selectedWorkflowId, setSelectedWorkflowId] = useState(null);
 
   const menuItems = [
@@ -417,6 +423,7 @@ function App() {
     { id: 'sladesigner', label: 'SLA' },
     { id: 'sql-stored', label: 'Stored Procedure Management' },
     { id: 'database-mgmt', label: 'Backup & Script Database' },
+    { id: 'report-builder', label: 'Report Designer' },
     { id: 'formfielddesigner', label: 'Views cshtml edit - Not working' },
 
   ];
@@ -484,6 +491,8 @@ function App() {
         return <SqlStoredProcedure />;
       case 'database-mgmt':
         return <DatabaseManagement />;
+      case 'report-builder':
+        return <ReportBuilder />;
       case 'datagridfielddesigner':
         return <DataGridFieldDesigner />;
       case 'formfielddesigner':
@@ -497,7 +506,7 @@ function App() {
           </div>
         );
       case 'datagridconfig-grid':
-        return <CustomGrid modelName="DataGridConfig" gridType="System" apiBaseUrl={appsettings.UrlConfig.Host} editMode="batch" />;
+        return <DataGridConfigList />;
       case 'menudesigner':
         return <MenuDesigner />;
       case 'menu-grid':
@@ -511,7 +520,7 @@ function App() {
       case 'notification-hub':
         return <NotificationHub />;
       case 'notification-template':
-        return <NotificationTemplate />;
+        return <NotificationTemplate onOpenDesigner={() => setActiveSection('notification-designer')} />;
       case 'notification-designer':
         return <NotificationTemplateDesigner />;
       case 'sladesigner':
@@ -593,7 +602,7 @@ function App() {
         </nav>
       </aside>
 
-      <main className="main-content">
+      <main className={`main-content section-${activeSection}`}>
         {content}
       </main>
       <ToastContainer />

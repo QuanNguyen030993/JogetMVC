@@ -21,7 +21,14 @@ namespace ERPCore.Models.Business.Migration.Config
         public Workflow? Workflow { get; set; }
         public Status? Status { get; set; }
         public SLA? SLA { get; set; }
+        public HardCodeObject? HardCodeObject { get; set; }
         public Dictionary<string, SiteConfig> Sites { get; set; } = new Dictionary<string, SiteConfig>();
+    }
+    public class HardCodeObject
+    {
+        public string Note { get; set; } = "";
+        public string Remark { get; set; } = "";
+        public string Comment { get; set; } = "";
     }
     public class SLA
     {

@@ -1,100 +1,497 @@
-import React, { useState } from "react";
-import { createRoot } from "react-dom/client";
+import React, {
+    forwardRef,
+    useEffect,
+    useImperativeHandle,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState
+} from "react";
+import { createPortal } from "react-dom";
 
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const pad = value => String(value).padStart(2, "0");
 
-function DateBox({
+const toDateKey = date => date instanceof Date && !Number.isNaN(date.getTime())
+    ? `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+    : "";
+
+const fromDateKey = value => {
+    if (!value) return null;
+    if (value instanceof Date) {
+        return Number.isNaN(value.getTime())
+            ? null
+            : new Date(value.getFullYear(), value.getMonth(), value.getDate());
+    }
+
+    const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return null;
+
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const sameDay = (left, right) => toDateKey(left) === toDateKey(right);
+
+const parseRangeValue = value => {
+    if (Array.isArray(value)) return [fromDateKey(value[0]), fromDateKey(value[1])];
+    if (value && typeof value === "object") {
+        return [
+            fromDateKey(value.startDate ?? value.start ?? value.from),
+            fromDateKey(value.endDate ?? value.end ?? value.to)
+        ];
+    }
+    return [null, null];
+};
+
+const buildCalendarDays = viewDate => {
+    const firstDay = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+    const mondayOffset = (firstDay.getDay() + 6) % 7;
+    const gridStart = new Date(firstDay);
+    gridStart.setDate(firstDay.getDate() - mondayOffset);
+
+    return Array.from({ length: 42 }, (_, index) => {
+        const date = new Date(gridStart);
+        date.setDate(gridStart.getDate() + index);
+        return date;
+    });
+};
+
+const BodyPortal = ({ enabled, children }) => (
+    enabled && typeof document !== "undefined"
+        ? createPortal(children, document.body)
+        : children
+);
+
+const DateBox = forwardRef(({
     value = "",
     onChange,
-    placeholder = "Select date"
-}) {
+    onValueChanged,
+    placeholder = "Select date",
+    range = false,
+    mode,
+    selectionMode,
+    type,
+    locale = "en-GB",
+    min,
+    max,
+    disabled = false,
+    readOnly = false,
+    clearable = true,
+    wheelNavigation = true,
+    inline = false,
+    showFooter = true,
+    name,
+    startName,
+    endName,
+    className = "",
+    width
+}, ref) => {
+    const isRange = range || mode === "range" || selectionMode === "range" || type === "range";
+    const containerRef = useRef(null);
+    const popoverRef = useRef(null);
+    const previousValueRef = useRef(value);
+    const initialRange = parseRangeValue(value);
+    const initialSingle = isRange ? null : fromDateKey(value);
+    const currentValueRef = useRef(isRange
+        ? { startDate: toDateKey(initialRange[0]), endDate: toDateKey(initialRange[1]) }
+        : toDateKey(initialSingle));
+    const [startDate, setStartDate] = useState(isRange ? initialRange[0] : initialSingle);
+    const [endDate, setEndDate] = useState(isRange ? initialRange[1] : null);
+    const [viewDate, setViewDate] = useState(initialRange[0] || initialSingle || new Date());
+    const [opened, setOpened] = useState(false);
+    const [calendarView, setCalendarView] = useState("days");
+    const [popoverPosition, setPopoverPosition] = useState({
+        top: 0,
+        left: 0,
+        visibility: "hidden"
+    });
 
-    const [val, setVal] = useState(value);
+    const minDate = useMemo(() => fromDateKey(min), [min]);
+    const maxDate = useMemo(() => fromDateKey(max), [max]);
+    const calendarDays = useMemo(() => buildCalendarDays(viewDate), [viewDate]);
 
+    useEffect(() => {
+        if (isRange) {
+            const [nextStart, nextEnd] = parseRangeValue(value);
+            setStartDate(nextStart);
+            setEndDate(nextEnd);
+            currentValueRef.current = { startDate: toDateKey(nextStart), endDate: toDateKey(nextEnd) };
+            if (nextStart) setViewDate(nextStart);
+        } else {
+            const nextDate = fromDateKey(value);
+            setStartDate(nextDate);
+            setEndDate(null);
+            currentValueRef.current = toDateKey(nextDate);
+            if (nextDate) setViewDate(nextDate);
+        }
+        previousValueRef.current = value;
+    }, [value, isRange]);
 
-    const change = (e) => {
+    useEffect(() => {
+        if (!opened) return undefined;
 
-        const v = e.target.value;
+        const closeOnOutsideClick = event => {
+            const clickedTrigger = containerRef.current?.contains(event.target);
+            const clickedPopover = popoverRef.current?.contains(event.target);
+            if (!clickedTrigger && !clickedPopover) setOpened(false);
+        };
+        const closeOnEscape = event => {
+            if (event.key === "Escape") setOpened(false);
+        };
 
-        setVal(v);
+        document.addEventListener("mousedown", closeOnOutsideClick);
+        document.addEventListener("keydown", closeOnEscape);
+        return () => {
+            document.removeEventListener("mousedown", closeOnOutsideClick);
+            document.removeEventListener("keydown", closeOnEscape);
+        };
+    }, [opened]);
 
-        onChange?.(v);
+    useLayoutEffect(() => {
+        if (!opened || inline) return undefined;
+
+        let animationFrameId;
+        const viewportMargin = 12;
+        const triggerGap = 8;
+
+        const updatePopoverPosition = () => {
+            window.cancelAnimationFrame(animationFrameId);
+            animationFrameId = window.requestAnimationFrame(() => {
+                const trigger = containerRef.current;
+                const popover = popoverRef.current;
+                if (!trigger || !popover) return;
+
+                const triggerRect = trigger.getBoundingClientRect();
+                const popoverRect = popover.getBoundingClientRect();
+                const popoverWidth = popoverRect.width || 320;
+                const popoverHeight = popoverRect.height || 390;
+
+                const maxLeft = Math.max(viewportMargin, window.innerWidth - popoverWidth - viewportMargin);
+                const left = Math.min(Math.max(triggerRect.left, viewportMargin), maxLeft);
+
+                const topBelow = triggerRect.bottom + triggerGap;
+                const topAbove = triggerRect.top - popoverHeight - triggerGap;
+                const canOpenBelow = topBelow + popoverHeight <= window.innerHeight - viewportMargin;
+                const canOpenAbove = topAbove >= viewportMargin;
+                const top = canOpenBelow || !canOpenAbove
+                    ? Math.min(topBelow, Math.max(viewportMargin, window.innerHeight - popoverHeight - viewportMargin))
+                    : topAbove;
+
+                setPopoverPosition({ top, left, visibility: "visible" });
+            });
+        };
+
+        updatePopoverPosition();
+        window.addEventListener("resize", updatePopoverPosition);
+        document.addEventListener("scroll", updatePopoverPosition, true);
+
+        return () => {
+            window.cancelAnimationFrame(animationFrameId);
+            window.removeEventListener("resize", updatePopoverPosition);
+            document.removeEventListener("scroll", updatePopoverPosition, true);
+        };
+    }, [opened, inline, calendarView, viewDate, startDate, endDate]);
+
+    const createValue = (start, end) => isRange
+        ? { startDate: toDateKey(start), endDate: toDateKey(end) }
+        : toDateKey(start);
+
+    const emitValue = (start, end, event) => {
+        const nextValue = createValue(start, end);
+        currentValueRef.current = nextValue;
+        onChange?.(nextValue);
+        onValueChanged?.({ value: nextValue, previousValue: previousValueRef.current, event });
+        previousValueRef.current = nextValue;
     };
 
+    const applyInternalValue = nextValue => {
+        if (isRange) {
+            const [nextStart, nextEnd] = parseRangeValue(nextValue);
+            setStartDate(nextStart);
+            setEndDate(nextEnd);
+            currentValueRef.current = { startDate: toDateKey(nextStart), endDate: toDateKey(nextEnd) };
+            if (nextStart) setViewDate(nextStart);
+        } else {
+            const nextDate = fromDateKey(nextValue);
+            setStartDate(nextDate);
+            setEndDate(null);
+            currentValueRef.current = toDateKey(nextDate);
+            if (nextDate) setViewDate(nextDate);
+        }
+        previousValueRef.current = nextValue;
+    };
+
+    useImperativeHandle(ref, () => ({
+        option(optionName, nextValue) {
+            if (optionName !== "value") return undefined;
+            if (arguments.length === 1) return currentValueRef.current;
+            applyInternalValue(nextValue);
+            return undefined;
+        },
+        getValue: () => currentValueRef.current,
+        focus: () => containerRef.current?.querySelector(".tmivcom-datebox-trigger")?.focus(),
+        open: () => {
+            if (disabled || readOnly) return;
+            setPopoverPosition(current => ({ ...current, visibility: "hidden" }));
+            setOpened(true);
+        },
+        close: () => setOpened(false)
+    }), [startDate, endDate, disabled, readOnly, isRange]);
+
+    const isDisabledDate = date => (
+        (minDate && date < minDate) || (maxDate && date > maxDate)
+    );
+
+    const selectDate = (date, event) => {
+        if (isDisabledDate(date)) return;
+
+        if (!isRange) {
+            setStartDate(date);
+            emitValue(date, null, event);
+            setOpened(false);
+            return;
+        }
+
+        if (!startDate || endDate) {
+            setStartDate(date);
+            setEndDate(null);
+            emitValue(date, null, event);
+            return;
+        }
+
+        const nextStart = date < startDate ? date : startDate;
+        const nextEnd = date < startDate ? startDate : date;
+        setStartDate(nextStart);
+        setEndDate(nextEnd);
+        emitValue(nextStart, nextEnd, event);
+        setOpened(false);
+    };
+
+    const clearValue = event => {
+        event?.stopPropagation();
+        setStartDate(null);
+        setEndDate(null);
+        emitValue(null, null, event);
+    };
+
+    const selectToday = event => {
+        const today = new Date();
+        if (!isDisabledDate(today)) selectDate(today, event);
+    };
+
+    const formatDisplayDate = date => date
+        ? new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", year: "numeric" }).format(date)
+        : "";
+
+    const displayValue = isRange
+        ? [formatDisplayDate(startDate), formatDisplayDate(endDate)].filter(Boolean).join(" – ")
+        : formatDisplayDate(startDate);
+    const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(viewDate);
+    const monthNames = useMemo(() => Array.from({ length: 12 }, (_, monthIndex) => (
+        new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(2024, monthIndex, 1))
+    )), [locale]);
+    const yearPageStart = Math.floor(viewDate.getFullYear() / 10) * 10;
+    const visibleYears = Array.from({ length: 12 }, (_, index) => yearPageStart + index);
+    const calendarTitle = calendarView === "days"
+        ? monthLabel
+        : calendarView === "months"
+            ? String(viewDate.getFullYear())
+            : `${yearPageStart} – ${yearPageStart + 11}`;
+
+    const moveCalendar = direction => {
+        setViewDate(current => {
+            if (calendarView === "years") {
+                return new Date(current.getFullYear() + (direction * 10), current.getMonth(), 1);
+            }
+            if (calendarView === "months") {
+                return new Date(current.getFullYear() + direction, current.getMonth(), 1);
+            }
+            return new Date(current.getFullYear(), current.getMonth() + direction, 1);
+        });
+    };
+
+    const handleCalendarWheel = event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const direction = event.deltaY > 0 ? 1 : -1;
+        if (calendarView === "days" && (event.ctrlKey || event.shiftKey)) {
+            setViewDate(current => new Date(current.getFullYear() + direction, current.getMonth(), 1));
+            return;
+        }
+        moveCalendar(direction);
+    };
+
+    const zoomOutCalendar = () => {
+        setCalendarView(current => current === "days" ? "months" : "years");
+    };
+
+    useEffect(() => {
+        const popover = popoverRef.current;
+        if (!popover || !wheelNavigation || (!opened && !inline)) return undefined;
+
+        popover.addEventListener("wheel", handleCalendarWheel, { passive: false });
+        return () => popover.removeEventListener("wheel", handleCalendarWheel);
+    }, [opened, inline, wheelNavigation, calendarView]);
 
     return (
+        <div
+            ref={containerRef}
+            className={`tmivcom-datebox ${opened ? "is-open" : ""} ${inline ? "is-inline" : ""} ${disabled ? "is-disabled" : ""} ${className}`.trim()}
+            style={width ? { width } : undefined}
+        >
+            {!inline && <div className="tmivcom-datebox-control">
+            <button
+                type="button"
+                className="tmivcom-datebox-trigger"
+                disabled={disabled}
+                aria-haspopup="dialog"
+                aria-expanded={opened}
+                onClick={() => {
+                    if (readOnly) return;
+                    if (!opened) {
+                        setCalendarView("days");
+                        setPopoverPosition(current => ({ ...current, visibility: "hidden" }));
+                    }
+                    setOpened(current => !current);
+                }}
+            >
+                <svg className="tmivcom-datebox-calendar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 3v3m10-3v3M4.5 9h15M6 5h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
+                </svg>
+                <span className={`tmivcom-datebox-value ${displayValue ? "" : "is-placeholder"}`}>
+                    {displayValue || (isRange ? "Select date range" : placeholder)}
+                </span>
+                <svg className="tmivcom-datebox-chevron" viewBox="0 0 20 20" aria-hidden="true">
+                    <path d="m6 8 4 4 4-4" />
+                </svg>
+            </button>
+            {clearable && (startDate || endDate) && !disabled && !readOnly && (
+                <button type="button" className="tmivcom-datebox-clear" onClick={clearValue} title="Clear date" aria-label="Clear date">×</button>
+            )}
+            </div>}
 
-        <div className="tmivcom-datebox">
+            {name && !isRange && <input type="hidden" name={name} value={toDateKey(startDate)} />}
+            {isRange && (
+                <>
+                    {(startName || name) && <input type="hidden" name={startName || `${name}Start`} value={toDateKey(startDate)} />}
+                    {(endName || name) && <input type="hidden" name={endName || `${name}End`} value={toDateKey(endDate)} />}
+                </>
+            )}
 
-            <div className="tmivcom-datebox-input">
+            {(opened || inline) && (
+                <BodyPortal enabled={!inline}>
+                    <div
+                        ref={popoverRef}
+                        className={`tmivcom-datebox-popover ${inline ? "is-inline" : "is-portalled"}`}
+                        style={!inline ? popoverPosition : undefined}
+                        role="dialog"
+                        aria-label={isRange ? "Choose date range" : "Choose date"}
+                    >
+                    <div className="tmivcom-datebox-header">
+                        <button type="button" className="tmivcom-datebox-nav" onClick={() => moveCalendar(-1)} aria-label="Previous period">‹</button>
+                        <button
+                            type="button"
+                            className="tmivcom-datebox-title"
+                            onClick={zoomOutCalendar}
+                            title="Click to choose month or year"
+                        >
+                            {calendarTitle}
+                        </button>
+                        <button type="button" className="tmivcom-datebox-nav" onClick={() => moveCalendar(1)} aria-label="Next period">›</button>
+                    </div>
 
-                <input
-                    type="date"
-                    value={val}
-                    placeholder={placeholder}
-                    onChange={change}
-                />
+                    {calendarView === "days" && (
+                        <>
+                            <div className="tmivcom-datebox-weekdays">
+                                {DAY_NAMES.map(day => <span key={day}>{day}</span>)}
+                            </div>
+                            <div className="tmivcom-datebox-days">
+                                {calendarDays.map(date => {
+                                    const key = toDateKey(date);
+                                    const isStart = startDate && sameDay(date, startDate);
+                                    const isEnd = endDate && sameDay(date, endDate);
+                                    const inRange = isRange && startDate && endDate && date > startDate && date < endDate;
+                                    const outsideMonth = date.getMonth() !== viewDate.getMonth();
 
-            </div>
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={key}
+                                            className={[
+                                                "tmivcom-datebox-day",
+                                                outsideMonth ? "is-outside" : "",
+                                                sameDay(date, new Date()) ? "is-today" : "",
+                                                inRange ? "is-in-range" : "",
+                                                isStart ? "is-range-start" : "",
+                                                isEnd ? "is-range-end" : ""
+                                            ].filter(Boolean).join(" ")}
+                                            disabled={isDisabledDate(date)}
+                                            onClick={event => selectDate(date, event)}
+                                            aria-label={formatDisplayDate(date)}
+                                        >
+                                            {date.getDate()}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    )}
 
+                    {calendarView === "months" && (
+                        <div className="tmivcom-datebox-period-grid">
+                            {monthNames.map((monthName, monthIndex) => (
+                                <button
+                                    type="button"
+                                    key={monthName}
+                                    className={monthIndex === viewDate.getMonth() ? "is-selected" : ""}
+                                    onClick={() => {
+                                        setViewDate(current => new Date(current.getFullYear(), monthIndex, 1));
+                                        setCalendarView("days");
+                                    }}
+                                >
+                                    {monthName}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {calendarView === "years" && (
+                        <div className="tmivcom-datebox-period-grid">
+                            {visibleYears.map(year => (
+                                <button
+                                    type="button"
+                                    key={year}
+                                    className={year === viewDate.getFullYear() ? "is-selected" : ""}
+                                    onClick={() => {
+                                        setViewDate(current => new Date(year, current.getMonth(), 1));
+                                        setCalendarView("months");
+                                    }}
+                                >
+                                    {year}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {showFooter && <div className="tmivcom-datebox-footer">
+                        <span className="tmivcom-datebox-hint">
+                            {calendarView === "days"
+                                ? (isRange && startDate && !endDate ? "Choose an end date" : (isRange ? "Start date – End date" : "Scroll to change month"))
+                                : `Scroll to change ${calendarView === "months" ? "year" : "year range"}`}
+                        </span>
+                        <div className="tmivcom-datebox-actions">
+                            {(startDate || endDate) && clearable && <button type="button" onClick={clearValue}>Clear</button>}
+                            <button type="button" className="is-primary" onClick={selectToday}>Today</button>
+                        </div>
+                    </div>}
+                    </div>
+                </BodyPortal>
+            )}
         </div>
-
     );
-}
+});
 
+DateBox.displayName = "DateBox";
 
-
-const roots = new Map();
-
-
-
-// register(
-//     "DateBox",
-//     DateBox
-// );
-// window.TMIVCom = {
-
-//     DateBox(selector, options = {}) {
-
-//         const el = document.querySelector(selector);
-
-//         if (!el)
-//             throw new Error(
-//                 `TMIVCom DateBox target not found: ${selector}`
-//             );
-
-
-//         let root = roots.get(el);
-
-
-//         if (!root) {
-
-//             root = createRoot(el);
-
-//             roots.set(el, root);
-
-//         }
-
-
-//         root.render(
-//             <DateBox {...options}/>
-//         );
-
-
-//         return {
-
-//             setValue(value){
-
-//                 root.render(
-//                     <DateBox
-//                         {...options}
-//                         value={value}
-//                     />
-//                 );
-
-//             }
-
-//         };
-//     }
-
-// };
-export default DateBox; 
+export default DateBox;

@@ -21,11 +21,6 @@ namespace ERPCore.Models.Migration.Business.Workflow
         public bool? IsStart { get; set; }
         public bool? IsEnd { get; set; }
         public bool? IsActive { get; set; } = true;
-         
-        public bool? CanEdit { get; set; }
-        public bool? CanComment { get; set; } = true;
-        public bool? CanUpload { get; set; }
-
         public string? DisplayStatus { get; set; }
 
         public string? UiMode { get; set; }            // ReadOnly / EditQuotation / Approval
@@ -36,9 +31,6 @@ namespace ERPCore.Models.Migration.Business.Workflow
 
         public string? FlowType { get; set; }
 
-        public bool? AllowLoop { get; set; }
-
-        public string? LoopGroup { get; set; }
 
         public decimal? PosX { get; set; }
         public decimal? PosY { get; set; }
@@ -64,6 +56,6 @@ namespace ERPCore.Models.Migration.Business.Workflow
         public NotificationTemplate? NotificationTemplateFK { get; set; }
         public long? MailTemplateId { get; set; } = 0;
         public MailTemplate? MailTemplateFK { get; set; }
-
+        public bool? IsReturnNeedAccepted { get; set; } = false;
     }
 }

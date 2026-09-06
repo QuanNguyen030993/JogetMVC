@@ -1,7 +1,6 @@
 :root,
 :root[data-app-theme="reactify"] {
     color-scheme: light;
-
     /* Layout */
     --collapsed-ml: -15%;
     --collapsed-mr: 5%;
@@ -10,7 +9,6 @@
     --sidebar-w: 260px;
     --gap: 12px;
     --node: 30px;
-
     /* Reactify palette */
     --theme-primary: #5d95f5;
     --theme-primary-hover: #4b84e8;
@@ -45,7 +43,6 @@
     --theme-shadow-lg: 0 24px 70px rgba(35, 49, 75, .2);
     --theme-quotation: #5d95f5;
     --theme-policy: #00c7bd;
-
     /* Existing component aliases */
     --bg: var(--theme-page);
     --card: var(--theme-surface);
@@ -81,6 +78,11 @@
     --dx-grid-hover: #f8fbff;
     --dx-grid-selected: #e8f1ff;
     --dx-grid-radius: 0px;
+    --z-index-low: 1;
+    --z-index-medium: 10000;
+    --z-index-high: 30000;
+    --z-index-ultra: 2147483647;
+    --z-index-custom1: 10000;
 }
 
 :root[data-app-theme="classic"] {

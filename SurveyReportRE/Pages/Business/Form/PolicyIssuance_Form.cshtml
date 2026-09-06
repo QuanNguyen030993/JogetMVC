@@ -17,138 +17,7 @@ Note:
 *@
 
 <style>
-    #pi-overviewRoot_@(ViewData["Id"]) {
-        position: relative;
-        height: calc(90vh);
-    }
-
-    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .cardBody,
-    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .pi-cardHeader {
-        pointer-events: none;
-        user-select: none;
-    }
-
-    .pi-render-overlay {
-        position: absolute;
-        inset: 0;
-        z-index: 120;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        overflow: hidden;
-        border-radius: inherit;
-        background: color-mix(in srgb, var(--theme-page) 82%, transparent);
-        backdrop-filter: blur(3px);
-        opacity: 0;
-        visibility: hidden;
-        transition: opacity .28s ease, visibility .28s ease;
-    }
-
-    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .pi-render-overlay {
-        opacity: 1;
-        visibility: visible;
-    }
-
-    .pi-render-overlay.is-leaving {
-        opacity: 0 !important;
-    }
-
-    .pi-loader-panel {
-        width: min(320px, calc(100% - 32px));
-        padding: 26px 28px 24px;
-        text-align: center;
-        border: 1px solid var(--theme-border);
-        border-radius: 20px;
-        background: color-mix(in srgb, var(--theme-surface) 88%, transparent);
-        box-shadow: var(--theme-shadow-md);
-    }
-
-    .pi-loader-icon-host {
-        display: grid;
-        width: 64px;
-        height: 64px;
-        margin: 0 auto 15px;
-        place-items: center;
-    }
-
-    .pi-loader-icon-host > img,
-    .pi-loader-icon-host > svg {
-        display: block;
-        max-width: 64px;
-        max-height: 64px;
-        object-fit: contain;
-    }
-
-    .pi-loader-default-icon {
-        position: relative;
-        width: 52px;
-        height: 52px;
-        border: 4px solid var(--theme-primary-ring);
-        border-top-color: var(--theme-primary);
-        border-radius: 50%;
-        animation: piLoaderSpin .85s linear infinite;
-    }
-
-    .pi-loader-default-icon::after {
-        content: "";
-        position: absolute;
-        inset: 7px;
-        border: 3px solid color-mix(in srgb, var(--theme-secondary) 16%, transparent);
-        border-bottom-color: var(--theme-secondary);
-        border-radius: 50%;
-        animation: piLoaderSpin .65s linear infinite reverse;
-    }
-
-    .pi-loader-message {
-        margin-bottom: 15px;
-        color: var(--theme-text);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: .01em;
-    }
-
-    .pi-render-progress {
-        height: 3px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: color-mix(in srgb, var(--theme-muted) 22%, transparent);
-    }
-
-    .pi-render-progress > span {
-        display: block;
-        width: 12%;
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, var(--theme-primary), var(--theme-secondary), var(--theme-primary));
-        background-size: 200% 100%;
-        animation: piProgressFlow 1.1s linear infinite;
-        transition: width .3s ease;
-    }
-
-    @@keyframes piLoaderSpin {
-        to { transform: rotate(360deg); }
-    }
-
-    @@keyframes piProgressFlow {
-        to { background-position: -200% 0; }
-    }
-
-    @@media (prefers-reduced-motion: reduce) {
-        .pi-loader-default-icon,
-        .pi-loader-default-icon::after,
-        .pi-render-progress > span {
-            animation-duration: 1.8s;
-        }
-    }
-
-    .workflow-custom-route-host {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
-        margin-top: 8px;
-    }
+   
 </style>
 
 
@@ -268,20 +137,27 @@ Note:
             var sequence = 0;
             var startedAt = 0;
             var $root = $(`#${policyIssuanceOverviewRootId}`);
-            var $overlay = $root.children(".pi-render-overlay");
+            var $loadingHost = $root.find("> .card > .cardBody.overview-wrap").first();
+            var $overlay = $loadingHost.children(".pi-render-overlay");
 
             if (!$overlay.length) {
                 $overlay = $(`
                     <div id="${formModuleKeyPi}-renderOverlay_${policyIssuanceViewInstanceId}" class="pi-render-overlay" role="status" aria-live="polite" aria-busy="true">
-                        <div class="pi-loader-panel">
+                        <div class="pi-loader-panel overview-section-loader">
+                            <div class="dept-section-action-loader" aria-hidden="true">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <div class="pi-loader-message dept-section-action-message">Please wait…</div>
+                            <!-- LEGACY OVERVIEW INDICATOR - rollback when needed:
                             <div class="pi-loader-icon-host" aria-hidden="true">
                                 <div class="pi-loader-default-icon"></div>
                             </div>
                             <div class="pi-loader-message">Please wait…</div>
                             <div class="pi-render-progress"><span></span></div>
+                            -->
                         </div>
                     </div>
-                `).appendTo($root);
+                `).appendTo($loadingHost);
             }
 
             function setLoadingIcon(source, options) {
@@ -320,7 +196,9 @@ Note:
 
             function setPhase(_message, progress) {
                 progress = Math.max(0, Math.min(100, Number(progress) || 0));
-                $overlay.find(".pi-render-progress > span").css("width", `${Math.max(progress, 8)}%`);
+                $overlay.find(".pi-loader-message").first().text(_message || "Please wait…");
+                // LEGACY OVERVIEW PROGRESS:
+                // $overlay.find(".pi-render-progress > span").css("width", `${Math.max(progress, 8)}%`);
             }
 
             function resetProgressiveContent() {
@@ -517,7 +395,7 @@ Note:
         async function renderPolicyIssuancePersonInCharge() {
             const q = getSelectedModel();
             if (!q) return;
-            renderDeptCallouts(PIC_JSON);
+            renderDeptCallouts(PIC_JSON, document.getElementById(policyIssuanceOverviewRootId));
             let stageName = "";
             try {
                 stageName = stageAccount && stageAccount !== "(Unassigned)"
@@ -535,7 +413,7 @@ Note:
                 resolveSkipTSFromRequestType(q, "policyIssuanceType") === true
             );
         }
-        function loadSelectedWorkflow() {
+        function selfLoadSelectedWorkflow() {
             return window.WorkflowLoader.load({
                 moduleCode: viewIdModulePrefix.policyIssuance,
                 id: @ViewData["Id"],
@@ -995,7 +873,7 @@ Note:
                 firstRender = false;
                 await policyIssuanceFormStages.enter("personInCharge");
                 await renderPolicyIssuancePersonInCharge();
-                await loadSelectedWorkflow();
+                await selfLoadSelectedWorkflow();
                 invalidateSectionCommentCache(state.selectedGuid);
                 await policyIssuanceFormStages.enter("comments");
                 await loadPolicyIssuanceSectionComments();
@@ -1010,6 +888,7 @@ Note:
         }
 
         window.OverviewViewRegistry[policyIssuanceViewInstanceKey].reload = reloadPolicyIssuanceInstance;
+        window.OverviewViewRegistry[policyIssuanceViewInstanceKey].reloadWorkflow = selfLoadSelectedWorkflow;
         var policyIssuanceDepartmentRefreshes = {};
         function refreshPolicyIssuanceDepartment(dept) {
             dept = String(dept || "").trim().toUpperCase();
@@ -1228,18 +1107,22 @@ Note:
         }
 
         function applyNodeHighlights() {
-            $(".dept-node").removeClass("status focus");
-            $(`.dept-node[data-key='${stageDept}']`).addClass("status");
-            $(`.dept-node[data-key='${state.focusDept}']`).addClass("focus");
+            const $tree = $(`#${PolicyIssuanceIdManager.deptTree(@ViewData["Id"])}`);
+            $tree.find(".dept-node").removeClass("status focus");
+            $tree.find(`.dept-node[data-key='${stageDept}']`).addClass("status");
+            $tree.find(`.dept-node[data-key='${state.focusDept}']`).addClass("focus");
         }
 
         function applySectionFocusHighlight() {
-            $(".dept-section").removeClass("focused");
+            $(`#${policyIssuanceOverviewRootId}`).find(".dept-section").removeClass("focused");
             $(`#${formModuleKeyPi}-sec_${state.focusDept}_@ViewData["Id"]`).addClass("focused");
         }
 
         function setupDeptTree() {
-            $(`.${formModuleKeyPi}-dept-tree.dept-node`).off("click.tree").on("click.tree", function (event) {
+            const $tree = $(`#${PolicyIssuanceIdManager.deptTree(@ViewData["Id"])}`);
+            $tree.find(`.${formModuleKeyPi}-dept-tree.dept-node`)
+                .off("click.tree")
+                .on("click.tree", function (event) {
                 if ($(event.target).closest(".dept-subnode").length) return;
                 const key = $(this).data("key");
                 state.focusDept = key;
@@ -1250,7 +1133,7 @@ Note:
                 updateHints();
                 scrollToDept(formModuleKeyPi, { id: `${state.focusDept}`, keyId: "@ViewData["Id"]" });
                 setSectionCollapsed(state.focusDept, false);
-            });
+                });
             bindDeptTreeScrollSpy(formModuleKeyPi, "@ViewData["Id"]");
         }
 
@@ -1601,7 +1484,9 @@ Note:
     var toggleHideWorkflow = false;
 
     $(`#${window.PolicyIssuanceIdManager.panelHoverInFlow(@ViewData["Id"])}`).dxButton({
-        text: "Workflow",
+        icon: "fas fa-project-diagram",
+        hint: "Workflow",
+        elementAttr: { "aria-label": "Workflow" },
         readOnly: true,
         type: "normal",
         stylingMode: "contained",
@@ -2079,7 +1964,7 @@ Note:
             firstRender = false;
             await policyIssuanceFormStages.enter("personInCharge");
             await renderPolicyIssuancePersonInCharge();
-            await loadSelectedWorkflow();
+            await selfLoadSelectedWorkflow();
             invalidateSectionCommentCache(state.selectedGuid);
             await policyIssuanceFormStages.enter("comments");
             await loadPolicyIssuanceSectionComments();

@@ -3,6 +3,7 @@ import CustomGrid from './components/CustomGrid';
 import HandsomGrid from './components/HandsomGrid';
 import HtmlEditor from './components/HtmlEditor';
 import DateBox from './components/DateBox';
+import TimeBox from './components/TimeBox';
 import CommentEditor from './components/CommentEditor';
 import CommentEditorRoute from './components/CommentEditorRoute';
 import TextBox from './components/TextBox';
@@ -77,14 +78,17 @@ const defaultRows = [
 
 const gridColumns = [
   { dataField: 'id', caption: 'ID', dataType: 'number', visible: false, width: '60px' },
-  { dataField: 'name', caption: 'Name', dataType: 'string' },
-  { dataField: 'role', caption: 'Role', dataType: 'string' },
-  { dataField: 'age', caption: 'Age', dataType: 'number' },
-  { dataField: 'active', caption: 'Active', dataType: 'boolean' },
+  { dataField: 'name', caption: 'Name', dataType: 'string', width: 170, minWidth: 120, fixed: true, bandPath: ['Identity'], validationRules: [{ type: 'required', message: 'Name is required' }, { type: 'stringLength', min: 2, max: 80 }] },
+  { dataField: 'role', caption: 'Role', dataType: 'string', width: 150, bandPath: ['Identity'], hidingPriority: 3 },
+  { dataField: 'age', caption: 'Age', dataType: 'number', width: 100, bandPath: ['Profile'], hidingPriority: 1, validationRules: [{ type: 'range', min: 18, max: 100, message: 'Age must be between 18 and 100' }] },
+  { dataField: 'active', caption: 'Active', dataType: 'boolean', width: 100, bandPath: ['Profile'], hidingPriority: 2 },
   { 
     dataField: 'deptId', 
     caption: 'Department (Enum)', 
     dataType: 'enum',
+    width: 210,
+    bandPath: ['Organization'],
+    hidingPriority: 4,
     lookup: {
       dataSource: departmentEnum,
       valueExpr: 'id',
@@ -530,6 +534,39 @@ function App() {
         </div>
       </section>
 
+      <section className="section">
+        <div className="section-title">CustomGrid Modular Engine — Phase 4 (Advanced Column Layout)</div>
+        <CustomGrid
+          architecture="modular"
+          columns={gridColumns}
+          rows={rows}
+          keyExpr="id"
+          height={320}
+          showBorders
+          rowAlternationEnabled
+          hoverStateEnabled
+          columnAutoWidth
+          allowColumnReordering
+          allowColumnResizing
+          columnResizingMode="widget"
+          columnChooser={{ enabled: true, mode: 'dragAndDrop', searchable: true, allowSelectAll: true, title: 'Choose columns' }}
+          responsive={{ enabled: true, padding: 254 }}
+          sorting={{ mode: 'multiple' }}
+          searchPanel={{ visible: true, placeholder: 'Search all columns...', debounce: 200, highlightSearchText: true }}
+          filterRow={{ visible: true }}
+          headerFilter={{ visible: true, searchable: true }}
+          groupPanel={{ visible: true, allowColumnDragging: true }}
+          grouping={{ autoExpandAll: true, allowCollapsing: true }}
+          summary={{ totalItems: [{ type: 'count', displayFormat: 'Total: {0} rows' }] }}
+          editing={{ mode: 'batch', allowAdding: true, allowUpdating: true, allowDeleting: true, confirmDelete: false, newRowPosition: 'first' }}
+          onRowsChange={setRows}
+          selection={{ mode: 'multiple', showCheckBoxes: true, selectAllMode: 'allPages' }}
+          paging={{ pageSize: 2 }}
+          pager={{ allowedPageSizes: [2, 10, 20, 50], showPageSizeSelector: true, showInfo: true }}
+          rowNumber={{ visible: true, mode: 'absolute' }}
+        />
+      </section>
+
       <section className="section" id="tour-handsomgrid-section">
         <div className="section-title">HandsomGrid (Spreadsheet Excel Style - Di chuyển phím mũi tên, Enter để sửa, Ctrl+C/V để copy paste)</div>
         <div style={{ padding: '16px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
@@ -539,6 +576,23 @@ function App() {
             onRowsChange={setHandsomRows}
             theme="light"
             height="300px"
+          />
+        </div>
+      </section>
+
+      <section className="section" id="tour-handsomgrid-section">
+        <div className="section-title">HandsomGrid (Spreadsheet Excel Style - Di chuyển phím mũi tên, Enter để sửa, Ctrl+C/V để copy paste)</div>
+        <div style={{ padding: '16px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <DateBox
+          />
+        </div>
+      </section>
+
+ <section className="section" id="tour-handsomgrid-section">
+        <div className="section-title">HandsomGrid (Spreadsheet Excel Style - Di chuyển phím mũi tên, Enter để sửa, Ctrl+C/V để copy paste)</div>
+        <div style={{ padding: '16px', background: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+          <TimeBox
+          mode="range"
           />
         </div>
       </section>

@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "./dist-grid/types",
+    "types": ["react", "react-dom"]
+  },
+  "include": ["src/DataGrid/**/*.ts", "src/DataGrid/**/*.tsx"],
+  "exclude": ["src/DataGrid/**/*.test.ts", "src/DataGrid/**/*.test.tsx"]
+}

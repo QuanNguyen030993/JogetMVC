@@ -5,8 +5,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 public class PolicyIssuanceSubDetails : BaseModel
 {
-    public long? PolicyIssuanceId { get; set; } 
+    public long? PolicyIssuanceId { get; set; }
     public string TranNo { get; set; }
     public string Renew { get; set; }
-    public string Endorsment { get; set; }  
+    public string Endorsement { get; set; }
+    public string QuotationCode { get; set; }
+    public string PolicyNo { get; set; }
+    public long? ClientId { get; set; }
+    public string ClientName { get; set; }
 }

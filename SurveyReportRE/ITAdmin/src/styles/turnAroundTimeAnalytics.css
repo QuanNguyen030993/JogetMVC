@@ -349,7 +349,7 @@
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     padding: 10px 12px;
-    z-index: 1000;
+    
     pointer-events: none;
     color: #1e293b;
     font-size: 11px;
@@ -531,13 +531,13 @@
     display: flex;
     align-items: center;
     padding: 0 10px;
-    z-index: 10;
+    
 }
 
 .block-item:hover {
     transform: translateY(-2px) scale(1.01);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
-    z-index: 20;
+    
 }
 
 .block-inner {
@@ -583,7 +583,7 @@
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     padding: 10px 12px;
-    z-index: 1000;
+    
     pointer-events: none;
     color: #1e293b;
     white-space: normal;

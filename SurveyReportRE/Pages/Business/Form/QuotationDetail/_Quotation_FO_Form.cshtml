@@ -93,6 +93,7 @@
 
 
                 {itemType: "group",caption: "Request Date",colCount:2,items: [
+                /* LEGACY ROLLBACK - DevExtreme dxDateBox
                 {
                     dataField: "requestedDate",
                     editorType: "dxDateBox",
@@ -104,7 +105,24 @@
                     editorType: "dxDateBox",
                     editorOptions: { displayFormat: "dd/MM/yyyy" },
                     label: { template: labelTpl("DueDate - Due date") }
-                }
+                },
+                */
+                makeTmivDateBoxFormItem({
+                    dataField: "requestedDate",
+                    editorOptions: {
+                        placeholder: "Select requested date",
+                        showClearButton: true
+                    },
+                    label: { template: labelTpl("RequestedDate - Ngày yêu cầu") }
+                }),
+                makeTmivDateBoxFormItem({
+                    dataField: "dueDate",
+                    editorOptions: {
+                        placeholder: "Select due date",
+                        showClearButton: true
+                    },
+                    label: { template: labelTpl("DueDate - Due date") }
+                })
                 ]},
 
                  {itemType: "group",caption: "Client",colCount:2,items: [
@@ -131,7 +149,7 @@
 
                  // { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" ,editorOptions:{ switchedOnText: "Yes", switchedOffText: "No"} },
                  {itemType: "group",
-                caption: "Request Infomation",
+                caption: "Request Information",
                 colCount: 3,
                 items: [
                 { dataField: "requestNo", label: { template: labelTpl("RequestNo - Mã Quotation Request") } },
@@ -142,8 +160,21 @@
                       valueExpr: "id"
                  },
                     { dataField: "quotationType",visible: false, label:  { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
-                    // makeSkipTSSwitchFormItem("quotationType"),
-                    { dataField: "businessChannelName", label: { template: labelTpl("BusinessChannelName - Kênh kinh doanh (name)") } },
+                    // Skip TS is selected at Quotation Request and is intentionally
+                    // not mixed into the Request Information fields here.
+                    {
+                        dataField: "businessChannelName",
+                        isRequired: true,
+                        editorType: "dxSelectBox",
+                        label: { text: "Business Channel" },
+                        editorOptions: {
+                            items: _enums.BusinessChannel,
+                            displayExpr: "value",
+                            valueExpr: "value",
+                            searchEnabled: true,
+                            showClearButton: true
+                        }
+                    },
                     { dataField: "businessChannelDisplayName",visible: false, label: { template: labelTpl("BusinessChannelDisplayName - Tên hiển thị kênh (name of biz)") } },
                      { dataField:"reinsuranceId", editorType:"dxSelectBox", label:{text:"Reinsurance"},
                      editorOptions:{
@@ -377,7 +408,8 @@
 
                         guid: "@quotationGuid",
 
-                        reload: false
+                        reload: false,
+                    data: decisionContext
                     });
 
 

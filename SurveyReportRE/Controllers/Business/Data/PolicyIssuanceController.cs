@@ -1636,24 +1636,26 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             EnsurePolicyIssuanceChecklistAsync(form.key).GetAwaiter().GetResult();
         }
 
-        Task.Run(async () =>
-        {
-            string connectionId = "";
-            IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
-            OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == CURRENT_USER);
-            if (onlineUser != null)
-            {
-                connectionId = onlineUser.ConnectionId;
-                if (!string.IsNullOrEmpty(connectionId))
-                    await _hubContext.Clients.Client(connectionId).SendAsync($"sectionRender_{connectionId}", new
-                    {
-                        data = entity,
-                        connectionId = connectionId
-                    });
-
-            }
-        });
-        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = form.key, type = nameof(PolicyIssuance) }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        PolicyIssuance updatedPolicyIssuance = _BaseRepository
+            .GetSingleObject(item => item.Id == form.key)
+            .GetAwaiter().GetResult();
+        PICAttributes? picAttributes = string.IsNullOrWhiteSpace(updatedPolicyIssuance?.PIC)
+            ? null
+            : JsonConvert.DeserializeObject<PICAttributes>(updatedPolicyIssuance.PIC);
+        string? assignedAccount = picAttributes == null
+            ? null
+            : Util.PICPicker(picAttributes, updatedPolicyIssuance.StageDept);
+        ControllerHelper.DistributeWorkflowRefresh(
+            _usersSessionRepository,
+            nameof(PolicyIssuance),
+            form.key,
+            "update",
+            ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration),
+            assignedAccount,
+            updatedPolicyIssuance?.StageDept,
+            updatedPolicyIssuance?.StageDept,
+            DOMAIN_NAME)
+            .GetAwaiter().GetResult();
 
         return new HttpResponseMessage(HttpStatusCode.OK);
     }

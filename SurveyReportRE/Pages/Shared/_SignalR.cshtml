@@ -3,7 +3,7 @@
         position: fixed;
         right: 18px;
         bottom: 18px;
-        z-index: 2147483000;
+        z-index: var(--z-index-high);
         display: flex;
         width: min(360px, calc(100vw - 32px));
         flex-direction: column;
@@ -529,48 +529,88 @@ function startSignalRConnection() {
         signalRBlink("R_ServerLogAlert");
         showServerLogAlert(alert);
     });
-    connectionSignR.on("R_ItemSubmitted", function (items) {
-            // signalRBlink("R_ItemSubmitted");
-            if (items.type === "Quotation" || items.type === "PolicyIssuance") {
-                // if (typeof window.reloadOverviewViewComponents !== "function") {
-                //     console.warn("Shared overview reload handler is not available.", items);
-                //     return;
-                // }
-
-                // // SignalR khong co DevExtreme event.e.element nhu btnRefreshOverview,
-                // // nen resolve chinh root element cua view tu registry. Truyen true de
-                // // su kien submit di cung dung full-refresh path cua nut Refresh.
-                // const normalizedType = String(items.type || "")
-                //     .replace(/\s+/g, "")
-                //     .toLowerCase();
-                // const moduleCode = normalizedType === "policyissuance"
-                //     ? viewIdModulePrefix.policyIssuance
-                //     : viewIdModulePrefix.quotation;
-                // const viewKey = `${moduleCode}:${items.id}`;
-                // if (window.WorkflowViewReloadState?.[viewKey] === Number.POSITIVE_INFINITY) {
-                //     return;
-                // }
-                // const viewInstance = window.OverviewViewRegistry?.[viewKey];
-                // const triggerElement = viewInstance?.rootId
-                //     ? document.getElementById(viewInstance.rootId)
-                //     : null;
-
-                // window.reloadOverviewViewComponents(
-                //     items.type,
-                //     items.id,
-                //     triggerElement,
-                //     true
-                // )
-                //     .catch(function (err) {
-                //         console.error("Submitted item reload failed", err);
-                //     });
-                     var prefix = items.type === "Quotation"
-                        ? viewIdModulePrefix.quotation
-                        : viewIdModulePrefix.policyIssuance;
-                                 $(`#${prefix}-btnRefreshOverview_${items.id}`).trigger("click");
-            }
+    window.WorkflowRefreshSignals = window.WorkflowRefreshSignals || new Map();
+    window.dispatchWorkflowRefresh = window.dispatchWorkflowRefresh || async function (signal) {
+        signal = signal || {};
+        var flowType = String(signal.type || signal.Type || signal.flowType || "")
+            .replace(/\s+/g, "")
+            .toLowerCase();
+        var recordId = signal.id ?? signal.Id ?? signal.recordId;
+        if (!recordId || (flowType !== "quotation" && flowType !== "policyissuance")) {
+            console.warn("Ignored invalid workflow refresh signal.", signal);
+            return false;
         }
-    );
+
+        var correlationId = signal.correlationId || signal.CorrelationId;
+        if (correlationId && window.WorkflowRefreshSignals.has(correlationId)) {
+            return window.WorkflowRefreshSignals.get(correlationId);
+        }
+
+        var moduleCode = flowType === "policyissuance"
+            ? viewIdModulePrefix.policyIssuance
+            : viewIdModulePrefix.quotation;
+        var viewKey = `${moduleCode}:${recordId}`;
+        window.WorkflowViewReloadState = window.WorkflowViewReloadState || {};
+        var previousReloadAt = window.WorkflowViewReloadState[viewKey] || 0;
+        if (previousReloadAt === Number.POSITIVE_INFINITY) return true;
+        if (Date.now() - previousReloadAt < 1500) return true;
+        window.WorkflowViewReloadState[viewKey] = Date.now();
+        var entry = window.OverviewViewRegistry?.[viewKey];
+        var refreshScope = String(signal.refreshScope || signal.RefreshScope || "view").toLowerCase();
+        var department = signal.toDepartment || signal.ToDepartment;
+
+        var refreshPromise = (async function () {
+            // A section refresh must also recreate its route/custom buttons because
+            // those controls depend on the latest workflow node and permissions.
+            if (refreshScope === "section" && department && typeof entry?.refreshDepartment === "function") {
+                await entry.refreshDepartment(department);
+                if (typeof entry.reloadWorkflow === "function") await entry.reloadWorkflow();
+                return true;
+            }
+
+            if (typeof entry?.reload === "function") {
+                await entry.reload();
+                return true;
+            }
+
+            if (typeof window.reloadOverviewViewComponents === "function") {
+                return await window.reloadOverviewViewComponents(moduleCode, recordId, null, false);
+            }
+
+            console.warn(`Workflow refresh handler is not ready for ${viewKey}.`, signal);
+            return false;
+        })();
+
+        if (correlationId) {
+            window.WorkflowRefreshSignals.set(correlationId, refreshPromise);
+            window.setTimeout(function () {
+                window.WorkflowRefreshSignals.delete(correlationId);
+            }, 30000);
+        }
+
+        try {
+            var refreshed = await refreshPromise;
+            document.dispatchEvent(new CustomEvent("workflowViewRefreshed", {
+                detail: Object.assign({}, signal, { refreshed: refreshed })
+            }));
+            return refreshed;
+        } catch (error) {
+            console.error(`Workflow refresh failed for ${viewKey}.`, error, signal);
+            throw error;
+        }
+    };
+
+    connectionSignR.on("R_WorkflowRefresh", function (signal) {
+        signalRBlink("R_WorkflowRefresh");
+        window.dispatchWorkflowRefresh(signal).catch(function () { });
+    });
+
+    // Backward compatibility for controllers that have not moved to the richer
+    // workflow event yet. It now follows the registry path instead of clicking a
+    // refresh button that may have been removed during route re-rendering.
+    connectionSignR.on("R_ItemSubmitted", function (signal) {
+        window.dispatchWorkflowRefresh(signal).catch(function () { });
+    });
 
     connectionSignR.on("R_InitializeLoading", function (responseData) {
         signalRBlink("R_InitializeLoading");

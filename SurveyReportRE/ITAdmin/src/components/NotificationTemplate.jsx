@@ -1,296 +1,182 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
+import appsettings from "../../../host.json";
 import CustomGrid from "../../../TMIVCom/src/components/CustomGrid";
-import CustomForm from "../../../TMIVCom/src/components/CustomForm";
-import { notify } from "../../../TMIVCom/src/components/Notification";
-import appsettings from '../../../host.json';
+import { DataGrid, GridCustomStore } from "../../../TMIVCom/src/DataGrid";
 import "../styles/notificationtemplate.css";
 
-const getRowVal = (row, field) => {
-    if (!row) return "";
-    const lower = field.toLowerCase();
-    const key = Object.keys(row).find(k => k.toLowerCase() === lower);
-    return key ? row[key] : "";
+const API_BASE_URL = appsettings.UrlConfig.Host;
+
+const mutateNotificationTemplate = async (path, method, key, values) => {
+    const formData = new FormData();
+    if (key !== undefined) formData.append("key", key);
+    if (values !== undefined) formData.append("values", JSON.stringify(values));
+    const response = await fetch(`${API_BASE_URL}/api/NotificationTemplate/${path}`, { method, body: formData });
+    if (!response.ok) throw new Error(`Không thể lưu Notification Template (${response.status})`);
+    const text = await response.text();
+    if (!text) return values;
+    try { return JSON.parse(text); } catch { return values; }
 };
 
-export default function NotificationTemplate() {
-    const gridRef = useRef(null);
-    const formRef = useRef(null);
-
-    const [selectedTemplate, setSelectedTemplate] = useState(null);
+export default function NotificationTemplate({ onOpenDesigner }) {
+    const [engine, setEngine] = useState("modular");
+    const [editMode, setEditMode] = useState("batch");
     const [enumList, setEnumList] = useState([]);
-    const [refreshKey, setRefreshKey] = useState(0);
-    const [activeTab, setActiveTab] = useState("preview"); // "preview" | "edit"
-   
-    // Fetch all EnumData once for lookup mappings
+
     useEffect(() => {
-        const fetchEnums = async () => {
-            try {
-                const res = await fetch(`${appsettings.UrlConfig.Host}/api/EnumData/GetAll?take=9999`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setEnumList(data || []);
-                }
-            } catch (e) {
-                console.error("Failed to fetch EnumData list:", e);
-            }
-        };
-        fetchEnums();
+        const controller = new AbortController();
+        fetch(`${API_BASE_URL}/api/EnumData/GetAll?take=9999`, { signal: controller.signal })
+            .then((response) => response.ok ? response.json() : [])
+            .then((result) => setEnumList(Array.isArray(result) ? result : result?.data || []))
+            .catch((error) => { if (error.name !== "AbortError") console.error("Failed to load NotificationType:", error); });
+        return () => controller.abort();
     }, []);
 
-    // Static definition of schema columns for CustomForm lookup
-    const enumOptions = React.useMemo(() => {
-        return enumList.map(item => ({
-            id: item.id || item.Id,
-            name: `[${item.name || "Default"}] ${item.value || item.Name || item.Code}`
-        }));
+    const notificationTypes = useMemo(() => {
+        const filtered = enumList.filter((item) => {
+            const name = String(item.name || item.Name || "").toLowerCase();
+            const code = String(item.code || item.Code || "").toLowerCase();
+            return name.includes("notification") || code.includes("notification");
+        });
+        return filtered.length ? filtered : enumList;
     }, [enumList]);
 
-    const formColumns = [
-        { 
-            dataField: "TemplateName", 
-            caption: "Tên Mẫu (Template Name)", 
-            dataType: "string", 
-            colSpan: 2,
-            validationRules: [{ type: "required", message: "Tên mẫu là bắt buộc" }] 
-        },
-        { 
-            dataField: "Title", 
-            caption: "Tiêu Đề (Title)", 
-            dataType: "string", 
-            colSpan: 2,
-            validationRules: [{ type: "required", message: "Tiêu đề là bắt buộc" }] 
-        },
-        { 
-            dataField: "TypeId", 
-            caption: "Loại Thông Báo (Notification Type)", 
-            editorType: "selectbox", 
-            colSpan: 1,
-            lookup: {
-                dataSource: enumOptions,
-                valueExpr: "id",
-                displayExpr: "name"
-            }
-        },
-        { 
-            dataField: "IsActive", 
-            caption: "Trạng Thái Kích Hoạt (Active)", 
-            editorType: "checkbox",
-            colSpan: 1,
-            defaultValue: true
-        },
-        { 
-            dataField: "Content", 
-            caption: "Nội Dung (Content)", 
-            editorType: "htmleditor",
-            colSpan: 2
-        }
-    ];
+    const typeLookup = useMemo(() => notificationTypes.map((item) => ({
+        id: item.id || item.Id,
+        name: `[${item.code || item.Code || item.name || item.Name || "Type"}] ${item.value || item.Value || item.name || item.Name || ""}`
+    })), [notificationTypes]);
 
-    const gridColumns = [
-        { dataField: "templateName", caption: "Tên mẫu", dataType: "string" },
-        { dataField: "title", caption: "Tiêu đề", dataType: "string" },
-        { 
-            dataField: "typeId", 
-            caption: "Loại thông báo", 
+    const columns = useMemo(() => [
+        {
+            field: "templateName",
+            caption: "Tên mẫu",
             dataType: "string",
-            calculateCellValue: (row) => {
-                const typeId = getRowVal(row, "typeId");
-                const enumItem = enumList.find(e => (e.id || e.Id) === typeId);
-                return enumItem ? `${enumItem.name}: ${enumItem.value}` : (typeId || "-");
-            }
+            minWidth: 170,
+            fixed: true,
+            validationRules: [{ type: "required", message: "Tên mẫu là bắt buộc" }]
         },
-        { 
-            dataField: "isActive", 
-            caption: "Kích hoạt", 
-            dataType: "boolean"
+        {
+            field: "title",
+            caption: "Tiêu đề",
+            dataType: "string",
+            minWidth: 230,
+            validationRules: [{ type: "required", message: "Tiêu đề là bắt buộc" }]
+        },
+        {
+            field: "typeId",
+            caption: "Loại thông báo",
+            dataType: "number",
+            minWidth: 180,
+            editorType: "selectbox",
+            lookup: { dataSource: typeLookup, valueExpr: "id", displayExpr: "name" }
+        },
+        {
+            field: "notificationQuery",
+            caption: "SQL Query",
+            dataType: "string",
+            minWidth: 220,
+            hidingPriority: 2
+        },
+        {
+            field: "clearContent",
+            caption: "Clear Content",
+            dataType: "string",
+            minWidth: 260,
+            visible: true,
+            allowEditing: false,
+            allowHiding: false,
+            hidingPriority: 1000
+        },
+        {
+            field: "isActive",
+            caption: "Kích hoạt",
+            dataType: "boolean",
+            width: 105,
+            fixed: true,
+            fixedPosition: "right"
         }
-    ];
+    ], [typeLookup]);
 
-    const handleGridRowClick = (row) => {
-        setSelectedTemplate(row);
-        setActiveTab("preview");
-    };
-
-    const handleCreateNew = () => {
-        setSelectedTemplate({
-            id: 0,
-            Id: 0,
-            templateName: "Mẫu thông báo mới",
-            TemplateName: "Mẫu thông báo mới"
-        });
-        setActiveTab("edit");
-    };
-
-    const handleDelete = async () => {
-        if (!selectedTemplate) return;
-        const id = getRowVal(selectedTemplate, "id");
-        const name = getRowVal(selectedTemplate, "templateName");
-        if (!window.confirm(`Bạn có chắc chắn muốn xóa mẫu thông báo "${name}"?`)) return;
-
-        try {
-            const formBody = `key=${encodeURIComponent(id)}`;
-            const res = await fetch(`${appsettings.UrlConfig.Host}/api/NotificationTemplate/DeleteData`, {
-                method: "POST",
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-                },
-                body: formBody
-            });
-
-            if (res.ok) {
-                notify("Xóa thành công! ✅", "success");
-                setSelectedTemplate(null);
-                setRefreshKey(prev => prev + 1);
-            } else {
-                const text = await res.text();
-                notify(`Xóa thất bại: ${text} ❌`, "error");
-            }
-        } catch (e) {
-            notify(`Lỗi: ${e.message} ❌`, "error");
+    const store = useMemo(() => new GridCustomStore({
+        key: "id",
+        async load() {
+            const response = await fetch(`${API_BASE_URL}/api/NotificationTemplate/GetAll`);
+            if (!response.ok) throw new Error(`Không thể tải Notification Template (${response.status})`);
+            const result = await response.json();
+            const data = Array.isArray(result) ? result : result?.data || [];
+            return { data, totalCount: result?.totalCount ?? data.length };
+        },
+        async insert(values) {
+            return await mutateNotificationTemplate("InsertData", "POST", undefined, { isActive: true, ...values }) || values;
+        },
+        async update(key, values) {
+            return mutateNotificationTemplate("UpdateData", "PUT", key, values);
+        },
+        async remove(key) {
+            await mutateNotificationTemplate("DeleteData", "DELETE", key);
         }
-    };
-
-    const handleSaveSuccess = () => {
-        notify("Lưu thành công! ✅", "success");
-        setRefreshKey(prev => prev + 1);
-        setSelectedTemplate(null);
-    };
-
-    const getEnumLabel = (typeId) => {
-        const item = enumList.find(e => (e.id || e.Id) === typeId);
-        return item ? `[${item.name}] ${item.value || item.Code}` : `ID: ${typeId}`;
-    };
+    }), []);
 
     return (
-        <div className="nt-manager-container">
-            <div className="nt-workspace-grid">
-                
-                {/* Left side: Grid panel */}
-                <div className="nt-grid-panel">
-                    <div className="nt-panel-header">
-                        <h2>
-                            <span>📢</span> Thiết lập Notification Template
-                        </h2>
-                        <button className="nt-btn nt-btn-primary" onClick={handleCreateNew}>
-                            ➕ Thêm Mẫu Mới
-                        </button>
-                    </div>
-
-                    <div className="nt-grid-wrapper">
-                        <CustomGrid
-                            key={refreshKey}
-                            ref={gridRef}
-                            columns={gridColumns}
-                            apiBaseUrl={appsettings.UrlConfig.Host}
-                            showSelectionCheckbox={false}
-                            showCommandsColumn={false}
-                            onRowClick={handleGridRowClick}
-                            gridOption={{
-                                overrideGetUrl: "api/NotificationTemplate/GetAll"
-                            }}
-                        />
-                    </div>
+        <section className="itadmin-grid-list notification-template-list">
+            <header className="itadmin-grid-list__header">
+                <div>
+                    <h2>Notification Template</h2>
+                    <p>{engine === "modular" ? `TMIV modular DataGrid — ${editMode} editing` : "Legacy CustomGrid — batch editing"}</p>
                 </div>
-
-                {/* Right side: Detail & Edit panel */}
-                <div className="nt-detail-panel" style={{ marginTop: 0 }}>
-                    {selectedTemplate ? (
-                        <>
-                            {/* Panel header tabs */}
-                            <div className="nt-panel-tabs">
-                                <button 
-                                    className={`nt-tab-btn ${activeTab === 'preview' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab("preview")}
-                                >
-                                    👀 Xem trước
-                                </button>
-                                <button 
-                                    className={`nt-tab-btn ${activeTab === 'edit' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab("edit")}
-                                >
-                                    ✏️ Chỉnh sửa
-                                </button>
-                            </div>
-
-                            {/* Tab contents */}
-                            {activeTab === "preview" ? (
-                                <div className="nt-tab-content nt-preview-content">
-                                    <div className="nt-detail-title">
-                                        <span>📝 Thông tin chi tiết mẫu</span>
-                                        <button className="nt-btn" style={{ padding: "4px 10px", fontSize: "0.8rem", background: "#fef2f2", color: "#ef4444", border: "1px solid #fee2e2" }} onClick={handleDelete}>
-                                            🗑️ Xóa mẫu
-                                        </button>
-                                    </div>
-
-                                    <div className="nt-meta-info">
-                                        <div className="nt-meta-item">
-                                            <strong>Tên mẫu (Template Name)</strong>
-                                            <span>{getRowVal(selectedTemplate, "templateName") || "-"}</span>
-                                        </div>
-                                        <div className="nt-meta-item">
-                                            <strong>Tiêu đề (Title)</strong>
-                                            <span>{getRowVal(selectedTemplate, "title") || "-"}</span>
-                                        </div>
-                                        <div className="nt-meta-item">
-                                            <strong>Loại thông báo (Type)</strong>
-                                            <span>{getEnumLabel(getRowVal(selectedTemplate, "typeId"))}</span>
-                                        </div>
-                                        <div className="nt-meta-item">
-                                            <strong>Trạng thái</strong>
-                                            <span>
-                                                {getRowVal(selectedTemplate, "isActive") ? (
-                                                    <span className="nt-badge nt-badge-active">Hoạt động</span>
-                                                ) : (
-                                                    <span className="nt-badge nt-badge-inactive">Không hoạt động</span>
-                                                )}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div style={{ fontWeight: "600", fontSize: "0.85rem", color: "#64748b", marginBottom: "6px" }}>
-                                        Nội dung mẫu (HTML preview):
-                                    </div>
-                                    <div 
-                                        className="nt-content-preview"
-                                        dangerouslySetInnerHTML={{ __html: getRowVal(selectedTemplate, "content") || "<em>Không có nội dung</em>" }}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="nt-tab-content">
-                                    <div className="nt-detail-title">
-                                        <span>✏️ Soạn thảo mẫu thông báo</span>
-                                        <button className="nt-btn nt-btn-secondary" style={{ padding: "4px 10px", fontSize: "0.8rem" }} onClick={() => setActiveTab("preview")}>
-                                            Quay lại
-                                        </button>
-                                    </div>
-                                    <div style={{ padding: "10px 0" }}>
-                                        <CustomForm
-                                            key={`${getRowVal(selectedTemplate, "id")}`}
-                                            ref={formRef}
-                                            id={getRowVal(selectedTemplate, "id") || 0}
-                                            columns={formColumns}
-                                            formConfig={{
-                                                modelName: "NotificationTemplate",
-                                                pk: "Id", // PascalCase Primary Key
-                                                colCount: 2,
-                                                allowFormActionButton: true
-                                            }}
-                                            onSaveSuccess={handleSaveSuccess}
-                                            onClose={() => setSelectedTemplate(null)}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </>
-                    ) : (
-                        <div className="nt-empty-state">
-                            <span style={{ fontSize: "2.5rem", marginBottom: "10px" }}>📢</span>
-                            <p>Chọn một mẫu thông báo từ danh sách để xem chi tiết hoặc chỉnh sửa thông tin.</p>
-                        </div>
-                    )}
+                <div className="notification-template-list__actions">
+                    <button type="button" className="notification-template-list__designer" onClick={onOpenDesigner}>Notification Design</button>
+                    <div className="itadmin-grid-list__engine" role="group" aria-label="Grid engine">
+                        <button type="button" className={engine === "modular" ? "is-active" : ""} onClick={() => setEngine("modular")}>Modular</button>
+                        <button type="button" className={engine === "legacy" ? "is-active" : ""} onClick={() => setEngine("legacy")}>Legacy edit</button>
+                    </div>
+                    {engine === "modular" && <div className="itadmin-grid-list__engine" role="group" aria-label="Editing mode">
+                        {["batch", "row", "cell"].map((mode) => <button type="button" key={mode} className={editMode === mode ? "is-active" : ""} onClick={() => setEditMode(mode)}>{mode[0].toUpperCase() + mode.slice(1)}</button>)}
+                    </div>}
                 </div>
+            </header>
 
-            </div>
-        </div>
+            {engine === "legacy" ? (
+                <CustomGrid modelName="NotificationTemplate" gridType="System" apiBaseUrl={API_BASE_URL} editMode="batch" />
+            ) : (
+                <DataGrid
+                    key={`notification-template-${editMode}`}
+                    dataSource={store}
+                    keyExpr="id"
+                    columns={columns}
+                    height="calc(100vh - 210px)"
+                    showBorders
+                    showRowLines
+                    showColumnLines
+                    rowAlternationEnabled
+                    hoverStateEnabled
+                    columnAutoWidth
+                    allowColumnReordering
+                    allowColumnResizing
+                    columnResizingMode="widget"
+                    columnChooser={{ enabled: true, mode: "dragAndDrop", searchable: true, allowSelectAll: true, title: "Tùy chọn cột" }}
+                    responsive={{ enabled: true, padding: 254 }}
+                    sorting={{ mode: "multiple" }}
+                    searchPanel={{ visible: true, placeholder: "Tìm trong Notification Template...", width: 320, debounce: 250, highlightSearchText: true }}
+                    filterRow={{ visible: true, applyMode: "auto" }}
+                    headerFilter={{ visible: true, searchable: true }}
+                    groupPanel={{ visible: true, allowColumnDragging: true, emptyText: "Kéo cột vào đây để nhóm dữ liệu" }}
+                    grouping={{ autoExpandAll: true, allowCollapsing: true }}
+                    editing={{
+                        mode: editMode,
+                        allowAdding: true,
+                        allowUpdating: true,
+                        allowDeleting: true,
+                        confirmDelete: true,
+                        newRowPosition: "first",
+                        texts: { add: "Thêm", edit: "Sửa", delete: "Xóa", save: "Lưu", cancel: "Hủy", saveAll: "Lưu thay đổi", cancelAll: "Hoàn tác" }
+                    }}
+                    selection={{ mode: "multiple", showCheckBoxes: true, selectAllMode: "allPages" }}
+                    paging={{ enabled: true, pageSize: 50 }}
+                    pager={{ visible: true, allowedPageSizes: [25, 50, 100], showPageSizeSelector: true, showNavigationButtons: true, showInfo: true }}
+                    rowNumber={{ visible: true, mode: "absolute" }}
+                    messages={{ noData: "Không có Notification Template", loading: "Đang tải Notification Template...", retry: "Tải lại", columns: "Cột", resetColumns: "Đặt lại cột" }}
+                />
+            )}
+        </section>
     );
 }

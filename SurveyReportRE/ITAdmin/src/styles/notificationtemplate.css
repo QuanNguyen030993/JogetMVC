@@ -1,5 +1,11 @@
 /* IT Admin Portal - Notification Template Style */
 
+.notification-template-list { height: 100%; }
+.notification-template-list__actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.notification-template-list__designer { padding: 8px 13px; border: 0; border-radius: 7px; background: #7c3aed; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 8px rgba(124, 58, 237, .2); }
+.notification-template-list__designer:hover { background: #6d28d9; }
+@media (max-width: 900px) { .notification-template-list__actions { width: 100%; justify-content: flex-start; } }
+
 .nt-manager-container {
     padding: 10px;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;

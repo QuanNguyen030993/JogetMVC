@@ -24,6 +24,8 @@
                 <div id="@ViewIdHelper.PanelHoverInFlow(moduleCode,quotationId)"></div>
             </div>
             <div class="overview-header-actions">
+                <div id="@Id("btnNodeHelp")"></div>
+                <div id="@Id("nodeHelpPopover")"></div>
                 <div id="@Id("btnRefreshOverview")"></div>
                 <div id="@ViewIdHelper.BtnCollapseAllTab(moduleCode,quotationId)"></div>
                 <div id="@ViewIdHelper.BtnToggleReferenceFields(moduleCode,quotationId)"></div>
@@ -105,12 +107,118 @@
 </div>
 <script>
     $(function () {
+        const $nodeHelpButton = $("#@Id("btnNodeHelp")");
+        const nodeHelpPopover = $("#@Id("nodeHelpPopover")").dxPopover({
+            target: "#@Id("btnNodeHelp")",
+            width: 390,
+            maxWidth: "calc(100vw - 24px)",
+            position: {
+                my: "top right",
+                at: "bottom right",
+                offset: "0 8"
+            },
+            closeOnOutsideClick: true,
+            contentTemplate: function (contentElement) {
+                const instruction = String($nodeHelpButton.data("nodeInstruction") || "").trim();
+                const nodeLabel = String($nodeHelpButton.data("nodeLabel") || "Current node").trim();
+                const $content = $("<div>").addClass("overview-node-help-content");
+                const $header = $("<div>").addClass("overview-node-help-header").appendTo($content);
+                $("<span>")
+                    .addClass("overview-node-help-icon")
+                    .append($("<i>").addClass("fa fa-lightbulb-o").attr("aria-hidden", "true"))
+                    .appendTo($header);
+                const $heading = $("<div>").addClass("overview-node-help-heading").appendTo($header);
+                $("<span>").addClass("overview-node-help-kicker").text("CURRENT WORKFLOW STEP").appendTo($heading);
+                $("<strong>").addClass("overview-node-help-title").text(nodeLabel).appendTo($heading);
+
+                const $message = $("<div>").addClass("overview-node-help-message").appendTo($content);
+                $("<i>").addClass("fa fa-quote-left").attr("aria-hidden", "true").appendTo($message);
+                $("<div>")
+                    .addClass("overview-node-help-text")
+                    .html(instruction || "No instruction is configured for this node.")
+                    .appendTo($message);
+
+                // $("<div>")
+                //     .addClass("overview-node-help-footer")
+                //     .append($("<i>").addClass("fa fa-info-circle").attr("aria-hidden", "true"))
+                //     .append($("<span>")//.text("Instruction configured in the workflow node."))
+                //     .appendTo($content);
+                $content.appendTo(contentElement);
+            }
+        }).dxPopover("instance");
+
+        $nodeHelpButton.dxButton({
+            icon: "help",
+            hint: "No node instruction",
+            stylingMode: "text",
+            disabled: true,
+            elementAttr: {
+                "aria-label": "Show node instruction"
+            },
+            onClick: function () {
+                nodeHelpPopover.option("visible", !nodeHelpPopover.option("visible"));
+            }
+        });
+
+        $(document)
+            .off("overviewNodeInstructionChanged.@(Model.Prefix)_@(Model.Id)")
+            .on("overviewNodeInstructionChanged.@(Model.Prefix)_@(Model.Id)", function (_, detail) {
+                if (String(detail?.moduleCode || "").trim().toLowerCase() !== "@moduleCode"
+                    || String(detail?.recordId) !== "@Model.Id") return;
+
+                const instruction = String(detail?.instruction || "").trim();
+                const nodeLabel = String(detail?.nodeLabel || "Current node").trim();
+                $nodeHelpButton.data("nodeInstruction", instruction);
+                $nodeHelpButton.data("nodeLabel", nodeLabel);
+                const button = $nodeHelpButton.dxButton("instance");
+                button.option({
+                    disabled: !instruction,
+                    hint: instruction ? "Show node instruction" : "No node instruction"
+                });
+                $(nodeHelpPopover.content())
+                    .find(".overview-node-help-text")
+                    .text(instruction || "No instruction is configured for this node.");
+                $(nodeHelpPopover.content())
+                    .find(".overview-node-help-title")
+                    .text(nodeLabel);
+                nodeHelpPopover.hide();
+            });
+
         $("#@Id("btnRefreshOverview")").dxButton({
             icon: "refresh",
             hint: "Refresh",
             stylingMode: "text",
-            onClick: function (e) {
-                window.reloadOverviewViewComponents("@moduleCode", @quotationId, e.element, true);
+            elementAttr: {
+                class: "overview-refresh-button",
+                "aria-label": "Refresh overview"
+            },
+            onClick: async function (e) {
+                const button = e.component;
+                const $buttonElement = $(e.element);
+                if (button.option("disabled")) return;
+
+                button.option("disabled", true);
+                $buttonElement
+                    .addClass("is-refreshing")
+                    .attr("aria-busy", "true");
+
+                try {
+                    await Promise.resolve(
+                        window.reloadOverviewViewComponents(
+                            "@moduleCode",
+                            @quotationId,
+                            e.element,
+                            true
+                        )
+                    );
+                } finally {
+                    $buttonElement
+                        .removeClass("is-refreshing")
+                        .removeAttr("aria-busy");
+                    try {
+                        button.option("disabled", false);
+                    } catch (error) {}
+                }
             }
         });
 

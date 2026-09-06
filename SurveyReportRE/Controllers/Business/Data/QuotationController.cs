@@ -166,7 +166,19 @@ public class QuotationController : BaseControllerApi<Quotation>
         entity = await _BaseRepository.GetSingleObject(s => s.Id == id);
         entity.IsNotMakeOption = true;
         await _BaseRepository.UpdateData(entity, JsonConvert.SerializeObject(new { IsNotMakeOption = true }), entity.Id, "Id");
-        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = id, type = "Quotation" }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        PICAttributes? picAttributes = string.IsNullOrWhiteSpace(entity.PIC)
+            ? null
+            : JsonConvert.DeserializeObject<PICAttributes>(entity.PIC);
+        await ControllerHelper.DistributeWorkflowRefresh(
+            _usersSessionRepository,
+            nameof(Quotation),
+            entity.Id,
+            "update",
+            ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration),
+            picAttributes == null ? null : Util.PICPicker(picAttributes, entity.StageDept),
+            entity.StageDept,
+            entity.StageDept,
+            DOMAIN_NAME);
 
         return Ok();
     }
@@ -209,12 +221,20 @@ public class QuotationController : BaseControllerApi<Quotation>
             quotation.Id,
             "Id");
 
-        await ControllerHelper.SignalRResponse(
+        PICAttributes? picAttributes = string.IsNullOrWhiteSpace(quotation.PIC)
+            ? null
+            : JsonConvert.DeserializeObject<PICAttributes>(quotation.PIC);
+        await ControllerHelper.DistributeWorkflowRefresh(
             _usersSessionRepository,
-            "R_ItemSubmitted",
-            new { id = quotation.Id, type = nameof(Quotation), workflowStatus },
+            nameof(Quotation),
+            quotation.Id,
+            "update",
             ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration),
-            DOMAIN_NAME);
+            picAttributes == null ? null : Util.PICPicker(picAttributes, quotation.StageDept),
+            quotation.StageDept,
+            quotation.StageDept,
+            DOMAIN_NAME,
+            data: new { workflowStatus, statusId = signedStatus.Id });
 
         return Ok(new
         {
@@ -1981,24 +2001,26 @@ public class QuotationController : BaseControllerApi<Quotation>
 
 
 
-        Task.Run(async () =>
-        {
-            string connectionId = "";
-            IReadOnlyList<OnlineUserDto> onlineUsers = FileProcessingHub._store.GetOnlineUsers();
-            OnlineUserDto onlineUser = onlineUsers.FirstOrDefault(f => f.User.Replace(DOMAIN_NAME, "") == CURRENT_USER);
-            if (onlineUser != null)
-            {
-                connectionId = onlineUser.ConnectionId;
-                if (!string.IsNullOrEmpty(connectionId))
-                    await _hubContext.Clients.Client(connectionId).SendAsync($"sectionRender_{connectionId}", new
-                    {
-                        data = entity,
-                        connectionId = connectionId
-                    });
-
-            }
-        });
-        ControllerHelper.SignalRResponse(_usersSessionRepository, "R_ItemSubmitted", new { id = form.key, type = nameof(Quotation) }, ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration), DOMAIN_NAME);
+        Quotation updatedQuotation = _BaseRepository
+            .GetSingleObject(item => item.Id == form.key)
+            .GetAwaiter().GetResult();
+        PICAttributes? picAttributes = string.IsNullOrWhiteSpace(updatedQuotation?.PIC)
+            ? null
+            : JsonConvert.DeserializeObject<PICAttributes>(updatedQuotation.PIC);
+        string? assignedAccount = picAttributes == null
+            ? null
+            : Util.PICPicker(picAttributes, updatedQuotation.StageDept);
+        ControllerHelper.DistributeWorkflowRefresh(
+            _usersSessionRepository,
+            nameof(Quotation),
+            form.key,
+            "update",
+            ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration),
+            assignedAccount,
+            updatedQuotation?.StageDept,
+            updatedQuotation?.StageDept,
+            DOMAIN_NAME)
+            .GetAwaiter().GetResult();
         return new HttpResponseMessage(HttpStatusCode.OK);
     }
 

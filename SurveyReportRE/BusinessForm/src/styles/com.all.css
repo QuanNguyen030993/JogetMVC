@@ -410,7 +410,7 @@
     width: 7px;
     height: 100%;
     cursor: col-resize;
-    z-index: 5;
+    
     touch-action: none;
 }
 
@@ -1134,7 +1134,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,.08);
     position: sticky;
     top: 0;
-    z-index: 10
+    
 }
 
 .layout {
@@ -1353,7 +1353,7 @@ textarea {
     position: fixed;
     border: 1px dashed #999;
     pointer-events: none;
-    z-index: 99999;
+    
 }
 
 .resize-t{
@@ -1668,7 +1668,7 @@ textarea {
     position: absolute;
     top: 100%;
     left: 0;
-    z-index: 1000;
+    
     margin-top: 4px;
     background: #ffffff;
     border: 1px solid #cbd5e1;
@@ -1782,7 +1782,7 @@ textarea {
     position: absolute;
     top: 100%;
     left: 0;
-    z-index: 1000;
+    
     margin-top: 4px;
     background: #ffffff;
     border: 1px solid #cbd5e1;
@@ -1808,11 +1808,11 @@ textarea {
 }
 
 .grid-cell:focus-within {
-    z-index: 50 !important;
+    
 }
 
 .grid-row:hover {
-    z-index: 10 !important;
+    
 }
 
 .grid-toolbar {
