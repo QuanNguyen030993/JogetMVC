@@ -97,6 +97,53 @@
         var lineText = "";
         var productText = "";
         var policyNoText = "";
+        var endorsementPolicyNumberItems = [];
+        var endorsementPolicyNumberRequest = 0;
+
+        function applyEndorsementPolicyNumbers(form, items) {
+            endorsementPolicyNumberItems = Array.isArray(items) ? items : [];
+            form.updateData("policyNo", null);
+            policyNoText = "";
+            form.updateData("subject", `${productText} - ${policyNoText}`);
+
+            var itemPath = "headerInformation.policyNo";
+            var policyItem = form.itemOption(itemPath);
+            if (policyItem) {
+                form.itemOption(itemPath, "editorOptions", {
+                    ...(policyItem.editorOptions || {}),
+                    dataSource: endorsementPolicyNumberItems,
+                    disabled: endorsementPolicyNumberItems.length === 0
+                });
+            }
+
+            var editor = form.getEditor("policyNo");
+            if (editor) {
+                editor.option({
+                    dataSource: endorsementPolicyNumberItems,
+                    disabled: endorsementPolicyNumberItems.length === 0
+                });
+            }
+        }
+
+        function loadEndorsementPolicyNumbers(form, clientId, clientName) {
+            var requestId = ++endorsementPolicyNumberRequest;
+            applyEndorsementPolicyNumbers(form, []);
+
+            if (!clientId && !clientName) return;
+
+            $.ajax({
+                url: "/api/PolicyIssuanceSubDetails/GetPolicyNumbers",
+                method: "GET",
+                data: { clientId: clientId || null, clientName: clientName || "" }
+            }).done(function (result) {
+                if (requestId !== endorsementPolicyNumberRequest) return;
+                applyEndorsementPolicyNumbers(form, result);
+            }).fail(function () {
+                if (requestId !== endorsementPolicyNumberRequest) return;
+                applyEndorsementPolicyNumbers(form, []);
+                DevExpress.ui.notify("Unable to load policy numbers for the selected client.", "warning", 3000);
+            });
+        }
            var guid= crypto.randomUUID();
                 var sectionId =  "@(prefix)-body_@(dept)_";
                          var that = new Object();
@@ -332,6 +379,13 @@
                                 height: _defaultDropDownHeight,
                             },
                             showClearButton: true,
+                            onValueChanged: function (e) {
+                                if (!e.value) {
+                                    that.formInstance = that.dxForm("instance");
+                                    that.formInstance.updateData("clientName", "");
+                                    loadEndorsementPolicyNumbers(that.formInstance, null, "");
+                                }
+                            },
                             dataSource: new DevExpress.data.CustomStore({
                                 key: "id",
                                 load: function (loadOptions) {
@@ -369,6 +423,11 @@
                                     e.component.option("value", selectedItems.selectedRowKeys[0]);
                                     that.formInstance.updateData("clientName", selectedRow.englishName);
                                     that.formInstance.updateData("businessOccupation", selectedRow.businessOccupation);
+                                    loadEndorsementPolicyNumbers(
+                                        that.formInstance,
+                                        selectedRow.id || selectedRow.Id || selectedItems.selectedRowKeys[0],
+                                        selectedRow.englishName || selectedRow.EnglishName || ""
+                                    );
                                     e.component.close();
                                 });
 
@@ -465,8 +524,15 @@
                         //             }
                         //         },
                         { dataField: "dueDate", editorType: "dxDateBox", editorOptions: { displayFormat: "dd/MM/yyyy" } },
-                        { dataField: "policyNo",name: "policyNo", visible: true ,label: { text: "Policy No" }, editorType: "dxTextBox"
+                        { dataField: "policyNo",name: "policyNo", visible: true ,label: { text: "Policy No" }, editorType: "dxSelectBox", validationRules: [{ type: "required" }]
                         , editorOptions: {
+                            dataSource: endorsementPolicyNumberItems,
+                            valueExpr: "policyNo",
+                            displayExpr: "policyNo",
+                            searchEnabled: true,
+                            showClearButton: true,
+                            disabled: true,
+                            noDataText: "No policy number found for this client",
                             onValueChanged: function (e){
                             that.formInstance = that.dxForm("instance"); 
                             

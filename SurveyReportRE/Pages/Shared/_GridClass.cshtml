@@ -113,6 +113,10 @@
             e.component.element()
                 .off("paste.employeeExcelPaste")
                 .on("paste.employeeExcelPaste", function (event) {
+                    if (!that.mGridInstance?.isExcelPasteMode ||
+                        e.component.option("editing.mode") !== "batch") {
+                        return;
+                    }
                     that.pasteEmployeeCells(event, e.component);
                 });
         }
@@ -1599,6 +1603,9 @@
 
         async makeGridOptions(mGridConfigInstance = null) {
             const options = await super.makeGridOptions(mGridConfigInstance);
+            if (options.editing?.allowUpdating === true && !options.editing.mode) {
+                options.editing.mode = "batch";
+            }
             configureStatusExcelExport(options, ["workflowStatus"]);
             return options;
         }
