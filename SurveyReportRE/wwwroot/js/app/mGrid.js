@@ -1631,10 +1631,21 @@ function referenceMaking(item, gridConfig) {
         item.refOperator = gridConfig.refOperator;
     if (gridConfig.refField != null || gridConfig.refField != undefined)
         item.refField = gridConfig.refField;
-    if (gridConfig.refKey2 != undefined)
-        item.refKey2 = gridConfig.refKey2;
-    if (gridConfig.refOperator2 != null || gridConfig.refOperator2 != undefined)
-        item.refOperator2 = gridConfig.refOperator2;
-    if (gridConfig.refField2 != undefined)
-        item.refField2 = gridConfig.refField2;
+    //if (gridConfig.refKey2 != undefined)
+    //    item.refKey2 = gridConfig.refKey2;
+    //if (gridConfig.refOperator2 != null || gridConfig.refOperator2 != undefined)
+    //    item.refOperator2 = gridConfig.refOperator2;
+    //if (gridConfig.refField2 != undefined)
+    //    item.refField2 = gridConfig.refField2;
+    for (let i = 1; i <= _maxRefField; i++) {
+        const suffix = i === 1 ? "" : i;
+
+        ["refKey", "refOperator", "refField"].forEach(field => {
+            const prop = `${field}${suffix}`;
+
+            if (gridConfig[prop] != null) {
+                item[prop] = gridConfig[prop];
+            }
+        });
+    }
 }
