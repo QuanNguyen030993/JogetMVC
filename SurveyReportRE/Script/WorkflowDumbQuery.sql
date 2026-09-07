@@ -630,3 +630,41 @@ ORDER BY
     Q.QuotationCode,
     R.Renew,
     E.Endorsement;
+
+
+    
+ UPDATE NotificationTemplate SET NotificationQuery = N'SELECT PolicyIssuanceCode AS ''MaCapDon'',
+PolicyIssuanceCode AS ''MaDonCapDon'',
+LineCode AS ''LineCode'',
+QuotationCode AS ''MaBaoGia'',
+PolicyIssuanceRequest AS ''MaRequest'',
+p.ModifiedBy AS ''NguoiThucHien'',
+PolicyNo AS ''PolicyNo'',
+p1.ProductCode AS ''ProductCode'',
+ProductName AS ''ProductName'',
+RequestType AS ''RequestType'',
+ClientName AS ''TenKhachHang''
+FROM PolicyIssuance p
+LEFT JOIN [Product] p1 ON  p.ProductCode = p1.ProductCode
+WHERE Id = @PolicyIssuanceId' WHERE Id IN (6,17)
+
+
+ UPDATE NotificationTemplate SET NotificationQuery = N'SELECT LineCode AS ''LineCode'',
+p.QuotationCode AS ''MaBaoGia'',
+p.RequestNo AS ''MaRequest'',
+p.ModifiedBy AS ''NguoiThucHien'',
+PolicyNo AS ''PolicyNo'',
+p.ProductCode AS ''ProductCode'',
+p1.ProductName AS ''ProductName'',
+RequestType AS ''RequestType'',
+ClientName AS ''TenKhachHang''
+FROM Quotation  p
+LEFT JOIN [Product] p1 ON  p.ProductCode = p1.ProductCode
+WHERE Id = @QuotationId' WHERE Id IN (7
+,9
+,10
+,12
+,13
+,14
+,15
+,16)

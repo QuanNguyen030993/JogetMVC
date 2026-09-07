@@ -219,18 +219,34 @@
                         }
                         else {
                             var params = new URLSearchParams();
+                            debugger
                               if (instance?.refKey)
                                 params.set("refKey", instance?.refKey);
                               if (instance?.refField)
                                 params.set("refField", instance?.refField);
                                  if (instance?.refOperator)
                                 params.set("refOperator", instance?.refOperator);
-                              if (instance?.refKey2)
-                                params.set("refKey2", instance?.refKey2);
-                              if(instance?.refField2)
-                                params.set("refField2", instance?.refField2);
-                              if (instance?.refOperator2)
-                                params.set("refOperator2", instance?.refOperator2);
+                              // if (instance?.refKey2)
+                              //   params.set("refKey2", instance?.refKey2);
+                              // if(instance?.refField2)
+                              //   params.set("refField2", instance?.refField2);
+                              // if (instance?.refOperator2)
+                              //   params.set("refOperator2", instance?.refOperator2);
+                              for (let i = 1; i <= 10; i++) {
+                                const suffix = i === 1 ? "" : i;
+
+                                if (instance?.[`refKey${suffix}`]) {
+                                    params.set(`refKey${suffix}`, instance[`refKey${suffix}`]);
+                                }
+
+                                if (instance?.[`refField${suffix}`]) {
+                                    params.set(`refField${suffix}`, instance[`refField${suffix}`]);
+                                }
+
+                                if (instance?.[`refOperator${suffix}`]) {
+                                    params.set(`refOperator${suffix}`, instance[`refOperator${suffix}`]);
+                                }
+                            }
                              return new DevExpress.data.DataSource({
                                 // filter: filter,
                                 paginate: true,
@@ -2498,6 +2514,7 @@
                 if (k.includes("accept")) return { css: "accepted", text: raw };
                 if (k === "approved") return { css: "approved", text: raw };
                 if (k === "reject") return { css: "rejected", text: raw };
+                if (k === "cancelled") return { css: "rejected", text: raw };
                 if (k === "decline" || k === "declined") return { css: "declined", text: raw };
                 if (k === "quotation confirmed") return { css: "accepted", text: raw };
                 if (k === "quotation refused") return { css: "rejected", text: raw };
