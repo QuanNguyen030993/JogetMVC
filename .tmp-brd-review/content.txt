@@ -1,0 +1,440 @@
+BUSINESS REQUIREMENT DOCUMENT
+Workflow Management
+Tokiomarine Insurance Viet Nam
+16th April 2026
+
+## [Heading 1] 1. Objective (Mục tiêu)
+Mục tiêu của việc triển khai hệ thống Quotation Workflow là xây dựng một quy trình báo giá xuyên suốt, chuẩn hóa và có khả năng kiểm soát cao, nhằm nâng cao hiệu quả vận hành và năng lực cạnh tranh của doanh nghiệp trong bối cảnh thị trường bảo hiểm ngày càng số hóa.
+Cụ thể, hệ thống hướng đến các mục tiêu sau:
+Chuẩn hóa toàn bộ quy trình báo giá từ khâu tạo quotation đến khi hoàn tất, đảm bảo tất cả các phòng ban (FO, TS, UW, MKT/MGR) tuân thủ cùng một luồng xử lý thống nhất.
+Giảm thời gian xử lý (Turnaround Time – TAT) thông qua việc tự động hóa các bước assign, routing và notification, từ đó tăng tính hiệu quả
+Tăng năng suất làm việc của các bộ phận bằng cách giảm thiểu các thao tác thủ công, hạn chế việc xử lý qua email rời rạc và file offline.
+Đảm bảo kiểm soát rủi ro thông qua cơ chế referral đến Underwriting (UW), cho phép đánh giá và phê duyệt các trường hợp có mức độ rủi ro cao.
+Nâng cao chất lượng dịch vụ khách hàng bằng việc rút ngắn thời gian báo giá và đảm bảo thông tin chính xác, nhất quán.
+Tăng khả năng phối hợp liên phòng ban thông qua hệ thống workflow tập trung, giúp giảm sai sót và tránh mất thông tin trong quá trình bàn giao.
+Tạo nền tảng dữ liệu tập trung cho việc phân tích, báo cáo và tối ưu hóa quy trình trong tương lai.
+Hỗ trợ cơ chế phê duyệt linh hoạt (approval workflow), bao gồm các trường hợp cần escalations lên cấp quản lý hoặc yêu cầu ký số.
+Cho phép xử lý ngoại lệ (exception handling) một cách kiểm soát, ví dụ như các trường hợp cần refer UW hoặc cần bổ sung thông tin.
+Tăng khả năng mở rộng (scalability) của hệ thống để đáp ứng khối lượng quotation ngày càng tăng mà không làm gia tăng tương ứng chi phí vận hành.
+Đảm bảo tuân thủ các quy định nội bộ và yêu cầu kiểm toán thông qua việc lưu trữ đầy đủ dữ liệu và lịch sử giao dịch.
+
+## [Heading 1] 2. Quy trình
+
+## [Heading 1] 2.1 Quy trình báo giá
+Stakeholders (Các bên liên quan)
+
+### [TABLE 1]
+ROW 1: Role | Mô tả
+ROW 2: FO (Front Office) | Tạo báo giá, làm việc với khách hàng
+ROW 3: TS (Technical Support) | Hỗ trợ nhập liệu / xử lý kỹ thuật
+ROW 4: UW (Underwriting) | Đánh giá rủi ro, approve/decline
+ROW 5: MKT/MGR | Phê duyệt cuối + ký số
+ROW 6: System Admin | Quản lý hệ thống
+Scope process
+Tạo mới quotation
+Assign & xử lý task theo role (FO / TS / UW)
+Review & referral (UW)/ Risk assessment
+Approval & Digital Signature (MKT/MGR)/
+Send Quote to client
+
+## [Heading 1] 2.2 Mô tả chi tiết báo giá
+Khởi tạo báo giá
+Quy trình bắt đầu khi bộ phận MKT Front Office (FO) hoặc Technical Support (TS) tạo mới một quotation dựa trên nhu cầu của khách hàng. Hệ thống quản lý theo từng quote riêng lẽ
+Hệ thống cần cho phép người dùng:
+Nhập đầy đủ thông tin khách hàng và sản phẩm
+Đính kèm các tài liệu liên quan
+Khởi tạo quotation dưới dạng bản nháp (draft)
+Giao nhiệm vụ / phân công và xử lý nội bộ
+Sau khi quotation được tạo, dữ liệu sẽ được hoàn thiện bởi FO hoặc TS tùy theo mức độ phức tạp của sản phẩm.
+Với các trường hợp đơn giản: FO có thể xử lý trực tiếp
+ệ thống cần:
+Hỗ trợ phân công công việc linh hoạt (assignment)
+Cho phép nhiều bên cùng tham gia xử lý theo từng vai trò
+Đảm bảo tất cả các thông tin cần thiết được hoàn thiện trước khi chuyển sang bước tiếp theo
+Trước khi gửi quotation ra bên ngoài, FO/TS thực hiện bước rà soát cuối cùng nhằm:
+Kiểm tra tính đầy đủ và chính xác của thông tin
+Đảm bảo các điều khoản phù hợp với chính sách nội bộ
+Xác định liệu quotation có cần đánh giá rủi ro bởi Underwriting hay không
+Risk Assessment & Underwriting Control (Đánh giá rủi ro)
+Đối với các trường hợp có yếu tố rủi ro hoặc vượt ngoài tiêu chuẩn, quotation sẽ được chuyển đến bộ phận Underwriting (UW) để đánh giá.
+UW sẽ thực hiện:
+Phân tích rủi ro
+Đánh giá khả năng chấp nhận bảo hiểm
+Đưa ra quyết định nghiệp vụ (chấp nhận, từ chối hoặc yêu cầu bổ sung thông tin)
+Hệ thống cần:
+Hỗ trợ ghi nhận kết quả đánh giá
+Cho phép trao đổi thông tin giữa UW và FO
+Lưu lại toàn bộ lịch sử quyết định
+Giai đoạn này đảm bảo kiểm soát tốt danh mục rủi ro và tuân thủ chính sách underwriting.
+Manager MKT Approval (Phê duyệt & ký số)
+Quotation cần được phê duyệt bởi cấp quản lý (MKT/MGR).
+Hệ thống cần:
+Hỗ trợ luồng phê duyệt theo cấp
+Cho phép ký số (digital signature)
+Ghi nhận đầy đủ lịch sử phê duyệt
+Điều này đảm bảo các quyết định quan trọng được kiểm soát ở cấp phù hợp.
+Send Quotation to client (Giao tiếp với khách hàng)
+Sau khi quotation đã được hoàn thiện và (nếu cần) được UW phê duyệt, FO sẽ gửi quotation đến khách hàng.
+Hệ thống cần hỗ trợ:
+Xuất quotation dưới dạng tài liệu chuẩn
+Gửi thông tin đến khách hàng
+Theo dõi phản hồi của khách hàng
+Khách hàng có thể:
+Chấp nhận quotation → chuyển sang bước hoàn tất
+Từ chối hoặc không phản hồi → quotation được đóng lại
+Mục tiêu của giai đoạn này là đảm bảo trải nghiệm khách hàng nhanh chóng
+Decision:
+Client Confirm = Yes → Complete quotation
+Client Confirm = No → Cancel quotation
+
+## [Heading 1] 2.3 Quy trình cấp đơn
+Các phòng TS/ FO có thể gửi yêu cầu cấp đơn, PM sẽ phải nhập Quotation No vào hệ thống Core PA . chương trình Integration sẽ tự động mapping Policy No tương ứng với Quation No ở bên hệ thống Workflow Management. PM sẽ không phải lưu link WM lên Soho.
+
+## [Heading 1] 2.4 Mô tả chi tiết cấp đơn
+Khởi tạo yêu cầu
+Quy trình bắt đầu khi bộ phận MKT Front Office (FO) hoặc Technical Support (TS) tạo mới một yêu cầu dựa trên báo giá đã được phê duyệt và kí từ khách hàng. Hệ thống quản lý theo từng yêu cầu riêng lẽ, liên kết 1 báo giá – 1 yêu cầu cấp làm chứng từ
+Hệ thống cần cho phép người dùng:
+Nhập đầy đủ thông tin khách hàng và sản phẩm
+Đính kèm các tài liệu liên quan
+Khởi tạo yêu cầu dưới dạng bản nháp (draft)
+Giao nhiệm vụ / phân công và xử lý nội bộ
+Sau khi yêu cầu được tạo, dữ liệu sẽ được hoàn thiện bởi FO hoặc TS bằng việc check đầy đủ thông tin để cấp đơn.
+Với các trường hợp đơn giản: FO có thể xử lý trực tiếp
+Với các trường hợp cần hỗ trợ kỹ thuật: TS sẽ tham gia để bổ sung thông tin chi tiết
+Hệ thống cần:
+Hỗ trợ phân công công việc linh hoạt (assignment)
+Cho phép nhiều bên cùng tham gia xử lý theo từng vai trò
+Đảm bảo tất cả các thông tin cần thiết được hoàn thiện trước khi chuyển sang bước tiếp theo
+Gửi bản ký trả tới khách hàng
+Sau khi tài liệu đã được hoàn thiện và (nếu cần) và được gửi từ PM đến phòng MKT
+Hệ thống cần hỗ trợ:
+Nhắc nhở người dùng các hợp đồng đến hạn renew
+Nhắc nhở người dùng các hợp đồng đã ký nhưng chưa làm cấp đơn để gửi đến khách hàng
+Đồng bộ thông tin từ PA sang WM để PM tiện theo dõi tiến độ kí trả từ khách hàng
+Theo dõi phản hồi của khách hàng
+Mục tiêu của giai đoạn này là hoàn thiện các chứng từ có liên quan đến báo giá đã duyệt bởi TMIV
+
+## [Heading 1] 3. Chi tiết quy trình theo các phòng
+
+## [Heading 1] 3.1 Báo giá
+
+## [Heading 1] 3.1.1 FO
+Tại giai đoạn này, hệ thống đóng vai trò là công cụ hỗ trợ thu thập thông tin và đảm bảo dữ liệu đầu vào được chuẩn hóa ngay từ đầu, vừa hỗ trợ cho FO quản lý được các thông tin báo giá mình đã gửi đi cho các phòng khác, từ đầu vào FO gửi request, đến lúc nhận lại là thông tin báo giá đã hoàn tất, gửi đến cho MGR phê duyệt, nhận lại báo giá đã ký từ TMIV và gửi đến khách hàng.
+
+### [TABLE 2]
+ROW 1: Actions | User (FO hoặc TS) tạo quotation / Có thể cập nhật thông tin trong quá trình chờ làm báo giá / Upload đính kèm báo giá đúng như quy định để tạo code báo giá cho TS /  /  / Hệ thống auto assign task theo rule: / Nếu FO → có thể skip TS hoặc assign TS / Nếu TS → xử lý trực tiếp / Nhận báo giá refer sang Underwriting / Gửi báo giá đến MGR  / Gửi báo giá đến khách hàng
+ROW 2: Output | Quotation draft được tạo / Bản Quotation đã hoàn thành để làm việc với khách hàng
+ROW 3: Status | Pending – In Progress – confirm
+
+## [Heading 1] 3.1.2 TS
+Ở giai đoạn này, khi TS nhận được request của FO thì sẽ lên kế hoạch thực hiện cho các đơn dạng New / Renew
+
+### [TABLE 3]
+ROW 1: Actions | TS nhận task  / Nhập liệu, tính toán thông tin báo giá / Hoàn thành task → chuyển về FO
+ROW 2: Output | Quotation đầy đủ dữ liệu
+ROW 3: Status | Status: In Progress
+
+## [Heading 1] 3.1.3 UW
+Tại giai đoạn này, Underwriting đã nhận được yêu cầu mang tính chất xem / đánh giá dựa trên mẫu báo giá đã được soạn thảo hoàn thành, tùy vào authority FO sẽ nhận biết báo giá này có cần được refer hay không,
+
+### [TABLE 4]
+ROW 1: Actions | Review yêu cầu refer từ FO  / Decline yêu cầu refer / Trả yêu cầu không cần refer / không đủ thông tin về FO / Tiếp nhận yêu cầu refer / Duyệt chấp nhận rủi ro từ báo giá, trả trạng thái / Từ chối rủi ro từ báo giá, trả trạng thái / Feedback đến FO / Escalate rủi ro đến trưởng bộ phận / Underwriting MGR tiếp nhận xem rủi ro và cho ý kiến
+ROW 2: Output | Quotation đã xem qua rủi ro
+ROW 3: Status | Status: / No need to refer / Need More Info
+
+## [Heading 1] 3.2 Cấp đơn
+
+## [Heading 1] 3.2.1 FO
+Tại giai đoạn này, hệ thống cho phép FO tạo tiếp yêu cầu đến TS/PM về việc sẽ tiến hành làm hợp đồng cho báo giá đã được ký từ khách hàng hoặc tạo yêu cầu làm mới / điều chỉnh hợp đồng, phát sinh các phí, như year-end adjustment, no claim bonus …. .
+
+### [TABLE 5]
+ROW 1: Actions | User FO tạo yêu cầu / FO có quyền thu hồi yêu cầu nếu có sự cố phát sinh từ báo giá / FO có quyền revise request được trả lại từ PM / Review bản ký trả gửi từ PM / Gửi khách hàng và nhận bản kí trả  / Hoàn thành task đã gửi yêu cầu / Hệ thống auto assign task theo rule: / Nếu FO → có thể skip TS hoặc assign TS / Nếu TS → xử lý trực tiếp / Hệ thống bypass : / Nếu FO muốn skip TS → PM / Nếu FO không muốn skip TS → TS
+ROW 2: Output | Request gửi đến TS / PM với các thông tin cần làm chứng từ dựa theo báo giá đang làm việc
+ROW 3: Status | Pending – In Progress – Policy Issuance - Complete
+
+## [Heading 1] 3.2.1 TS
+Ở giai đoạn này, khi TS nhận được request của FO thì sẽ lên kế hoạch thực hiện cho các đơn dạng New / Renew / Endorsement
+
+### [TABLE 6]
+ROW 1: Actions | User TS tạo yêu cầu / TS có quyền thu hồi yêu cầu nếu có sự cố phát sinh từ báo giá / TS có quyền revise request được trả lại từ PM / Review bản ký trả gửi từ PM / Gửi khách hàng và nhận bản kí trả  / Hoàn thành task đã gửi yêu cầu / Điền checklist của TS
+ROW 2: Output | Hồ sơ chuẩn bị đưa sang PM có thông tin xử lý từ TS
+ROW 3: Status | In Progress
+
+## [Heading 1] 3.2.1 PM
+Tại giai đoạn này, PM đã nhận được yêu cầu từ phòng MKT, bắt đầu thực hiện việc cấp đơn bao gồm các việc xử lý request gửi về các bản hợp đồng bán hàng, chứng từ chi trả …. . Nếu yêu cầu PM nhận được là các chứng từ phát sinh ngoài hợp đồng thì PM sẽ là phòng ban đóng yêu cầu để hoàn thành task.
+
+### [TABLE 7]
+ROW 1: Actions | PM gửi trả yêu cầu nếu chưa đủ thông tin / PM re-assign trong nội bộ PM / PM tiếp nhận yêu cầu từ MKT / Submit đơn / Complete task
+ROW 2: Output | PM trả lại bộ chứng từ / hợp đồng theo yêu cầu của MKT
+ROW 3: Status | In Progress – Submit – Submit but follow up - Complete
+
+## [Heading 1] 4. Function / Feature
+
+### [TABLE 8]
+ROW 1: No | Function | Description | Type
+ROW 2: 1 | Digital Signature | Hỗ trợ ký số điện tử | Core
+ROW 3: 2 | Document Management | Attach main and supporting docs, upload 1 lần nhưng hệ thống tự động tạo nhiều quotation no. Rule tạo tự động :  / + Số lượng file upload / + Key in vào số lượng Quote No cần khởi tạo / + Hệ thống cho khởi tạo có file hoặc tạo Quote rỗng để người dùng tự upload từng file  / + 1 nguồn file được sử dụng chung cho các phòng không nhân bản như hệ thống cũ sẽ tốn bộ nhớ / Máy chủ sẽ lưu tất cả các : / Version của attachment, kể cả file cùng tên,  / Dựa trên dung lượng,  / Thời gian upload  / Người upload. | Core
+ROW 4: 3 | Preview File | Xem không cần download | Enhancement
+ROW 5: 4 | Mapping Quotation-Policy | Liên kết báo giá với issue đơn. PM keyin Quote No trong PA system | Core
+ROW 6: 5 | UW Referral | Refer với lý do cần thiết, | Core
+ROW 7: 6 | Checklist | PM thực hiện checklist trước khi Accept request | New
+ROW 8: 7 | Bulk Action | Chọn nhiều request / đơn action một lúc / + áp dụng cho renew hàng loạt / + Close request của PM hàng loạt | Enhancement
+ROW 9: 8 | Email | + Chỉ áp dụng cho một số phòng ban / status / action cụ thể  / Các case bao gồm / + PM done process  / + UW finish reference  / + Manager approve / + Khởi tạo Quote | Core
+ROW 10: 9 | Notification | Mỗi action đều có thông báo bao gồm / Cập nhật cho báo giá hoặc cấp đơn.  / Khi được giao nhiệm vụ.  / Thay thế khi email không nhận được.  / Trạng thái Approve hoặc Decline (từ Underwriting hoặc Leader).  / Khi báo giá được chỉnh sửa (modify). | New
+ROW 11: 10 | Comment | Sử dụng chức năng này để update thông tin trong trường hợp không muốn upload lại file , mang ý nghĩa ( giống Jira sharing comment ) | New
+ROW 12: 10 | Audit Log | Kiểm soát lịch sử hành động của người dùng | Core
+ROW 13: 11 | Transaction Type | Lựa chọn trong các loại này trong quá trình tạo request. / + New / Renew/ Endorsement | Core
+ROW 14: 12 | Report / dashboard | Các phòng cung cấp lại tiêu chí thống kê ( dimension ) | Core
+ROW 15: 13 | Status | Quotation status / +Pending / +In Progress / +Completed / Main Status of Quotaton-> Need define status of each department  / UW status  / +  / + Decline | Enhance
+
+## [Heading 1] 5. Sơ đồ giao tiếp
+Báo giá
+Cấp đơn
+
+## [Heading 1] 6. Trạng thái
+
+## [Heading 2] 6.1 Trạng thái chính, toàn cục
+Pending
+In Progress
+Completed
+Cancelled
+Declined
+Global Status Deriving Department
+
+### [TABLE 9]
+ROW 1: Condition | Global Status
+ROW 2: FO đang làm | 
+ROW 3: TS đang làm | 
+ROW 4: UW đang làm | 
+ROW 5: PM đang làm | 
+ROW 6: Chờ TS/UW | Pending
+ROW 7: Client confirm | 
+ROW 8: UW decline | 
+ROW 9: Client cancel | 
+ROW 10: TMIV cancel | Cancelled
+
+## [Heading 2] 6.2 Trạng thái phòng
+Ngoài Global status còn có status cụ thể của các phòng
+Pending (chưa xử lý)
+In Progress (đang làm)
+Completed (đã xong)
+Accept risk / Not accept risk
+No need to refer / Need more information
+Rejected / Returned (nếu có)
+FO_Status
+TS_Status
+UW_Status
+PM_Status
+Global_Status
+Trong DB / Joget:
+FO_Status: Pending / / Completed
+TS_Status: Pending / / Completed
+UW_Status: Pending / / Completed / Rejected
+Global_Status: Pending / / Completed / Cancelled / Declined
+
+## [Heading 3] a. FO
+Lifecycle FO:
+
+### [TABLE 10]
+ROW 1: Stage | Status
+ROW 2: Create quotation | Pending
+ROW 3: Fill task | In Progress
+ROW 4: Review quotation | In Progress
+ROW 5: Send quotation | In Progress
+ROW 6: Client confirms | Completed
+ROW 7: Client decline / cancel | Cancelled
+ROW 8:  | 
+FO Complete khi:
+Client confirm → Done
+FO Pending khi:
+Mới tạo quotation hoặc đang chờ TS/UW
+
+## [Heading 3] b. TS
+Lifecycle TS:
+
+### [TABLE 11]
+ROW 1: Stage | Status
+ROW 2: Assigned TS | Pending
+ROW 3: Fill task | In Progress
+ROW 4: Submit to FO / UW | Completed
+ROW 5: Receive follow up document | Completed
+TS Complete khi:
+Đã làm báo giá xong + submit lại
+TS Pending khi:
+Được assign nhưng chưa làm
+
+## [Heading 3] Underwriting
+Lifecycle UW:
+
+### [TABLE 12]
+ROW 1: Stage | Status
+ROW 2: Assigned UW | Pending
+ROW 3: Risk assessment | In Progress
+ROW 4: No need to refer | 
+ROW 5: Need more info | Pending
+ROW 6:  | Completed
+ROW 7:  | Rejected
+UW Accept khi:
+Accept task → flow đi tiếp
+UW Complete khi:
+No need to refer / Need more info → flow đi tiếp
+Decline → flow đi tiếp
+
+## [Heading 3] PM
+Lifecycle PM:
+
+### [TABLE 13]
+ROW 1: Stage | Status
+ROW 2: Assigned PM | Pending
+ROW 3: Accept Policy | In Progress
+ROW 4: Submit Policy | Endors => Submit / New / renew => Submit but follow up
+ROW 5: Complete Policy | Completed
+PM Accept khi:
+Accept task → flow đi tiếp
+PM Submit khi:
+Submit policy/Submit but follow up → flow đi tiếp
+
+## [Heading 1] 7. TAT/ SLA Management
+
+## [Heading 1] 7.1 SLA ( Mục tiêu )
+SLA của hệ thống sẽ gồm hai phần.
+Trong hệ thống sẽ có tính năng nhắc nhở người dùng về các báo giá gần đến hạn renew, bằng cách hiển thị danh sách trong hệ thống.
+Sẽ có tính năng email nhắc nhở dành cho báo giá sắp hết hạn. Ngoài ra, hệ thống cũng sẽ nhắc nhở những báo giá đã quá hạn xử lý.
+SLA (Service Level Agreement)
+Thời gian cam kết
+SLA = Target time (vd: 4h / 1 ngày)
+
+## [Heading 1] 7.2 TAT ( Thực tế )
+Với các công thức tính của Joget cũ sẽ được archive và apply cho hệ thống WM, hệ thống sẽ loại trừ các ngày nghỉ / lễ, cụ thể thêm phần cải thiện khác:
+FO: Không tính TAT, vì FO phụ thuộc theo thời gian tạo request và thời gian chốt của khách hàng
+TS: Sẽ được tính dựa trên Accepted Date và Complete Date, cùng với số lần đã xử lý báo giá. Nếu báo giá chưa được sửa đổi (revise), TAT sẽ được tính theo khoảng thời gian từ ngày nhận đến ngày hoàn thành của mỗi báo giá. Nếu báo giá đã được sửa đổi, TAT sẽ dựa trên số lần xử lý, với tiêu chuẩn là 3 ngày cho mỗi lần xử lý.
+UW:
+PM: Sẽ được tính tương tự, dựa trên ngày Accepted Date cuối cùng và Submit Date đầu tiên.
+
+## [Heading 3] Công thức tính TAT chung
+Thời gian gap TAT
+Gap TAT = Accept Time - Notification Time
+Thời gian thực tế xử lý
+TAT = End Time – Start Time
+Trong đó,
+Gap TAT: Số ngày người dùng được assign đến khi bấm accept task (nếu có)
+TAT: số ngày xử lý đã loại bỏ các ngày nghỉ, lễ
+End Time: Date submit hoặc complete tùy thuộc theo rule quy định của phòng, căn cứ theo cách tính KPI cuối năm
+Start Time: Date accept task
+
+## [Heading 4] a.I FO
+FO TAT = Time (Create quotation → Send quotation / Complete)
+Có thể split:
+Create → Review
+Review → Send
+Sending → Client confirms
+
+## [Heading 4] a.II TS
+Hệ thống có khi nhận accept / complete date + số lần đã xử lý báo giá, nếu:
++ báo giá chưa revise, xét theo accept / complete date ra TAT
++ báo giá revise, xét theo số lần xử lý
+TS TAT = Time (Accept Task → Submit back)
+Nếu có loop, phải tính thêm:
+TS Total TAT = SUM(all TS cycles)
+Cách tính TAT của TS bị sai : End- start vì có tgian TS chờ đợi
+Cách tính đúng : TS Loop Time = SUM (TS xử lý mỗi lần giữ case)
+Ví dụ :
+
+### [TABLE 14]
+ROW 1: Step | Owner | Time
+ROW 2: 1 | FO submit → TS | 01 Apr 09:00
+ROW 3: 2 | TS xử lý | → 01 Apr 12:00
+ROW 4: 3 | TS trả FO | 
+ROW 5: 4 | FO update | 01 Apr 16:00
+ROW 6: 5 | TS xử lý tiếp | → 02 Apr 10:00
+ROW 7: 6 | gửi UW | 
+Cách tính :
+🔹 Loop 1 (TS):
+09:00 → 12:00 = 3h
+🔹 Loop 2 (TS):
+16:00 → 10:00 hôm sau = 18h
+🔹 Total TS Loop Time:
+3h + 18h = 21h
+
+## [Heading 4] a.III UW
+Nhận đủ thông tin thì accept - khi gửi đến FO là complete
+UW TAT = Time (Accept Task → Decision)
+
+## [Heading 4] a.IV PM
+Rule PM tính Accept task và lúc Submit, Complete task không tính
+Nếu submit đi rồi xem như PM đã complete hoàn toàn việc, nên khi lên báo cáo về TAT rule sẽ lấy lần PM xử lý sau cùng
+PM TAT = Time (Accept Task → Submit back)
+
+## [Heading 3] b. Trường dữ liệu để tính TAT
+Log các timestamp từ các trường lưu:
+FO_Start_Time
+FO_End_Time
+TS_Assign_Time
+TS_Complete_Time
+UW_Assign_Time
+UW_Decision_Time
+PM_Assign_Time
+PM_Submit_Time
+Client_Confirm_Time
+
+## [Heading 3] c. Bottleneck
+
+### [TABLE 15]
+ROW 1: Phòng | Bottleneck chính | Nguyên nhân
+ROW 2: FO | Client confirm | External dependency
+ROW 3: TS | Rework loop | Data không chuẩn
+ROW 4: UW | Risk assessment | Manual + thiếu data
+8. Các điểm trao đổi
+
+## [Heading 1] FO
+
+### [TABLE 16]
+ROW 1: No | Content | Concern | Type solution
+ROW 2: 1 | Update thông tin khách hàng khi chờ TS làm báo giá | Các mục thay đổi  / + Option báo giá, tăng sum insured / + Client đổi tên pháp lý mst  / + Đổi product lob, thi thoảng /  => As is thường phải end quotation và duyệt lại | Cải tiến
+ROW 3: 2 | Bổ sung workflow không cần refer từ UW | Đưa sang cấp đơn và báo giá không cần refer UW | Keep
+ROW 4: 3 | Xây dựng thêm flow tự động cho việc khách hàng đồng ý mua sp TMIV sang cấp đơn | Vẫn giữ việc chủ động request cấp đơn nếu khách hàng có thời gian hold => không để tự động ảnh hưởng TAT PM | 
+ROW 5: 5 | RES form theo Lob chuẩn hóa | Mỗi quotation là mỗi RES | Cải tiến
+ROW 6: 6 | Cách tính TAT của FO nếu đã tách báo giá | FO không có nhu cầu tính TAT, nhu cần làm xuất báo cáo thống kê theo status request / báo giá | Cải tiến
+ROW 7: 7 | Thêm flow skip MNG cho những báo giá hoặc endorsement ko cần phê duyệt | Vẫn cần refer/ hay TS làm báo giá, chỉ skip MNG để cấp đơn/ Client confirmed luôn | Cải tiến
+
+## [Heading 1] TS
+
+### [TABLE 17]
+ROW 1: No | Content | Concern | Type solution
+ROW 2: 1 | TAT tách cho mỗi báo giá | -Báo giá nhận / trả sớm muộn thất thường: / + Nhận request thì gửi liền, không phản ánh thực tế  / + Có lúc complete ghi nhận bị trễ dù đã làm xong trước đó / -Số lượng báo giá expiry bị ồ ạt tại 1 thời điểm, không thể đo lường trước được / -PIC renewal quotation list phải chỉnh thủ công cho danh sách PIC cũ của cả FO / TS, mong / muốn cả FO / TS có chung màn hình refer vào set PIC chung, có tính năng copy paste thuận tiện | Cải tiến
+ROW 3: 2 | Các báo giá của LoB đính kèm nào hiện đang được chuẩn hóa rồi | Các đính kèm có vài Lobs đã chuẩn hóa 1 phần, thiết kế preview xem nhanh, hạn chế download về | Cải tiến
+ROW 4: 3 | CR fill task từ Joget cũ | Hiện tại chưa cần build vào hệ thống mới | Keep
+ROW 5: 4 | Option báo giá | Thiết lập tính năng làm option cho báo giá, khi xác  nhận thì sẽ tách quotation code | New
+ROW 6: 5 | Skip TS workflow | Dùng việc chạy quy trình tạm của Joget cũ, vướng mắc flow UW khi declined sẽ cancel quotation không làm tiếp được | Cải tiến
+ROW 7: 6 | Nhận biết về type new/renew/endorsement của các request cho workflow báo giá / cấp đơn | TS không tìm kiếm qua quotation code, tìm qua policy no | Cải tiến
+ROW 8: 7 | Sanction | Realtime check khách hàng hit / without hit | New
+
+## [Heading 1] UW
+
+### [TABLE 18]
+ROW 1: No | Content | Concern | Type solution
+ROW 2: 1 | Cách follow ngày hiệu lực đơn | -Hiện tại Joget vẫn chưa trích xuất được thông tin ngày hiệu lực đơn, khi trước làm refer bằng email thì có thể nắm bắt thông tin được ngay / , khi lọc dữ liệu chỉ lấy được theo ngày tạo request báo giá, không có cơ sở lấy được ngày hiệu lực đơn vì hệ thống đang không mapping / -Policy No có nhiều code trong Quotation Code nên UW không thể check | Cải tiến
+ROW 3: 2 | Phê duyệt refer báo giá | UW vẫn sẽ tiếp nhận như flow cũ để không ảnh hưởng workload | Keep
+ROW 4: 3 | Pass báo giá đưa thẳng sang cấp đơn | - Nếu hỗ trợ thêm flow bypass từ báo giá tạo xong và duyệt sang cấp đơn, sẽ có rủi ro / - Phụ thuộc vào authority FO sẽ kiểm soát về việc refer sang UW và tạo request cấp đơn (với báo giá được phê duyệt từ lead MKT) | Keep
+ROW 5: 4 | TAT UW | Ngày accept date bị nới khi FO không cung cấp đủ thông tin, lúc sau back lại cho UW thì được không tính | Cải tiến
+
+## [Heading 1] PM
+
+### [TABLE 19]
+ROW 1: No | Content | Concern | Type solution
+ROW 2: 1 | Mapping quotation / policy no | Sẽ dễ dàng làm chi tiết cho từng đơn, tuy nhiên việc accept đơn, tìm kiếm sẽ bị tăng số lần thực hiện, cần tìm giải pháp xử lý nhanh | Cải tiến
+ROW 3: 2 | Soho | Phải lưu link ở soho hiện tại, người dùng lưu link lại để mỗi khi thao tác xong có thể biết link nào ở Joget vào trực tiếp, vì còn bước đăng nhập | Tối ưu
+ROW 4: 3 | Year end adjustment | 1 request nhiều attachment báo giá khó xử lý, sửa bổ sung mục đích cho endorsement ,mọi thứ chỉ qua attachment ,hoặc cũng thường gửi chung 2 transaction cùng 1 số báo giá | Thêm mới
+ROW 5: 4 | Mail | Giữ lại các thông tin cần thiết từ log trao đổi | Cải tiến
+ROW 6: 5 | Process checklist | Hiện tại Joget chưa có tính năng này, mong muốn bổ sung vào hệ thống mới,checklist từng line, buộc phải thực hiện trước mới cho phép Accept request | Thêm mới
+ROW 7: 6 | TAT | Không tính ngày lễ | Thêm mới
+ROW 8: 7 | Follow UW status | PM không tháy tiến trình của refer UW của quotation, khó theo dõi trạng thái báo giá đc refer hay chưa và cụ thể ra sao tại thời điểm đang issue đơn hoặc tiếp nhận request / => cho hiện luôn status của UW (Rejected/Approved) và detail để PM vào xem nếu cần | Cải tiến
+ROW 9: 8 | TS chuyển giao  đơn sang cho PM | PM phải mở từng màn hình từng đơn để xử lý accept | Cải tiến
+ROW 10: 9 | Submit but follow up list | Việc chuyển bảng kí trả của khách hàng về PM, 99% chỉ vào thực hiện việc đóng request /  / Type endorsement là PM đóng ko follow | Cải tiến
+ROW 11: 10 | Inbox status | Còn chưa rõ ràng, nhiều khó tìm kiếm | Cải tiến
+ROW 12: 11 | Preview file | Mong muốn preview file, không cần tải, không cần chỉnh sửa | Thêm mới
+
+## [Heading 1] 9. Tích hợp
+Hệ thống mới: Thêm tích hợp chữ ký số trực tiếp; nếu khả thi, tích hợp RE Tool Survey; trong tương lai, thêm xử lý Add Clause (thêm điều khoản) và hệ thống xử lý định danh XML.
+Hệ thống cải thiện: Tích hợp với hệ thống PA, đảm bảo đồng bộ dữ liệu chặt chẽ.
+Hệ thống ngưng dùng: Hệ thống Soho không còn khả dụng vì có phương pháp thay thế.

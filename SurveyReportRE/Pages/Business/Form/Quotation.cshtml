@@ -18,13 +18,19 @@
         if (_roleAppName == "HOD")
             mGridOption.refField = "hodpic";    
         }
+        mGridOption.refKey2 = "Quotation confirmed";
+        mGridOption.refField2 = "workflowStatus";
+        mGridOption.refOperator2 = "<>";
+        mGridOption.refKey3 = "Quotation refused";
+        mGridOption.refField3 = "workflowStatus";
+        mGridOption.refOperator3 = "<>";
+        mGridOption.refKey4 = "Cancelled";
+        mGridOption.refField4 = "workflowStatus";
+        mGridOption.refOperator4 = "<>";
         // mGridOption.refField2 = "isView";
         // mGridOption.refKey2 = true;
         //Pending filterName refactor
         var mGrid = new MGrid(null, $(`#dataGrid_@QuotationModel.ModelName`), new QuotationGridOption('@QuotationModel.ModelName', "User", mGridOption), null);
-        // var DS = mGrid.component.getDataSource();
-        // DS.filter(["isArchived", "=", null], "or", ["isArchived", "=", false]);
-        // mGrid.component.option("dataSource", DS);
          
     });
 </script>

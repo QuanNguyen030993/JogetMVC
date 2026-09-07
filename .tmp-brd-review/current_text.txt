@@ -1,0 +1,764 @@
+P0001 CURRENT: BUSINESS REQUIREMENT DOCUMENT
+Workflow Management
+P0004 CURRENT: Tokiomarine Insurance Viet Nam
+P0005 CURRENT: 16th April 2026
+P0008 CURRENT: Contents
+P0009 CURRENT: 1. Objective (Mục tiêu)	4
+P0010 CURRENT: 2. Quy trình	5
+P0011 CURRENT: 2.1 Quy trình báo giá	5
+P0012 CURRENT: 2.2 Mô tả chi tiết báo giá	6
+P0013 CURRENT: 2.3 Quy trình cấp đơn	8
+P0014 CURRENT: 3. Chi tiết quy trình theo các phòng	12
+P0015 CURRENT: 3.1 Báo giá	12
+P0016 CURRENT: 3.1.1 FO	12
+P0017 CURRENT: 3.1.2 TS	15
+P0018 CURRENT: 3.1.3 UW	17
+P0019 CURRENT: 3.2 Cấp đơn	18
+P0020 CURRENT: 3.2.1 FO	18
+P0021 CURRENT: 3.2.1 TS	21
+P0022 CURRENT: 3.2.1 PM	22
+P0023 CURRENT: 4. Function / Feature	24
+P0024 CURRENT: 5. Sơ đồ giao tiếp	27
+P0025 CURRENT: 6. Trạng thái	29
+P0026 CURRENT: 6.1 Trạng thái chính, toàn cục	29
+P0027 CURRENT: 6.2 Trạng thái phòng	30
+P0028 CURRENT: a. FO	31
+P0029 CURRENT: b. TS	32
+P0030 CURRENT: c.	Underwriting	33
+P0031 CURRENT: 7. TAT/ SLA Management	35
+P0032 CURRENT: 7.1 SLA ( Mục tiêu )	35
+P0033 CURRENT: 7.2 TAT ( Thực tế )	36
+P0034 CURRENT: a.	Công thức tính TAT chung	37
+P0035 CURRENT: b. Trường dữ liệu để tính TAT	41
+P0036 CURRENT: c. Bottleneck	42
+P0037 CURRENT: 8. Các điểm các phòng cần trao đổi	43
+P0038 CURRENT: FO	43
+P0039 CURRENT: TS	44
+P0040 CURRENT: UW	46
+P0041 CURRENT: PM	47
+P0042 CURRENT: 9. Tích hợp	48
+P0045 CURRENT: 1. Objective (Mục tiêu)
+P0046 CURRENT: Mục tiêu của việc triển khai hệ thống Quotation Workflow là xây dựng một quy trình báo giá xuyên suốt, chuẩn hóa và có khả năng kiểm soát cao, nhằm nâng cao hiệu quả vận hành và năng lực cạnh tranh của doanh nghiệp trong bối cảnh thị trường bảo hiểm ngày càng số hóa.
+P0047 CURRENT: Cụ thể, hệ thống hướng đến các mục tiêu sau:
+P0048 CURRENT: Chuẩn hóa toàn bộ quy trình báo giá từ khâu tạo quotation đến khi hoàn tất, đảm bảo tất cả các phòng ban (FO, TS, UW, MKT/MGR) tuân thủ cùng một luồng xử lý thống nhất.
+P0049 CURRENT: Giảm thời gian xử lý (Turnaround Time – TAT) thông qua việc tự động hóa các bước assign, routing và notification, từ đó tăng tính hiệu quả
+P0050 CURRENT: Tăng năng suất làm việc của các bộ phận bằng cách giảm thiểu các thao tác thủ công, hạn chế việc xử lý qua email rời rạc và file offline.
+P0051 CURRENT: Đảm bảo kiểm soát rủi ro thông qua cơ chế referral đến Underwriting (UW), cho phép đánh giá và phê duyệt các trường hợp có mức độ rủi ro cao.
+P0052 CURRENT: Nâng cao chất lượng dịch vụ khách hàng bằng việc rút ngắn thời gian báo giá và đảm bảo thông tin chính xác, nhất quán.
+P0053 CURRENT: Tăng khả năng phối hợp liên phòng ban thông qua hệ thống workflow tập trung, giúp giảm sai sót và tránh mất thông tin trong quá trình bàn giao.
+P0054 CURRENT: Tạo nền tảng dữ liệu tập trung cho việc phân tích, báo cáo và tối ưu hóa quy trình trong tương lai.
+P0055 CURRENT: Hỗ trợ cơ chế phê duyệt linh hoạt (approval workflow), bao gồm các trường hợp cần escalations lên cấp quản lý hoặc yêu cầu ký số.
+P0056 CURRENT: Cho phép xử lý ngoại lệ (exception handling) một cách kiểm soát, ví dụ như các trường hợp cần refer UW hoặc cần bổ sung thông tin.
+P0057 CURRENT: Tăng khả năng mở rộng (scalability) của hệ thống để đáp ứng khối lượng quotation ngày càng tăng mà không làm gia tăng tương ứng chi phí vận hành.
+P0058 CURRENT: Đảm bảo tuân thủ các quy định nội bộ và yêu cầu kiểm toán thông qua việc lưu trữ đầy đủ dữ liệu và lịch sử giao dịch.
+P0060 CURRENT: 2. Quy trình
+P0061 CURRENT: 2.1 Quy trình báo giá
+P0063 CURRENT: Stakeholders (Các bên liên quan)
+P0065 CURRENT: Role
+P0066 CURRENT: Mô tả
+P0067 CURRENT: FO (Front Office)
+P0068 CURRENT: Tạo báo giá, làm việc với khách hàng
+P0069 CURRENT: TS (Technical Support)
+P0070 CURRENT: Hỗ trợ nhập liệu / xử lý kỹ thuật
+P0071 CURRENT: UW (Underwriting)
+P0072 CURRENT: Đánh giá rủi ro, approve/decline
+P0073 CURRENT: MKT/MGR
+P0074 CURRENT: Phê duyệt cuối + ký số
+P0075 CURRENT: System Admin
+P0076 CURRENT: Quản lý hệ thống
+P0078 CURRENT: Scope process
+P0079 CURRENT: Tạo mới quotation
+P0080 CURRENT: Assign & xử lý task theo role (FO / TS / UW)
+P0081 CURRENT: Review & referral (UW)/ Risk assessment
+P0082 CURRENT: Approval & Digital Signature (MKT/MGR)/
+P0083 CURRENT: Send Quote to client
+P0084 CURRENT: 2.2 Mô tả chi tiết báo giá
+P0085 CURRENT: Khởi tạo báo giá
+P0086 CURRENT: Quy trình bắt đầu khi bộ phận MKT Front Office (FO) hoặc Technical Support (TS) tạo mới một quotation dựa trên nhu cầu của khách hàng. Hệ thống quản lý theo từng quote riêng lẽ
+P0087 CURRENT: Hệ thống cần cho phép người dùng:
+P0088 CURRENT: Nhập đầy đủ thông tin khách hàng và sản phẩm
+P0089 CURRENT: Đính kèm các tài liệu liên quan
+P0090 CURRENT: Khởi tạo quotation dưới dạng bản nháp (draft)
+P0091 CURRENT: Giao nhiệm vụ / phân công và xử lý nội bộ
+P0092 CURRENT: Sau khi quotation được tạo, dữ liệu sẽ được hoàn thiện bởi FO hoặc TS tùy theo mức độ phức tạp của sản phẩm.
+P0093 CURRENT: Với các trường hợp đơn giản: FO có thể xử lý trực tiếp
+P0095 CURRENT: FO được quyết định tự xử lý báo giá hoặc gửi request cho TS. TS có trách nhiệm thực hiện yêu cầu theo đúng thông tin và các hướng dẫn/ biểu mẫu của TMIV.
+P0095 INSERTED: FO được quyết định tự xử lý báo giá hoặc gửi request cho TS. TS có trách nhiệm thực hiện yêu cầu theo đúng thông tin và các hướng dẫn/ biểu mẫu của TMIV.
+P0096 CURRENT: ệ thống cần:
+P0097 CURRENT: Hỗ trợ phân công công việc linh hoạt (assignment)
+P0098 CURRENT: Cho phép nhiều bên cùng tham gia xử lý theo từng vai trò
+P0099 CURRENT: Đảm bảo tất cả các thông tin cần thiết được hoàn thiện trước khi chuyển sang bước tiếp theo
+P0100 CURRENT: Trước khi gửi quotation ra bên ngoài, FO/TS thực hiện bước rà soát cuối cùng nhằm:
+P0101 CURRENT: Kiểm tra tính đầy đủ và chính xác của thông tin
+P0102 CURRENT: Đảm bảo các điều khoản phù hợp với chính sách nội bộ
+P0103 CURRENT: Xác định liệu quotation có cần đánh giá rủi ro bởi Underwriting hay không
+P0104 CURRENT: Risk Assessment & Underwriting Control (Đánh giá rủi ro)
+P0105 CURRENT: Đối với các trường hợp có yếu tố rủi ro hoặc vượt ngoài tiêu chuẩn, quotation sẽ được chuyển đến bộ phận Underwriting (UW) để đánh giá.
+P0106 CURRENT: UW sẽ thực hiện:
+P0107 CURRENT: Phân tích rủi ro
+P0108 CURRENT: Đánh giá khả năng chấp nhận bảo hiểm
+P0109 CURRENT: Đưa ra quyết định nghiệp vụ (chấp nhận, từ chối hoặc yêu cầu bổ sung thông tin)
+P0110 CURRENT: Hệ thống cần:
+P0111 CURRENT: Hỗ trợ ghi nhận kết quả đánh giá
+P0112 CURRENT: Cho phép trao đổi thông tin giữa UW và FO
+P0113 CURRENT: Lưu lại toàn bộ lịch sử quyết định
+P0114 CURRENT: Giai đoạn này đảm bảo kiểm soát tốt danh mục rủi ro và tuân thủ chính sách underwriting.
+P0116 CURRENT: Manager MKT Approval (Phê duyệt & ký số)
+P0117 CURRENT: Quotation cần được phê duyệt bởi cấp quản lý (MKT/MGR). Riêng Với các endorsement hoặc một số Quatation ko cần MGR ký
+P0117 INSERTED: Riêng Với các endorsement hoặc một số Quatation ko cần MGR ký
+P0119 CURRENT: Hệ thống cần:
+P0120 CURRENT: Hỗ trợ luồng phê duyệt theo cấp
+P0121 CURRENT: Cho phép ký số (digital signature)
+P0122 CURRENT: Ghi nhận đầy đủ lịch sử phê duyệt
+P0123 CURRENT: Điều này đảm bảo các quyết định quan trọng được kiểm soát ở cấp phù hợp.
+P0124 CURRENT: Send Quotation to client (Giao tiếp với khách hàng)
+P0125 CURRENT: Sau khi quotation đã được hoàn thiện và (nếu cần) được UW phê duyệt, FO sẽ gửi quotation đến khách hàng.
+P0126 CURRENT: Hệ thống cần hỗ trợ:
+P0127 CURRENT: Xuất quotation dưới dạng tài liệu chuẩn
+P0128 CURRENT: Gửi thông tin đến khách hàng
+P0129 CURRENT: Theo dõi phản hồi của khách hàng
+P0130 CURRENT: Khách hàng có thể:
+P0131 CURRENT: Chấp nhận quotation → chuyển sang bước hoàn tất
+P0132 CURRENT: Từ chối hoặc không phản hồi → quotation được đóng lại hoặc là được revise làm lại với một số trường hợp
+P0132 INSERTED: hoặc là được revise làm lại với một số trường hợp
+P0133 CURRENT: Mục tiêu của giai đoạn này là đảm bảo trải nghiệm khách hàng nhanh chóng
+P0134 CURRENT: Decision:
+P0135 CURRENT: Client Confirm = Yes → Complete quotation
+P0136 CURRENT: Client Confirm = No → Cancel quotation
+P0137 CURRENT: 2.3 Quy trình cấp đơn
+P0138 CURRENT: Các phòng TS/ FO có thể gửi yêu cầu cấp đơn, PM sẽ phải nhập Quotation No vào hệ thống Core PA .  chương trình Integration sẽ tự động mapping Policy No tương ứng với Quation No ở bên hệ thống Workflow Management. PM sẽ không phải lưu link WM lên Soho.
+P0143 CURRENT: 2.4 Mô tả chi tiết cấp đơn
+P0144 CURRENT: Khởi tạo yêu cầu
+P0145 CURRENT: Quy trình bắt đầu khi bộ phận MKT Front Office (FO) hoặc Technical Support (TS) tạo mới một yêu cầu dựa trên báo giá đã được phê duyệt và kí từ khách hàng. Hệ thống quản lý theo từng yêu cầu riêng lẽ, liên kết 1 báo giá – 1 yêu cầu cấp làm chứng từ
+P0146 CURRENT: Hệ thống cần cho phép người dùng:
+P0147 CURRENT: Nhập đầy đủ thông tin khách hàng và sản phẩm
+P0148 CURRENT: Đính kèm các tài liệu liên quan
+P0149 CURRENT: Khởi tạo yêu cầu dưới dạng bản nháp (draft)
+P0150 CURRENT: Giao nhiệm vụ / phân công và xử lý nội bộ
+P0151 CURRENT: Sau khi yêu cầu được tạo, dữ liệu sẽ được hoàn thiện bởi FO hoặc TS bằng việc check đầy đủ thông tin để cấp đơn.
+P0152 CURRENT: Với các trường hợp đơn giản: FO có thể xử lý trực tiếp
+P0153 CURRENT: Với các trường hợp cần hỗ trợ kỹ thuật: TS sẽ tham gia để bổ sung thông tin chi tiết
+P0154 CURRENT: Hệ thống cần:
+P0155 CURRENT: Hỗ trợ phân công công việc linh hoạt (assignment)
+P0156 CURRENT: Cho phép nhiều bên cùng tham gia xử lý theo từng vai trò
+P0157 CURRENT: Đảm bảo tất cả các thông tin cần thiết được hoàn thiện trước khi chuyển sang bước tiếp theo
+P0158 CURRENT: Gửi bản ký trả tới khách hàng
+P0159 CURRENT: Sau khi tài liệu đã được hoàn thiện và (nếu cần) và được gửi từ PM đến phòng MKT
+P0160 CURRENT: Hệ thống cần hỗ trợ:
+P0161 CURRENT: Nhắc nhở người dùng các hợp đồng đến hạn renew
+P0162 CURRENT: Nhắc nhở người dùng các hợp đồng đã ký nhưng chưa làm cấp đơn để gửi đến khách hàng
+P0163 CURRENT: Đồng bộ thông tin từ PA sang WM để PM tiện theo dõi tiến độ kí trả từ khách hàng
+P0164 CURRENT: Theo dõi phản hồi của khách hàng
+P0165 CURRENT: Mục tiêu của giai đoạn này là hoàn thiện các chứng từ có liên quan đến báo giá đã duyệt bởi TMIV
+P0168 CURRENT: 3. Chi tiết quy trình theo các phòng
+P0169 CURRENT: 3.1 Báo giá
+P0170 CURRENT: 3.1.1 FO
+P0174 CURRENT: Tại giai đoạn này, hệ thống đóng vai trò là công cụ hỗ trợ thu thập thông tin và đảm bảo dữ liệu đầu vào được chuẩn hóa ngay từ đầu, vừa hỗ trợ cho FO quản lý được các thông tin báo giá mình đã gửi đi cho các phòng khác, từ đầu vào FO gửi request, đến lúc nhận  lại là thông tin báo giá đã hoàn tất, gửi đến cho MGR phê duyệt, nhận lại báo giá đã ký từ TMIV và gửi đến khách hàng.
+P0176 CURRENT: Actions
+P0177 CURRENT: User (FO hoặc TS) tạo quotation
+P0178 CURRENT: Có thể cập nhật thông tin trong quá trình chờ làm báo giá
+P0179 CURRENT: Upload đính kèm báo giá đúng như quy định để tạo code báo giá cho TS, quy định như sau:
+P0179 INSERTED: , quy định như sau:
+P0180 CURRENT: Nếu nhập số lượng mà không đính kèm, ví dụ: nhập số lượng là 2, tạo ra 2 Quotation code Q1 , Q2 và không có đính kèm bên trong
+P0180 INSERTED: Nếu nhập số lượng mà không đính kèm, ví dụ: nhập số lượng là 2, tạo ra 2 Quotation code Q1 , Q2 và không có đính kèm bên trong
+P0181 CURRENT: Nếu đính kèm nhiều file thì hệ thống tự count và điền số lượng, ví dụ đính kèm 2 file thì tự điền số 2, Quotation code tạo Q1 , Q2 và có đính kèm bên trong
+P0181 INSERTED: Nếu đính kèm nhiều file thì hệ thống tự count và điền số lượng, ví dụ đính kèm 2 file thì tự điền số 2, Quotation code tạo Q1 , Q2 và có đính kèm bên trong
+P0182 CURRENT: Hệ thống auto assign task theo rule:
+P0183 CURRENT: Nếu FO → có thể skip TS hoặc assign TS
+P0184 CURRENT: Nếu TS → xử lý trực tiếp
+P0185 CURRENT: Nhận báo giá refer sang Underwriting
+P0186 CURRENT: Gửi báo giá đến MGR
+P0187 CURRENT: Gửi báo giá đến khách hàng
+P0189 CURRENT: Output
+P0190 CURRENT: Quotation draft được tạo
+P0191 CURRENT: Bản Quotation đã hoàn thành để làm việc với khách hàng
+P0193 CURRENT: Status
+P0194 CURRENT: Pending – In Progress – Quotation confirmed (có trường lưu)
+P0194 INSERTED: Quotation ed (có trường lưu)
+P0197 CURRENT: 3.1.2 TS
+P0199 CURRENT: Ở giai đoạn này, khi TS nhận được request của FO thì sẽ lên kế hoạch thực hiện cho các đơn dạng New / Renew/ Endor
+P0199 INSERTED: / Endor
+P0200 CURRENT: Actions
+P0201 CURRENT: FO/ TS dựa vào data tái tục có sẵn từ hệ thống để quyết định tạo bản chào và điều chuyển đúng người phụ trách
+P0201 INSERTED: FO/ TS dựa vào data tái tục có sẵn từ hệ thống để quyết định tạo bản chào và điều chuyển đúng người phụ trách
+P0202 CURRENT: TS nhận task  từ FO hoặc tự process bản chào do mình phụ trách.
+P0202 INSERTED: từ FO hoặc tự process bản chào do mình phụ trách.
+P0203 CURRENT: Nhập liệu, tính toán thông tin báo giá
+P0204 CURRENT: Hoàn thành task → chuyển về FO
+P0206 CURRENT: Output
+P0207 CURRENT: Quotation đầy đủ dữ liệu
+P0209 CURRENT: Status
+P0210 CURRENT: Status: In Progress
+P0214 CURRENT: 3.1.3 UW
+P0217 CURRENT: Tại giai đoạn này, Underwriting đã nhận được yêu cầu mang tính chất xem / đánh giá dựa trên mẫu báo giá đã được soạn thảo hoàn thành, tùy vào authority FO sẽ nhận biết báo giá này có cần được refer hay không, UW chỉ xem những điểm vượt MKT's Authority, các điểm trong MKT's Authority thì MKT phải chịu trách nhiệm. Ngoài ra, khi UW trả kết quả và yêu cầu điều chỉnh T&Cs thì MKT cần phải follow
+P0217 INSERTED: UW chỉ xem những điểm vượt MKT's Authority, các điểm trong MKT's Authority thì MKT phải chịu trách nhiệm. Ngoài ra, khi UW trả kết quả và yêu cầu điều chỉnh T&Cs thì MKT cần phải follow
+P0219 CURRENT: Actions
+P0220 CURRENT: Review yêu cầu refer từ FO
+P0221 CURRENT: Decline yêu cầu refer
+P0222 CURRENT: Trả yêu cầu không cần refer / không đủ thông tin về FO
+P0223 CURRENT: Tiếp nhận yêu cầu refer
+P0224 CURRENT: Duyệt chấp nhận rủi ro từ báo giá, trả trạng thái
+P0225 CURRENT: Từ chối rủi ro từ báo giá, trả trạng thái
+P0226 CURRENT: Feedback đến FO
+P0227 CURRENT: Escalate rủi ro đến trưởng bộ phận
+P0228 CURRENT: Underwriting MGR tiếp nhận xem rủi ro và cho ý kiến
+P0231 CURRENT: Output
+P0232 CURRENT: Quotation đã xem qua rủi ro
+P0234 CURRENT: Status
+P0235 CURRENT: Status: UW Approve / UW Decline / No need to refer / Need More Info
+P0235 INSERTED: UW Approve / UW Decline
+P0238 CURRENT: 3.2 Cấp đơn
+P0239 CURRENT: 3.2.1 FO
+P0242 CURRENT: Tại giai đoạn này, hệ thống cho phép FO tạo tiếp yêu cầu đến TS/PM về việc sẽ tiến hành làm hợp đồng cho báo giá đã được ký từ khách hàng hoặc tạo yêu cầu làm mới / điều chỉnh hợp đồng, phát sinh các phí, như year-end adjustment, no claim bonus …. .
+P0244 CURRENT: Actions
+P0245 CURRENT: User FO tạo yêu cầu
+P0246 CURRENT: FO có quyền thu hồi yêu cầu nếu có sự cố phát sinh từ báo giá
+P0247 CURRENT: FO có quyền revise request được trả lại từ PM
+P0248 CURRENT: Review bản ký trả gửi từ (trường hợp Broker) PM
+P0248 INSERTED: (trường hợp Broker)
+P0249 CURRENT: Gửi khách hàng và nhận bản kí trả  (trường hợp Broker)
+P0249 INSERTED: (trường hợp Broker)
+P0250 CURRENT: Hoàn thành task đã gửi yêu cầu
+P0251 CURRENT: Hệ thống auto assign task theo rule:
+P0252 CURRENT: Nếu FO → có thể skip TS hoặc assign TS
+P0253 CURRENT: Nếu TS → xử lý trực tiếp
+P0254 CURRENT: Hệ thống bypass :
+P0255 CURRENT: Nếu FO muốn skip TS → PM
+P0256 CURRENT: Nếu FO không muốn skip TS → TS
+P0258 CURRENT: Output
+P0259 CURRENT: Request gửi đến TS / PM với các thông tin cần làm chứng từ dựa theo báo giá đang làm việc
+P0261 CURRENT: Status
+P0262 CURRENT: Pending – In Progress – Policy Issuance - Complete
+P0264 CURRENT: 3.2.1 TS
+P0266 CURRENT: Ở giai đoạn này, khi TS nhận được request của FO thì sẽ lên kế hoạch thực hiện cho các đơn dạng New / Renew / Endorsement
+P0267 CURRENT: Actions
+P0268 CURRENT: User TS  tạo yêu cầu
+P0269 CURRENT: TS có quyền thu hồi yêu cầu nếu có sự cố phát sinh từ báo giá
+P0270 CURRENT: TS có quyền revise request được trả lại từ PM
+P0271 CURRENT: Review bản ký trả gửi từ PM
+P0272 CURRENT: Gửi khách hàng và nhận bản kí trả
+P0273 CURRENT: Hoàn thành task đã gửi yêu cầu
+P0274 CURRENT: Điền checklist của TS
+P0276 CURRENT: Output
+P0277 CURRENT: Hồ sơ chuẩn bị đưa sang PM có thông tin xử lý từ TS
+P0279 CURRENT: Status
+P0280 CURRENT: In Progress
+P0283 CURRENT: 3.2.1 PM
+P0285 CURRENT: Tại giai đoạn này, PM  đã nhận được yêu cầu từ phòng MKT, bắt đầu thực hiện việc cấp đơn bao gồm các việc xử lý request gửi về các bản hợp đồng bán hàng, chứng từ chi trả …. . Nếu yêu cầu PM nhận được là các chứng từ phát sinh ngoài hợp đồng thì PM sẽ là phòng ban đóng yêu cầu để hoàn thành task.
+P0287 CURRENT: Actions
+P0288 CURRENT: PM gửi trả yêu cầu nếu chưa đủ thông tin
+P0289 CURRENT: PM re-assign trong nội bộ PM
+P0290 CURRENT: PM tiếp nhận yêu cầu từ MKT
+P0291 CURRENT: Submit đơn
+P0292 CURRENT: Complete task
+P0294 CURRENT: Output
+P0295 CURRENT: PM trả lại bộ chứng từ / hợp đồng theo yêu cầu của MKT
+P0297 CURRENT: Status
+P0298 CURRENT: In Progress – Submit – Submit but follow up - Complete
+P0310 CURRENT: 4. Function / Feature
+P0311 CURRENT: No
+P0312 CURRENT: Function
+P0313 CURRENT: Description
+P0314 CURRENT: Type
+P0315 CURRENT: 1
+P0316 CURRENT: Digital Signature
+P0317 CURRENT: Hỗ trợ ký số điện tử
+P0318 CURRENT: Core
+P0319 CURRENT: 2
+P0320 CURRENT: Document Management
+P0321 CURRENT: Attach main and supporting docs, upload 1 lần nhưng hệ thống tự động tạo nhiều quotation no. Rule tạo tự động :
+P0322 CURRENT: + Số lượng file upload
+P0323 CURRENT: + Key in vào số lượng Quote No cần khởi tạo
+P0324 CURRENT: + Hệ thống cho khởi tạo có file hoặc tạo Quote rỗng để người dùng tự upload từng file
+P0325 CURRENT: + 1 nguồn file được sử dụng chung cho các phòng không nhân bản như hệ thống cũ sẽ tốn bộ nhớ
+P0326 CURRENT: Máy chủ sẽ lưu tất cả các :
+P0327 CURRENT: Version của attachment, kể cả file cùng tên,
+P0328 CURRENT: Dựa trên dung lượng,
+P0329 CURRENT: Thời gian upload
+P0330 CURRENT: Người upload.
+P0331 CURRENT: Core
+P0332 CURRENT: 3
+P0333 CURRENT: Preview File
+P0334 CURRENT: Xem không cần download
+P0335 CURRENT: Enhancement
+P0336 CURRENT: 4
+P0337 CURRENT: Mapping Quotation-Policy
+P0338 CURRENT: Liên kết báo giá với issue đơn. PM keyin Quote No trong PA system
+P0339 CURRENT: Core
+P0340 CURRENT: 5
+P0341 CURRENT: UW Referral
+P0342 CURRENT: Refer với lý do cần thiết,  Các phòng sẽ follow theo status của UW sau khi UW đã hoàn tất
+P0342 INSERTED: Các phòng sẽ follow theo status của UW sau khi UW đã hoàn tất
+P0344 CURRENT: Core
+P0345 CURRENT: 6
+P0346 CURRENT: Checklist
+P0347 CURRENT: PM thực hiện checklist trước khi Accept request
+P0348 CURRENT: New
+P0349 CURRENT: 7
+P0350 CURRENT: Bulk Action
+P0351 CURRENT: Chọn nhiều request / đơn action một lúc
+P0352 CURRENT: + áp dụng cho renew hàng loạt
+P0353 CURRENT: + Close request của PM hàng loạt
+P0354 CURRENT: Enhancement
+P0355 CURRENT: 8
+P0356 CURRENT: Email
+P0357 CURRENT: Ở các bước quyết định, thông báo với những người đang trực tiếp liên quan, và phần Cc để cho user tự input nếu cần . Input từ đầu flow hoặc edit trong quá trình
+P0357 INSERTED: Ở các bước quyết định, thông báo với những người đang trực tiếp liên quan, và phần Cc để cho user tự input nếu cần . Input từ đầu flow hoặc edit trong quá trình
+P0358 CURRENT: + Chỉ áp dụng cho một số phòng ban / status / action cụ thể
+P0359 CURRENT: Các case bao gồm
+P0360 CURRENT: + PM done process
+P0361 CURRENT: + UW finish reference
+P0362 CURRENT: + Manager approve
+P0363 CURRENT: + Khởi tạo Quote
+P0364 CURRENT: Core
+P0365 CURRENT: 9
+P0366 CURRENT: Notification
+P0367 CURRENT: Mỗi action đều có thông báo bao gồm
+P0368 CURRENT: Cập nhật cho báo giá hoặc cấp đơn.
+P0369 CURRENT: Khi được giao nhiệm vụ.
+P0370 CURRENT: Thay thế khi email không nhận được.
+P0371 CURRENT: Trạng thái Approve hoặc Decline (từ Underwriting hoặc Leader).
+P0372 CURRENT: Khi báo giá được chỉnh sửa (modify).
+P0374 CURRENT: New
+P0375 CURRENT: 10
+P0376 CURRENT: Comment – chat box
+P0376 INSERTED: – chat box
+P0377 CURRENT: Sử dụng chức năng này để update thông tin trong trường hợp không muốn upload lại file , mang ý nghĩa ( giống Jira sharing comment )
+P0378 CURRENT: New
+P0379 CURRENT: 10
+P0380 CURRENT: Audit Log
+P0381 CURRENT: Kiểm soát lịch sử hành động của người dùng
+P0382 CURRENT: Core
+P0383 CURRENT: 11
+P0384 CURRENT: Transaction Type
+P0385 CURRENT: Lựa chọn trong các loại này trong quá trình tạo request.
+P0386 CURRENT: + New / Renew/ Endorsement
+P0387 CURRENT: Core
+P0389 CURRENT: 12
+P0390 CURRENT: Report / dashboard
+P0391 CURRENT: Các phòng cung cấp lại tiêu chí thống kê ( dimension )
+P0392 CURRENT: Core
+P0394 CURRENT: 13
+P0395 CURRENT: Status
+P0396 CURRENT: Quotation status
+P0397 CURRENT: +Pending
+P0398 CURRENT: +In Progress
+P0399 CURRENT: +Completed
+P0400 CURRENT: Main Status of Quotaton-> Need define status of each department
+P0401 CURRENT: UW status
+P0402 CURRENT: + UW Approve
+P0402 INSERTED: UW Approve
+P0403 CURRENT: + UW Decline
+P0403 INSERTED: UW
+P0404 CURRENT: Enhance
+P0408 CURRENT: 5. Sơ đồ giao tiếp
+P0409 CURRENT: Báo giá
+P0420 CURRENT: Cấp đơn
+P0425 CURRENT: 6. Trạng thái
+P0426 CURRENT: 6.1 Trạng thái chính, toàn cục
+P0427 CURRENT: Pending
+P0428 CURRENT: In Progress
+P0429 CURRENT: Completed
+P0430 CURRENT: Cancelled
+P0431 CURRENT: Declined
+P0433 CURRENT: Global Status Deriving Department
+P0434 CURRENT: Condition
+P0435 CURRENT: Global Status
+P0436 CURRENT: FO đang làm
+P0437 CURRENT: FO Process
+P0437 INSERTED: FO Process
+P0438 CURRENT: TS đang làm
+P0439 CURRENT: TS Process
+P0439 INSERTED: TS Process
+P0440 CURRENT: UW đang làm
+P0441 CURRENT: UW Process
+P0441 INSERTED: UW Process
+P0442 CURRENT: PM đang làm
+P0443 CURRENT: PM Process
+P0443 INSERTED: PM Process
+P0444 CURRENT: Chờ TS/UW
+P0445 CURRENT: Pending
+P0446 CURRENT: Client confirm
+P0447 CURRENT: Quotation confirmed
+P0447 INSERTED: Quotation confirmed
+P0448 CURRENT: UW decline
+P0449 CURRENT: UW Declined
+P0449 INSERTED: UW Declined
+P0450 CURRENT: Client cancel
+P0451 CURRENT: Quotation refused
+P0451 INSERTED: Quotation refused
+P0452 CURRENT: TMIV cancel
+P0453 CURRENT: Cancelled
+P0457 CURRENT: 6.2 Trạng thái phòng
+P0458 CURRENT: Ngoài Global status còn có status cụ thể của các phòng
+P0460 CURRENT: Pending (chưa xử lý)
+P0461 CURRENT: In Progress (đang làm)
+P0462 CURRENT: Completed (đã xong)
+P0463 CURRENT: Accept risk / Not accept risk
+P0464 CURRENT: No need to refer / Need more information
+P0465 CURRENT: Rejected / Returned (nếu có)
+P0467 CURRENT: FO_Status
+P0468 CURRENT: TS_Status
+P0469 CURRENT: UW_Status
+P0470 CURRENT: PM_Status
+P0471 CURRENT: Global_Status
+P0473 CURRENT: Trong DB / Joget:
+P0474 CURRENT: FO_Status: Pending / FO Process  / Completed
+P0474 INSERTED: FO Process
+P0475 CURRENT: TS_Status: Pending / TS Process  / Completed
+P0475 INSERTED: TS Process
+P0476 CURRENT: UW_Status: Pending / UW Process / Completed / Rejected
+P0476 INSERTED: UW Process
+P0477 CURRENT: Global_Status: Pending / PM Process/ Completed / Cancelled / Declined
+P0477 INSERTED: PM Process
+P0480 CURRENT: a. FO
+P0481 CURRENT: Lifecycle FO:
+P0482 CURRENT: Stage
+P0483 CURRENT: Status
+P0484 CURRENT: Create quotation
+P0485 CURRENT: Pending
+P0486 CURRENT: Fill task
+P0487 CURRENT: In Progress
+P0488 CURRENT: Review quotation
+P0489 CURRENT: In Progress
+P0490 CURRENT: Send quotation
+P0491 CURRENT: In Progress
+P0492 CURRENT: Client confirms
+P0493 CURRENT: Completed
+P0494 CURRENT: Client decline / cancel
+P0495 CURRENT: Cancelled
+P0499 CURRENT: FO Complete khi:
+P0500 CURRENT: Client confirm → Done
+P0501 CURRENT: FO Pending khi:
+P0502 CURRENT: Mới tạo quotation hoặc đang chờ TS/UW
+P0505 CURRENT: b. TS
+P0507 CURRENT: Lifecycle TS:
+P0509 CURRENT: Stage
+P0510 CURRENT: Status
+P0511 CURRENT: Assigned TS
+P0512 CURRENT: Pending
+P0513 CURRENT: Fill task
+P0514 CURRENT: In Progress
+P0515 CURRENT: Submit to FO / UW
+P0516 CURRENT: Completed
+P0517 CURRENT: Receive follow up document
+P0518 CURRENT: Completed
+P0520 CURRENT: TS Complete khi:
+P0522 CURRENT: Đã làm báo giá xong + submit lại
+P0524 CURRENT: TS Pending khi:
+P0526 CURRENT: Được assign nhưng chưa làm
+P0529 CURRENT: Underwriting
+P0531 CURRENT: Lifecycle UW:
+P0533 CURRENT: Stage
+P0534 CURRENT: Status
+P0535 CURRENT: Assigned UW
+P0536 CURRENT: Pending
+P0537 CURRENT: Risk assessment
+P0538 CURRENT: In Progress
+P0539 CURRENT: No need to refer
+P0540 CURRENT: Completed
+P0540 INSERTED: Completed
+P0541 CURRENT: Need more info
+P0542 CURRENT: Pending
+P0543 CURRENT: UW Approve
+P0543 INSERTED: UW Approve
+P0544 CURRENT: Completed
+P0545 CURRENT: UW Decline
+P0545 INSERTED: UW Decline
+P0546 CURRENT: Rejected
+P0548 CURRENT: UW Accept khi:
+P0550 CURRENT: Accept task → flow đi tiếp
+P0552 CURRENT: UW Complete khi:
+P0554 CURRENT: No need to refer / Need more info → flow đi tiếp về FO
+P0554 INSERTED: về FO
+P0555 CURRENT: Decline → flow đi tiếp về FO
+P0555 INSERTED: về FO
+P0560 CURRENT: PM
+P0561 CURRENT: Lifecycle PM:
+P0563 CURRENT: Stage
+P0564 CURRENT: Status
+P0565 CURRENT: Assigned PM
+P0566 CURRENT: Pending
+P0567 CURRENT: Accept Policy
+P0568 CURRENT: In Progress
+P0569 CURRENT: Submit Policy
+P0570 CURRENT: Endors => Submit
+P0571 CURRENT: New / renew => Submit but follow up
+P0572 CURRENT: Complete Policy
+P0573 CURRENT: Completed
+P0575 CURRENT: PM Accept khi:
+P0577 CURRENT: Accept task → flow đi tiếp
+P0579 CURRENT: PM Submit khi:
+P0581 CURRENT: Submit policy/Submit but follow up → flow đi tiếp
+P0585 CURRENT: 7. TAT/ SLA Management
+P0586 CURRENT: 7.1 SLA ( Mục tiêu )
+P0587 CURRENT: SLA của hệ thống sẽ gồm hai phần.
+P0588 CURRENT: Trong hệ thống sẽ có tính năng nhắc nhở người dùng về các báo giá gần đến hạn renew, bằng cách hiển thị danh sách trong hệ thống.
+P0589 CURRENT: Sẽ có tính năng email nhắc nhở dành cho báo giá sắp hết hạn. Ngoài ra, hệ thống cũng sẽ nhắc nhở những báo giá đã quá hạn xử lý.
+P0590 CURRENT: SLA (Service Level Agreement)
+P0591 CURRENT: Thời gian cam kết
+P0592 CURRENT: SLA = Target time (vd: 4h / 1 ngày)
+P0595 CURRENT: 7.2 TAT ( Thực tế )
+P0596 CURRENT: Với các công thức tính của Joget cũ sẽ được archive và apply cho hệ thống WM, hệ thống sẽ loại trừ các ngày nghỉ / lễ, cụ thể thêm phần cải thiện khác:
+P0597 CURRENT: FO: Không tính TAT, vì FO phụ thuộc theo thời gian tạo request và thời gian chốt của khách hàng
+P0598 CURRENT: TS: Sẽ được tính dựa trên Accepted Date và Complete Date, cùng với số lần đã xử lý báo giá. Nếu báo giá chưa được sửa đổi (revise), TAT sẽ được tính theo khoảng thời gian từ ngày nhận đến ngày hoàn thành của mỗi báo giá. Nếu báo giá đã được sửa đổi, TAT sẽ dựa trên số lần xử lý, với tiêu chuẩn là 3 ngày cho mỗi lần xử lý.
+P0599 CURRENT: UW: UW có thể return cho MKT khi đã accept, TAT sẽ tính dựa trên accepted date cuối cùng đến ngày make decision
+P0599 INSERTED: UW có thể return cho MKT khi đã accept, TAT sẽ tính dựa trên accepted date cuối cùng đến ngày make decision
+P0600 CURRENT: PM: Sẽ được tính tương tự, dựa trên ngày Accepted Date cuối cùng và Submit  Date đầu tiên.
+P0603 CURRENT: Công thức tính TAT chung
+P0605 CURRENT: Thời gian gap TAT
+P0606 CURRENT: Gap TAT = Accept Time - Notification Time
+P0607 CURRENT: Thời gian thực tế xử lý
+P0608 CURRENT: TAT = End Time – Start Time
+P0610 CURRENT: Trong đó,
+P0612 CURRENT: Gap TAT: Số ngày người dùng được assign đến khi bấm accept task (nếu có)
+P0614 CURRENT: TAT: số ngày xử lý đã loại bỏ các ngày nghỉ, lễ
+P0616 CURRENT: End Time: Date submit hoặc complete tùy thuộc theo rule quy định của phòng, căn cứ theo cách tính KPI cuối năm
+P0618 CURRENT: Start Time: Date accept task
+P0621 CURRENT: a.I FO
+P0622 CURRENT: FO TAT = Time (Create quotation → Send quotation / Complete)
+P0623 CURRENT: Có thể split:
+P0624 CURRENT: Create → Review
+P0625 CURRENT: Review → Send
+P0626 CURRENT: Sending → Client confirms
+P0628 CURRENT: a.II TS
+P0630 CURRENT: Hệ thống có khi nhận accept / complete date + số lần đã xử lý báo giá, nếu:
+P0632 CURRENT: + báo giá chưa revise, xét theo accept / complete date ra TAT
+P0633 CURRENT: + báo giá revise, xét theo số lần xử lý
+P0635 CURRENT: TS TAT = Time (Accept Task  → Submit back)
+P0636 CURRENT: Nếu có loop,  phải tính thêm:
+P0637 CURRENT: TS Total TAT = SUM(all TS cycles)
+P0639 CURRENT: Cách tính TAT của TS bị sai :  End- start vì có tgian TS chờ đợi
+P0640 CURRENT: Cách tính đúng : TS Loop Time = SUM (TS xử lý mỗi lần giữ case)
+P0642 CURRENT: Ví dụ :
+P0644 CURRENT: Step
+P0645 CURRENT: Owner
+P0646 CURRENT: Time
+P0647 CURRENT: 1
+P0648 CURRENT: FO submit → TS
+P0649 CURRENT: 01 Apr 09:00
+P0650 CURRENT: 2
+P0651 CURRENT: TS xử lý
+P0652 CURRENT: → 01 Apr 12:00
+P0653 CURRENT: 3
+P0654 CURRENT: TS trả FO
+P0656 CURRENT: 4
+P0657 CURRENT: FO update
+P0658 CURRENT: 01 Apr 16:00
+P0659 CURRENT: 5
+P0660 CURRENT: TS xử lý tiếp
+P0661 CURRENT: → 02 Apr 10:00
+P0662 CURRENT: 6
+P0663 CURRENT: FO gửi UW
+P0663 INSERTED: FO
+P0666 CURRENT: Cách tính :
+P0667 CURRENT: 🔹 Loop 1 (TS):
+P0668 CURRENT: 09:00 → 12:00 = 3h
+P0669 CURRENT: 🔹 Loop 2 (TS):
+P0670 CURRENT: 16:00 → 10:00 hôm sau = 18h
+P0671 CURRENT: 🔹 Total TS Loop Time:
+P0672 CURRENT: 3h + 18h = 21h
+P0677 CURRENT: TAT của 1 lần TS thực hiện
+P0677 INSERTED: TAT của 1 lần TS thực hiện
+P0680 CURRENT: Ví dụ trường hợp TS nhận nhiều báo giá:
+P0680 INSERTED: Ví dụ trường hợp TS nhận nhiều báo giá:
+P0681 CURRENT: Nếu muốn tính tổng TAT TS của mỗi 1 báo giá đơn lẻ, sum các khối xanh lá mỗi Quotation, mỗi báo giá dựa theo SLA tiêu chuẩn của phòng TS quy định
+P0681 INSERTED: Nếu muốn tính tổng TAT TS của mỗi 1 báo giá đơn lẻ, sum các khối xanh lá mỗi Quotation, mỗi báo giá dựa theo SLA tiêu chuẩn của phòng TS quy định
+P0682 CURRENT: Quotation1 : 6 hours -  2 lần xử lý
+P0682 INSERTED: Quotation1 : 6 hours -  2 lần xử lý
+P0683 CURRENT: Quotation2: 9 hours – 4 lần xử lý
+P0683 INSERTED: Quotation2: 9 hours – 4 lần xử lý
+P0684 CURRENT: Quotation3: 5 hours – 1 lần xử lý
+P0684 INSERTED: Quotation3: 5 hours – 1 lần xử lý
+P0685 CURRENT: Quotation4: 3 hours – 2 lần xử lý
+P0685 INSERTED: Quotation4: 3 hours – 2 lần xử lý
+P0686 CURRENT: Nếu muốn tính tổng TAT TS của cả 1 request, sum tất cả TAT các báo giá cùng 1 request gửi bởi FO
+P0686 INSERTED: Nếu muốn tính tổng TAT TS của cả 1 request, sum tất cả TAT các báo giá cùng 1 request gửi bởi FO
+P0688 CURRENT: Cả request: sum 4 quotation = 23 hours
+P0688 INSERTED: Cả request: sum 4 quotation = 23 hours
+P0692 CURRENT: a.III UW
+P0693 CURRENT: Nhận đủ thông tin thì accept - khi gửi đến FO là complete
+P0695 CURRENT: UW TAT = Time (Accept Task → Decision)
+P0700 CURRENT: a.IV PM
+P0701 CURRENT: Rule PM tính Accept task và lúc Submit, Complete task không tính
+P0703 CURRENT: Nếu submit đi rồi xem như PM đã complete hoàn toàn việc, nên khi lên báo cáo về TAT rule sẽ lấy lần PM xử lý sau cùng
+P0705 CURRENT: PM TAT = Time (Accept Task → Submit back)
+P0710 CURRENT: b. Trường dữ liệu để tính TAT
+P0712 CURRENT: Log các timestamp từ các trường lưu:
+P0713 CURRENT: FO_Start_Time
+P0714 CURRENT: FO_End_Time
+P0716 CURRENT: TS_Assign_Time
+P0717 CURRENT: TS_Complete_Time
+P0719 CURRENT: UW_Assign_Time
+P0720 CURRENT: UW_Decision_Time
+P0722 CURRENT: PM_Assign_Time
+P0723 CURRENT: PM_Submit_Time
+P0725 CURRENT: Client_Confirm_Time
+P0728 CURRENT: c. Bottleneck
+P0730 CURRENT: Phòng
+P0731 CURRENT: Bottleneck chính
+P0732 CURRENT: Nguyên nhân
+P0733 CURRENT: FO
+P0734 CURRENT: Client confirm
+P0735 CURRENT: External dependency
+P0736 CURRENT: TS
+P0737 CURRENT: Rework loop
+P0738 CURRENT: Data không chuẩn
+P0739 CURRENT: UW
+P0740 CURRENT: Risk assessment
+P0741 CURRENT: Manual + thiếu data
+P0745 CURRENT: 8. Các điểm IT đã· trao đổi và ghi nhận với các phòng (meeting)
+P0745 INSERTED: IT đã· và ghi nhận với các phòng (meeting)
+P0746 CURRENT: FO
+P0747 CURRENT: No
+P0748 CURRENT: Content
+P0749 CURRENT: Concern
+P0750 CURRENT: Type solution
+P0751 CURRENT: 1
+P0752 CURRENT: Update thông tin khách hàng khi chờ TS làm báo giá
+P0753 CURRENT: Các mục thay đổi 
++ Option báo giá, tăng sum insured
++ Client đổi tên pháp lý mst 
++ Đổi product lob, thi thoảng
+ => As is thường phải end quotation và duyệt lại
+P0754 CURRENT: Cải tiến
+P0755 CURRENT: 2
+P0756 CURRENT: Bổ sung workflow không cần refer từ UW
+P0757 CURRENT: Đưa sang cấp đơn và báo giá không cần refer UW
+P0758 CURRENT: Keep
+P0759 CURRENT: 3
+P0760 CURRENT: Xây dựng thêm flow tự động cho việc khách hàng đồng ý mua sp TMIV sang cấp đơn
+P0761 CURRENT: Vẫn giữ việc chủ động request cấp đơn nếu khách hàng có thời gian hold => không để tự động ảnh hưởng TAT PM
+P0762 CURRENT: Keep
+P0762 INSERTED: Keep
+P0763 CURRENT: 5
+P0764 CURRENT: RES form theo Lob chuẩn hóa
+P0765 CURRENT: Mỗi quotation là mỗi RES
+P0766 CURRENT: Cải tiến
+P0767 CURRENT: 6
+P0768 CURRENT: Cách tính TAT của FO nếu đã tách báo giá
+P0769 CURRENT: FO không có nhu cầu tính TAT, nhu cần làm xuất báo cáo thống kê theo status request / báo giá
+P0770 CURRENT: Cải tiến
+P0771 CURRENT: 7
+P0772 CURRENT: Thêm flow skip MNG cho những báo giá hoặc endorsement ko cần phê duyệt
+P0773 CURRENT: Vẫn cần refer/ hay TS làm báo giá, chỉ skip MNG để cấp đơn/ Client confirmed luôn
+P0774 CURRENT: Cải tiến
+P0778 CURRENT: TS
+P0779 CURRENT: No
+P0780 CURRENT: Content
+P0781 CURRENT: Concern
+P0782 CURRENT: Type solution
+P0783 CURRENT: 1
+P0784 CURRENT: TAT tách cho mỗi báo giá
+P0785 CURRENT: -Báo giá nhận / trả sớm muộn thất thường:
++ Nhận request thì gửi liền, không phản ánh thực tế 
++ Có lúc complete ghi nhận bị trễ dù đã làm xong trước đó
+-Số lượng báo giá expiry bị ồ ạt tại 1 thời điểm, không thể đo lường trước được
+-PIC renewal quotation list phải chỉnh thủ công cho danh sách PIC cũ của cả FO / TS, mong
+muốn cả FO / TS có chung màn hình refer vào set PIC chung, có tính năng copy paste thuận tiện
+P0786 CURRENT: Cải tiến
+P0787 CURRENT: 2
+P0788 CURRENT: Các báo giá của LoB đính kèm nào hiện đang được chuẩn hóa rồi
+P0789 CURRENT: Các đính kèm có vài Lobs đã chuẩn hóa 1 phần, thiết kế preview xem nhanh, hạn chế download về
+P0790 CURRENT: Cải tiến
+P0791 CURRENT: 3
+P0792 CURRENT: CR fill task từ Joget cũ
+P0793 CURRENT: Hiện tại chưa cần build vào hệ thống mới
+P0794 CURRENT: Keep
+P0795 CURRENT: 4
+P0796 CURRENT: Option báo giá
+P0797 CURRENT: Thiết lập tính năng làm option cho báo giá, khi xác  nhận thì sẽ tách quotation code
+P0798 CURRENT: New
+P0799 CURRENT: 5
+P0800 CURRENT: Skip TS workflow
+P0801 CURRENT: Dùng việc chạy quy trình tạm của Joget cũ, vướng mắc flow UW khi declined sẽ cancel quotation không làm tiếp được
+P0802 CURRENT: Cải tiến
+P0803 CURRENT: 6
+P0804 CURRENT: Nhận biết về type new/renew/endorsement của các request cho workflow báo giá / cấp đơn
+P0805 CURRENT: TS không tìm kiếm qua quotation code, tìm qua policy no
+P0806 CURRENT: Cải tiến
+P0807 CURRENT: 7
+P0808 CURRENT: Sanction
+P0809 CURRENT: Realtime check khách hàng hit / without hit
+P0810 CURRENT: New
+P0813 CURRENT: UW
+P0814 CURRENT: No
+P0815 CURRENT: Content
+P0816 CURRENT: Concern
+P0817 CURRENT: Type solution
+P0818 CURRENT: 1
+P0819 CURRENT: Cách follow ngày hiệu lực đơn
+P0820 CURRENT: -Hiện tại Joget vẫn chưa trích xuất được thông tin ngày hiệu lực đơn, khi trước làm refer bằng email thì có thể nắm bắt thông tin được ngay
+, khi lọc dữ liệu chỉ lấy được theo ngày tạo request báo giá, không có cơ sở lấy được ngày hiệu lực đơn vì hệ thống đang không mapping
+-Policy No có nhiều code trong Quotation Code nên UW không thể check
+P0821 CURRENT: Cải tiến
+P0822 CURRENT: 2
+P0823 CURRENT: Phê duyệt refer báo giá
+P0824 CURRENT: UW vẫn sẽ tiếp nhận như flow cũ để không ảnh hưởng workload
+P0825 CURRENT: Keep
+P0826 CURRENT: 3
+P0827 CURRENT: Pass báo giá đưa thẳng sang cấp đơn
+P0828 CURRENT: - Nếu hỗ trợ thêm flow bypass từ báo giá tạo xong và duyệt sang cấp đơn, sẽ có rủi ro
+- Phụ thuộc vào authority FO sẽ kiểm soát về việc refer sang UW và tạo request cấp đơn (với báo giá được phê duyệt từ lead MKT)
+P0829 CURRENT: Keep
+P0830 CURRENT: 4
+P0831 CURRENT: TAT UW
+P0832 CURRENT: Ngày accept date bị nới khi FO không cung cấp đủ thông tin, lúc sau back lại cho UW thì được không tính
+P0833 CURRENT: Cải tiến
+P0837 CURRENT: PM
+P0838 CURRENT: No
+P0839 CURRENT: Content
+P0840 CURRENT: Concern
+P0841 CURRENT: Type solution
+P0842 CURRENT: 1
+P0843 CURRENT: Mapping quotation / policy no
+P0844 CURRENT: Sẽ dễ dàng làm chi tiết cho từng đơn, tuy nhiên việc accept đơn, tìm kiếm sẽ bị tăng số lần thực hiện, cần tìm giải pháp xử lý nhanh
+P0845 CURRENT: Cải tiến
+P0846 CURRENT: 2
+P0847 CURRENT: Soho
+P0848 CURRENT: Phải lưu link ở soho hiện tại, người dùng lưu link lại để mỗi khi thao tác xong có thể biết link nào ở Joget vào trực tiếp, vì còn bước đăng nhập
+P0849 CURRENT: Tối ưu
+P0850 CURRENT: 3
+P0851 CURRENT: Year end adjustment
+P0852 CURRENT: 1 request nhiều attachment báo giá khó xử lý, sửa bổ sung mục đích cho endorsement ,mọi thứ chỉ qua attachment ,hoặc cũng thường gửi chung 2 transaction cùng 1 số báo giá
+P0853 CURRENT: Thêm mới
+P0854 CURRENT: 4
+P0855 CURRENT: Mail
+P0856 CURRENT: Giữ lại các thông tin cần thiết từ log trao đổi
+P0857 CURRENT: Cải tiến
+P0858 CURRENT: 5
+P0859 CURRENT: Process checklist
+P0860 CURRENT: Hiện tại Joget chưa có tính năng này, mong muốn bổ sung vào hệ thống mới,checklist từng line, buộc phải thực hiện trước mới cho phép Accept request
+P0861 CURRENT: Thêm mới
+P0862 CURRENT: 6
+P0863 CURRENT: TAT
+P0864 CURRENT: Không tính ngày lễ, cuối tuần
+P0864 INSERTED: , cuối tuần
+P0865 CURRENT: Thêm mới
+P0866 CURRENT: 7
+P0867 CURRENT: Follow UW status
+P0868 CURRENT: PM không tháy tiến trình của refer UW của quotation, khó theo dõi trạng thái báo giá đc refer hay chưa và cụ thể ra sao tại thời điểm đang issue đơn hoặc tiếp nhận request
+P0869 CURRENT: => cho hiện luôn status của UW (Rejected/Approved) và detail để PM vào xem nếu cần
+P0870 CURRENT: Cải tiến
+P0871 CURRENT: 8
+P0872 CURRENT: TS chuyển giao  đơn sang cho PM
+P0873 CURRENT: PM phải mở từng màn hình từng đơn để xử lý accept
+P0874 CURRENT: Cải tiến
+P0875 CURRENT: 9
+P0876 CURRENT: Submit but follow up list
+P0877 CURRENT: Việc chuyển bảng kí trả của khách hàng về PM, 99% chỉ vào thực hiện việc đóng request
+
+Type endorsement là PM đóng ko follow
+P0878 CURRENT: Cải tiến
+P0879 CURRENT: 10
+P0880 CURRENT: Inbox status
+P0881 CURRENT: Còn chưa rõ ràng, nhiều khó tìm kiếm
+P0882 CURRENT: Cải tiến
+P0883 CURRENT: 11
+P0884 CURRENT: Preview file
+P0885 CURRENT: Mong muốn preview file, không cần tải, không cần chỉnh sửa
+P0886 CURRENT: Thêm mới
+P0889 CURRENT: 9. Tích hợp
+P0890 CURRENT: Hệ thống mới: Thêm tích hợp chữ ký số trực tiếp; nếu khả thi, tích hợp RE Tool Survey; trong tương lai, thêm xử lý Add Clause (thêm điều khoản) và hệ thống xử lý định danh XML.
+P0891 CURRENT: Hệ thống cải thiện: Tích hợp với hệ thống PA, đảm bảo đồng bộ dữ liệu chặt chẽ.
+P0892 CURRENT: Hệ thống ngưng dùng: Hệ thống Soho không còn khả dụng vì có phương pháp thay thế.
