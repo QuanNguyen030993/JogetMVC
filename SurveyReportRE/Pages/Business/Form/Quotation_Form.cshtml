@@ -1399,7 +1399,7 @@ Note:
             // }
 
             const loadAuditLogs = debounce(function (quoteNo) {
-                document.documentElement.style.setProperty("--rightdock-width", "20%");
+                document.documentElement.style.setProperty("--rightdock-width", "30%");
                 var guid = state.selectedGuid;
                 $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
                 $("#rightCommentList").html(`<div style="color:var(--c-6b7280);font-size:12px;padding:6px 4px;">Loading…</div>`);
@@ -1418,7 +1418,7 @@ Note:
             }, 180);
 
             const loadReferenceFields = debounce(function (quoteNo, quoteId) {
-                document.documentElement.style.setProperty("--rightdock-width", "20%");
+                 document.documentElement.style.setProperty("--rightdock-width", "30%");
                 $("#rightCommentSub").text(`Common fields - ${quoteNo}`);
                 var _formConfig = new MFormOption();
                 _formConfig.originModelName = "Quotation";
@@ -1430,9 +1430,9 @@ Note:
             }, 180);
 
             const previewQuotation = debounce(function (quoteNo, quoteId, attachmentId) {
+                document.documentElement.style.setProperty("--rightdock-width", "70%");
                 if (attachmentId)
                 {
-                document.documentElement.style.setProperty("--rightdock-width", "70%");
                 $("#rightCommentSub").text(`Preview quotation - ${quoteNo}`);
                 $("<iframe>")
                     .attr("id", `${formModuleKeyQt}-pdfViewer_${quoteId}`)
@@ -1454,6 +1454,7 @@ Note:
                 });
                 }
                 else {
+                    $("#rightCommentSub").text(`Preview quotation - ${quoteNo}`);
                     $(`<div>No preview of this quotation!</div>`).appendTo($("#rightCommentList"));
                 }
             }, 180);
@@ -1543,6 +1544,13 @@ Note:
 
                             },
                             {
+                                dataField: "date",
+                                caption: "Date",
+                                dataType: "datetime",
+                                format: "dd/MM/yyyy HH:mm",
+                                sortOrder: "desc" // ✅ SORT TĂNG DẦN
+                            },
+                            {
                                 dataField: "department",
                                 caption: "Department",
                                 width: 150
@@ -1551,13 +1559,6 @@ Note:
                                 dataField: "author",
                                 caption: "Author",
                                 width: 150
-                            },
-                            {
-                                dataField: "date",
-                                caption: "Date",
-                                dataType: "datetime",
-                                format: "dd/MM/yyyy HH:mm",
-                                sortOrder: "desc" // ✅ SORT TĂNG DẦN
                             }
                         ]
                     });

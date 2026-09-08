@@ -18,9 +18,9 @@ const PLACEHOLDER_TYPES = [
         meaning: "Được xử lý theo thứ tự tham số bằng string.Format; không tra cứu theo tên biến."
     },
     {
-        syntax: "<comment>",
+        syntax: "[[COMMENT]]",
         name: "Token xử lý riêng",
-        meaning: "Được logic nghiệp vụ nhận diện và thay trực tiếp. Các thẻ HTML khác như <p>, <b> chỉ dùng để định dạng nội dung."
+        meaning: "Được logic nghiệp vụ nhận diện và thay trực tiếp, không bị HTML editor hiểu nhầm thành thẻ. Ví dụ: [[COMMENT]], [[REMARK]], [[NOTE]]."
     }
 ];
 

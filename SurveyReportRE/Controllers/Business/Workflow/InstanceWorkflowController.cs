@@ -1647,21 +1647,19 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         }
 
         string contentTemplate = notificationTemplate.Content ?? "";
-        string message = comment;
-        if (contentTemplate.Contains(_businessConfig.CurrentValue.HardCodeObject.Comment, StringComparison.OrdinalIgnoreCase))
-        {
-            contentTemplate = contentTemplate.Replace(
-                _businessConfig.CurrentValue.HardCodeObject.Comment,
-                comment,
-                StringComparison.OrdinalIgnoreCase);
-            message = MailUtil.BodyContentHandle(contentTemplate, templateData).Trim();
-        }
+        string contentWithComment = ReplaceNotificationCommentTokens(
+            contentTemplate,
+            _businessConfig.CurrentValue.HardCodeObject?.Comment,
+            comment);
+        string message = string.IsNullOrWhiteSpace(contentWithComment)
+            ? comment
+            : MailUtil.BodyContentHandle(contentWithComment, templateData).Trim();
 
         dynamic transferObject = new
         {
             DOMAIN_NAME,
             Title = title,
-            Message = contentTemplate,
+            Message = message,
             Resource = fallbackTransferObject.Resource,
             Guid = fallbackTransferObject.Guid,
             ReceivedBy = fallbackTransferObject.ReceivedBy,
@@ -1683,7 +1681,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                 transferObject,
                 notificationTypeId);
             notification.Title = title;
-            notification.Message = contentTemplate;
+            notification.Message = message;
             await _notificationRepository.InsertData(notification);
             return notification;
         }
@@ -1724,6 +1722,45 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         //return await ControllerUtil.Notify(transferObject, notificationTypeId);
 
 
+    }
+
+    private static string ReplaceNotificationCommentTokens(
+        string content,
+        string? configuredToken,
+        string comment)
+    {
+        if (string.IsNullOrEmpty(content)) return content;
+
+        // Some existing templates were saved while <comment> was interpreted as
+        // an HTML custom element. Resolve the complete element before replacing
+        // the plain legacy spellings below.
+        string resolved = Regex.Replace(
+            content,
+            @"<\s*comment(?:\s[^>]*)?>.*?<\s*/\s*comment\s*>",
+            _ => comment,
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+        string[] supportedTokens =
+        [
+            configuredToken ?? "",
+            "[[COMMENT]]",
+            "__comment__",
+            "<<comment>>",
+            "<comment>",
+            "&lt;&lt;comment&gt;&gt;",
+            "&lt;comment&gt;&lt;/comment&gt;",
+            "&lt;comment&gt;"
+        ];
+
+        foreach (string token in supportedTokens
+            .Where(token => !string.IsNullOrWhiteSpace(token))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(token => token.Length))
+        {
+            resolved = resolved.Replace(token, comment, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return resolved;
     }
 
     private async Task<long?> ResolveWorkflowNotificationTypeId(

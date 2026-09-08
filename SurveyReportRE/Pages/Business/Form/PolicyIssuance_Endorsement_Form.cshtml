@@ -1230,7 +1230,7 @@ Note:
 
 
             const loadAuditLogs = debounce(function (quoteNo, quoteId) {
-                document.documentElement.style.setProperty("--rightdock-width", "20%");
+                // document.documentElement.style.setProperty("--rightdock-width", "20%");
                 $("#rightCommentSub").text(`Audit log - ${quoteNo}` || "-");
                 $("#rightCommentList").html(`<div style="color:var(--c-6b7280);font-size:12px;padding:6px 4px;">Loading…</div>`);
                 const q = `OnSystem`;
@@ -1328,6 +1328,13 @@ Note:
 
                                 },
                                 {
+                                    dataField: "date",
+                                    caption: "Date",
+                                    dataType: "datetime",
+                                    format: "dd/MM/yyyy HH:mm",
+                                    sortOrder: "desc" // ✅ SORT TĂNG DẦN
+                                },
+                                {
                                     dataField: "department",
                                     caption: "Department",
                                     width: 150
@@ -1336,13 +1343,6 @@ Note:
                                     dataField: "author",
                                     caption: "Author",
                                     width: 150
-                                },
-                                {
-                                    dataField: "date",
-                                    caption: "Date",
-                                    dataType: "datetime",
-                                    format: "dd/MM/yyyy HH:mm",
-                                    sortOrder: "desc" // ✅ SORT TĂNG DẦN
                                 }
                             ]
                         });
@@ -1355,7 +1355,7 @@ Note:
             }, 180);
 
             const loadReferenceFields = debounce(function (quoteNo, quoteId) {
-                document.documentElement.style.setProperty("--rightdock-width", "20%");
+                // document.documentElement.style.setProperty("--rightdock-width", "20%");
                 $("#rightCommentSub").text(`Common fields - ${quoteNo}`);
                 var _formConfig = new MFormOption();
                 _formConfig.originModelName = "PolicyIssuance";

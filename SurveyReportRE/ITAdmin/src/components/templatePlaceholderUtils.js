@@ -2,7 +2,14 @@ export const buildPlaceholderToken = (type = "data", rawFieldName = "FieldName")
     const fieldName = String(rawFieldName || "FieldName").trim() || "FieldName";
     if (type === "editor") return `{{${fieldName}}}`;
     if (type === "position") return `{${fieldName.replace(/\D/g, "") || "0"}}`;
-    if (type === "special") return `<${fieldName.replace(/^<|>$/g, "")}>`;
+    if (type === "special") {
+        const specialName = fieldName
+            .replace(/^\[\[|\]\]$/g, "")
+            .replace(/^<+|>+$/g, "")
+            .trim()
+            .toUpperCase();
+        return `[[${specialName || "COMMENT"}]]`;
+    }
     return `@@${fieldName.replace(/^@@/, "")}`;
 };
 

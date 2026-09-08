@@ -7,7 +7,7 @@ const PLACEHOLDER_OPTIONS = [
     { value: "data", label: "@@ Dữ liệu" },
     { value: "editor", label: "{{ }} Editor" },
     { value: "position", label: "{ } Vị trí" },
-    { value: "special", label: "< > Đặc biệt" }
+    { value: "special", label: "[[ ]] Đặc biệt" }
 ];
 
 export default function TemplatePlaceholderControl({ editorInstance }) {
