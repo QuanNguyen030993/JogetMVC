@@ -137,7 +137,8 @@ Note:
             var sequence = 0;
             var startedAt = 0;
             var $root = $(`#${policyIssuanceOverviewRootId}`);
-            var $loadingHost = $root;
+            var $loadingHost = $root.find(".cardBody.overview-wrap").first();
+            if (!$loadingHost.length) $loadingHost = $root;
             var $overlay = $loadingHost.children(".pi-render-overlay");
 
             if (!$overlay.length) {
@@ -959,6 +960,7 @@ Note:
             return policyIssuanceDepartmentRefreshes[dept];
         }
         window.OverviewViewRegistry[policyIssuanceViewInstanceKey].refreshDepartment = refreshPolicyIssuanceDepartment;
+        window.OverviewViewRegistry[policyIssuanceViewInstanceKey].refreshStatus = renderPolicyIssuancePersonInCharge;
         window.syncOverviewAdminRefreshButtons?.(`#${window.PolicyIssuanceIdManager.overviewScroll(@ViewData["Id"])}`);
         window.reloadPolicyIssuanceComponents = function(instanceId) {
             var registry = window.OverviewViewRegistry || {};

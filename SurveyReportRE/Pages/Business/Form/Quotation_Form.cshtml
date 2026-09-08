@@ -225,7 +225,8 @@ Note:
             var sequence = 0;
             var startedAt = 0;
             var $root = $(`#${quotationOverviewRootId}`);
-            var $loadingHost = $root;
+            var $loadingHost = $root.find(".cardBody.overview-wrap").first();
+            if (!$loadingHost.length) $loadingHost = $root;
             var $overlay = $loadingHost.children(".qt-render-overlay");
 
             if (!$overlay.length) {
@@ -1088,6 +1089,7 @@ Note:
             return quotationDepartmentRefreshes[dept];
         }
         window.OverviewViewRegistry[quotationViewInstanceKey].refreshDepartment = refreshQuotationDepartment;
+        window.OverviewViewRegistry[quotationViewInstanceKey].refreshStatus = renderQuotationPersonInCharge;
         window.syncOverviewAdminRefreshButtons?.(`#${window.QuotationIdManager.overviewScroll(@ViewData["Id"])}`);
         window.reloadQuotationComponents = function(instanceId) {
             var registry = window.OverviewViewRegistry || {};

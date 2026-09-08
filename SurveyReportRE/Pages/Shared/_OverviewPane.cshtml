@@ -192,14 +192,24 @@
                     .attr("aria-busy", "true");
 
                 try {
+                    const refreshSections = window.refreshOverviewSectionsSequentially;
                     await Promise.resolve(
-                        window.reloadOverviewViewComponents(
+                        typeof refreshSections === "function"
+                            ? refreshSections(
+                                "@moduleCode",
+                                @quotationId,
+                                e.element
+                            )
+                            : window.reloadOverviewViewComponents(
                             "@moduleCode",
                             @quotationId,
                             e.element,
                             true
                         )
                     );
+                } catch (error) {
+                    console.error("Overview refresh failed", error);
+                    DevExpress.ui.notify("Overview refresh failed", "error", 1800);
                 } finally {
                     $buttonElement
                         .removeClass("is-refreshing")

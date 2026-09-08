@@ -8059,6 +8059,91 @@
            }
            window.reloadOverviewViewComponents = reloadOverviewViewComponents;
 
+           async function refreshOverviewSectionsSequentially(moduleCode, recordId, triggerElement) {
+                var normalizedModule = String(moduleCode || "").replace(/\s+/g, "").toLowerCase();
+                var resolvedModuleCode = normalizedModule === viewIdModulePrefix.policyIssuance || normalizedModule === "policyissuance"
+                    ? viewIdModulePrefix.policyIssuance
+                    : viewIdModulePrefix.quotation;
+                var viewInstanceKey = `${resolvedModuleCode}:${recordId}`;
+                var entry = window.OverviewViewRegistry?.[viewInstanceKey];
+                var root = entry?.rootId ? document.getElementById(entry.rootId) : null;
+
+                if (!root || typeof entry?.refreshDepartment !== "function") {
+                    return reloadOverviewViewComponents(resolvedModuleCode, recordId, triggerElement, true);
+                }
+
+                var schemeName = resolvedModuleCode === viewIdModulePrefix.policyIssuance
+                    ? "PolicyIssuance"
+                    : "Quotation";
+                var sectionButtons = Array.from(
+                    root.querySelectorAll("[data-overview-section-refresh='true'][data-dept]")
+                );
+                var departments = sectionButtons
+                    .map(function (button) { return String(button.dataset.dept || "").trim().toUpperCase(); })
+                    .filter(function (dept, index, values) { return dept && values.indexOf(dept) === index; });
+
+                if (!departments.length) {
+                    return reloadOverviewViewComponents(resolvedModuleCode, recordId, triggerElement, true);
+                }
+
+                var statusPill = root.querySelector(".overview-status-pill");
+                var failedDepartments = [];
+                if (statusPill) {
+                    statusPill.classList.add("is-ready", "is-loading");
+                    statusPill.setAttribute("aria-busy", "true");
+                    statusPill.innerHTML = `
+                        <span class="overview-status-loading-icon" aria-hidden="true">
+                            <i class="fa fa-refresh"></i>
+                        </span>
+                        <span class="overview-status-loading-text">Refreshing overview…</span>`;
+                }
+
+                for (var index = 0; index < departments.length; index += 1) {
+                    var dept = departments[index];
+                    if (statusPill) {
+                        statusPill.querySelector(".overview-status-loading-text").textContent =
+                            `Refreshing ${dept} (${index + 1}/${departments.length})…`;
+                    }
+                    var loadingContext = beginDepartmentSectionLoading(
+                        schemeName,
+                        recordId,
+                        dept,
+                        `Refreshing ${dept} section...`
+                    );
+                    try {
+                        await entry.refreshDepartment(dept);
+                        finishDepartmentSectionLoading(loadingContext, `${dept} section refreshed`, false);
+                    } catch (error) {
+                        failedDepartments.push(dept);
+                        finishDepartmentSectionLoading(loadingContext, `${dept} refresh failed`, true);
+                        console.error(`${dept} section refresh failed`, error);
+                    }
+                }
+
+                try {
+                    if (typeof entry.reloadWorkflow === "function") {
+                        await entry.reloadWorkflow();
+                    }
+                    if (typeof entry.refreshStatus === "function") {
+                        await entry.refreshStatus();
+                    }
+                } catch (error) {
+                    failedDepartments.push("workflow status");
+                    console.error("Overview workflow/status refresh failed", error);
+                } finally {
+                    if (statusPill) {
+                        statusPill.classList.remove("is-loading");
+                        statusPill.setAttribute("aria-busy", "false");
+                    }
+                }
+
+                if (failedDepartments.length) {
+                    throw new Error(`Unable to refresh: ${failedDepartments.join(", ")}`);
+                }
+                return true;
+           }
+           window.refreshOverviewSectionsSequentially = refreshOverviewSectionsSequentially;
+
            function reloadWorkflowViewComponents(schemeName, recordId, triggerElement, forceReload) {
                 var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
                 var isPolicyIssuance = normalizedScheme === "policyissuance";
@@ -10261,7 +10346,7 @@
 
                 $target
                     .data("overviewStatusRevealToken", revealToken)
-                    .removeClass("is-ready")
+                    .removeClass("is-ready is-loading")
                     .attr({
                         "aria-busy": "true",
                         title: `${statusText}${skipTsEnabled ? " — Skip TS" : ""} — ${owner}`
