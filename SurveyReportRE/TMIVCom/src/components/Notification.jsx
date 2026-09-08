@@ -220,6 +220,7 @@ const pendingQueue = [];
  */
 export const ToastContainer = forwardRef((props, ref) => {
     const [toasts, setToasts] = useState([]);
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     const addToast = useCallback((toastOptions) => {
         const id = Date.now() + "_" + Math.random().toString(36).substr(2, 9);
@@ -273,6 +274,12 @@ export const ToastContainer = forwardRef((props, ref) => {
         };
     }, [handleObj]);
 
+    useEffect(() => {
+        if (toasts.length === 0 && isCollapsed) {
+            setIsCollapsed(false);
+        }
+    }, [toasts.length, isCollapsed]);
+
     const positions = {
         "top-right": toasts.filter(t => t.position === "top-right"),
         "top-left": toasts.filter(t => t.position === "top-left"),
@@ -282,6 +289,13 @@ export const ToastContainer = forwardRef((props, ref) => {
         "bottom-right": toasts.filter(t => (!t.position || t.position === "bottom-right" || t.position === "right-bottom"))
     };
 
+    const activePositions = Object.keys(positions).filter((pos) => positions[pos].length > 0);
+    const collapseControlPosition = positions["bottom-right"].length > 0
+        ? "bottom-right"
+        : positions["top-right"].length > 0
+            ? "top-right"
+            : activePositions[0];
+
     const getPositionStyle = (pos) => {
         const baseStyle = {
             position: "fixed",
@@ -289,7 +303,14 @@ export const ToastContainer = forwardRef((props, ref) => {
             display: "flex",
             flexDirection: "column",
             gap: "10px",
-            pointerEvents: "none"
+            maxHeight: "calc(100vh - 40px)",
+            padding: "2px 8px 4px 2px",
+            boxSizing: "border-box",
+            overflowX: "hidden",
+            overflowY: "auto",
+            overscrollBehavior: "contain",
+            scrollbarGutter: "stable",
+            pointerEvents: "auto"
         };
 
         switch (pos) {
@@ -314,13 +335,141 @@ export const ToastContainer = forwardRef((props, ref) => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
     }, []);
 
+    const compactCount = toasts.length > 99 ? "99+" : String(toasts.length);
+
     return (
         <>
+            {isCollapsed && toasts.length > 0 && (
+                <button
+                    type="button"
+                    className="tmiv-toast-mini-button"
+                    title={`Show ${toasts.length} notification${toasts.length === 1 ? "" : "s"}`}
+                    aria-label={`Show ${toasts.length} notification${toasts.length === 1 ? "" : "s"}`}
+                    aria-expanded="false"
+                    onClick={() => setIsCollapsed(false)}
+                    style={{
+                        position: "fixed",
+                        right: "20px",
+                        bottom: "20px",
+                        zIndex: 99999,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "50px",
+                        height: "50px",
+                        padding: 0,
+                        border: "1px solid rgba(37, 99, 235, 0.2)",
+                        borderRadius: "15px",
+                        background: "linear-gradient(145deg, #ffffff 0%, #eff6ff 100%)",
+                        color: "#2563eb",
+                        boxShadow: "0 14px 34px rgba(15, 23, 42, 0.2), 0 3px 10px rgba(37, 99, 235, 0.16)",
+                        cursor: "pointer",
+                        pointerEvents: "auto",
+                        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                        transition: "transform 0.2s ease, box-shadow 0.2s ease"
+                    }}
+                    onMouseEnter={(event) => {
+                        event.currentTarget.style.transform = "translateY(-2px) scale(1.03)";
+                        event.currentTarget.style.boxShadow = "0 18px 38px rgba(15, 23, 42, 0.24), 0 4px 12px rgba(37, 99, 235, 0.2)";
+                    }}
+                    onMouseLeave={(event) => {
+                        event.currentTarget.style.transform = "translateY(0) scale(1)";
+                        event.currentTarget.style.boxShadow = "0 14px 34px rgba(15, 23, 42, 0.2), 0 3px 10px rgba(37, 99, 235, 0.16)";
+                    }}
+                >
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M10 21h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                    </svg>
+                    <span
+                        className="tmiv-toast-mini-count"
+                        style={{
+                            position: "absolute",
+                            top: "-7px",
+                            right: "-7px",
+                            minWidth: "22px",
+                            height: "22px",
+                            padding: "0 6px",
+                            boxSizing: "border-box",
+                            borderRadius: "999px",
+                            background: "#ef4444",
+                            color: "#ffffff",
+                            fontSize: "10px",
+                            fontWeight: 800,
+                            lineHeight: "22px",
+                            textAlign: "center",
+                            boxShadow: "0 0 0 3px #ffffff"
+                        }}
+                    >
+                        {compactCount}
+                    </span>
+                </button>
+            )}
+
             {Object.keys(positions).map((pos) => {
                 const toastList = positions[pos];
                 if (toastList.length === 0) return null;
                 return (
-                    <div key={pos} style={getPositionStyle(pos)}>
+                    <div
+                        key={pos}
+                        className={`tmiv-toast-stack tmiv-toast-stack-${pos}`}
+                        aria-hidden={isCollapsed}
+                        style={{
+                            ...getPositionStyle(pos),
+                            display: isCollapsed ? "none" : "flex"
+                        }}
+                    >
+                        {pos === collapseControlPosition && (
+                            <div style={{
+                                position: "sticky",
+                                top: 0,
+                                zIndex: 2,
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                paddingBottom: "2px",
+                                pointerEvents: "auto"
+                            }}>
+                                <button
+                                    type="button"
+                                    className="tmiv-toast-collapse-button"
+                                    title="Collapse all notifications"
+                                    aria-label="Collapse all notifications"
+                                    onClick={() => setIsCollapsed(true)}
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        height: "30px",
+                                        padding: "0 11px",
+                                        border: "1px solid rgba(148, 163, 184, 0.35)",
+                                        borderRadius: "9px",
+                                        background: "rgba(255, 255, 255, 0.96)",
+                                        color: "#475569",
+                                        boxShadow: "0 5px 16px rgba(15, 23, 42, 0.12)",
+                                        cursor: "pointer",
+                                        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                                        fontSize: "12px",
+                                        fontWeight: 600,
+                                        lineHeight: 1,
+                                        pointerEvents: "auto",
+                                        transition: "background-color 0.18s ease, color 0.18s ease, transform 0.18s ease"
+                                    }}
+                                    onMouseEnter={(event) => {
+                                        event.currentTarget.style.backgroundColor = "#f8fafc";
+                                        event.currentTarget.style.color = "#2563eb";
+                                    }}
+                                    onMouseLeave={(event) => {
+                                        event.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.96)";
+                                        event.currentTarget.style.color = "#475569";
+                                    }}
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M5 9h5V4M19 9h-5V4M5 15h5v5M19 15h-5v5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    Collapse
+                                </button>
+                            </div>
+                        )}
                         {toastList.map((toast) => (
                             <ToastItem key={toast.id} toast={toast} onClose={handleClose} />
                         ))}

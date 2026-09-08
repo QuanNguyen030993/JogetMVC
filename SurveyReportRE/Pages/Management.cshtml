@@ -1802,6 +1802,36 @@
         };
     }
 
+    function hasInvalidNotificationTarget(target) {
+        if (!target?.url) return true;
+        const match = target.url.match(/\/[A-Za-z0-9_]+_Form\/([^/?#]+)/i);
+        if (!match) return false;
+        const id = Number(match[1]);
+        return !Number.isFinite(id) || id <= 0;
+    }
+
+    async function resolveNotificationTarget(item) {
+        const target = getNotificationTarget(item);
+        if (!hasInvalidNotificationTarget(target)) {
+            return target;
+        }
+
+        const urlGuid = target?.url?.match(/\/[A-Za-z0-9_]+_Form\/[^/]+\/([^/?#]+)/i)?.[1];
+        const recordGuid = item?.recordGuid ?? item?.RecordGuid ?? urlGuid ?? "";
+        if (!recordGuid) return target;
+
+        try {
+            const resolved = await ajaxGet(
+                `/api/Notification/ResolveRecordTarget?recordGuid=${encodeURIComponent(recordGuid)}`,
+                null
+            );
+            return getNotificationTarget({ ...item, url: resolved }) || target;
+        } catch (error) {
+            console.warn("Unable to resolve notification target", error);
+            return target;
+        }
+    }
+
     async function openNotification(item) {
         const itemId = String(item?.id ?? item?.Id ?? "");
         if (_notif.openingIds.has(itemId)) return;
@@ -1821,8 +1851,8 @@
 
         // 2) hành động mở: tùy hệ bạn
         // Nếu bạn có obj.url/caption/name kiểu loadParams -> callElementView(...)
-        const target = getNotificationTarget(item);
-        if (!target) {
+        const target = await resolveNotificationTarget(item);
+        if (!target || hasInvalidNotificationTarget(target)) {
             DevExpress.ui.notify("No target action for this notification", "warning", 1500);
             return;
         }

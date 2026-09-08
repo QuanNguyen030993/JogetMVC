@@ -31054,37 +31054,37 @@ aside {
 
 .dept-tree .dept-idle-clock {
     position: absolute;
-    top: -54px;
-    right: 7px;
+    top: -43px;
+    right: 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    /* nhỏ ngang circle FO */
-    width: 40px;
-    height: 40px;
-    padding: 5px 3px 3px;
-    color: #1d4ed8;
-    background: radial-gradient( circle at 32% 24%, rgba(255, 255, 255, .98), transparent 34% ), linear-gradient( 145deg, #ffffff 0%, #eff6ff 58%, #dbeafe 100% );
-    border: 2px solid #93c5fd;
+    width: var(--node);
+    height: var(--node);
+    padding: 3px 2px 2px;
+    color: #1e3a5f;
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+    border: 1px solid #94a3b8;
     border-radius: 50%;
-    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .72), 0 4px 10px rgba(37, 99, 235, .16);
+    box-shadow: inset 0 0 0 2px #ffffff, 0 4px 10px rgba(15, 23, 42, .13);
     opacity: 0;
     visibility: hidden;
-    transform: translateY(5px) scale(.96);
+    transform: translateY(4px) scale(.96);
     transform-origin: top right;
     transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s;
+    pointer-events: none;
 }
 
     .dept-tree .dept-idle-clock::before {
         content: "";
         position: absolute;
-        top: 3px;
+        top: 2px;
         left: 50%;
-        width: 2px;
-        height: 3px;
-        background: #3b82f6;
+        width: 1px;
+        height: 2px;
+        background: #64748b;
         border-radius: 999px;
         transform: translateX(-50%);
     }
@@ -31100,15 +31100,15 @@ aside {
     /* Auto-saved nằm bên ngoài, trên đầu clock */
     .dept-tree .dept-idle-clock .auto-saved-text {
         position: absolute;
-        top: -10px;
+        top: -9px;
         left: 50%;
         transform: translateX(-50%);
-        color: #64748b;
-        font-family: Arial, sans-serif;
-        font-size: 7px;
-        font-weight: 600;
+        color: #475569;
+        font-family: Inter, "Segoe UI", Arial, sans-serif;
+        font-size: 6px;
+        font-weight: 700;
         line-height: 1;
-        letter-spacing: -.02em;
+        letter-spacing: .06em;
         text-align: center;
         white-space: nowrap;
         pointer-events: none;
@@ -31118,14 +31118,14 @@ aside {
     /* 02:00 nằm giữa clock */
     .dept-tree .dept-idle-clock .dept-idle-clock-value {
         display: block;
-        margin-top: 2px;
-        color: #1d4ed8;
-        font-family: Consolas, "Courier New", monospace;
-        font-size: 9px;
+        margin-top: 1px;
+        color: #1e3a5f;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 7px;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
         line-height: 1;
-        letter-spacing: -.04em;
+        letter-spacing: -.06em;
         text-align: center;
     }
 
@@ -31626,7 +31626,7 @@ aside {
     z-index: var(--z-index-high);
     pointer-events: auto; /* cho phép rê chuột vào tooltip */
     position: fixed;
-    width: 360px;
+    width: min(720px, calc(100vw - 32px));
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 14px;
@@ -36421,24 +36421,24 @@ textarea {
     padding: 3px 7px !important;
 }
 
-/* Smaller idle countdown without changing the workflow node dimensions. */
+/* Keep the auto-save countdown aligned with the workflow node dimensions. */
 :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-tree .dept-idle-clock {
-    top: -50px;
-    right: 2px;
+    top: -43px;
+    right: 8px;
     width: var(--overview-idle-clock-size);
     height: var(--overview-idle-clock-size);
-    padding: 6px 3px 3px;
-    gap: 1px;
+    padding: 3px 2px 2px;
+    gap: 0;
 }
 
     :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-tree .dept-idle-clock::before {
-        top: 3px;
-        height: 4px;
+        top: 2px;
+        height: 2px;
     }
 
 
 :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-idle-clock-value {
-    font-size: 9px;
+    font-size: 7px;
 }
 
 @media (max-width: 1366px) {

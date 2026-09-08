@@ -415,6 +415,8 @@ namespace ERPCore.ControllerUtil
             {
                 transferObjectIn = new
                 {
+                    Id = transferObject.Id,
+                    Code = transferObject.QuotationCode,
                     Title = Util.ReplaceDynamicProperties(notificationTemplate.Title, transferObject),
                     Message = Util.ReplaceDynamicProperties(notificationTemplate.Content, transferObject),
                     Guid = transferObject.Guid,
@@ -468,6 +470,10 @@ namespace ERPCore.ControllerUtil
 
             string moduleName = ReadProperty("ModuleName")?.ToString() ?? nameof(Quotation);
             long.TryParse(ReadProperty("Id")?.ToString(), out long id);
+            if (id <= 0 && string.Equals(moduleName, nameof(Quotation), StringComparison.OrdinalIgnoreCase))
+            {
+                long.TryParse(ReadProperty("QuotationId")?.ToString(), out id);
+            }
             string recordGuid = ReadProperty("Guid")?.ToString() ?? "";
             string code = ReadProperty("Code")?.ToString() ?? "";
 

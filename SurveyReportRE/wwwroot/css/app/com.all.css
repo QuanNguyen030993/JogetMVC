@@ -3783,3 +3783,25 @@ textarea {
 .tmivcom-previewoffice-excel-area tr:nth-child(even) {
     background: #f8fafc;
 }
+/* Toast stacks stay usable when many messages arrive at the same time. */
+.tmiv-toast-stack {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, .45) transparent;
+}
+
+.tmiv-toast-stack::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tmiv-toast-stack::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tmiv-toast-stack::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(100, 116, 139, .38);
+}
+
+.tmiv-toast-stack::-webkit-scrollbar-thumb:hover {
+    background: rgba(71, 85, 105, .58);
+}

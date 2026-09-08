@@ -50,6 +50,35 @@ public class NotificationController : BaseControllerApi<Notification>
         _policyIssuanceRepository = new BaseRepository<PolicyIssuance>(configuration, _httpContextAccessor);
         DOMAIN_NAME = configuration.GetSection("Domain:DCServer").Value;
     }
+
+    [HttpGet]
+    public async Task<IActionResult> ResolveRecordTarget(Guid recordGuid)
+    {
+        if (recordGuid == Guid.Empty)
+        {
+            return BadRequest("RecordGuid is required.");
+        }
+
+        Quotation? quotation = await _quotationRepository.GetSingleObject(item =>
+            item.Guid == recordGuid && !item.Deleted);
+        if (quotation != null)
+        {
+            return Ok(Util.URLObjectMaking(quotation));
+        }
+
+        PolicyIssuance? policyIssuance = await _policyIssuanceRepository.GetSingleObject(item =>
+            item.Guid == recordGuid && !item.Deleted);
+        if (policyIssuance == null)
+        {
+            return NotFound();
+        }
+
+        policyIssuance.QuotationId = await ControllerUtil.ResolvePolicyIssuanceCloneIdAsync(
+            _quotationRepository,
+            policyIssuance);
+        return Ok(ControllerUtil.NotificationURLObjectMaking(policyIssuance));
+    }
+
     [HttpPost]
     public async Task<IActionResult> JiraSubmit([FromBody] JiraSubmitRequest request)
     {
