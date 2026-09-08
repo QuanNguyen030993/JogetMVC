@@ -478,6 +478,7 @@ Note:
         }
 
         function selfLoadSelectedWorkflow() {
+            const selectedModel = getSelectedModel();
             return window.WorkflowLoader.load({
                 moduleCode: viewIdModulePrefix.quotation,
                 id: @ViewData["Id"],
@@ -489,6 +490,7 @@ Note:
                 formStages: quotationFormStages,
                 remarkBoxes: remarkBoxs,
                 prefix: "@prefix",
+                requestType: selectedModel?.requestType ?? selectedModel?.RequestType ?? "",
                 loadScreenConditions: loadAndApplyQuotationScreenConditions,
                 submitNextStep: submitNextStep,
                 returnToStep: returnToStep,

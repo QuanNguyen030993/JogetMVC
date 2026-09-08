@@ -751,6 +751,141 @@
                                 },
                             },
                         },
+                        {
+                            widget: 'dxButton',
+                            toolbar: 'bottom',
+                            location: 'after',
+                            options: {
+                                stylingMode: 'contained',
+                                type: 'success',
+                                text: "Demo Endorsement",
+                                onClick() {
+                                    var form = $(`#quotationRequestForm`).dxForm("instance");
+                                    if (!form) {
+                                        DevExpress.ui.notify("Quotation form is still loading.", "warning", 1500);
+                                        return;
+                                    }
+
+                                    var endorsementRequestType = (_enums.requestType || []).find(function (item) {
+                                        return String(item.value || "").trim().toLowerCase() === "endorsement";
+                                    });
+                                    if (!endorsementRequestType) {
+                                        DevExpress.ui.notify("Endorsement request type was not found.", "warning", 2500);
+                                        return;
+                                    }
+
+                                    var now = new Date();
+                                    var dueDate = new Date(now);
+                                    dueDate.setDate(dueDate.getDate() + 7);
+                                    var demoPolicyNo = `DEMO-END-${Date.now()}`;
+                                    var payload = {
+                                        assignedTeamOrRole: "TS",
+                                        assignees: {},
+                                        assignmentMode: "manual",
+                                        businessChannel: {
+                                            name: "BusinessChannel",
+                                            value: "Direct (DIR)",
+                                            key: "",
+                                            code: "",
+                                            sysTableId: null,
+                                            sysTableName: "",
+                                            mappingField: "",
+                                            enumOrder: 0,
+                                            id: 173,
+                                            guid: "852bccc3-e537-4225-b686-2724beec518e",
+                                            rowOrder: null
+                                        },
+                                        businessOccupation: "AAAAAAA",
+                                        clientId: 1128,
+                                        clientName: "DAO DUY THANG",
+                                        createDate: now,
+                                        dueDate: dueDate,
+                                        lineId: {
+                                            id: 1,
+                                            code: "LI1",
+                                            value: "Fire & Property, BI"
+                                        },
+                                        lineCode: "LI1",
+                                        lineName: "Fire & Property, BI",
+                                        PIC: _loginUser,
+                                        policyNo: demoPolicyNo,
+                                        productCode: "PC2",
+                                        productId: {
+                                            id: 2,
+                                            code: "PC2",
+                                            value: "Industrial All Risks",
+                                            lineId: 1
+                                        },
+                                        productName: "Industrial All Risks",
+                                        reinsuranceId: {
+                                            name: "reInsuranceType",
+                                            value: "NO FAC OUT",
+                                            key: "",
+                                            code: "",
+                                            sysTableId: 10056,
+                                            sysTableName: "",
+                                            mappingField: "",
+                                            enumOrder: 0,
+                                            id: 144,
+                                            guid: "ca0e7c80-1fcc-4bdb-8cc7-3a4209b72f2b",
+                                            rowOrder: null
+                                        },
+                                        reqDate: now,
+                                        reqPerson: _loginUser,
+                                        requestTypeId: endorsementRequestType.id,
+                                        requestType: "Endorsement",
+                                        requestedDate: now,
+                                        stageAccount: _loginUser,
+                                        stageDept: "TS",
+                                        subject: `Demo endorsement ${demoPolicyNo} ${now.toLocaleString()}`,
+                                        turnAroundTimeAttributes: "",
+                                        quotationQuantity: 2,
+                                        startingDept: "FO",
+                                        businessChannelName: "Direct (DIR)"
+                                    };
+
+                                    form.option("formData", payload);
+                                    form.itemOption("headerInformation.policyNo", "visible", true);
+
+                                    // Stop a client-change lookup from replacing the generated demo value.
+                                    if (typeof quotationPolicyNumberRequest !== "undefined") {
+                                        quotationPolicyNumberRequest++;
+                                    }
+                                    if (typeof applyQuotationPolicyNumbers === "function") {
+                                        applyQuotationPolicyNumbers(form, [{ policyNo: demoPolicyNo }]);
+                                    }
+                                    form.updateData("policyNo", demoPolicyNo);
+                                    form.updateData("subject", `Demo endorsement ${demoPolicyNo} ${now.toLocaleString()}`);
+
+                                    var branch = (_enums.BranchOffice || []).find(f => f.code === _branch)
+                                        || (_enums.BranchOffice || [])[0];
+                                    var assignmentData = {
+                                        to: _loginUser,
+                                        branchId: branch?.id || null,
+                                        notes: "Auto-generated demo endorsement",
+                                        deptTarget: "TS"
+                                    };
+                                    var $assignBox = $("#assignBox");
+                                    var assignmentForm = $assignBox.dxForm("instance");
+                                    if (!assignmentForm) {
+                                        assignmentForm = $assignBox.dxForm({
+                                            visible: false,
+                                            formData: assignmentData
+                                        }).dxForm("instance");
+                                    } else {
+                                        assignmentForm.option("formData", assignmentData);
+                                    }
+
+                                    setTimeout(function () {
+                                        var completeItem = (popupInstance.option("toolbarItems") || [])
+                                            .find(item => item.options?.text === "Complete");
+                                        if (completeItem?.options?.onClick) {
+                                            completeItem.options.onClick();
+                                        }
+                                    }, 0);
+                                }
+                            }
+                        },
                             // {
                             // widget: 'dxButton',
                             // toolbar: 'bottom',
@@ -6836,20 +6971,26 @@
                 }
             }
             function makeMiniLoadingPanel(tabName, subTabContent){
-                    $(`<div>`).html(`
-                        <div class="mini-browser-loading" id="browserLoading">
-                    <div class="browser-pill">
-                    <div class="pill-content">
-                    <div class="pill-text">
-                        <div class="domain">${tabName}</div>
-                        <div class="source">${subTabContent}</div>
-                    </div>
-                    </div>
-                    <div class="progress-line">
-                    <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    </div>
-                    </div>`).appendTo($(`body`));
+                    $("#browserLoading").remove();
+
+                    const $loading = $("<div>", {
+                        id: "browserLoading",
+                        class: "mini-browser-loading",
+                        role: "status",
+                        "aria-live": "polite",
+                        "aria-label": "Loading"
+                    });
+                    const $pill = $("<div>", { class: "browser-pill" }).appendTo($loading);
+                    const $content = $("<div>", { class: "pill-content" }).appendTo($pill);
+                    const $text = $("<div>", { class: "pill-text" }).appendTo($content);
+
+                    $("<div>", { class: "domain", text: tabName || "Processing" }).appendTo($text);
+                    $("<div>", { class: "source", text: subTabContent || "Please wait…" }).appendTo($text);
+                    $("<div>", { class: "progress-line" })
+                        .append($("<div>", { id: "progressFill", class: "progress-fill" }))
+                        .appendTo($pill);
+
+                    $loading.appendTo(document.body);
             }
 
             function disposeMiniLoadingPanel(){
@@ -6860,6 +7001,7 @@
              function startBrowserLoading(duration = 3000){
                    const fill = document.getElementById("progressFill");
                    const wrapper = document.getElementById("browserLoading");
+                   if (!fill || !wrapper) return;
                    let progress = 0;
                    fill.style.width = "0%";
                    wrapper.style.display = "block";
@@ -6880,10 +7022,11 @@
                    }, duration / 100);
                }
 
-                    function renderBrowserLoading(result){
+                     function renderBrowserLoading(result){
                        const fill = document.getElementById("progressFill");
                        const wrapper = document.getElementById("browserLoading");
-                       let progress = result.payload.progressvalue;
+                       if (!fill || !wrapper) return;
+                       let progress = Math.max(0, Math.min(100, Number(result?.payload?.progressvalue) || 0));
                            fill.style.width = progress + "%";
                        wrapper.style.display = "block";
                        wrapper.classList.remove("fade-out");
@@ -12156,6 +12299,92 @@
             );
         }
 
+        function normalizeRouteConditionValue(value) {
+            return String(value ?? "")
+                .trim()
+                .replace(/\s+/g, " ")
+                .toLowerCase();
+        }
+
+        function getCustomRouteLabels(route) {
+            const routeData = safeJsonParse(route?.data) || {};
+            return [
+                route?.text,
+                route?.name,
+                route?.textName,
+                route?.displayStatus,
+                route?.actionName,
+                route?.actionCode,
+                routeData?.text,
+                routeData?.name,
+                routeData?.textName,
+                routeData?.displayStatus,
+                routeData?.actionName,
+                routeData?.actionCode
+            ]
+                .map(normalizeRouteConditionValue)
+                .filter(Boolean);
+        }
+
+        function getWorkflowRequestType() {
+            const selectedRecords = [];
+            const sharedStates = [
+                state,
+                window.QuotationPage?.state,
+                window.PolicyIssuancePage?.state
+            ].filter(Boolean);
+
+            sharedStates.forEach(function (workflowState) {
+                [workflowState.quotes, workflowState.policyIssuances, workflowState.items].forEach(function (records) {
+                    if (!Array.isArray(records)) return;
+                    const selected = records.find(function (item) {
+                        return String(item?.id ?? item?.Id ?? "") === String(workflowState.selectedId ?? state.selectedId ?? id);
+                    }) || records[0];
+                    if (selected) selectedRecords.push(selected);
+                });
+            });
+
+            if (state.selectedId && state.quoteDetails?.[state.selectedId]) {
+                selectedRecords.unshift(state.quoteDetails[state.selectedId]);
+            }
+            if (state.selectedId && state.piDetails?.[state.selectedId]) {
+                selectedRecords.unshift(state.piDetails[state.selectedId]);
+            }
+
+            const candidates = [
+                params.requestType,
+                params.data?.requestType,
+                params.data?.RequestType,
+                params.data?.formItems?.requestType,
+                params.data?.formItems?.RequestType,
+                state.requestType,
+                state.RequestType,
+                window.QuotationPage?.state?.requestType,
+                window.PolicyIssuancePage?.state?.requestType
+            ];
+
+            selectedRecords.forEach(function (record) {
+                candidates.push(record?.requestType, record?.RequestType);
+            });
+
+            for (const candidate of candidates) {
+                if (candidate == null || candidate === "") continue;
+                if (typeof candidate === "object") {
+                    const nested = candidate.value ?? candidate.Value ?? candidate.text ?? candidate.Text ?? candidate.name ?? candidate.Name;
+                    if (nested != null && nested !== "") return normalizeRouteConditionValue(nested);
+                    continue;
+                }
+                return normalizeRouteConditionValue(candidate);
+            }
+            return "";
+        }
+
+        function shouldShowCustomRoute(route) {
+            const isNoNeedToRefer = getCustomRouteLabels(route).includes("no need to refer");
+            if (!isNoNeedToRefer) return true;
+            return getWorkflowRequestType() === "endorsement";
+        }
+
         function cleanupDynamicButtons() {
             $(`[data-workflow-record-id="${id}"]`).each(function () {
                 try {
@@ -12369,6 +12598,10 @@
 
                     const customRoutesInDept =
                         customRoutes.filter(function (route) {
+                            if (!shouldShowCustomRoute(route)) {
+                                return false;
+                            }
+
                             const routeKeys =
                                 getRouteGroupKeys(route);
 

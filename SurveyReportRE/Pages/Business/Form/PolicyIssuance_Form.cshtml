@@ -414,6 +414,7 @@ Note:
             );
         }
         function selfLoadSelectedWorkflow() {
+            const selectedModel = getSelectedModel();
             return window.WorkflowLoader.load({
                 moduleCode: viewIdModulePrefix.policyIssuance,
                 id: @ViewData["Id"],
@@ -425,6 +426,7 @@ Note:
                 formStages: policyIssuanceFormStages,
                 remarkBoxes: remarkBoxs,
                 prefix: "@prefix",
+                requestType: selectedModel?.requestType ?? selectedModel?.RequestType ?? "",
                 loadScreenConditions: loadAndApplyPolicyIssuanceScreenConditions,
                 submitNextStep: submitNextStep,
                 returnToStep: returnToStep,
