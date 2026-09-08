@@ -7690,10 +7690,12 @@
                     overlay = document.createElement("div");
                     overlay.className = "dept-section-action-overlay";
                     overlay.innerHTML = `
-                        <div class="dept-section-action-loader" aria-hidden="true">
-                            <span></span><span></span><span></span>
-                        </div>
-                        <span class="dept-section-action-message"></span>`;
+                        <div class="app-loading-indicator">
+                            <div class="dept-section-action-loader" aria-hidden="true">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="dept-section-action-message"></span>
+                        </div>`;
                     section.appendChild(overlay);
                 }
 
@@ -7902,10 +7904,12 @@
                     overlay = document.createElement("div");
                     overlay.className = "workflow-element-loading-overlay";
                     overlay.innerHTML = `
-                        <div class="dept-section-action-loader" aria-hidden="true">
-                            <span></span><span></span><span></span>
-                        </div>
-                        <span class="workflow-element-loading-message"></span>`;
+                        <div class="app-loading-indicator">
+                            <div class="dept-section-action-loader" aria-hidden="true">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <span class="workflow-element-loading-message"></span>
+                        </div>`;
                     element.appendChild(overlay);
                 }
                 overlay.dataset.loadingScope = scope || "element";
@@ -8065,9 +8069,40 @@
            }
            window.reloadWorkflowViewComponents = reloadWorkflowViewComponents;
 
+           function beginWorkflowButtonLoading(event) {
+                var instance = event?.component;
+                var $button = event?.element
+                    ? $(event.element)
+                    : $(instance?.element?.() || []);
+                if (!$button.length) return null;
+
+                var wasDisabled = instance?.option("disabled") === true;
+                var $content = $button.find(".dx-button-content").first();
+                $button.addClass("workflow-button-loading").attr("aria-busy", "true");
+                instance?.option("disabled", true);
+
+                if (!$content.children(".workflow-button-loader").length) {
+                    $(`
+                        <span class="workflow-button-loader dept-section-action-loader" aria-hidden="true">
+                            <span></span><span></span><span></span>
+                        </span>`).prependTo($content);
+                }
+
+                return {
+                    finish: function (restoreEnabled) {
+                        $button.removeClass("workflow-button-loading").attr("aria-busy", "false");
+                        $button.find(".workflow-button-loader").remove();
+                        if (restoreEnabled === true && !wasDisabled) {
+                            instance?.option("disabled", false);
+                        }
+                    }
+                };
+           }
+
            function acceptDecision(object, dept) {
                 object = object || {};
                 dept = dept || object.dept;
+                var buttonLoading = beginWorkflowButtonLoading(object.triggerEvent);
 
                 var scheme = object.schemeName || (object.prefix === viewIdModulePrefix.policyIssuance ? "PolicyIssuance" : "Quotation");
                 var formItems = object.formItems
@@ -8101,6 +8136,7 @@
                         responseData
                     )
                         .then(function () {
+                            buttonLoading?.finish(false);
                             finishDepartmentSectionLoading(
                                 loadingContext,
                                 `${dept} form unlocked`,
@@ -8108,6 +8144,7 @@
                             );
                         })
                         .catch(function (err) {
+                            buttonLoading?.finish(true);
                             finishDepartmentSectionLoading(
                                 loadingContext,
                                 `${dept} refresh failed`,
@@ -8118,6 +8155,7 @@
                 });
 
                 acceptRequest.fail(function (xhr) {
+                    buttonLoading?.finish(true);
                     finishDepartmentSectionLoading(
                         loadingContext,
                         "Accept decision failed",
@@ -10336,18 +10374,29 @@
                 function waitForDecisionRouteStage(formId) {
                     var $form = $(`#${formId}`);
                     var $stageRoot = $form.closest("[data-render-stage]");
-                    if (!$stageRoot.length || $stageRoot.attr("data-render-stage") === "routeState") {
+                    var hasReachedRouteStage = function (stage) {
+                        return stage === "routeState" || stage === "comments";
+                    };
+                    if (!$stageRoot.length || hasReachedRouteStage($stageRoot.attr("data-render-stage"))) {
                         return Promise.resolve();
                     }
 
                     return new Promise(function (resolve) {
                         var root = $stageRoot[0];
-                        var observer = new MutationObserver(function () {
-                            if ($stageRoot.attr("data-render-stage") !== "routeState") return;
+                        var completed = false;
+                        var finish = function () {
+                            if (completed) return;
+                            completed = true;
                             observer.disconnect();
+                            window.clearTimeout(fallbackTimer);
                             resolve();
+                        };
+                        var observer = new MutationObserver(function () {
+                            if (!hasReachedRouteStage($stageRoot.attr("data-render-stage"))) return;
+                            finish();
                         });
                         observer.observe(root, { attributes: true, attributeFilter: ["data-render-stage"] });
+                        var fallbackTimer = window.setTimeout(finish, 8000);
                     });
                 }
 
@@ -10381,7 +10430,7 @@
                                 mainFields,
                                 ...params
                             )
-                        }, FormStageDelay.routeState);
+                        }, FormStageDelay.routeComponent);
                     });
                 }
 
@@ -10454,7 +10503,7 @@
                 resolve,
                 Math.max(
                     0,
-                    Number(FormStageDelay?.routeState) || 0
+                    Number(FormStageDelay?.routeComponent) || 0
                 )
             );
         });
@@ -10532,6 +10581,13 @@
     }
         
 
+        function appendDecisionStatusLoader($host) {
+            return $(`
+                <span class="decision-common-status-loader dept-section-action-loader" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                </span>`).appendTo($host);
+        }
+
         function setDecisionCommonStatus(statusId, typeRender, state) {
 
             // var $status = ensureDecisionCommonStatus(statusId, buttonId);
@@ -10562,8 +10618,7 @@
                         backgroundColor: "var(--form-status-pending-bg)",
                         border: "1px solid var(--form-status-border)"
                     });
-                var $loader = $(`<span class="decision-common-status-loader"></span>`).appendTo($status);
-                $loader.dxLoadIndicator({ width: 14, height: 14, visible: true });
+                appendDecisionStatusLoader($status);
                 return;
             }
             else {
@@ -10607,11 +10662,11 @@
             }
 
             if (statusText) return { text: statusText, title: "" };
-            var acceptDate = tatObject?.[dept]?.AcceptDate || "No status";
+            var acceptDate = tatObject?.[dept]?.AcceptDate;
             if (acceptDate) {
                 return {
                     text: "Accepted",
-                    title: acceptDate == "No status" ? acceptDate : `Accepted at: ${fmtTimeLocal(acceptDate)}`
+                    title: `Accepted at: ${fmtTimeLocal(acceptDate)}`
                 };
             }
 
@@ -10637,7 +10692,13 @@
             options = options || {};
             var formItems = options.formItems || {};
             var buttonDept = normalizeDeptKey(options.dept);
-            var currentStageDept = normalizeDeptKey(options.stageDept || formItems.stageDept);
+            var currentStageDept = normalizeDeptKey(
+                options.stageDept
+                || formItems.stageDept
+                || formItems.StageDept
+                || window.QuotationPage?.state?.stageDept
+                || window.PolicyIssuancePage?.state?.stageDept
+            );
             var currentRole = normalizeDeptKey(
                 typeof options.role !== "undefined"
                     ? options.role
@@ -10661,8 +10722,9 @@
            if (options.type == "late-decision" || options.type == "early-decision")
             {
                  console.log(options.type, options.items);
-                 var hasAcceptDate = _role == "FO" ? true : !!tatObject?.[buttonDept]?.AcceptDate;
-                 if ( _role == "FO")
+                 var isFoDecision = currentRole === "FO";
+                 var hasAcceptDate = isFoDecision ? true : !!tatObject?.[buttonDept]?.AcceptDate;
+                 if (isFoDecision)
                      return !hasAcceptDate ;
                  else
                      return hasAcceptDate; //|| hasActionStatus;
@@ -10670,18 +10732,20 @@
             if (options.type == "route")
             {
                 console.log("route", options.items);
-                 var hasAcceptDate = _role == "FO" ? true : !!tatObject?.[buttonDept]?.AcceptDate;
+                 var isFoRoute = currentRole === "FO";
+                 var hasAcceptDate = isFoRoute ? true : !!tatObject?.[buttonDept]?.AcceptDate;
                  // var hasActionStatus = hasWorkflowButtonStatus(formItems, buttonDept);
-                 if ( _role == "FO")
+                 if (isFoRoute)
                      return !hasAcceptDate ;
                  else
                      return !hasAcceptDate; //|| hasActionStatus;
             }
-            if (options.type == "custom", options.items)
+            if (options.type == "custom")
             {
                  console.log("custom");
-                 var hasAcceptDate = _role == "FO" ? true : !!tatObject?.[buttonDept]?.AcceptDate;
-                 if ( _role == "FO")
+                 var isFoCustom = currentRole === "FO";
+                 var hasAcceptDate = isFoCustom ? true : !!tatObject?.[buttonDept]?.AcceptDate;
+                 if (isFoCustom)
                      return !hasAcceptDate ;
                  else
                      return hasAcceptDate; //|| hasActionStatus;
@@ -10759,8 +10823,7 @@
                         "data-decision-status-host": "true"
                     }).appendTo($content);
 
-                    var $loader = $(`<span class="decision-common-status-loader"></span>`).appendTo($statusRow);
-                     $loader.dxLoadIndicator({ width: 14, height: 14, visible: true });
+                    appendDecisionStatusLoader($statusRow);
                     // $("<span>", {
                     //     id: commonStatusId,
                     //     class: "accept-status-indicator decision-common-status decision-status-button",
@@ -11060,8 +11123,7 @@
                 return function (e) {
 
                          var objSnapshot = cloneReusableOptions(formProps);
-
-
+                         objSnapshot.triggerEvent = e;
 
                             acceptDecision(objSnapshot, objSnapshot.dept);
                 };
@@ -11189,7 +11251,10 @@
                     
                     setTimeout(() => {
                         var form = $(`#${formDataClone.formId}`).dxForm("instance");
-                        if (!form) return;
+                        if (!form) {
+                            setDecisionCommonStatus(commonStatusId, "onLoaded", "Form unavailable");
+                            return;
+                        }
                         
                         var formItems = form.option("formData") || {};
                         if (formItems)
@@ -11199,13 +11264,20 @@
                         else {
                             console.log("Form " + " no data");
                         }
-                        var picObject = tryParseJSON(
-                            formItems.pic ?? formItems.pIC ?? formItems.PIC,
-                            "PIC Load Problem"
-                        ) || {};
+                        var rawPic = formItems.pic ?? formItems.pIC ?? formItems.PIC;
+                        if (rawPic == null && typeof PIC_JSON !== "undefined") {
+                            rawPic = PIC_JSON;
+                        }
+                        var picObject = rawPic && typeof rawPic === "object"
+                            ? rawPic
+                            : (tryParseJSON(rawPic || "{}", "PIC Load Problem") || {});
                         var pic = picObject[formDataClone.dept];
                         if (!pic) {
-                            // console.log("No pic for "+ formDataClone.dept);
+                            setDecisionCommonStatus(commonStatusId, "onLoaded", "Not assigned");
+                            setDecisionButtonsDisabled(
+                                normalizedDecisionItems.map(item => getDelayAcceptButtonId(item)),
+                                true
+                            );
                             return;
 
                         }
@@ -13051,17 +13123,26 @@
         if (!$host.length) return;
 
         let $selector = $(getLoadingIndicator(actionRightId, hostSelector));
+        if ($selector.length && !$selector.hasClass("app-loading-indicator")) {
+            $selector.remove();
+            $selector = $();
+        }
         if (!$selector.length) {
-            $selector = $(`<div class="${actionRightId}_loading">`).appendTo($host);
-            $selector.dxLoadIndicator({ width: 14, height: 14, visible: false });
+            $selector = $(`
+                <div class="${actionRightId}_loading workflow-action-loading app-loading-indicator" role="status" aria-live="polite">
+                    <div class="dept-section-action-loader" aria-hidden="true">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <span class="workflow-element-loading-message">Loading workflow...</span>
+                </div>`).appendTo($host);
         }
 
-        $selector.dxLoadIndicator("instance")?.option("visible", true);
+        $selector.prop("hidden", false).attr("aria-busy", "true");
     }
     function hideLoading(actionRightId, hostSelector) {
        const indicator = getLoadingIndicator(actionRightId, hostSelector);
         if (indicator) {
-           $(indicator).dxLoadIndicator("instance").option("visible", false);
+           $(indicator).prop("hidden", true).attr("aria-busy", "false");
        }
     }
     function getDecisionRenderedObjects(formProps, decisionItems, legacyStatusId, buttonRule) {

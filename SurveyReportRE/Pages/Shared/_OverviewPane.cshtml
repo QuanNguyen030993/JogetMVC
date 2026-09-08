@@ -120,19 +120,13 @@
             closeOnOutsideClick: true,
             contentTemplate: function (contentElement) {
                 const instruction = String($nodeHelpButton.data("nodeInstruction") || "").trim();
-                const nodeLabel = String($nodeHelpButton.data("nodeLabel") || "Current node").trim();
                 const $content = $("<div>").addClass("overview-node-help-content");
-                const $header = $("<div>").addClass("overview-node-help-header").appendTo($content);
                 $("<span>")
                     .addClass("overview-node-help-icon")
                     .append($("<i>").addClass("fa fa-lightbulb-o").attr("aria-hidden", "true"))
-                    .appendTo($header);
-                const $heading = $("<div>").addClass("overview-node-help-heading").appendTo($header);
-                $("<span>").addClass("overview-node-help-kicker").text("CURRENT WORKFLOW STEP").appendTo($heading);
-                $("<strong>").addClass("overview-node-help-title").text(nodeLabel).appendTo($heading);
+                    .appendTo($content);
 
                 const $message = $("<div>").addClass("overview-node-help-message").appendTo($content);
-                $("<i>").addClass("fa fa-quote-left").attr("aria-hidden", "true").appendTo($message);
                 $("<div>")
                     .addClass("overview-node-help-text")
                     .html(instruction || "No instruction is configured for this node.")
@@ -167,9 +161,7 @@
                     || String(detail?.recordId) !== "@Model.Id") return;
 
                 const instruction = String(detail?.instruction || "").trim();
-                const nodeLabel = String(detail?.nodeLabel || "Current node").trim();
                 $nodeHelpButton.data("nodeInstruction", instruction);
-                $nodeHelpButton.data("nodeLabel", nodeLabel);
                 const button = $nodeHelpButton.dxButton("instance");
                 button.option({
                     disabled: !instruction,
@@ -178,9 +170,6 @@
                 $(nodeHelpPopover.content())
                     .find(".overview-node-help-text")
                     .text(instruction || "No instruction is configured for this node.");
-                $(nodeHelpPopover.content())
-                    .find(".overview-node-help-title")
-                    .text(nodeLabel);
                 nodeHelpPopover.hide();
             });
 

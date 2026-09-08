@@ -225,13 +225,13 @@ Note:
             var sequence = 0;
             var startedAt = 0;
             var $root = $(`#${quotationOverviewRootId}`);
-            var $loadingHost = $root.find("> .card > .cardBody.overview-wrap").first();
+            var $loadingHost = $root;
             var $overlay = $loadingHost.children(".qt-render-overlay");
 
             if (!$overlay.length) {
                 $overlay = $(`
                     <div id="${formModuleKeyQt}-renderOverlay_${quotationViewInstanceId}" class="qt-render-overlay" role="status" aria-live="polite" aria-busy="true">
-                        <div class="qt-loader-panel overview-section-loader">
+                        <div class="qt-loader-panel overview-section-loader app-loading-indicator">
                             <div class="dept-section-action-loader" aria-hidden="true">
                                 <span></span><span></span><span></span>
                             </div>
@@ -1701,27 +1701,27 @@ Note:
 
                 var toggleHideWorkflow = false;
 
-                $(`#${window.QuotationIdManager.panelHoverInFlow(@ViewData["Id"])}`).dxButton({
-                    icon: "fas fa-project-diagram",
-                    hint: "Workflow",
-                    elementAttr: { "aria-label": "Workflow" },
-                    readOnly: true,
-                    type: "normal",
-                    stylingMode: "contained",
-                    onClick: () => {
-                        if (!toggleHideWorkflow) {
-                            $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).empty();
-                            $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).show();
-                            $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).show();
-                            toggleHideWorkflow = true;
-                                reloadWorkflow("@(ViewData["Guid"])", @(ViewData["Id"]), stageDept, formModuleKeyQt);
-                        } else {
-                            $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).hide();
-                            $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).hide();
-                            toggleHideWorkflow = false;
-                        }
-                    }
-                });
+                // $(`#${window.QuotationIdManager.panelHoverInFlow(@ViewData["Id"])}`).dxButton({
+                //     icon: "fas fa-project-diagram",
+                //     hint: "Workflow",
+                //     elementAttr: { "aria-label": "Workflow" },
+                //     readOnly: true,
+                //     type: "normal",
+                //     stylingMode: "contained",
+                //     onClick: () => {
+                //         if (!toggleHideWorkflow) {
+                //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).empty();
+                //             $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).show();
+                //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).show();
+                //             toggleHideWorkflow = true;
+                //                 reloadWorkflow("@(ViewData["Guid"])", @(ViewData["Id"]), stageDept, formModuleKeyQt);
+                //         } else {
+                //             $(`#${window.QuotationIdManager.flowHistoryPanel(@ViewData["Id"])}`).hide();
+                //             $(`#${window.QuotationIdManager.flowPanel(@ViewData["Id"])}`).hide();
+                //             toggleHideWorkflow = false;
+                //         }
+                //     }
+                // });
 
                 $("#btnCloseRightComment").off("click").on("click", function () {
                     clearContent();

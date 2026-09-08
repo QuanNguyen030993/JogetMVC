@@ -1022,8 +1022,21 @@ function Flow({ id: propId }) {
                 nodeMap[n.id] = n;
             });
 
+            // ReactFlow can temporarily retain stale/duplicated edges after reload or reconnect.
+            // Build only edges with valid endpoints and one record per stable edge id.
+            const seenEdgeIds = new Set();
+            const buildableEdges = edges.filter((edge) => {
+                const edgeId = String(edge.id || '');
+                const hasValidSource = !!edge.source && !!nodeMap[edge.source];
+                const isExit = edge.data?.transitionType === 'Exit';
+                const hasValidTarget = !!edge.target && !!nodeMap[edge.target];
+                if (!edgeId || seenEdgeIds.has(edgeId) || !hasValidSource || (!isExit && !hasValidTarget)) return false;
+                seenEdgeIds.add(edgeId);
+                return true;
+            });
+
             // Sort edges based on the sorted order of their source nodes
-            const sortedEdgesList = [...edges].sort((a, b) => {
+            const sortedEdgesList = [...buildableEdges].sort((a, b) => {
                 const indexA = sortedNodesList.findIndex((n) => n.id === a.source);
                 const indexB = sortedNodesList.findIndex((n) => n.id === b.source);
                 return indexA - indexB;
@@ -1032,7 +1045,7 @@ function Flow({ id: propId }) {
             const stepsPayload = sortedEdgesList.map((edge, index) => {
                 const fromNode = nodeMap[edge.source] || {};
                 const toNode = edge.target ? (nodeMap[edge.target] || {}) : null;
-                const incomingEdgesCount = edges.filter((e) => e.target === fromNode.id).length;
+                const incomingEdgesCount = buildableEdges.filter((e) => e.target === fromNode.id).length;
                 const isStart = fromNode.data?.nodeType === 'start' || incomingEdgesCount === 0;
                 const isEnd = edge.data?.transitionType === 'Exit' || !edge.target;
                 const isReturn = edge.data?.isReturn === true || false; 

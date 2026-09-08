@@ -24,6 +24,26 @@
         var callElementView = function (url, code, caption, data) {
         //not invoke to the mForm js
 
+        var addTabLoadingTimer = null;
+        var addTabLoadingOwner = `add-tab-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        var stopAddTabLoading = function () {
+            if (addTabLoadingTimer) {
+                window.clearTimeout(addTabLoadingTimer);
+                addTabLoadingTimer = null;
+            }
+
+            var $loading = $("#browserLoading");
+            if ($loading.attr("data-loading-owner") === addTabLoadingOwner) {
+                $loading.addClass("fade-out");
+                window.setTimeout(function () {
+                    var $currentLoading = $("#browserLoading");
+                    if ($currentLoading.attr("data-loading-owner") === addTabLoadingOwner) {
+                        $currentLoading.remove();
+                    }
+                }, 350);
+            }
+        };
+
         try {
             const sourceData = data;
             if (url.length === 0) {
@@ -35,6 +55,13 @@
                 appNotify({ message: "Incorrect web link, please contact Admin.", type: 'info' });
                 return false;
             }
+
+            addTabLoadingTimer = window.setTimeout(function () {
+                makeMiniLoadingPanel("Loading", "Connecting to server...");
+                $("#browserLoading").attr("data-loading-owner", addTabLoadingOwner);
+                renderBrowserLoading({ payload: { progressvalue: 35 } });
+            }, 3000);
+
             $.ajax({
                 url: addURLParams(url, { UITabId: code, Caption: caption, Data: data != undefined ? data : {} }),
                 headers: { 'Content-Type': 'application/json' },
@@ -75,10 +102,12 @@
                     appNotify({ message: `${errorThrown}. ${jqXHR.responseText}`, type: 'warning' });
                 }
             }).always(function () {
+                stopAddTabLoading();
                 console.log("Go to " + url);
             });
         }
         catch (err) {
+            stopAddTabLoading();
             appErrorHandling('Library error: call callElementView was failed.', err);
             return;
         }

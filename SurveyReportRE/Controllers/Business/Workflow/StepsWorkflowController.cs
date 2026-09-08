@@ -13,11 +13,13 @@ using ERPCore.Models.Request;
 using Microsoft.SharePoint.WorkflowActions;
 using ERPCore.Models.Migration.Config;
 using static WorkflowDefinition_FormModel;
+using System.Collections.Concurrent;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
 public class StepsWorkflowController : BaseControllerApi<StepsWorkflow>
 {
+    private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> BuildLocks = new();
     private readonly IBaseRepository<StepsWorkflow> _BaseRepository;
     private readonly IBaseRepository<EnumData> _enumDataRepository;
     private readonly IBaseRepository<WorkflowInstanceNode> _workflowInstanceNodeRepository;
@@ -45,14 +47,24 @@ public class StepsWorkflowController : BaseControllerApi<StepsWorkflow>
     [HttpPost]
     public async Task<IActionResult> BuildSteps([FromBody] WorkflowSavePayload workflowDefinition)
     {//current is next at currnt 
-        List<StepsWorkflow> stepsWorkflows = await _BaseRepository.GetListObject(l => l.WorkflowDefinitionId == workflowDefinition.WorkflowDefinitionId);
+        if (!workflowDefinition.WorkflowDefinitionId.HasValue || workflowDefinition.WorkflowDefinitionId == Guid.Empty)
+        {
+            return BadRequest("WorkflowDefinitionId is required.");
+        }
+
+        Guid workflowDefinitionId = workflowDefinition.WorkflowDefinitionId.Value;
+        SemaphoreSlim buildLock = BuildLocks.GetOrAdd(workflowDefinitionId, _ => new SemaphoreSlim(1, 1));
+        await buildLock.WaitAsync();
+        try
+        {
+        List<StepsWorkflow> stepsWorkflows = await _BaseRepository.GetListObject(l => l.WorkflowDefinitionId == workflowDefinitionId);
 
         if (stepsWorkflows.Count > 0)
         {
-            stepsWorkflows.ForEach(async f =>
+            foreach (StepsWorkflow existingStep in stepsWorkflows)
             {
-                await _BaseRepository.DeleteData(f, f.Id, "Id", true);
-            });
+                await _BaseRepository.DeleteData(existingStep, existingStep.Id, "Id", true);
+            }
         }
         List<EnumData> enumDatas = await _enumDataRepository.EnumData("OverallStatus");
         foreach (StepsWorkflow f in workflowDefinition.Steps)
@@ -61,8 +73,8 @@ public class StepsWorkflowController : BaseControllerApi<StepsWorkflow>
 
             JsonConvert.PopulateObject(JsonConvert.SerializeObject(f), stepsWorkflow);
 
-            string fromNodeId = workflowDefinition.Nodes.FirstOrDefault(fi => fi.NodeId == f.FromNodeId).NodeName ?? "";
-            string toNodeId = workflowDefinition.Nodes.FirstOrDefault(fi => fi.NodeId == f.ToNodeId).NodeName ?? "";
+            string fromNodeId = workflowDefinition.Nodes.FirstOrDefault(fi => fi.NodeId == f.FromNodeId)?.NodeName ?? "";
+            string toNodeId = workflowDefinition.Nodes.FirstOrDefault(fi => fi.NodeId == f.ToNodeId)?.NodeName ?? "";
             stepsWorkflow.FromNodeId = fromNodeId;
             stepsWorkflow.ToNodeId = toNodeId;
             stepsWorkflow.StatusCode = enumDatas.FirstOrDefault(x => x.Id == f.StatusId)?.Code ?? "";
@@ -75,14 +87,15 @@ public class StepsWorkflowController : BaseControllerApi<StepsWorkflow>
         }
         foreach (var f in workflowDefinition.Nodes)
         {
-            List<WorkflowInstanceNode> workflowInstanceNodes = await _workflowInstanceNodeRepository.GetListObject(l => l.Code == f.NodeId);
+            List<WorkflowInstanceNode> workflowInstanceNodes = await _workflowInstanceNodeRepository.GetListObject(
+                l => l.Code == f.NodeId && l.WorkflowDefinitionId == workflowDefinitionId);
 
             if (workflowInstanceNodes.Count > 0)
             {
-                workflowInstanceNodes.ForEach(async f =>
+                foreach (WorkflowInstanceNode existingNode in workflowInstanceNodes)
                 {
-                    await _workflowInstanceNodeRepository.DeleteData(f, f.Id, "Id", true);
-                });
+                    await _workflowInstanceNodeRepository.DeleteData(existingNode, existingNode.Id, "Id", true);
+                }
             }
             WorkflowInstanceNode workflowInstanceNode = new WorkflowInstanceNode();
             workflowInstanceNode.Code = f.NodeId ?? "";
@@ -93,6 +106,11 @@ public class StepsWorkflowController : BaseControllerApi<StepsWorkflow>
 
 
         return Ok();
+        }
+        finally
+        {
+            buildLock.Release();
+        }
     }
 
 }

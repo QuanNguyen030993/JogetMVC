@@ -31229,52 +31229,98 @@ aside {
     user-select: none;
 }
 
-.dept-section-action-loader {
-    display: flex;
+.app-loading-indicator {
+    --app-loading-accent: var(--theme-primary, #2563eb);
+    --app-loading-soft: color-mix(in srgb, var(--app-loading-accent) 11%, var(--theme-surface, #fff));
+    display: inline-flex;
     align-items: center;
-    gap: 5px;
-    height: 15px;
+    justify-content: center;
+    gap: 11px;
+    max-width: calc(100% - 24px);
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 8px 13px 8px 9px;
+    border: 1px solid color-mix(in srgb, var(--app-loading-accent) 18%, var(--theme-border, #e2e8f0));
+    border-radius: 12px;
+    color: var(--theme-text, #0f172a);
+    background: linear-gradient(135deg,
+        color-mix(in srgb, var(--theme-surface, #fff) 96%, var(--app-loading-accent)),
+        color-mix(in srgb, var(--theme-surface, #fff) 88%, transparent));
+    box-shadow: 0 10px 28px rgba(15, 23, 42, .11), inset 0 1px 0 rgba(255, 255, 255, .58);
+    backdrop-filter: blur(10px) saturate(125%);
+    -webkit-backdrop-filter: blur(10px) saturate(125%);
+    animation: app-loading-indicator-enter .2s cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.app-loading-indicator.overview-section-loader {
+    width: min(340px, calc(100% - 32px));
+    min-height: 54px;
+    padding: 11px 16px 11px 11px;
+    border: 1px solid color-mix(in srgb, var(--app-loading-accent) 18%, var(--theme-border, #e2e8f0));
+    border-radius: 15px;
+    background: linear-gradient(135deg,
+        color-mix(in srgb, var(--theme-surface, #fff) 96%, var(--app-loading-accent)),
+        color-mix(in srgb, var(--theme-surface, #fff) 88%, transparent));
+    box-shadow: 0 14px 38px rgba(15, 23, 42, .13), inset 0 1px 0 rgba(255, 255, 255, .62);
+    text-align: left;
+}
+
+.dept-section-action-loader {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--app-loading-soft, color-mix(in srgb, var(--theme-primary, #2563eb) 11%, var(--theme-surface, #fff)));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-loading-accent, var(--theme-primary, #2563eb)) 10%, transparent);
 }
 
     .dept-section-action-loader span {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: var(--theme-primary);
-        animation: dept-section-loading-dot .9s ease-in-out infinite;
+        width: 5px;
+        height: 5px;
+        border-radius: 999px;
+        background: var(--app-loading-accent, var(--theme-primary, #2563eb));
+        box-shadow: 0 2px 5px color-mix(in srgb, var(--app-loading-accent, var(--theme-primary, #2563eb)) 28%, transparent);
+        animation: dept-section-loading-dot 1.05s cubic-bezier(.4, 0, .2, 1) infinite;
     }
 
         .dept-section-action-loader span:nth-child(2) {
-            animation-delay: .12s;
+            animation-delay: .14s;
         }
 
         .dept-section-action-loader span:nth-child(3) {
-            animation-delay: .24s;
+            animation-delay: .28s;
         }
 
-.dept-section-action-message {
-    padding: 5px 10px;
-    border: 1px solid color-mix(in srgb, var(--theme-primary) 22%, transparent);
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--theme-surface) 86%, transparent);
-    font-size: var(--management-font-body, 10px);
+.app-loading-indicator :is(.dept-section-action-message, .workflow-element-loading-message, .qt-loader-message, .pi-loader-message) {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: var(--theme-text, #0f172a);
+    background: transparent;
+    box-shadow: none;
+    font-size: var(--management-font-body, 11px);
     font-weight: 650;
-    box-shadow: 0 7px 20px rgba(15, 23, 42, .08);
+    line-height: 1.35;
+    letter-spacing: .005em;
 }
 
-.dept-section-action-overlay.is-success .dept-section-action-loader span {
+:is(.dept-section-action-overlay, .workflow-element-loading-overlay).is-success .app-loading-indicator {
+    --app-loading-accent: #16a34a;
+}
+
+:is(.dept-section-action-overlay, .workflow-element-loading-overlay).is-error .app-loading-indicator {
+    --app-loading-accent: #dc2626;
+}
+
+:is(.dept-section-action-overlay, .workflow-element-loading-overlay).is-success .dept-section-action-loader span,
+:is(.dept-section-action-overlay, .workflow-element-loading-overlay).is-error .dept-section-action-loader span {
     animation: none;
-    background: #16a34a;
 }
-
-.dept-section-action-overlay.is-error {
-    color: #b91c1c;
-}
-
-    .dept-section-action-overlay.is-error .dept-section-action-loader span {
-        animation: none;
-        background: #dc2626;
-    }
 
 .dept-section.dept-section-decision-unlocked .dept-body {
     animation: dept-section-unlocked .8s ease-out;
@@ -31290,14 +31336,11 @@ aside {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
-    padding: 3px 7px;
-    border: 1px solid color-mix(in srgb, var(--theme-primary) 20%, var(--theme-border));
+    padding: 3px;
+    border: 0;
     border-radius: 8px;
-    color: var(--theme-primary);
-    background: color-mix(in srgb, var(--theme-surface) 82%, transparent);
-    backdrop-filter: blur(3px);
-    box-shadow: 0 5px 16px rgba(15, 23, 42, .08);
+    background: color-mix(in srgb, var(--theme-surface) 74%, transparent);
+    backdrop-filter: blur(2px);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -31317,6 +31360,74 @@ aside {
     white-space: nowrap;
 }
 
+.workflow-element-loading-overlay .app-loading-indicator {
+    min-height: 32px;
+    padding: 5px 9px 5px 6px;
+    border-radius: 9px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .09), inset 0 1px 0 rgba(255, 255, 255, .5);
+}
+
+.workflow-element-loading-overlay .dept-section-action-loader {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+}
+
+.workflow-action-loading {
+    min-height: 32px;
+    margin-inline-start: 4px;
+    padding: 5px 9px 5px 6px;
+    border-radius: 9px;
+    white-space: nowrap;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .09), inset 0 1px 0 rgba(255, 255, 255, .5);
+}
+
+.workflow-action-loading[hidden] {
+    display: none !important;
+}
+
+.workflow-action-loading .dept-section-action-loader,
+.decision-common-status-loader.dept-section-action-loader {
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+}
+
+.decision-common-status-loader.dept-section-action-loader {
+    display: inline-flex;
+    margin: -3px 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.decision-common-status-loader.dept-section-action-loader span {
+    width: 4px;
+    height: 4px;
+}
+
+.workflow-button-loading .dx-button-content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.workflow-button-loader.dept-section-action-loader {
+    width: 22px;
+    height: 20px;
+    margin: -3px 0 -3px -3px;
+    border-radius: 7px;
+    background: color-mix(in srgb, currentColor 13%, transparent);
+    box-shadow: none;
+}
+
+.workflow-button-loader.dept-section-action-loader span {
+    width: 4px;
+    height: 4px;
+    background: currentColor;
+    box-shadow: none;
+}
+
 .workflow-element-loading-overlay[data-loading-scope="header"] .dept-section-action-loader span {
     width: 5px;
     height: 5px;
@@ -31324,10 +31435,15 @@ aside {
 
 .workflow-element-loading-overlay[data-loading-scope="tree"] {
     inset: -5px -4px;
-    flex-direction: column;
-    gap: 5px;
     padding: 5px 2px;
     border-radius: 10px;
+}
+
+.workflow-element-loading-overlay[data-loading-scope="tree"] .app-loading-indicator {
+    flex-direction: column;
+    gap: 5px;
+    max-width: 58px;
+    padding: 6px 5px;
 }
 
     .workflow-element-loading-overlay[data-loading-scope="tree"] .dept-section-action-loader {
@@ -31346,29 +31462,37 @@ aside {
         white-space: normal;
     }
 
-.workflow-element-loading-overlay.is-success .dept-section-action-loader span {
-    animation: none;
-    background: #16a34a;
-}
-
-.workflow-element-loading-overlay.is-error {
-    color: #b91c1c;
-}
-
-    .workflow-element-loading-overlay.is-error .dept-section-action-loader span {
-        animation: none;
-        background: #dc2626;
-    }
-
 @keyframes dept-section-loading-dot {
-    0%, 60%, 100% {
-        transform: translateY(0);
-        opacity: .45;
+    0%, 70%, 100% {
+        transform: translateY(0) scale(.78);
+        opacity: .42;
     }
 
-    30% {
-        transform: translateY(-5px);
+    35% {
+        transform: translateY(-2px) scale(1.12);
         opacity: 1;
+    }
+}
+
+@keyframes app-loading-indicator-enter {
+    from {
+        opacity: 0;
+        transform: translateY(4px) scale(.985);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-loading-indicator {
+        animation: none;
+    }
+
+    .dept-section-action-loader span {
+        animation-duration: 1.8s;
     }
 }
 
@@ -37522,23 +37646,29 @@ code,
     }
 }
 
-#pi-overviewRoot_@(ViewData["Id"]) {
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) {
     position: relative;
-    height: calc(90vh);
 }
 
-    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .cardBody,
-    #pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .pi-cardHeader {
-        pointer-events: none;
-        user-select: none;
-    }
+[id^="qt-overviewRoot_"].qt-render-loading .cardBody,
+[id^="qt-overviewRoot_"].qt-render-loading .qt-cardHeader,
+[id^="pi-overviewRoot_"].pi-render-loading .cardBody,
+[id^="pi-overviewRoot_"].pi-render-loading .pi-cardHeader {
+    pointer-events: none;
+    user-select: none;
+}
 
+.qt-render-overlay,
 .pi-render-overlay {
     position: absolute;
     inset: 0;
+    z-index: var(--z-index-medium, 10);
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
     padding: 24px;
     overflow: hidden;
     border-radius: inherit;
@@ -37549,11 +37679,21 @@ code,
     transition: opacity .28s ease, visibility .28s ease;
 }
 
-#pi-overviewRoot_@(ViewData["Id"]).pi-render-loading .pi-render-overlay {
+[id^="pi-overviewRoot_"].pi-render-loading .pi-render-overlay {
     opacity: 1;
     visibility: visible;
 }
 
+[id^="qt-overviewRoot_"].qt-render-loading .qt-render-overlay {
+    opacity: 1;
+    visibility: visible;
+}
+
+:is(.qt-loader-panel, .pi-loader-panel) {
+    margin: auto;
+}
+
+.qt-render-overlay.is-leaving,
 .pi-render-overlay.is-leaving {
     opacity: 0 !important;
 }
@@ -37656,4 +37796,58 @@ code,
     align-items: center;
     gap: 8px;
     margin-top: 8px;
+}
+
+.overview-node-help-content {
+    position: relative;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+    padding: 16px;
+    overflow: hidden;
+    color: var(--theme-text, #172033);
+    border: 1px solid color-mix(in srgb, var(--theme-primary, #3b82f6) 24%, transparent);
+    border-left: 4px solid var(--theme-primary, #3b82f6);
+    border-radius: 12px;
+    background: linear-gradient(135deg,
+        color-mix(in srgb, var(--theme-primary, #3b82f6) 8%, var(--theme-surface, #fff)),
+        var(--theme-surface, #fff) 72%);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, .10);
+}
+
+.overview-node-help-content::after {
+    content: "";
+    position: absolute;
+    top: -28px;
+    right: -22px;
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--theme-primary, #3b82f6) 7%, transparent);
+    pointer-events: none;
+}
+
+.overview-node-help-icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    color: var(--theme-primary, #3b82f6);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--theme-primary, #3b82f6) 13%, transparent);
+    font-size: 18px;
+}
+
+.overview-node-help-message {
+    min-width: 0;
+    padding-top: 7px;
+}
+
+.overview-node-help-text {
+    color: inherit;
+    font-size: 13px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }

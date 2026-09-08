@@ -267,13 +267,13 @@ Note:
             var sequence = 0;
             var startedAt = 0;
             var $root = $(`#${policyIssuanceOverviewRootId}`);
-            var $loadingHost = $root.find("> .card > .cardBody.overview-wrap").first();
+            var $loadingHost = $root;
             var $overlay = $loadingHost.children(".pi-render-overlay");
 
             if (!$overlay.length) {
                 $overlay = $(`
                     <div id="${formModuleKeyPi}-renderOverlay_${policyIssuanceViewInstanceId}" class="pi-render-overlay" role="status" aria-live="polite" aria-busy="true">
-                        <div class="pi-loader-panel overview-section-loader">
+                        <div class="pi-loader-panel overview-section-loader app-loading-indicator">
                             <div class="dept-section-action-loader" aria-hidden="true">
                                 <span></span><span></span><span></span>
                             </div>
