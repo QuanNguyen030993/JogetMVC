@@ -1324,6 +1324,31 @@
             super(modelName, gridType, params);
         };
 
+        onCustomizeColumns(columns) {
+            super.onCustomizeColumns(columns);
+
+            const policyIssuanceLookup = DevExpress.data.AspNet.createStore({
+                key: "id",
+                loadUrl: "/api/PolicyIssuance/DropDownLookup"
+            });
+
+            columns.forEach(function (column) {
+                if (String(column.dataField || "").toLowerCase() !== "policyissuanceid") return;
+
+                column.caption = "Policy Issuance Code";
+                column.lookup = {
+                    dataSource: policyIssuanceLookup,
+                    valueExpr: "id",
+                    displayExpr: "policyIssuanceCode"
+                };
+                column.editorOptions = {
+                    searchEnabled: true,
+                    searchExpr: "policyIssuanceCode",
+                    showClearButton: true,
+                    placeholder: "Select Policy Issuance Code"
+                };
+            });
+        }
     }
 
     var OutlineGridOption = class OutlineGridOption extends MGridOption {
