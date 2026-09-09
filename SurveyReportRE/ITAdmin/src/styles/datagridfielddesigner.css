@@ -214,6 +214,73 @@ color:#334155;
 text-overflow:ellipsis;
 white-space:nowrap;
 }
+
+.field-lookup-details {
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+padding-top:2px;
+border-top:1px dashed #bfdbfe;
+}
+
+.field-lookup-details > label {
+display:flex;
+min-width:0;
+margin:0;
+flex-direction:column;
+gap:4px;
+color:#64748b;
+font-size:9px;
+font-weight:600;
+}
+
+.field-lookup-details select {
+min-width:0;
+font-size:9px;
+}
+
+.field-lookup-details .field-lookup-search {
+grid-column:1 / -1;
+display:flex;
+align-items:center;
+flex-direction:row;
+gap:6px;
+color:#475569;
+cursor:pointer;
+}
+
+.field-lookup-search input {
+width:14px;
+height:14px;
+margin:0;
+}
+
+.field-lookup-details small {
+grid-column:1 / -1;
+display:flex;
+padding:6px 8px;
+border-radius:7px;
+background:#dbeafe;
+color:#475569;
+}
+
+.field-lookup-details small span {
+max-width:105px;
+overflow:hidden;
+font-weight:700;
+text-overflow:ellipsis;
+white-space:nowrap;
+}
+
+.field-lookup-details small b {
+color:#1d4ed8;
+font-weight:700;
+}
+
+.field-lookup-details small i {
+color:#64748b;
+font-style:normal;
+}
 .itadmin-grid-list {
   display: flex;
   min-height: 0;

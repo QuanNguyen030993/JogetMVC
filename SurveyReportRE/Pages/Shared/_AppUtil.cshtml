@@ -3115,18 +3115,23 @@
                             orderBy: false
                         };
 
+                        var lookupOptions = gridConfig.lookupOptions || {};
+                        var lookupValueExpr = lookupOptions.valueExpr || 'id';
+                        var lookupDisplayExpr = lookupOptions.displayExpr || gridConfig.config.displayExp;
+                        var lookupSearchEnabled = lookupOptions.searchEnabled !== false;
+
                         var DS = mDropDownDS.getDropDownDS(
-                            'id',
+                            lookupValueExpr,
                             `api/${gridConfig.model}/DropDownLookUp`,
                             customOptions
                         );
 
-                        if (gridConfig.config.displayExp) {
+                        if (lookupDisplayExpr) {
 
                             item.lookup = {
                                 dataSource: DS,
-                                displayExpr: gridConfig.config.displayExp,
-                                valueExpr: 'id'
+                                displayExpr: lookupDisplayExpr,
+                                valueExpr: lookupValueExpr
                             };
 
                             item.editorType = "dxDropDownBox";
@@ -3140,6 +3145,8 @@
                                 },
                                 showClearButton: true,
                                 dataSource: DS,
+                                displayExpr: lookupDisplayExpr,
+                                valueExpr: lookupValueExpr,
                                 columns: gridConfig.config.getScheme,
 
                                 contentTemplate: function (e) {
@@ -3149,12 +3156,12 @@
                                         selectionMode: 'all',
 
                                         filterRow: {
-                                            visible: true
+                                            visible: lookupSearchEnabled
                                         },
 
                                         dataSource: e.component.option("dataSource"),
 
-                                        displayExpr: gridConfig.config.displayExpr,
+                                        displayExpr: lookupDisplayExpr,
 
                                         columns: e.component.option("columns"),
 
@@ -3190,7 +3197,7 @@
 
                                                 e.component.option(
                                                     "displayValue",
-                                                    selectedItems.selectedRowsData[0][gridConfig.config.displayExp]
+                                                    selectedItems.selectedRowsData[0][lookupDisplayExpr]
                                                 );
 
                                                 e.component.option(

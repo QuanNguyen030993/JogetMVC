@@ -52,6 +52,7 @@ export default function DataGridFieldDesigner() {
   const [tables, setTables] = useState([]);
   const [selectedTable, setSelectedTable] = useState(null);
   const [fields, setFields] = useState([]);
+  const [gridConfigs, setGridConfigs] = useState([]);
   const [deletedIds, setDeletedIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -63,6 +64,7 @@ export default function DataGridFieldDesigner() {
       console.log(res);
       if (!res.ok) throw new Error("Load tables failed");
       const data = await res.json();
+      setGridConfigs(data || []);
       setTables(data || []);
     } catch (e) {
       console.error("Fetch tables failed", e);
@@ -152,11 +154,35 @@ export default function DataGridFieldDesigner() {
     setFields((currentFields) => currentFields.map((field) => {
       if (field.id !== id) return field;
       if (mappingFieldId) {
+        const lookupFields = gridConfigs.filter((config) =>
+          Number(config.sysTableId ?? config.SysTableId) === mappingFieldId
+        );
+        const lookupTable = tables.find((table) => Number(tableIdOf(table)) === mappingFieldId);
+        const valueFieldConfig = lookupFields.find((config) =>
+          String(config.dataField ?? config.DataField).toLowerCase() === "id"
+        );
+        const displayFieldConfig = lookupFields.find((config) =>
+          String(config.dataType ?? config.DataType).toLowerCase() === "string"
+        );
+        const defaultValueExpr = valueFieldConfig?.dataField ?? valueFieldConfig?.DataField ?? "id";
+        const defaultDisplayExpr = tableDisplayExprOf(lookupTable)
+          || displayFieldConfig?.dataField
+          || displayFieldConfig?.DataField
+          || defaultValueExpr;
         return {
           ...field,
           MappingFieldId: mappingFieldId,
           DataType: "table",
-          Editor: "dxDropDownBox"
+          Editor: "dxDropDownBox",
+          EditorOptions: {
+            ...field.EditorOptions,
+            lookup: {
+              ...(field.EditorOptions?.lookup || {}),
+              valueExpr: defaultValueExpr,
+              displayExpr: defaultDisplayExpr,
+              searchEnabled: true
+            }
+          }
         };
       }
       return {
@@ -167,6 +193,29 @@ export default function DataGridFieldDesigner() {
       };
     }));
   };
+
+  const updateLookupOption = (id, key, value) => {
+    setFields((currentFields) => currentFields.map((field) => field.id === id
+      ? {
+          ...field,
+          EditorOptions: {
+            ...field.EditorOptions,
+            lookup: {
+              ...(field.EditorOptions?.lookup || {}),
+              [key]: value
+            }
+          }
+        }
+      : field));
+  };
+
+  const lookupFieldsFor = (mappingFieldId) => gridConfigs
+    .filter((config) => Number(config.sysTableId ?? config.SysTableId) === Number(mappingFieldId))
+    .map((config) => ({
+      field: config.dataField ?? config.DataField ?? "",
+      caption: config.caption ?? config.Caption ?? config.dataField ?? config.DataField ?? ""
+    }))
+    .filter((config) => config.field);
 
   const removeField = (id) => {
     if (id < 100000000000) {
@@ -451,12 +500,49 @@ export default function DataGridFieldDesigner() {
                       </select>
                       {f.MappingFieldId && (() => {
                         const lookupTable = tables.find((table) => Number(tableIdOf(table)) === Number(f.MappingFieldId));
+                        const lookupFields = lookupFieldsFor(f.MappingFieldId);
+                        const lookupOptions = f.EditorOptions?.lookup || {};
                         return (
-                          <small>
-                            Value: <strong>id</strong>
-                            <span>•</span>
-                            Display: <strong>{tableDisplayExprOf(lookupTable) || "Chưa cấu hình"}</strong>
-                          </small>
+                          <div className="field-lookup-details">
+                            <label>
+                              <span>Trường giá trị</span>
+                              <select
+                                value={lookupOptions.valueExpr || "id"}
+                                onChange={(e) => updateLookupOption(f.id, "valueExpr", e.target.value)}
+                              >
+                                {!lookupFields.some((item) => item.field === "id") && <option value="id">id</option>}
+                                {lookupFields.map((item) => (
+                                  <option key={`value-${item.field}`} value={item.field}>{item.caption} ({item.field})</option>
+                                ))}
+                              </select>
+                            </label>
+                            <label>
+                              <span>Trường hiển thị</span>
+                              <select
+                                value={lookupOptions.displayExpr || tableDisplayExprOf(lookupTable) || ""}
+                                onChange={(e) => updateLookupOption(f.id, "displayExpr", e.target.value)}
+                              >
+                                <option value="">-- Chọn trường --</option>
+                                {lookupFields.map((item) => (
+                                  <option key={`display-${item.field}`} value={item.field}>{item.caption} ({item.field})</option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="field-lookup-search">
+                              <input
+                                type="checkbox"
+                                checked={lookupOptions.searchEnabled !== false}
+                                onChange={(e) => updateLookupOption(f.id, "searchEnabled", e.target.checked)}
+                              />
+                              Cho phép tìm kiếm trong lookup
+                            </label>
+                            <small>
+                              <span>{tableNameOf(lookupTable)}</span>
+                              <b>{lookupOptions.valueExpr || "id"}</b>
+                              <i>→</i>
+                              <b>{lookupOptions.displayExpr || tableDisplayExprOf(lookupTable) || "Chưa cấu hình"}</b>
+                            </small>
+                          </div>
                         );
                       })()}
                     </div>

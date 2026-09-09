@@ -953,6 +953,20 @@ function getDxKind(obj) {
 
     return name;
 }
+
+function getFieldLookupOptions(item) {
+    var options = item?.editorOptionsConfig || item?.editorOptions || {};
+    if (typeof options === "string" && options.trim()) {
+        try {
+            const decodedBytes = Uint8Array.from(atob(options), c => c.charCodeAt(0));
+            options = JSON.parse(new TextDecoder("utf-8").decode(decodedBytes));
+        } catch {
+            try { options = JSON.parse(options); } catch { options = {}; }
+        }
+    }
+    return options?.lookup && typeof options.lookup === "object" ? options.lookup : {};
+}
+
 async function makeFieldFeatures(item, obj, type) {
 
     var model = item.dataField.replace(/\b(\w+)Id\b/g, (match, p1) => {
@@ -964,6 +978,7 @@ async function makeFieldFeatures(item, obj, type) {
     }
 
     const config = await fetchConfigurationData(model, obj.gridType);
+    const lookupOptions = getFieldLookupOptions(item);
 
     config.model = model;
 
@@ -1072,7 +1087,8 @@ async function makeFieldFeatures(item, obj, type) {
     return {
         config,
         dataSource,
-        model
+        model,
+        lookupOptions
     };
 }
 //async function makeFieldFeatures(item, obj, type) {
