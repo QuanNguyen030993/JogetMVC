@@ -290,7 +290,7 @@ export default function DataGridFieldDesigner() {
 
   const gridColumns = [
     { field: "DataField", caption: "Mã trường (DataField)", width: "180px" },
-    { field: "Caption", caption: "Tiêu đề hiển thị (Caption)", width: "180px" },
+    { field: "Caption", caption: " I think that that's all I know. I think that that's all I know. I think that that's all I know. I think that that's all I know.Tiêu đề hiển thị (Caption)", width: "180px" },
     {
       field: "DataType",
       caption: "Kiểu dữ liệu (DataType)",
@@ -518,7 +518,11 @@ export default function DataGridFieldDesigner() {
                             </label>
                             <label>
                               <span>Trường hiển thị</span>
-                              <select
+                              <input
+                              onChange={(e) => updateLookupOption(f.id, "displayExpr", e.target.value)}
+                              style={{ width: "100%", padding: "6px", borderRadius: "6px", border: "1px solid #cbd5e1", marginTop: "4px" }}
+                            />
+                              {/* <select
                                 value={lookupOptions.displayExpr || tableDisplayExprOf(lookupTable) || ""}
                                 onChange={(e) => updateLookupOption(f.id, "displayExpr", e.target.value)}
                               >
@@ -526,7 +530,7 @@ export default function DataGridFieldDesigner() {
                                 {lookupFields.map((item) => (
                                   <option key={`display-${item.field}`} value={item.field}>{item.caption} ({item.field})</option>
                                 ))}
-                              </select>
+                              </select> */}
                             </label>
                             <label className="field-lookup-search">
                               <input

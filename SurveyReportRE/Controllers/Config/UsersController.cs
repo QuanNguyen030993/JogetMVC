@@ -349,7 +349,7 @@ namespace ERPCore.Controllers.Config
             }
 
             var roleName = string.IsNullOrWhiteSpace(request.RoleName) ? "Staff" : request.RoleName.Trim();
-            var allowedRoles = new[] { "Staff", "Line Manager", "HOD", "BOD" };
+            var allowedRoles = new[] { "FO", "TS", "LMKT", "UW", "PM" };
             var canonicalRoleName = allowedRoles.FirstOrDefault(role =>
                 string.Equals(role, roleName, StringComparison.OrdinalIgnoreCase));
             if (canonicalRoleName == null && !request.IsClear)

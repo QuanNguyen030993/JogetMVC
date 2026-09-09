@@ -302,7 +302,7 @@ const UserManagement = () => {
             </div>
           )}
           <label className="role-select-field"><span>Role</span><select value={roleName} onChange={(event) => setRoleName(event.target.value)}>
-            {ROLE_TYPES.map((role) => <option key={role} value={role}>{role}</option>)}
+            {DEPARTMENT_GROUPS.map((role) => <option key={role} value={role}>{role}</option>)}
           </select></label>
           <div className="role-assignment-actions">
             <button type="button" className="clear" disabled={saving || !stagedUsers.length} onClick={() => submitRoleMenu(true)}>Clear role/menu</button>

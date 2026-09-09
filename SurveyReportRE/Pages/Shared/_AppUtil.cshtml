@@ -12653,7 +12653,7 @@
                 });
 
                     if (isReturn && isReturnNeedAccepted) {
-                        if (!(options.data.tatObject[buttonFormItems.stageDept].AcceptDate) && options.data.tatObject[buttonFormItems.stageDept].AcceptDate == ""){
+                        if (!(options.data.tatObject[buttonFormItems.stageDept]?.AcceptDate) && options.data.tatObject[buttonFormItems.stageDept]?.AcceptDate == ""){
                             buttonDisabled = false;
                         }
                 }
