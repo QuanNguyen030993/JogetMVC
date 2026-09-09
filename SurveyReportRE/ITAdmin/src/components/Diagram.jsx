@@ -495,6 +495,9 @@ const WorkflowNode = ({ data, selected }) => {
     });
 
     const isReadOnly = data?.readOnly;
+    const nodeInstruction = String(
+        data?.nodeInstruction ?? data?.instruction ?? data?.assignLabel ?? ''
+    ).trim();
 
     return (
         <div
@@ -516,6 +519,12 @@ const WorkflowNode = ({ data, selected }) => {
         >
             <div>{data.label}</div>
             {data.subtitle && <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>{data.subtitle}</div>}
+            {nodeInstruction && (
+                <div className="workflow-node-instruction-popover" role="tooltip">
+                    <span className="workflow-node-instruction-icon" aria-hidden="true">💡</span>
+                    <span className="workflow-node-instruction-text">{nodeInstruction}</span>
+                </div>
+            )}
             
             {!isReadOnly && (
                 <>
@@ -763,6 +772,71 @@ export default function Diagram({
                     opacity: 1;
                     pointer-events: all;
                     scale: 1;
+                }
+                .workflow-node-instruction-popover {
+                    position: absolute;
+                    z-index: 20;
+                    left: 50%;
+                    bottom: calc(100% + 12px);
+                    display: grid;
+                    grid-template-columns: 28px minmax(0, 1fr);
+                    align-items: start;
+                    gap: 9px;
+                    width: max-content;
+                    min-width: 190px;
+                    max-width: 320px;
+                    padding: 11px 13px;
+                    color: #1e293b;
+                    text-align: left;
+                    border: 1px solid #bfdbfe;
+                    border-left: 4px solid #3b82f6;
+                    border-radius: 11px;
+                    background: linear-gradient(135deg, #eff6ff, #ffffff 72%);
+                    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+                    opacity: 0;
+                    visibility: hidden;
+                    pointer-events: none;
+                    transform: translate(-50%, 6px);
+                    transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
+                }
+                .workflow-node-instruction-popover::after {
+                    content: '';
+                    position: absolute;
+                    left: 50%;
+                    bottom: -7px;
+                    width: 12px;
+                    height: 12px;
+                    border-right: 1px solid #bfdbfe;
+                    border-bottom: 1px solid #bfdbfe;
+                    background: #fff;
+                    transform: translateX(-50%) rotate(45deg);
+                }
+                .workflow-node:hover > .workflow-node-instruction-popover {
+                    opacity: 1;
+                    visibility: visible;
+                    transform: translate(-50%, 0);
+                }
+                .react-flow__node.dragging .workflow-node-instruction-popover {
+                    opacity: 0;
+                    visibility: hidden;
+                }
+                .workflow-node-instruction-icon {
+                    display: grid;
+                    width: 28px;
+                    height: 28px;
+                    place-items: center;
+                    border-radius: 8px;
+                    background: #dbeafe;
+                    font-size: 15px;
+                    line-height: 1;
+                }
+                .workflow-node-instruction-text {
+                    padding-top: 3px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    line-height: 1.5;
+                    overflow-wrap: anywhere;
+                    white-space: pre-wrap;
                 }
                 .transition-label-container:not(.readonly) {
                     cursor: move;
