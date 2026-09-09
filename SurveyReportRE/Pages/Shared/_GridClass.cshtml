@@ -1606,6 +1606,21 @@
             if (options.editing?.allowUpdating === true && !options.editing.mode) {
                 options.editing.mode = "batch";
             }
+            const allowedWorkflowStatuses = Array.isArray(this.Params?.allowedWorkflowStatuses)
+                ? this.Params.allowedWorkflowStatuses
+                    .map(status => String(status || "").trim())
+                    .filter(Boolean)
+                : [];
+            if (allowedWorkflowStatuses.length) {
+                const statusFilter = [];
+                allowedWorkflowStatuses.forEach((status, index) => {
+                    if (index > 0) statusFilter.push("or");
+                    statusFilter.push(["workflowStatus", "=", status]);
+                });
+                options.filterValue = options.filterValue
+                    ? [options.filterValue, "and", statusFilter]
+                    : statusFilter;
+            }
             configureStatusExcelExport(options, ["workflowStatus"]);
             return options;
         }

@@ -85,8 +85,11 @@
         var mGridOption = new Object();
         mGridOption.isAllowRowMenu = false;
         mGridOption.selection =  { mode: "multiple" };
-        mGridOption.refKey = "Quotation confirmed";
-        mGridOption.refField = "workflowStatus";
+        mGridOption.allowedWorkflowStatuses = [
+            "Quotation confirmed",
+            "Signed",
+            "Quotation Signed"
+        ];
         var mGrid = new MGrid(null, $(`#dataGrid_Quotation_Request`), new QuotationGridOption('Quotation', "User", mGridOption), null);
 
 
