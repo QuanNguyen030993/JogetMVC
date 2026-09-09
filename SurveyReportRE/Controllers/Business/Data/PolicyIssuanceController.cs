@@ -416,7 +416,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                     });
                 }
 
-                // A direct Endorse request must not be linked to a quotation.
+                // A direct Endorsement request must not be linked to a quotation.
                 item.QuotationId = null;
                 item.CopyFromGuid = null;
             }

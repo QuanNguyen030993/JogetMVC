@@ -38,10 +38,15 @@ const safeStringifyBinaryJson = (obj) => {
 const controlTypes = [
   "dxTextBox",
   "dxSelectBox",
+  "dxDropDownBox",
   "dxDateBox",
   "dxNumberBox",
   "dxCheckBox"
 ];
+
+const tableIdOf = (table) => table?.id ?? table?.Id;
+const tableNameOf = (table) => table?.name ?? table?.Name ?? "";
+const tableDisplayExprOf = (table) => table?.displayExpr ?? table?.DisplayExpr ?? "";
 
 export default function DataGridFieldDesigner() {
   const [tables, setTables] = useState([]);
@@ -97,7 +102,8 @@ export default function DataGridFieldDesigner() {
           Fixed: c.fixed === true,
           ValidationRules: typeof c.validationRules === 'string' ? JSON.parse(c.validationRules || "{}") : c.validationRules || [],
           EditorOptions: safeParseBinaryJson(c.editorOptions || "{}"),
-          FormItem: safeParseBinaryJson(c.formItem || "{}")
+          FormItem: safeParseBinaryJson(c.formItem || "{}"),
+          MappingFieldId: c.mappingFieldId ?? c.MappingFieldId ?? null
         }));
       setFields(filtered);
       setDeletedIds([]);
@@ -129,7 +135,8 @@ export default function DataGridFieldDesigner() {
         Fixed: false,
         ValidationRules: [],
         EditorOptions: {},
-        FormItem: {}
+        FormItem: {},
+        MappingFieldId: null
       }
     ]);
   };
@@ -138,6 +145,27 @@ export default function DataGridFieldDesigner() {
     setFields((x) =>
       x.map((f) => (f.id === id ? { ...f, [key]: value } : f))
     );
+  };
+
+  const updateLookupTable = (id, rawTableId) => {
+    const mappingFieldId = rawTableId ? Number(rawTableId) : null;
+    setFields((currentFields) => currentFields.map((field) => {
+      if (field.id !== id) return field;
+      if (mappingFieldId) {
+        return {
+          ...field,
+          MappingFieldId: mappingFieldId,
+          DataType: "table",
+          Editor: "dxDropDownBox"
+        };
+      }
+      return {
+        ...field,
+        MappingFieldId: null,
+        DataType: field.DataType === "table" ? "string" : field.DataType,
+        Editor: field.Editor === "dxDropDownBox" ? "dxTextBox" : field.Editor
+      };
+    }));
   };
 
   const removeField = (id) => {
@@ -165,7 +193,7 @@ export default function DataGridFieldDesigner() {
       // 2. Process insertions & updates
       for (const f of fields) {
         const payload = {
-          sysTableId: selectedTable.id,
+          sysTableId: tableIdOf(selectedTable),
           dataField: f.DataField,
           caption: f.Caption,
           dataType: f.DataType,
@@ -176,7 +204,8 @@ export default function DataGridFieldDesigner() {
           fixed: f.Fixed,
           validationRules: JSON.stringify(f.ValidationRules),
           editorOptions: safeStringifyBinaryJson(f.EditorOptions),
-          formItem: safeStringifyBinaryJson(f.FormItem)
+          formItem: safeStringifyBinaryJson(f.FormItem),
+          mappingFieldId: f.MappingFieldId || null
         };
 
         const formData = new FormData();
@@ -287,16 +316,16 @@ export default function DataGridFieldDesigner() {
         <div>
           <label style={{ fontWeight: "600", marginRight: "10px", color: "#475569" }}>Chọn bảng để cấu hình cột:</label>
           <select 
-            value={selectedTable ? selectedTable.id : ""} 
+            value={selectedTable ? tableIdOf(selectedTable) : ""} 
             onChange={(e) => {
-              const tbl = tables.find((t) => t.id === parseInt(e.target.value));
+              const tbl = tables.find((t) => Number(tableIdOf(t)) === Number(e.target.value));
               handleSelectTable(tbl || null);
             }}
             style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", outline: "none", background: "white" }}
           >
             <option value="">-- Chọn bảng --</option>
             {tables.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
+              <option key={tableIdOf(t)} value={tableIdOf(t)}>{tableNameOf(t)}</option>
             ))}
           </select>
         </div>
@@ -387,6 +416,7 @@ export default function DataGridFieldDesigner() {
                           <option value="number">number</option>
                           <option value="date">date</option>
                           <option value="boolean">boolean</option>
+                          <option value="table">table (lookup)</option>
                         </select>
                       </div>
                       <div>
@@ -401,6 +431,34 @@ export default function DataGridFieldDesigner() {
                           ))}
                         </select>
                       </div>
+                    </div>
+
+                    <div className={`field-lookup-config ${f.MappingFieldId ? "is-active" : ""}`}>
+                      <div className="field-lookup-title">
+                        <span>Lookup dữ liệu từ bảng</span>
+                        {f.MappingFieldId && <b>Đang dùng</b>}
+                      </div>
+                      <select
+                        value={f.MappingFieldId || ""}
+                        onChange={(e) => updateLookupTable(f.id, e.target.value)}
+                      >
+                        <option value="">-- Không dùng lookup --</option>
+                        {tables.map((table) => (
+                            <option key={tableIdOf(table)} value={tableIdOf(table)}>
+                              {tableNameOf(table)}
+                            </option>
+                          ))}
+                      </select>
+                      {f.MappingFieldId && (() => {
+                        const lookupTable = tables.find((table) => Number(tableIdOf(table)) === Number(f.MappingFieldId));
+                        return (
+                          <small>
+                            Value: <strong>id</strong>
+                            <span>•</span>
+                            Display: <strong>{tableDisplayExprOf(lookupTable) || "Chưa cấu hình"}</strong>
+                          </small>
+                        );
+                      })()}
                     </div>
 
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "6px" }}>

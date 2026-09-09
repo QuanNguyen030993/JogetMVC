@@ -156,6 +156,64 @@ height:auto;
 }
 
 }
+
+.field-lookup-config {
+display:flex;
+flex-direction:column;
+gap:7px;
+margin-top:4px;
+padding:10px;
+border:1px solid #dbe3ee;
+border-radius:9px;
+background:#fff;
+}
+
+.field-lookup-config.is-active {
+border-color:#93c5fd;
+background:#eff6ff;
+box-shadow:0 0 0 2px rgba(37,99,235,.06);
+}
+
+.field-lookup-title {
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:8px;
+color:#334155;
+font-size:10px;
+font-weight:700;
+}
+
+.field-lookup-title b {
+padding:3px 6px;
+border-radius:999px;
+background:#dbeafe;
+color:#1d4ed8;
+font-size:8px;
+text-transform:uppercase;
+}
+
+.field-lookup-config select {
+width:100%;
+background:#fff;
+}
+
+.field-lookup-config small {
+display:flex;
+align-items:center;
+gap:5px;
+min-width:0;
+color:#64748b;
+font-size:9px;
+}
+
+.field-lookup-config small strong {
+max-width:120px;
+overflow:hidden;
+color:#334155;
+text-overflow:ellipsis;
+white-space:nowrap;
+}
 .itadmin-grid-list {
   display: flex;
   min-height: 0;
