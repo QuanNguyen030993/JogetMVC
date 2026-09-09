@@ -101,6 +101,77 @@ textarea:focus-visible {
   white-space: nowrap;
 }
 
+.admin-brand-block {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.admin-environment-tag {
+  display: inline-flex;
+  max-width: 102px;
+  height: 18px;
+  align-items: center;
+  gap: 4px;
+  padding: 0 7px 0 5px;
+  overflow: hidden;
+  border: 1px solid rgba(96, 165, 250, .32);
+  border-radius: 999px;
+  background: rgba(37, 99, 235, .14);
+  color: #bfdbfe;
+  font-size: 8px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.admin-environment-tag > i {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, .12);
+}
+
+.admin-environment-tag > span {
+  color: #93c5fd;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.admin-environment-tag > strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #eff6ff;
+  font-size: 8px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+
+.admin-environment-tag.uat,
+.admin-environment-tag.test,
+.admin-environment-tag.testing {
+  border-color: rgba(251, 191, 36, .35);
+  background: rgba(245, 158, 11, .14);
+  color: #fde68a;
+}
+
+.admin-environment-tag.uat > i,
+.admin-environment-tag.test > i,
+.admin-environment-tag.testing > i {
+  background: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, .12);
+}
+
+.admin-environment-tag.uat > span,
+.admin-environment-tag.test > span,
+.admin-environment-tag.testing > span {
+  color: #fcd34d;
+}
+
 .admin-context-dropdown { position: relative; }
 .admin-context-dropdown summary {
   max-width: 118px;
@@ -487,6 +558,7 @@ th, td { vertical-align: middle; }
     gap: 7px;
   }
   .brand-row { min-height: 30px; padding: 0 0 6px; align-items: center; flex-direction: row; }
+  .admin-brand-block { flex-direction: row; align-items: center; }
   .sidebar nav { display: flex; gap: 5px; overflow-x: auto; overflow-y: hidden; }
   .sidebar nav button { width: auto; min-width: max-content; margin: 0; padding: 7px 10px; }
   .sidebar nav button:hover { transform: translateY(-1px); }

@@ -564,7 +564,17 @@ function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand-row">
-          <div className="brand">Admin Config</div>
+          <div className="admin-brand-block">
+            <div className="brand">Admin Config</div>
+            <span
+              className={`admin-environment-tag ${String(serverEnvironment || 'unknown').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+              title={`Environment: ${serverEnvironment || '-'}`}
+            >
+              <i aria-hidden="true" />
+              <span>ENV</span>
+              <strong>{serverEnvironment || '-'}</strong>
+            </span>
+          </div>
           <details className="admin-context-dropdown">
             <summary title="Current login context">
               <span className="admin-context-avatar">{(currentAccount || '?').slice(0, 1).toUpperCase()}</span>
