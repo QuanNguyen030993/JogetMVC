@@ -3119,6 +3119,23 @@
                         var lookupValueExpr = lookupOptions.valueExpr || 'id';
                         var lookupDisplayExpr = lookupOptions.displayExpr || gridConfig.config.displayExp;
                         var lookupSearchEnabled = lookupOptions.searchEnabled !== false;
+                        var configuredLookupColumns = Array.isArray(lookupOptions.columns)
+                            ? lookupOptions.columns
+                            : [];
+                        var lookupColumns = configuredLookupColumns.length
+                            ? configuredLookupColumns.map(function (configuredColumn) {
+                                if (configuredColumn && typeof configuredColumn === "object") {
+                                    return configuredColumn;
+                                }
+
+                                var configuredDataField = String(configuredColumn || "");
+                                var schemeColumn = gridConfig.config.getScheme.find(function (schemeItem) {
+                                    return String(schemeItem.dataField || "").toLowerCase()
+                                        === configuredDataField.toLowerCase();
+                                });
+                                return schemeColumn || configuredDataField;
+                            })
+                            : gridConfig.config.getScheme;
 
                         var DS = mDropDownDS.getDropDownDS(
                             lookupValueExpr,
@@ -3142,12 +3159,15 @@
                                 dropDownOptions: {
                                     width: _defaultDropDownWidth,
                                     height: _defaultDropDownHeight,
+                                    ...(lookupOptions.dropDownOptions || {})
                                 },
-                                showClearButton: true,
+                                showClearButton: lookupOptions.showClearButton !== false,
+                                placeholder: lookupOptions.placeholder,
                                 dataSource: DS,
                                 displayExpr: lookupDisplayExpr,
                                 valueExpr: lookupValueExpr,
-                                columns: gridConfig.config.getScheme,
+                                searchExpr: lookupOptions.searchExpr || lookupDisplayExpr,
+                                columns: lookupColumns,
 
                                 contentTemplate: function (e) {
 

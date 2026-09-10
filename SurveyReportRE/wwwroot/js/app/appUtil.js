@@ -964,7 +964,31 @@ function getFieldLookupOptions(item) {
             try { options = JSON.parse(options); } catch { options = {}; }
         }
     }
-    return options?.lookup && typeof options.lookup === "object" ? options.lookup : {};
+
+    if (!options || typeof options !== "object") return {};
+
+    // Both formats are supported by field configuration:
+    // { "lookup": { "valueExpr": "id", ... } }
+    // { "valueExpr": "id", "displayExpr": "policyIssuanceCode", ... }
+    // Older code only handled the nested format, so valid table lookup options
+    // stored directly in EditorOptions were silently ignored.
+    if (options.lookup && typeof options.lookup === "object") {
+        return { ...options, ...options.lookup };
+    }
+
+    const lookupKeys = [
+        "valueExpr",
+        "displayExpr",
+        "columns",
+        "searchEnabled",
+        "searchExpr",
+        "showClearButton",
+        "placeholder",
+        "dropDownOptions"
+    ];
+    return lookupKeys.some(key => Object.prototype.hasOwnProperty.call(options, key))
+        ? options
+        : {};
 }
 
 async function makeFieldFeatures(item, obj, type) {
