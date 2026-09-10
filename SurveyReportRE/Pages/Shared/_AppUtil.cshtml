@@ -13471,6 +13471,318 @@
         //appNotifyInfo([title, plainBody].filter(Boolean).join(" - "));
     }
 
+    // REVIEW ONLY: centralized feature-rule diagnostic. Nothing in the application
+    // calls this helper; invoke window.checkFeatureRoleRule(...) manually when needed.
+    async function checkFeatureRoleRule(options) {
+        options = options || {};
+        const configuredRules = options.rules || options.rule || {};
+
+        function firstDefined() {
+            for (const value of arguments) {
+                if (value !== undefined && value !== null) return value;
+            }
+            return undefined;
+        }
+
+        function readRule(camelName, pascalName) {
+            return firstDefined(
+                configuredRules[camelName],
+                configuredRules[pascalName],
+                options[camelName],
+                options[pascalName]
+            );
+        }
+
+        function normalize(value) {
+            return String(value ?? "").trim().toUpperCase();
+        }
+
+        function asBoolean(value) {
+            if (typeof value === "string") {
+                return !["", "0", "false", "no", "off", "null", "undefined"]
+                    .includes(value.trim().toLowerCase());
+            }
+            return !!value;
+        }
+
+        function asList(value) {
+            if (value == null || value === "" || value === false) return [];
+            const values = Array.isArray(value)
+                ? value
+                : String(value).split(/[;,|]/);
+            return values.map(normalize).filter(Boolean);
+        }
+
+        function getGlobal(name) {
+            return firstDefined(window[name],
+                typeof globalThis !== "undefined" ? globalThis[name] : undefined);
+        }
+
+        function findPageState() {
+            return options.state
+                || window.PolicyIssuancePage?.state
+                || window.QuotationPage?.state
+                || {};
+        }
+
+        function routeValue(route, names) {
+            for (const name of names) {
+                const value = route?.[name];
+                if (value !== undefined && value !== null && value !== "") return value;
+            }
+            return "";
+        }
+
+        function matchesAllowed(actualValues, allowedValues) {
+            if (!allowedValues.length) return true;
+            const normalizedActual = actualValues.map(normalize).filter(Boolean);
+            return allowedValues.some(function (allowed) {
+                return allowed === "*" || normalizedActual.includes(allowed);
+            });
+        }
+
+        function safeJson(value) {
+            if (!value || typeof value !== "string") return value;
+            try {
+                return JSON.parse(value);
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function resolveField(source, path) {
+            return String(path || "").split(".").filter(Boolean).reduce(function (value, key) {
+                return value == null ? undefined : value[key];
+            }, source);
+        }
+
+        function compareCondition(left, operator, right) {
+            const op = String(operator || "=").trim().toLowerCase().replace(/_/g, "");
+            if (op === "=" || op === "==") return left === right;
+            if (op === "!=" || op === "<>") return left !== right;
+            if (op === ">") return left > right;
+            if (op === ">=") return left >= right;
+            if (op === "<") return left < right;
+            if (op === "<=") return left <= right;
+            if (op === "contains") return Array.isArray(left)
+                ? left.includes(right)
+                : String(left ?? "").toLowerCase().includes(String(right ?? "").toLowerCase());
+            if (op === "in") return Array.isArray(right) && right.includes(left);
+            if (op === "notin") return Array.isArray(right) && !right.includes(left);
+            if (op === "isnull" || op === "isempty") return left == null || left === "";
+            if (op === "isnotnull" || op === "isnotempty") return left != null && left !== "";
+            return false;
+        }
+
+        async function evaluateCustomCondition(condition, context) {
+            condition = safeJson(condition);
+            if (condition == null || condition === "") return true;
+            if (typeof condition === "boolean") return condition;
+            if (typeof condition === "function") {
+                return asBoolean(await condition(context));
+            }
+
+            const type = String(condition.type ?? condition.Type ?? "").toLowerCase();
+            if (type === "group" || Array.isArray(condition.children ?? condition.Children)) {
+                const children = condition.children ?? condition.Children ?? [];
+                const values = await Promise.all(children.map(function (child) {
+                    return evaluateCustomCondition(child, context);
+                }));
+                const operator = String(condition.operator ?? condition.Operator ?? "AND").toUpperCase();
+                if (operator === "OR") return values.some(Boolean);
+                if (operator === "XOR") return values.filter(Boolean).length === 1;
+                if (operator === "NOT") return !values.some(Boolean);
+                return values.every(Boolean);
+            }
+
+            const source = String(condition.source ?? condition.Source ?? "").toLowerCase();
+            if (source === "custom") {
+                const handlerName = condition.handler ?? condition.Handler;
+                const handler = typeof handlerName === "function"
+                    ? handlerName
+                    : (handlerName ? window[handlerName] : null);
+                if (typeof handler !== "function") return false;
+                return asBoolean(await handler(condition.args ?? condition.Args ?? {}, context));
+            }
+
+            if (typeof window.evaluateConditionRule === "function") {
+                return asBoolean(await window.evaluateConditionRule(condition, context.formData));
+            }
+            return compareCondition(
+                resolveField(context.formData, condition.field ?? condition.Field),
+                condition.operator ?? condition.Operator,
+                condition.value ?? condition.Value
+            );
+        }
+
+        const state = findPageState();
+        const route = firstDefined(options.route, state.currentRoute, state.selectedRoute, null);
+        const role = firstDefined(options.role, state.currentUserRole, getGlobal("_roleAppName"), "");
+        const authenticatedSection = firstDefined(options.section, getGlobal("_role"), getGlobal("_userDepartment"), "");
+        const stageDeptValue = firstDefined(options.stageDept, state.stageDept, routeValue(route, ["fromNodeId", "FromNodeId"]), "");
+        const isDebugMode = asBoolean(firstDefined(options.isDebugMode, getGlobal("_isDebugMode"), false));
+        const isSuperUser = asBoolean(firstDefined(options.isSuperUser, getGlobal("_isSuperUser"), false));
+        const superUserBypass = firstDefined(options.superUserBypass, configuredRules.superUserBypass, true) !== false;
+        const allowedRoles = asList(readRule("roles", "Roles") ?? readRule("roleAllow", "RoleAllow"));
+        const allowedStageDepts = asList(readRule("stageDepts", "StageDepts") ?? readRule("stageDeptAllow", "StageDeptAllow"));
+        const allowedSections = asList(readRule("sections", "Sections") ?? readRule("sectionAllow", "SectionAllow"));
+        const onlyAllowFromRoute = readRule("onlyAllowFromRoute", "OnlyAllowFromRoute");
+        let customRouteCondition = readRule("customRouteCondition", "CustomRouteCondition");
+
+        const routeCandidates = [
+            routeValue(route, ["routeId", "RouteId", "id", "Id"]),
+            routeValue(route, ["fromNodeId", "FromNodeId", "fromDeptCode", "FromDeptCode"]),
+            routeValue(route, ["toNodeId", "ToNodeId", "toDeptCode", "ToDeptCode"]),
+            routeValue(route, ["actionCode", "ActionCode", "actionName", "ActionName"])
+        ];
+
+        async function checkOnlyAllowFromRoute() {
+            if (onlyAllowFromRoute == null || onlyAllowFromRoute === false || onlyAllowFromRoute === "") return true;
+            if (typeof onlyAllowFromRoute === "function") {
+                return asBoolean(await onlyAllowFromRoute({ route, state, options }));
+            }
+            if (onlyAllowFromRoute === true || normalize(onlyAllowFromRoute) === "TRUE") {
+                if (!route) return false;
+                const routeFrom = routeValue(route, ["fromNodeId", "FromNodeId", "fromDeptCode", "FromDeptCode"]);
+                return !stageDeptValue || !routeFrom || normalize(routeFrom) === normalize(stageDeptValue);
+            }
+            return !!route && matchesAllowed(routeCandidates, asList(onlyAllowFromRoute));
+        }
+
+        if (customRouteCondition === true) {
+            customRouteCondition = firstDefined(
+                route?.conditionJson,
+                route?.ConditionJson,
+                route?.data,
+                route?.Data,
+                null
+            );
+        }
+        const formData = firstDefined(options.formData, options.data, state.formData, {});
+        const evaluationContext = {
+            feature: options.feature || options.featureName || "Feature",
+            role,
+            authenticatedSection,
+            stageDept: stageDeptValue,
+            route,
+            state,
+            formData,
+            isDebugMode,
+            isSuperUser,
+            options
+        };
+
+        const settledChecks = await Promise.allSettled([
+            Promise.resolve(matchesAllowed(
+                [role],
+                allowedRoles
+            )),
+            Promise.resolve(matchesAllowed([stageDeptValue], allowedStageDepts)),
+            Promise.resolve(matchesAllowed([authenticatedSection], allowedSections)),
+            checkOnlyAllowFromRoute(),
+            evaluateCustomCondition(customRouteCondition, evaluationContext)
+        ]);
+        const rawChecks = settledChecks.map(function (item) {
+            return item.status === "fulfilled" && asBoolean(item.value);
+        });
+        const checkErrors = settledChecks.map(function (item) {
+            return item.status === "rejected"
+                ? String(item.reason?.message || item.reason || "Rule evaluation failed")
+                : "";
+        });
+
+        const checks = [
+            { key: "role", label: "Role", configured: !!allowedRoles.length, passed: rawChecks[0], actual: role, expected: allowedRoles, error: checkErrors[0] },
+            { key: "stageDept", label: "Stage dept", configured: !!allowedStageDepts.length, passed: rawChecks[1], actual: stageDeptValue, expected: allowedStageDepts, error: checkErrors[1] },
+            { key: "section", label: "Section allow", configured: !!allowedSections.length, passed: rawChecks[2], actual: authenticatedSection, expected: allowedSections, error: checkErrors[2] },
+            { key: "route", label: "Only allow from route", configured: onlyAllowFromRoute != null && onlyAllowFromRoute !== false && onlyAllowFromRoute !== "", passed: rawChecks[3], actual: routeCandidates.filter(Boolean), expected: onlyAllowFromRoute, error: checkErrors[3] },
+            { key: "customRoute", label: "Custom route condition", configured: customRouteCondition != null && customRouteCondition !== "", passed: rawChecks[4], actual: customRouteCondition == null ? "" : "evaluated", expected: customRouteCondition, error: checkErrors[4] }
+        ];
+        const rulesPassed = checks.every(function (item) { return item.passed; });
+        const bypassedBySuperUser = isSuperUser && superUserBypass && !rulesPassed;
+        const report = {
+            feature: evaluationContext.feature,
+            allowed: rulesPassed || (isSuperUser && superUserBypass),
+            rulesPassed,
+            bypassedBySuperUser,
+            isDebugMode,
+            isSuperUser,
+            role: normalize(role),
+            stageDept: normalize(stageDeptValue),
+            section: normalize(authenticatedSection),
+            route,
+            checks,
+            evaluatedAt: new Date().toISOString()
+        };
+
+        if (options.display !== false) showFeatureRoleRuleReport(report);
+        return report;
+    }
+
+    function showFeatureRoleRuleReport(report) {
+        const encode = function (value) {
+            return $("<div>").text(value == null ? "-" : String(value)).html();
+        };
+        const displayValue = function (value) {
+            if (Array.isArray(value)) return value.length ? value.join(", ") : "Any";
+            if (value && typeof value === "object") {
+                try { return JSON.stringify(value); } catch (error) { return "[object]"; }
+            }
+            return value === true ? "Required" : (value || "Any");
+        };
+        const badge = function (label, active, neutral) {
+            const color = neutral ? "#6c757d" : (active ? "#198754" : "#dc3545");
+            return `<span style="display:inline-block;margin:2px 6px 2px 0;padding:4px 9px;border-radius:12px;background:${color};color:#fff;font-size:12px">${encode(label)}</span>`;
+        };
+        const rows = report.checks.map(function (item) {
+            const status = !item.configured ? "NOT SET" : (item.passed ? "PASS" : "FAIL");
+            return `<tr>
+                <td style="padding:8px;border-bottom:1px solid #e5e7eb">${encode(item.label)}</td>
+                <td style="padding:8px;border-bottom:1px solid #e5e7eb">${badge(status, item.passed, !item.configured)}</td>
+                <td style="padding:8px;border-bottom:1px solid #e5e7eb;word-break:break-word">${encode(item.error || displayValue(item.actual))}</td>
+                <td style="padding:8px;border-bottom:1px solid #e5e7eb;word-break:break-word">${encode(displayValue(item.expected))}</td>
+            </tr>`;
+        }).join("");
+        const $content = $(`<div style="font-family:inherit;padding:4px">
+            <div style="margin-bottom:12px">
+                ${badge(report.allowed ? "ALLOWED" : "DENIED", report.allowed)}
+                ${badge(`Debug: ${report.isDebugMode ? "ON" : "OFF"}`, report.isDebugMode, !report.isDebugMode)}
+                ${badge(`Super user: ${report.isSuperUser ? "YES" : "NO"}`, report.isSuperUser, !report.isSuperUser)}
+                ${report.bypassedBySuperUser ? badge("SUPER USER BYPASS", true) : ""}
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+                <thead><tr style="text-align:left;background:#f3f4f6"><th style="padding:8px">Rule</th><th style="padding:8px">Result</th><th style="padding:8px">Actual</th><th style="padding:8px">Expected</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>`);
+
+        const $host = $("<div class='feature-role-rule-review-popup'>").appendTo(document.body);
+        const popup = $host.dxPopup({
+            title: `Feature rule review: ${report.feature}`,
+            width: "min(900px, 92vw)",
+            height: "auto",
+            maxHeight: "85vh",
+            showTitle: true,
+            dragEnabled: true,
+            closeOnOutsideClick: true,
+            contentTemplate: function (container) { $content.appendTo(container); },
+            toolbarItems: [{
+                widget: "dxButton",
+                toolbar: "bottom",
+                location: "after",
+                options: { text: "Close", onClick: function () { popup.hide(); } }
+            }],
+            onHidden: function () {
+                popup.dispose();
+                $host.remove();
+            }
+        }).dxPopup("instance");
+        popup.show();
+        return popup;
+    }
+
+    window.checkFeatureRoleRule = checkFeatureRoleRule;
+
 
     window.WorkflowLoader =
         window.WorkflowLoader || {};
