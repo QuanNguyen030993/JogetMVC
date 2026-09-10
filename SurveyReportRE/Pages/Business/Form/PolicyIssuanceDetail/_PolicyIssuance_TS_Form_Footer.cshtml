@@ -154,7 +154,8 @@
        // var stateLayout = pageLayout.state;
     $("#@PIViewIdHelper.BtnSave(dept, policyIssuanceId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
          function (e) {
-                var formId = `@PIViewIdHelper.Form(dept, policyIssuanceId)`
+                var formId = `@PIViewIdHelper.Form(dept, policyIssuanceId)`;
+               if (typeof validateEnabledOverviewSection === "function" && !validateEnabledOverviewSection(formId)) return;
                var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
                var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
                    shadingColor: window.AppColors.c_rgba_0_0_0_0_4,
@@ -172,44 +173,42 @@
                });
               globalLoadPanel.dxLoadPanel("instance").show();
 
-             ajaxPut('/api/PolicyIssuance/UpdateData',
+             var mainSaveRequest = ajaxPut('/api/PolicyIssuance/UpdateData',
              {
                  key: formItems.id,
                  values: JSON.stringify(
                      formItems
                  )
-             },
-             {
-                 onSuccess: function (response) {
-                 },
-                 onError: function (err) { }
              });
 
-             savePolicyIssuance();
+             var detailSaveRequest = savePolicyIssuance();
+             $.when(mainSaveRequest, detailSaveRequest)
+                 .done(function () {
+                     DevExpress.ui.notify("Policy Issuance saved successfully", "success", 1800);
+                 })
+                 .fail(function () {
+                     DevExpress.ui.notify("Policy Issuance save failed", "error", 2200);
+                 })
+                 .always(function () {
+                     globalLoadPanel.dxLoadPanel("instance").hide();
+                 });
 
          }
      });
 
          function savePolicyIssuance() {
         const grid =  $("#pi_fillList_@policyIssuanceId").dxDataGrid("instance");
-
-        const data = grid.option("dataSource");
-
+        if (!grid) return $.Deferred().resolve().promise();
 
             const visibleRows = grid.getVisibleRows().map(r => r.data);
+            if (!visibleRows.length || visibleRows[0].ownId == null) {
+                return $.Deferred().resolve().promise();
+            }
 
-            ajaxPut('/api/PolicyIssuanceDetails/UpdateData',
+            return ajaxPut('/api/PolicyIssuanceDetails/UpdateData',
             {
                 key: visibleRows[0].ownId,
                 values: JSON.stringify(mapGridToObject(visibleRows))
-            },
-            {
-                onSuccess: function (response) {
-                    DevExpress.ui.notify("Saved successfully", "success", 2000);
-                },
-                onError: function (err) {
-                    DevExpress.ui.notify("Save failed", "error", 2000);
-                }
             });
 
         }

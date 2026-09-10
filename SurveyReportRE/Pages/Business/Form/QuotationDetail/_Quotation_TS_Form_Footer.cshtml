@@ -388,6 +388,7 @@
         type: "default",
         onClick: function () {
             const formId = "@QTViewIdHelper.Form(dept, quotationId)";
+            if (typeof validateEnabledOverviewSection === "function" && !validateEnabledOverviewSection(formId)) return;
             const formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
             const loadPanel = $("#loadingPopup").dxLoadPanel({
                 shadingColor: window.AppColors.c_rgba_0_0_0_0_4,

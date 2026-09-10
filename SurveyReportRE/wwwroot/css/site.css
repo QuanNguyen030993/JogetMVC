@@ -36467,6 +36467,34 @@ textarea {
     gap: 0;
 }
 
+.dept-section-header-actions {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+}
+
+.dept-section-save:empty {
+    display: none;
+}
+
+.dept-section-save .dx-button {
+    border-color: color-mix(in srgb, var(--theme-primary) 42%, #cbd5e1) !important;
+    background: color-mix(in srgb, var(--theme-primary) 8%, #fff) !important;
+    color: var(--theme-primary) !important;
+    font-weight: 650;
+}
+
+.dept-section-save .dx-button:hover {
+    border-color: var(--theme-primary) !important;
+    background: color-mix(in srgb, var(--theme-primary) 14%, #fff) !important;
+}
+
+.dept-section-save .dx-button.dx-state-disabled {
+    opacity: .55;
+}
+
     :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-tree .dept-idle-clock::before {
         top: 2px;
         height: 2px;

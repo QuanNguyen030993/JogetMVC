@@ -4,6 +4,7 @@
 @{
     string Id(string name) => $"{Model.Prefix}-{name}_{Model.Id}";
     string Cd(string name) => $"{Model.Prefix}-{name}_";
+    long.TryParse(Model.Id, out var recordId);
     var moduleCode = (Model.ModuleCode ?? "").Trim().ToLower();
     string[] deptModuleCodes = moduleCode == QTViewIdHelper.Prefix
         ? QTViewIdHelper.Departments
@@ -28,17 +29,22 @@
                     };
                     }
                     <partial name="@($"Business/Form/QuotationDetail/_Quotation_{item}_Form_Header")" view-data="viewDataHeader" />
-                    <button type="button"
-                            class="dept-admin-refresh"
-                            hidden
-                            data-overview-section-refresh="true"
-                            data-module="@QTViewIdHelper.Prefix"
-                            data-record-id="@Model.Id"
-                            data-dept="@item"
-                            title="Refresh @item section"
-                            aria-label="Refresh @item section">
-                        <i class="fa fa-refresh" aria-hidden="true"></i>
-                    </button>
+                    <div class="dept-section-header-actions">
+                        <div id="@QTViewIdHelper.BtnSave(item, recordId)"
+                             class="dept-section-save"
+                             data-overview-section-save="true"></div>
+                        <button type="button"
+                                class="dept-admin-refresh"
+                                hidden
+                                data-overview-section-refresh="true"
+                                data-module="@QTViewIdHelper.Prefix"
+                                data-record-id="@Model.Id"
+                                data-dept="@item"
+                                title="Refresh @item section"
+                                aria-label="Refresh @item section">
+                            <i class="fa fa-refresh" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- 2. UpperBody -->
@@ -119,17 +125,22 @@
                     };
                     }
                     <partial name="@($"Business/Form/PolicyIssuanceDetail/_PolicyIssuance_{item}_Form_Header")" view-data="viewDataHeader" />
-                    <button type="button"
-                            class="dept-admin-refresh"
-                            hidden
-                            data-overview-section-refresh="true"
-                            data-module="@PIViewIdHelper.Prefix"
-                            data-record-id="@Model.Id"
-                            data-dept="@item"
-                            title="Refresh @item section"
-                            aria-label="Refresh @item section">
-                        <i class="fa fa-refresh" aria-hidden="true"></i>
-                    </button>
+                    <div class="dept-section-header-actions">
+                        <div id="@PIViewIdHelper.BtnSave(item, recordId)"
+                             class="dept-section-save"
+                             data-overview-section-save="true"></div>
+                        <button type="button"
+                                class="dept-admin-refresh"
+                                hidden
+                                data-overview-section-refresh="true"
+                                data-module="@PIViewIdHelper.Prefix"
+                                data-record-id="@Model.Id"
+                                data-dept="@item"
+                                title="Refresh @item section"
+                                aria-label="Refresh @item section">
+                            <i class="fa fa-refresh" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
                 <!-- 2. UpperBody -->
                 <div id="@Id($"sec_{item}-upperbody")" class="dept-upperbody">

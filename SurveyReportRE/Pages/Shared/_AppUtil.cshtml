@@ -7760,6 +7760,49 @@
                     || String(window._isSuperUser).toLowerCase() === "true";
            }
 
+           function validateEnabledOverviewSection(formId) {
+                var formElement = document.getElementById(formId);
+                var form = formElement ? DevExpress.ui.dxForm.getInstance(formElement) : null;
+                if (!formElement || !form) {
+                    DevExpress.ui.notify("Section form is not ready", "warning", 1800);
+                    return false;
+                }
+
+                var firstInvalidElement = null;
+                var isValid = true;
+                $(formElement).find(".dx-validator:visible").each(function () {
+                    var $validatorElement = $(this);
+                    var $editor = $validatorElement.closest(".dx-widget");
+                    if (!$editor.length) $editor = $validatorElement;
+
+                    // Hidden, disabled and read-only group items are outside the
+                    // editable scope of a section save and must not block it.
+                    if ($validatorElement.closest("[hidden], .dx-state-disabled, .dx-state-readonly").length) {
+                        return;
+                    }
+
+                    var validator = $validatorElement.dxValidator("instance");
+                    if (!validator) return;
+
+                    var result = validator.validate();
+                    if (result?.isValid === false) {
+                        isValid = false;
+                        if (!firstInvalidElement) firstInvalidElement = $validatorElement[0];
+                    }
+                });
+
+                if (!isValid) {
+                    firstInvalidElement?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+                    window.setTimeout(function () {
+                        $(firstInvalidElement).find("input, textarea, [tabindex]").first().trigger("focus");
+                    }, 220);
+                    DevExpress.ui.notify("Please complete the required fields in this section", "warning", 2400);
+                }
+
+                return isValid;
+           }
+           window.validateEnabledOverviewSection = validateEnabledOverviewSection;
+
            function syncOverviewAdminRefreshButtons(root) {
                 var scope = root ? document.querySelector(root) : document;
                 if (!scope) return;

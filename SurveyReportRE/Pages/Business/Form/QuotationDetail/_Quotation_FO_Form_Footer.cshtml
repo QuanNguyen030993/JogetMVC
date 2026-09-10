@@ -24,6 +24,8 @@
     var dept = "@dept";
         $("#@QTViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
         function (e) {
+              var formId = "@QTViewIdHelper.Form(dept, quotationId)";
+              if (typeof validateEnabledOverviewSection === "function" && !validateEnabledOverviewSection(formId)) return;
               var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
 
               var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
@@ -51,8 +53,13 @@
             },
             {
                 onSuccess: function (response) {
+                    globalLoadPanel.dxLoadPanel("instance").hide();
+                    DevExpress.ui.notify("Quotation saved successfully", "success", 1800);
                 },
-                onError: function (err) { }
+                onError: function (err) {
+                    globalLoadPanel.dxLoadPanel("instance").hide();
+                    DevExpress.ui.notify("Quotation save failed", "error", 2200);
+                }
             }
         );
         }
