@@ -1929,9 +1929,11 @@ Note:
             invalidateSectionCommentCache(state.selectedGuid);
             await quotationFormStages.enter("comments");
             await loadQuotationSectionComments();
+             
+
         });
     }, _delayQuotationsLoadForm);
-
+ 
       // var reportButtonMini = `<div class="report-mini" onclick="submitIssue(${_id},'LossControl','${lossControlData.lossControlNo}')">
       //             <div class="triangle-mini" ></div>
       //           </div>`;

@@ -913,7 +913,7 @@
                     //             popupInstance.hide();
                     //         },
                     //     },
-                    // }, 
+                    // },
                     {
                         widget: 'dxButton',
                         toolbar: 'bottom',
@@ -1114,7 +1114,7 @@
                     //             popupInstance.hide();
                     //         },
                     //     },
-                    // }, 
+                    // },
                     {
                         widget: 'dxButton',
                         toolbar: 'bottom',
@@ -1552,7 +1552,7 @@
                     //             popupInstance.hide();
                     //         },
                     //     },
-                    // }, 
+                    // },
                     {
                         widget: 'dxButton',
                         toolbar: 'bottom',
@@ -2366,7 +2366,7 @@
                                             // $(itemElement).tmivhtmleditorcommentbox(routeEditorOptions);
                                         }
 
-                                       
+
 
                                         var departmentCodes = moduleKey === viewIdModulePrefix.policyIssuance
                                             ? piDeptModuleCode
@@ -2378,14 +2378,14 @@
                                         if (typeof $.fn.tmivcommenteditorroute !== "function") {
                                             throw new Error("TMIVCom CommentEditorRoute is not loaded.");
                                         }
-                                        var typeRequest = moduleKey == viewIdModulePrefix.quotation ? "Quotation" : "PolicyIssuance"; 
+                                        var typeRequest = moduleKey == viewIdModulePrefix.quotation ? "Quotation" : "PolicyIssuance";
                                          var isdisableComment =  shouldDisableComment();
                                          try {
                                              const formItems = $(`[data-form-part='bodyForm'][data-form-dept='${dept}']`).dxForm("instance").option("formItems");
                                             if (formItems.stageDept == _role)  isdisableComment = true;
                                          }
-                                         catch{ 
-                                         
+                                         catch{
+
                                          }
 
                                         routeEditorOptions = {
@@ -2793,7 +2793,7 @@
                                             fromDepartment: dept, // or _role
                                             submitUrl: `api/Notification/CommentNotify?sendTo=quan.nh&typeRequest=${typeRequest}&id=${id}`,
                                             // currentDepartment: _role,
-                                            
+
                                             type: "Discussion",
                                             author: _displayName,
                                             createdBy: _loginUser,
@@ -4265,11 +4265,11 @@
 
                           if (picMap[dept] == accounts.join(","))
                                     {
-                    
+
 
                         // Giu nguyen full selection. Loai currentPic tai day se lam PIC cu
                         // bi mat chi vi user mo roi dong dropdown ma khong sua gi.
-                       
+
 
                                     }
                                     else {
@@ -5999,16 +5999,16 @@
             $container.toggleClass("attachment-mini-host", compactAttachment);
             const $preview = $(`<div id="${attachmentHostIds.preview}" class="att-preview${compactAttachment ? " att-preview--mini" : ""}"></div>`)
                 .appendTo($container);
-           
+
             const $uploader = $(`<div id="${attachmentHostIds.uploader}" class="tmivcom-dx-fileuploader${compactAttachment ? " tmivcom-fileuploader--mini-host" : ""}"></div>`)
                  .attr(compactAttachment ? {
                      title: editorOptionsIn.titleName || "Add attachment",
                      "aria-label": editorOptionsIn.titleName || "Add attachment"
                  } : {})
                  .appendTo($container)
-          
 
-          
+
+
              if (editorOptionsIn.id == 0)
              // if (isRenderUploader)
              {
@@ -6103,7 +6103,7 @@
                         $dropZone.removeClass("is-dragging").addClass("is-uploading");
                         renderDropZoneUploadStatus(e.file?.name, 0);
                         makeMiniLoadingPanel(`Uploading file`, "Please wait...");
-                
+
                         // showUploaderLoader(editorOptionsIn.uploaderId, "File loading...");
                     },
                     onValueChanged: function(e){
@@ -6165,8 +6165,8 @@
                                  renderBrowserLoading(result);
                         // hideUploaderLoader(editorOptionsIn.uploaderId);
                         loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn, renderTime, true)
-                        
-                      
+
+
                     },
                     onUploadError: function (e) {
                         uploadedCount++;
@@ -6254,7 +6254,7 @@
                         console.log("SharePoint file deleted", file);
                     }
                 });
-               }   
+               }
 
               loadDxFileUploaderAttachments(controlId, controllerName, editorOptionsIn,renderTime);
         }
@@ -6597,7 +6597,7 @@
                     .text(getIconByExt(ext))
                     .appendTo($item);
 
-               
+
 
 
                 const $meta = $("<div>").addClass("att-meta").appendTo($item);
@@ -8646,7 +8646,7 @@
                 if (readOnly || syncingFromForm) return;
 
                 if (formInstance) {
-                    // formInstance.updateData(item.dataField, html); // bug return to start 
+                    // formInstance.updateData(item.dataField, html); // bug return to start
                 }
                 editorOptions.value = html;
             };
@@ -10524,7 +10524,7 @@
                     return String(k || "").trim().toUpperCase();
                 }
 
-           
+
 
                 function waitForDecisionRouteStage(formId) {
                     var $form = $(`#${formId}`);
@@ -10607,7 +10607,7 @@
 
         var decisionGroupName =
             `decision${delayObject.dept}Group.${decisionFieldName}`;
-          
+
         var decisionRegistryKey =
             `${formProps.formId}:` +
             `${String(delayObject.dept || "")
@@ -10734,7 +10734,7 @@
             ruleDisabled: ruleDisabled
         };
     }
-        
+
 
         function appendDecisionStatusLoader($host) {
             return $(`
@@ -10746,7 +10746,7 @@
         function setDecisionCommonStatus(statusId, typeRender, state) {
 
             // var $status = ensureDecisionCommonStatus(statusId, buttonId);
-            try 
+            try
             {
                 var $status = $(`#${statusId}`);
             }
@@ -10883,7 +10883,7 @@
                      return !hasAcceptDate ;
                  else
                      return hasAcceptDate; //|| hasActionStatus;
-            } 
+            }
             if (options.type == "route")
             {
                 console.log("route", options.items);
@@ -11080,7 +11080,7 @@
 
             function updateDelayAcceptStatus(statusId, acceptDate, defaultStatus = null) {
                 setTimeout(() => {
-                    if (!statusId || !acceptDate) 
+                    if (!statusId || !acceptDate)
                     {
                         // console.log("Cannot load status from " + statusId, statusId);
                         // console.log("Cannot load acceptDate from " + statusId, acceptDate);
@@ -11097,7 +11097,7 @@
                     //         || statusLabel.actionCode
                     //         || statusLabel.statusName;
                     // }
-                   
+
                     setDecisionCommonStatus(
                         statusId,
                         "onLoaded",
@@ -11403,14 +11403,14 @@
                         normalizedDecisionItems,
                         params[1] || params[3]
                     );
-                    
+
                     setTimeout(() => {
                         var form = $(`#${formDataClone.formId}`).dxForm("instance");
                         if (!form) {
                             setDecisionCommonStatus(commonStatusId, "onLoaded", "Form unavailable");
                             return;
                         }
-                        
+
                         var formItems = form.option("formData") || {};
                         if (formItems)
                         {
@@ -11486,7 +11486,7 @@
                                     formDataClone.dept,
                                     latestTatObject
                             );
-                          
+
                           setDecisionCommonStatus(
                                 commonStatusId,
                                 "onLoading",
@@ -11533,7 +11533,7 @@
                          if (formDataClone.dept == "FO"){
 
                              if (formItems.stageDept == "Client") { //  another logic
-                                 
+
                                       var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
                                       if (storedStatus != "Accepted")
                                          {
@@ -11545,7 +11545,7 @@
                                           disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
                                           return;
                                       }
-                                  
+
                               }
                               else {
                                   updateDelayAcceptStatus(
@@ -11553,9 +11553,9 @@
                                   null);
                                   return;
                               }
-                                
+
                           }
-                   
+
 
                           if (latestFormItems.actionStatus) // trend to priority this field
                           {
@@ -11698,1570 +11698,7 @@
                                             });
                                         }
 
-    function loadSelectedWorkflow(params) {
-        //start render workflowc lazy load, all view department with decision load first , second time in QT or PI  _Form 
-        params = params || {};
-        const moduleCode = String(params.moduleCode || "")
-            .trim()
-            .toLowerCase();
-
-        if (moduleCode !== viewIdModulePrefix.quotation && moduleCode !== viewIdModulePrefix.policyIssuance) {
-            return $.Deferred()
-                .reject(new Error(
-                    `moduleCode must be '${viewIdModulePrefix.quotation}' or '${viewIdModulePrefix.policyIssuance}'`
-                ))
-                .promise();
-        }
-        const loadingClass = "actionRight";
-        // const loadingHost = params.loadingHost;
-        const loadingHost = $(`[aria-action-right='${params.stageDept}']`);
-        showLoading(loadingClass, loadingHost);
-
-        const id = params.id;
-        const guid = params.guid;
-        const stageDept = params.stageDept;
-
-        const state = params.state || {};
-        const deptCodes = params.deptCodes || (
-            moduleCode === viewIdModulePrefix.policyIssuance ? piDeptModuleCode : qtDeptModuleCode
-        );
-        const formStages = params.formStages;
-        const remarkBoxes = params.remarkBoxes || {};
-        const prefix = params.prefix || "";
-        const reload = params.reload === true;
-
-        const loadScreenConditions =
-            params.loadScreenConditions ||
-            function () {
-                return $.Deferred().resolve().promise();
-            };
-
-        const submitNextStepFn =
-            params.submitNextStep || function () {};
-
-        const returnToStepFn =
-            params.returnToStep || function () {};
-
-        const moduleConfigs = {
-            [viewIdModulePrefix.quotation]: {
-                key: viewIdModulePrefix.quotation,
-
-                workflowUrl: function (selectedGuid) {
-                    return `/api/Quotation/GetQuotationWorkflow/${selectedGuid}`;
-                },
-
-                nextStepUrl: function (workflowDefinitionId, currentStep) {
-                    return `/api/StepsWorkflow/GetNextStep/${workflowDefinitionId}/${currentStep}`;
-                },
-
-                updateUrl: "/api/Quotation/UpdateData",
-
-                formKey:
-                    params.formModuleKey ||
-                    (
-                        typeof formModuleKeyQt !== "undefined"
-                            ? formModuleKeyQt
-                            : viewIdModulePrefix.quotation
-                    ),
-
-                getFormId: function (dept, recordId) {
-                    if (
-                        window.QuotationIdManager &&
-                        typeof window.QuotationIdManager.form === "function"
-                    ) {
-                        return window.QuotationIdManager.form(dept, recordId);
-                    }
-
-                    return null;
-                },
-
-                getReturnButtonId: function (dept, recordId) {
-                    if (
-                        window.QuotationIdManager &&
-                        typeof window.QuotationIdManager.btnReturnBranch === "function"
-                    ) {
-                        return window.QuotationIdManager.btnReturnBranch(
-                            dept,
-                            recordId
-                        );
-                    }
-
-                    return null;
-                },
-
-                getSubmitButtonId: function (dept, recordId) {
-                    if (
-                        window.QuotationIdManager &&
-                        typeof window.QuotationIdManager.btnSubmitBranch === "function"
-                    ) {
-                        return window.QuotationIdManager.btnSubmitBranch(
-                            dept,
-                            recordId
-                        );
-                    }
-
-                    return null;
-                }
-            },
-
-            [viewIdModulePrefix.policyIssuance]: {
-                key: viewIdModulePrefix.policyIssuance,
-
-                // Change these API routes here if the real PI endpoints differ.
-                workflowUrl: function (selectedGuid) {
-                    return `/api/PolicyIssuance/GetPolicyIssuanceWorkflow/${selectedGuid}`;
-                },
-
-                nextStepUrl: function (workflowDefinitionId, currentStep) {
-                    return `/api/StepsWorkflow/GetNextStep/${workflowDefinitionId}/${currentStep}`;
-                },
-
-                updateUrl: "/api/PolicyIssuance/UpdateData",
-
-                formKey:
-                    params.formModuleKey ||
-                    (
-                        typeof formModuleKeyPi !== "undefined"
-                            ? formModuleKeyPi
-                            : viewIdModulePrefix.policyIssuance
-                    ),
-
-                getFormId: function (dept, recordId) {
-                    if (
-                        window.PolicyIssuanceIdManager &&
-                        typeof window.PolicyIssuanceIdManager.form === "function"
-                    ) {
-                        return window.PolicyIssuanceIdManager.form(
-                            dept,
-                            recordId
-                        );
-                    }
-
-                    return null;
-                },
-
-                getReturnButtonId: function (dept, recordId) {
-                    if (
-                        window.PolicyIssuanceIdManager &&
-                        typeof window.PolicyIssuanceIdManager.btnReturnBranch === "function"
-                    ) {
-                        return window.PolicyIssuanceIdManager.btnReturnBranch(
-                            dept,
-                            recordId
-                        );
-                    }
-
-                    return null;
-                },
-
-                getSubmitButtonId: function (dept, recordId) {
-                    if (
-                        window.PolicyIssuanceIdManager &&
-                        typeof window.PolicyIssuanceIdManager.btnSubmitBranch === "function"
-                    ) {
-                        return window.PolicyIssuanceIdManager.btnSubmitBranch(
-                            dept,
-                            recordId
-                        );
-                    }
-
-                    return null;
-                }
-            }
-        };
-
-        const moduleConfig = $.extend(
-            true,
-            {},
-            moduleConfigs[moduleCode],
-            params.moduleConfig || {}
-        );
-
-        function normalizeDept(value) {
-            return String(value || "")
-                .trim()
-                .toUpperCase();
-        }
-
-        function normalizeGroupKey(value) {
-            return normalizeDept(value)
-                .replace(/[^A-Z0-9]/g, "");
-        }
-
-        function safeKey(value) {
-            return String(value ?? "")
-                .replace(/[^a-zA-Z0-9_-]/g, "_");
-        }
-
-        function getFormItems(dept) {
-            const formId = moduleConfig.getFormId(dept, id);
-
-            if (!formId) {
-                return {};
-            }
-
-            const formInstance =
-                $(`#${formId}`).dxForm("instance");
-
-            return formInstance?.option("formData") || {};
-        }
-
-        function parseWorkflowRouteData(route) {
-            var routeData = route?.data ?? route?.Data;
-            if (routeData && typeof routeData === "object") return routeData;
-            if (typeof routeData !== "string" || !routeData.trim()) return {};
-
-            try {
-                return JSON.parse(routeData) || {};
-            } catch (error) {
-                return {};
-            }
-        }
-
-        function collectWorkflowRuntimeData() {
-            var sources = [params.formData, params.data, getFormItems(stageDept)];
-            deptCodes.forEach(function (dept) {
-                sources.push(getFormItems(dept));
-            });
-
-            return sources.filter(function (source) {
-                return source && typeof source === "object";
-            });
-        }
-
-        function isWorkflowConditionEnabled(propertyKey, runtimeSources) {
-            var normalizedKey = String(propertyKey || "").trim().toLowerCase();
-            if (!normalizedKey) return false;
-
-            if (normalizedKey === "skipts") {
-                return runtimeSources.some(function (source) {
-                    return resolvePolicyIssuanceSkipTS(source) === true;
-                });
-            }
-
-            return runtimeSources.some(function (source) {
-                var matchingKey = Object.keys(source).find(function (key) {
-                    return String(key).trim().toLowerCase() === normalizedKey;
-                });
-                if (!matchingKey) return false;
-
-                var value = source[matchingKey];
-                if (typeof value === "string") {
-                    var normalizedValue = value.trim().toLowerCase();
-                    return normalizedValue !== "" &&
-                        !["false", "0", "null", "undefined", "no", "off"].includes(normalizedValue);
-                }
-                return Boolean(value);
-            });
-        }
-
-        function selectRuntimeRoutes(routes) {
-            var candidates = Array.isArray(routes) ? routes : [];
-            var runtimeSources = collectWorkflowRuntimeData();
-            var hasJumpConfiguration = false;
-            var activeJumpRoutes = candidates.filter(function (route) {
-                var routeData = parseWorkflowRouteData(route);
-                var nodeJump = routeData?.nodeJump ?? routeData?.NodeJump ?? {};
-                var jumpDefinitions =
-                    routeData?.jumpDefinitions ?? routeData?.JumpDefinitions ??
-                    nodeJump?.definitions ?? nodeJump?.Definitions ??
-                    route?.jumpDefinitions ?? route?.JumpDefinitions ?? [];
-
-                var transitionMap = nodeJump.transitionMap ?? nodeJump.TransitionMap ?? {};
-                var conditionNames = nodeJump.conditionNames ?? nodeJump.ConditionNames ?? [];
-                var transitionId = String(
-                    nodeJump.transitionId ?? nodeJump.TransitionId ??
-                    routeData?.transitionId ?? routeData?.TransitionId ??
-                    route?.transitionId ?? route?.TransitionId ?? route?.routeId ?? route?.id ?? ""
-                );
-                var configuredConditions = [];
-
-                if (Array.isArray(conditionNames)) {
-                    configuredConditions = configuredConditions.concat(conditionNames);
-                }
-                if (transitionMap && typeof transitionMap === "object") {
-                    Object.keys(transitionMap).forEach(function (conditionName) {
-                        if (String(transitionMap[conditionName] ?? "") === transitionId) {
-                            configuredConditions.push(conditionName);
-                        }
-                    });
-                }
-                if (Array.isArray(jumpDefinitions)) {
-                    jumpDefinitions.forEach(function (definition) {
-                        var definitionTransitionId = String(
-                            definition?.transitionId ?? definition?.TransitionId ?? definition?.jumpTransitionId ?? ""
-                        );
-                        if (definitionTransitionId !== transitionId) return;
-
-                        configuredConditions.push(
-                            definition?.propertyKey ?? definition?.PropertyKey ??
-                            definition?.conditionName ?? definition?.ConditionName ?? definition?.name ?? ""
-                        );
-                    });
-                }
-
-                if (Object.keys(transitionMap || {}).length || jumpDefinitions.length || configuredConditions.length) {
-                    hasJumpConfiguration = true;
-                }
-
-                var isJumpRoute = String(route?.flowType ?? route?.FlowType ?? "")
-                    .trim()
-                    .toLowerCase() === "jump";
-
-                return isJumpRoute && configuredConditions.some(function (conditionName) {
-                    return isWorkflowConditionEnabled(conditionName, runtimeSources);
-                });
-            });
-
-            if (activeJumpRoutes.length) return activeJumpRoutes;
-            if (!hasJumpConfiguration) return candidates;
-
-            return candidates.filter(function (route) {
-                return String(route?.flowType ?? route?.FlowType ?? "")
-                    .trim()
-                    .toLowerCase() !== "jump";
-            });
-        }
-
-        function collectWorkflowUiLockRules(value, result, seen, depth) {
-            result = result || [];
-            seen = seen || new WeakSet();
-            depth = depth || 0;
-            if (value == null || depth > 7) return result;
-
-            if (typeof value === "string") {
-                const text = value.trim();
-                if (!text || (text[0] !== "{" && text[0] !== "[")) return result;
-                try {
-                    return collectWorkflowUiLockRules(JSON.parse(text), result, seen, depth + 1);
-                } catch (error) {
-                    return result;
-                }
-            }
-
-            if (typeof value !== "object") return result;
-            if (seen.has(value)) return result;
-            seen.add(value);
-
-            if (Array.isArray(value)) {
-                value.forEach(function (item) {
-                    collectWorkflowUiLockRules(item, result, seen, depth + 1);
-                });
-                return result;
-            }
-
-            if (String(value.type ?? value.Type ?? "").trim().toLowerCase() === "uilock") {
-                result.push(value);
-            }
-
-            Object.keys(value).forEach(function (key) {
-                collectWorkflowUiLockRules(value[key], result, seen, depth + 1);
-            });
-            return result;
-        }
-
-        function findWorkflowFormItem(items, targetName, parentPath) {
-            const normalizedTarget = String(targetName || "").trim().toLowerCase();
-            if (!normalizedTarget) return null;
-
-            for (const item of (Array.isArray(items) ? items : [])) {
-                if (!item) continue;
-                const itemKey = item.name || item.dataField || item.caption || "";
-                const itemPath = parentPath && itemKey
-                    ? `${parentPath}.${itemKey}`
-                    : (itemKey || parentPath || "");
-
-                if (String(item.name || "").trim().toLowerCase() === normalizedTarget) {
-                    return { item: item, path: itemPath || targetName };
-                }
-
-                const nested = findWorkflowFormItem(item.items, targetName, itemPath);
-                if (nested) return nested;
-            }
-            return null;
-        }
-
-        function collectWorkflowFormGroups(items, parentPath, result) {
-            result = result || [];
-            (Array.isArray(items) ? items : []).forEach(function (item) {
-                if (!item) return;
-                const itemKey = item.name || item.dataField || item.caption || "";
-                const itemPath = parentPath && itemKey
-                    ? `${parentPath}.${itemKey}`
-                    : (itemKey || parentPath || "");
-                const itemType = String(item.itemType || "").trim().toLowerCase();
-
-                if (itemType === "group" && item.name) {
-                    result.push({
-                        name: String(item.name),
-                        path: itemPath || String(item.name)
-                    });
-                }
-                collectWorkflowFormGroups(item.items, itemPath, result);
-            });
-            return result;
-        }
-
-        function restoreWorkflowUiLockedGroups() {
-            $(
-                `.workflow-ui-lock-group[data-workflow-ui-locked='true']` +
-                `[data-workflow-ui-lock-record='${id}']` +
-                `[data-workflow-ui-lock-module='${moduleCode}']`
-            ).each(function () {
-                const $group = $(this);
-                $group.find("[data-workflow-ui-lock-widget]").each(function () {
-                    const state = $(this).data("workflowUiLockOriginal");
-                    if (!state?.instance) return;
-                    try {
-                        if (state.disabled !== undefined) state.instance.option("disabled", state.disabled);
-                        if (state.readOnly !== undefined) state.instance.option("readOnly", state.readOnly);
-                        if (state.editing !== undefined) state.instance.option("editing", state.editing);
-                    } catch (error) {
-                        console.warn("Unable to restore workflow UI lock widget.", error);
-                    }
-                    $(this)
-                        .removeAttr("data-workflow-ui-lock-widget")
-                        .removeData("workflowUiLockOriginal");
-                });
-
-                $group.find("input, textarea, select").filter(function () {
-                    return !$(this).closest(".dx-widget").length;
-                }).each(function () {
-                    const state = $(this).data("workflowUiLockNativeOriginal");
-                    if (!state) return;
-                    this.disabled = state.disabled;
-                    this.readOnly = state.readOnly;
-                    $(this).removeData("workflowUiLockNativeOriginal");
-                });
-
-                $group.find("[data-workflow-ui-lock-tmiv='true']").each(function () {
-                    const $uploader = $(this);
-                    const originalDisabled = $uploader.data("workflowUiLockTmivDisabled");
-                    try {
-                        $uploader.fileuploader("option", "disabled", !!originalDisabled);
-                    } catch (error) {}
-                    $uploader
-                        .removeAttr("data-workflow-ui-lock-tmiv")
-                        .removeData("workflowUiLockTmivDisabled");
-                });
-
-                $group.find("[data-workflow-ui-lock-tmiv-control]").each(function () {
-                    const $control = $(this);
-                    const pluginName = $control.attr("data-workflow-ui-lock-tmiv-control");
-                    const originalDisabled = $control.data("workflowUiLockTmivControlDisabled");
-                    try {
-                        if (pluginName === "datebox") {
-                            $control.datebox({ disabled: !!originalDisabled });
-                        } else if (pluginName) {
-                            $control[pluginName]("option", "disabled", !!originalDisabled);
-                        }
-                    } catch (error) {}
-                    $control
-                        .removeAttr("data-workflow-ui-lock-tmiv-control")
-                        .removeData("workflowUiLockTmivControlDisabled");
-                });
-
-                $group
-                    .removeClass("workflow-ui-lock-group")
-                    .removeAttr(
-                        "data-workflow-ui-locked data-workflow-ui-lock-mode " +
-                        "data-workflow-ui-lock-record data-workflow-ui-lock-module aria-disabled"
-                    );
-            });
-        }
-
-        function lockWorkflowWidget($element, pluginName, mode) {
-            let instance;
-            try {
-                instance = $element[pluginName]("instance");
-            } catch (error) {
-                return;
-            }
-            if (!instance || $element.attr("data-workflow-ui-lock-widget")) return;
-
-            const readOnlyPlugins = new Set([
-                "dxTextBox", "dxTextArea", "dxSelectBox", "dxDateBox",
-                "dxNumberBox", "dxTagBox", "dxDropDownBox", "dxAutocomplete"
-            ]);
-            const isGrid = pluginName === "dxDataGrid" || pluginName === "dxTreeList";
-            const original = {
-                instance: instance,
-                disabled: instance.option("disabled")
-            };
-
-            try {
-                if (isGrid) {
-                    original.editing = $.extend(true, {}, instance.option("editing") || {});
-                    instance.option("editing", $.extend(true, {}, original.editing, {
-                        allowAdding: false,
-                        allowDeleting: false,
-                        allowUpdating: false
-                    }));
-                    if (String(mode || "").toLowerCase() !== "readonly") {
-                        instance.option("disabled", true);
-                    }
-                } else if (
-                    String(mode || "").toLowerCase() === "readonly" &&
-                    readOnlyPlugins.has(pluginName)
-                ) {
-                    original.readOnly = instance.option("readOnly");
-                    instance.option("readOnly", true);
-                } else {
-                    instance.option("disabled", true);
-                }
-
-                $element
-                    .attr("data-workflow-ui-lock-widget", pluginName)
-                    .data("workflowUiLockOriginal", original);
-            } catch (error) {
-                console.warn("Unable to apply workflow UI lock widget.", pluginName, error);
-            }
-        }
-
-        function lockWorkflowFormGroup(formInstance, target, rule) {
-            const targetName = target?.name ?? target?.Name;
-            const targetItemType = target?.itemType ?? target?.ItemType ?? "group";
-            if (!formInstance || !targetName) return false;
-            if (String(targetItemType).toLowerCase() !== "group") return false;
-
-            const match = findWorkflowFormItem(formInstance.option("items") || [], targetName, "");
-            if (!match) return false;
-
-            const markerClass = `workflow-ui-lock-target-${safeKey(targetName)}`;
-            const currentClass = String(match.item.cssClass || "");
-            if (!currentClass.split(/\s+/).includes(markerClass)) {
-                try {
-                    formInstance.itemOption(
-                        match.path,
-                        "cssClass",
-                        `${currentClass} ${markerClass}`.trim()
-                    );
-                } catch (error) {
-                    console.warn("Unable to mark workflow UI lock group.", target, error);
-                }
-            }
-
-            const $form = formInstance.$element ? formInstance.$element() : $();
-            const $group = $form.find(`.${markerClass}`).first();
-            if (!$group.length) return false;
-
-            const mode = String(rule.mode ?? rule.Mode ?? "ReadOnly");
-            $group
-                .addClass("workflow-ui-lock-group")
-                .attr({
-                    "data-workflow-ui-locked": "true",
-                    "data-workflow-ui-lock-mode": mode,
-                    "data-workflow-ui-lock-record": id,
-                    "data-workflow-ui-lock-module": moduleCode,
-                    "aria-disabled": "true"
-                });
-
-            const widgetPlugins = [
-                [".dx-textbox", "dxTextBox"],
-                [".dx-textarea", "dxTextArea"],
-                [".dx-selectbox", "dxSelectBox"],
-                [".dx-datebox", "dxDateBox"],
-                [".dx-numberbox", "dxNumberBox"],
-                [".dx-tagbox", "dxTagBox"],
-                [".dx-dropdownbox", "dxDropDownBox"],
-                [".dx-autocomplete", "dxAutocomplete"],
-                [".dx-checkbox", "dxCheckBox"],
-                [".dx-radiogroup", "dxRadioGroup"],
-                [".dx-switch", "dxSwitch"],
-                [".dx-fileuploader", "dxFileUploader"],
-                [".dx-datagrid", "dxDataGrid"],
-                [".dx-treelist", "dxTreeList"],
-                [".dx-button", "dxButton"]
-            ];
-            widgetPlugins.forEach(function (entry) {
-                $group.find(entry[0]).each(function () {
-                    lockWorkflowWidget($(this), entry[1], mode);
-                });
-            });
-
-            $group.find(".tmivcom-dx-fileuploader").each(function () {
-                const $uploader = $(this);
-                if (!$uploader.attr("data-workflow-ui-lock-tmiv")) {
-                    let originalDisabled = false;
-                    try {
-                        originalDisabled = !!$uploader.fileuploader("option", "disabled");
-                    } catch (error) {}
-                    $uploader
-                        .attr("data-workflow-ui-lock-tmiv", "true")
-                        .data("workflowUiLockTmivDisabled", originalDisabled);
-                }
-                try {
-                    $uploader.fileuploader("option", "disabled", true);
-                } catch (error) {}
-            });
-
-            $group.find(".tmiv-render-form-datebox").each(function () {
-                const $dateBox = $(this);
-                if (!$dateBox.attr("data-workflow-ui-lock-tmiv-control")) {
-                    const originalDisabled = $dateBox
-                        .find(".tmivcom-datebox")
-                        .hasClass("is-disabled");
-                    $dateBox
-                        .attr("data-workflow-ui-lock-tmiv-control", "datebox")
-                        .data("workflowUiLockTmivControlDisabled", originalDisabled);
-                }
-                try {
-                    $dateBox.datebox({ disabled: true });
-                } catch (error) {}
-            });
-
-            $group.find("input, textarea, select").filter(function () {
-                return !$(this).closest(".dx-widget").length;
-            }).each(function () {
-                const $native = $(this);
-                if (!$native.data("workflowUiLockNativeOriginal")) {
-                    $native.data("workflowUiLockNativeOriginal", {
-                        disabled: this.disabled,
-                        readOnly: this.readOnly
-                    });
-                }
-                if (
-                    String(mode).toLowerCase() === "readonly" &&
-                    (this.tagName === "TEXTAREA" || String(this.type || "").toLowerCase() === "text")
-                ) {
-                    this.readOnly = true;
-                } else {
-                    this.disabled = true;
-                }
-            });
-            return true;
-        }
-
-        function enableOnlyWorkflowFormGroup(formInstance, target, rule) {
-            const targetName = target?.name ?? target?.Name;
-            if (!formInstance || !targetName) return false;
-
-            const items = formInstance.option("items") || [];
-            const targetMatch = findWorkflowFormItem(items, targetName, "");
-            if (!targetMatch) return false;
-
-            const targetPath = String(targetMatch.path || targetName).toLowerCase();
-            const disabledRule = $.extend({}, rule, { mode: "Disabled" });
-            collectWorkflowFormGroups(items, "", []).forEach(function (group) {
-                const groupPath = String(group.path || group.name).toLowerCase();
-                const isTargetBranch = groupPath === targetPath
-                    || groupPath.startsWith(`${targetPath}.`)
-                    || targetPath.startsWith(`${groupPath}.`);
-                if (isTargetBranch) return;
-                lockWorkflowFormGroup(
-                    formInstance,
-                    { itemType: "group", name: group.name },
-                    disabledRule
-                );
-            });
-            return true;
-        }
-
-        function getWorkflowRuleGroupTargets(rule) {
-            const result = [];
-            const seen = new Set();
-            const configuredTargets = rule.targets ?? rule.Targets;
-            const groupNames = rule.groupNames ?? rule.GroupNames;
-
-            function appendTarget(target) {
-                if (typeof target === "string") {
-                    target = { itemType: "group", name: target };
-                }
-                const name = String(target?.name ?? target?.Name ?? "").trim();
-                const itemType = String(target?.itemType ?? target?.ItemType ?? "group").trim().toLowerCase();
-                if (!name || itemType !== "group") return;
-                const key = name.toLowerCase();
-                if (seen.has(key)) return;
-                seen.add(key);
-                result.push({ itemType: "group", name: name });
-            }
-
-            (Array.isArray(configuredTargets) ? configuredTargets : []).forEach(appendTarget);
-            (Array.isArray(groupNames)
-                ? groupNames
-                : String(groupNames || "").split(",")
-            ).forEach(appendTarget);
-
-            if (!result.length) {
-                appendTarget(rule.sectionId ?? rule.SectionId);
-            }
-            return result;
-        }
-
-        function disableAllWorkflowFormGroups(formInstance, rule) {
-            const disabledRule = $.extend({}, rule, { mode: "Disabled" });
-            collectWorkflowFormGroups(formInstance.option("items") || [], "", []).forEach(function (group) {
-                lockWorkflowFormGroup(
-                    formInstance,
-                    { itemType: "group", name: group.name },
-                    disabledRule
-                );
-            });
-        }
-
-        function enableOnlyWorkflowFormGroups(formInstance, targets, rule) {
-            const items = formInstance.option("items") || [];
-            const targetPaths = (Array.isArray(targets) ? targets : [])
-                .map(function (target) {
-                    const match = findWorkflowFormItem(items, target?.name, "");
-                    return match ? String(match.path || target.name).toLowerCase() : "";
-                })
-                .filter(Boolean);
-            if (!targetPaths.length) {
-                disableAllWorkflowFormGroups(formInstance, rule);
-                return false;
-            }
-
-            const disabledRule = $.extend({}, rule, { mode: "Disabled" });
-            collectWorkflowFormGroups(items, "", []).forEach(function (group) {
-                const groupPath = String(group.path || group.name).toLowerCase();
-                const belongsToEnabledBranch = targetPaths.some(function (targetPath) {
-                    return groupPath === targetPath
-                        || groupPath.startsWith(`${targetPath}.`)
-                        || targetPath.startsWith(`${groupPath}.`);
-                });
-                if (belongsToEnabledBranch) return;
-                lockWorkflowFormGroup(
-                    formInstance,
-                    { itemType: "group", name: group.name },
-                    disabledRule
-                );
-            });
-            return true;
-        }
-
-        function applyWorkflowUiLockRules(workflowPayload) {
-            restoreWorkflowUiLockedGroups();
-            const rules = collectWorkflowUiLockRules(workflowPayload);
-            rules.forEach(function (rule) {
-                const condition = String(rule.condition ?? rule.Condition ?? "").trim().toLowerCase();
-                if (condition === "false") return;
-
-                const configuredDepartment = String(rule.department ?? rule.Department ?? "").trim();
-                const trigger = String(rule.trigger ?? rule.Trigger ?? "").trim().toLowerCase();
-                const normalizedStageDept = normalizeDept(stageDept);
-                const normalizedRuleDept = normalizeDept(configuredDepartment);
-                if (trigger === "enableonlygroup"
-                    && (!normalizedStageDept || (normalizedRuleDept && normalizedRuleDept !== normalizedStageDept))) {
-                    return;
-                }
-                const department = trigger === "enableonlygroup"
-                    ? normalizedStageDept
-                    : normalizeDept(configuredDepartment || stageDept);
-                if (!department) return;
-                const formId = moduleConfig.getFormId(department, id);
-                const formInstance = formId ? $(`#${formId}`).dxForm("instance") : null;
-                if (!formInstance) return;
-
-                const targetList = getWorkflowRuleGroupTargets(rule);
-                if (trigger === "samedepartmentreturn") {
-                    const accountRole = normalizeDept(
-                        typeof _role !== "undefined" ? _role : window._role
-                    );
-                    if (accountRole && accountRole === department) {
-                        enableOnlyWorkflowFormGroups(formInstance, targetList, rule);
-                    } else {
-                        disableAllWorkflowFormGroups(formInstance, rule);
-                    }
-                } else if (trigger === "enableonlygroup") {
-                    if (targetList[0]) enableOnlyWorkflowFormGroup(formInstance, targetList[0], rule);
-                } else {
-                    targetList.forEach(function (target) {
-                        lockWorkflowFormGroup(formInstance, target, rule);
-                    });
-                }
-            });
-            return rules;
-        }
-
-        function getRemark(dept) {
-            const value =
-                remarkBoxes?.[dept]
-                    ?.controlRemark
-                    ?.value?.();
-
-            if (value == null) {
-                return "";
-            }
-
-            if (typeof value === "string") {
-                return value;
-            }
-
-            return value.text || "";
-        }
-
-        function getRouteGroupKeys(routeData) {
-            const route =
-                typeof routeData === "object" && routeData
-                    ? routeData
-                    : {
-                        fromNodeId: routeData
-                    };
-
-            return [
-                route.fromNodeId,
-                route.fromDeptCode,
-                route.departmentCode,
-                route.deptCode,
-                route.roleCode,
-                route.nodeName
-            ]
-                .map(normalizeGroupKey)
-                .filter(function (value, index, values) {
-                    return (
-                        value.length >= 2 &&
-                        values.indexOf(value) === index
-                    );
-                });
-        }
-
-        function getRouteDept(route, fallbackDept) {
-            return normalizeDept(
-                route?.fromDeptCode ||
-                route?.departmentCode ||
-                route?.deptCode ||
-                route?.fromNodeId ||
-                fallbackDept
-            );
-        }
-
-        function normalizeRouteConditionValue(value) {
-            return String(value ?? "")
-                .trim()
-                .replace(/\s+/g, " ")
-                .toLowerCase();
-        }
-
-        function getCustomRouteLabels(route) {
-            const routeData = safeJsonParse(route?.data) || {};
-            return [
-                route?.text,
-                route?.name,
-                route?.textName,
-                route?.displayStatus,
-                route?.actionName,
-                route?.actionCode,
-                routeData?.text,
-                routeData?.name,
-                routeData?.textName,
-                routeData?.displayStatus,
-                routeData?.actionName,
-                routeData?.actionCode
-            ]
-                .map(normalizeRouteConditionValue)
-                .filter(Boolean);
-        }
-
-        function getWorkflowRequestType() {
-            const selectedRecords = [];
-            const sharedStates = [
-                state,
-                window.QuotationPage?.state,
-                window.PolicyIssuancePage?.state
-            ].filter(Boolean);
-
-            sharedStates.forEach(function (workflowState) {
-                [workflowState.quotes, workflowState.policyIssuances, workflowState.items].forEach(function (records) {
-                    if (!Array.isArray(records)) return;
-                    const selected = records.find(function (item) {
-                        return String(item?.id ?? item?.Id ?? "") === String(workflowState.selectedId ?? state.selectedId ?? id);
-                    }) || records[0];
-                    if (selected) selectedRecords.push(selected);
-                });
-            });
-
-            if (state.selectedId && state.quoteDetails?.[state.selectedId]) {
-                selectedRecords.unshift(state.quoteDetails[state.selectedId]);
-            }
-            if (state.selectedId && state.piDetails?.[state.selectedId]) {
-                selectedRecords.unshift(state.piDetails[state.selectedId]);
-            }
-
-            const candidates = [
-                params.requestType,
-                params.data?.requestType,
-                params.data?.RequestType,
-                params.data?.formItems?.requestType,
-                params.data?.formItems?.RequestType,
-                state.requestType,
-                state.RequestType,
-                window.QuotationPage?.state?.requestType,
-                window.PolicyIssuancePage?.state?.requestType
-            ];
-
-            selectedRecords.forEach(function (record) {
-                candidates.push(record?.requestType, record?.RequestType);
-            });
-
-            for (const candidate of candidates) {
-                if (candidate == null || candidate === "") continue;
-                if (typeof candidate === "object") {
-                    const nested = candidate.value ?? candidate.Value ?? candidate.text ?? candidate.Text ?? candidate.name ?? candidate.Name;
-                    if (nested != null && nested !== "") return normalizeRouteConditionValue(nested);
-                    continue;
-                }
-                return normalizeRouteConditionValue(candidate);
-            }
-            return "";
-        }
-
-        function shouldShowCustomRoute(route) {
-            const isNoNeedToRefer = getCustomRouteLabels(route).includes("no need to refer");
-            if (!isNoNeedToRefer) return true;
-            return getWorkflowRequestType() === "endorsement";
-        }
-
-        function cleanupDynamicButtons() {
-            $(`[data-workflow-record-id="${id}"]`).each(function () {
-                try {
-                    const instance = $(this).dxButton("instance");
-
-                    if (instance) {
-                        instance.dispose();
-                    }
-                } catch (e) {}
-
-                $(this).remove();
-            });
-
-            $(
-                `[data-route-custom-host="true"]` +
-                `[data-record-id="${id}"]`
-            ).remove();
-        }
-
-        function resolveNormalButtonHost(buttonHostId, context) {
-            let $host = $(`#${buttonHostId}`);
-
-            if ($host.length) {
-                return $host;
-            }
-
-            $host = $(`<div id="${buttonHostId}"></div>`);
-
-            if (typeof params.resolveButtonHost === "function") {
-                const target = params.resolveButtonHost(context);
-
-                if (target?.length) {
-                    $host.appendTo(target);
-                }
-            }
-
-            return $host;
-        }
-
-        function buildNormalRouteButton(options) {
-            const route = options.route;
-            const isReturn = options.type === "return";
-            const isReturnNeedAccepted = options.route.isReturnNeedAccepted || false;
-            const buttonHostId =
-                isReturn
-                    ? moduleConfig.getReturnButtonId(stageDept, id)
-                    : moduleConfig.getSubmitButtonId(stageDept, id);
-
-            if (!buttonHostId) {
-                return;
-            }
-
-            const rawRouteKey =
-                route?.routeId ||
-                route?.id ||
-                route?.actionCode ||
-                options.routeIndex;
-
-            const buttonId =
-                `${buttonHostId}_${safeKey(rawRouteKey)}`;
-
-            const $oldButton = $(`#${buttonId}`);
-
-            if ($oldButton.length) {
-                try {
-                    $oldButton.dxButton("instance")?.dispose();
-                } catch (e) {}
-
-                $oldButton.remove();
-            }
-
-            const $host = resolveNormalButtonHost(
-                buttonHostId,
-                {
-                    type: isReturn ? "return" : "submit",
-                    dept: stageDept,
-                    route: route,
-                    id: id,
-                    moduleCode: moduleCode
-                }
-            );
-
-            if (!$host.length) {
-                return;
-            }
-
-            const $button = $(
-                `<div
-                    id="${buttonId}"
-                    data-workflow-record-id="${id}"
-                    data-workflow-route-button="true">
-                </div>`
-            ).appendTo($host);
-
-            const buttonFormItems = getFormItems(stageDept);
-            var buttonDisabled = shouldDisableWorkflowButton({
-                dept: stageDept,
-                stageDept: buttonFormItems.stageDept || stageDept,
-                formItems: buttonFormItems,
-                type: "route",
-                items: $button
-                });
-
-                    if (isReturn && isReturnNeedAccepted) {
-                        if (!(options.data.tatObject[buttonFormItems.stageDept]?.AcceptDate) && options.data.tatObject[buttonFormItems.stageDept]?.AcceptDate == ""){
-                            buttonDisabled = false;
-                        }
-                }
-
-            $button.dxButton({
-                disabled: buttonDisabled,
-                className: "submit-btn-visible",
-                text:
-                    route?.displayStatus ||
-                    route?.actionName ||
-                    route?.actionCode ||
-                    (isReturn ? "Return" : "Submit"),
-
-                icon:
-                    typeof getTransitionButtonIcon === "function"
-                        ? getTransitionButtonIcon(
-                            route,
-                            isReturn
-                                ? "undo"
-                                : "fa-solid fa-person-running"
-                        )
-                        : undefined,
-
-                type:
-                    isReturn
-                        ? "danger"
-                        : "info",
-
-                onClick: function () {
-                    const formItems =
-                        getFormItems(stageDept);
-
-                    const content =
-                        getRemark(stageDept);
-
-                    if (isReturn && !content) {
-                        appNotifyWarning(
-                            "Please put your reason to remarks!",
-                            false
-                        );
-
-                        return;
-                    }
-
-                    formItems.comment =
-                        content || "";
-
-                    if (isReturn) {
-                        return returnToStepFn(
-                            moduleConfig.formKey,
-                            state.nextStep,
-                            route,
-                            formItems,
-                            params
-                        );
-                    }
-                    if (!content) {
-                        return appNotifyWarning(
-                            "You may leave your remark empty, system will remark default message?",
-                            true,
-                            "Ok",
-                            "Cancel"
-                        ).then(function (result) {
-                            if (!result.isConfirmed) return;
-
-                            formItems.comment = `${_loginUser} ${route.displayStatus}`;
-                            return submitNextStepFn(
-                                moduleConfig.formKey,
-                                state.nextStep,
-                                route,
-                                formItems,
-                                params
-                            );
-                        });
-                    }
-
-                    return submitNextStepFn(
-                        moduleConfig.formKey,
-                        state.nextStep,
-                        route,
-                        formItems,
-                        params
-                    );
-                        }
-                        
-            });
-
-            if (
-                typeof applyTransitionButtonClass === "function"
-            ) {
-                applyTransitionButtonClass(
-                    `#${buttonId}`,
-                    route
-                );
-            }
-        }
-
-            async function buildCustomRoutes(customRoutes) {
-                for (
-                    const [deptIndex, deptItem]
-                    of deptCodes.entries()
-                ) {
-                
-                    const normalizedDept =
-                        normalizeDept(deptItem);
-
-                    const customRoutesInDept =
-                        customRoutes.filter(function (route) {
-                            if (!shouldShowCustomRoute(route)) {
-                                return false;
-                            }
-
-                            const routeKeys =
-                                getRouteGroupKeys(route);
-
-                            const deptKey =
-                                normalizeGroupKey(deptItem);
-
-                            const isDeptMatch =
-                                routeKeys.some(function (routeKey) {
-                                    return (
-                                        routeKey === deptKey ||
-                                        routeKey.indexOf(deptKey) >= 0 ||
-                                        deptKey.indexOf(routeKey) >= 0
-                                    );
-                                });
-
-                            const routeData =
-                                String(route?.data || "");
-
-                            var groupMatch =
-                                !routeData ||
-                                routeData.includes(
-                                    `decision${deptItem}Group`
-                                );
-
-                                if (deptItem == "FO")
-                                {
-                                     groupMatch =
-                                    !routeData ||
-                                    routeData.includes(
-                                        `decisionClientGroup`
-                                    );
-                                }
-                           
-
-                            return isDeptMatch && groupMatch;
-                        });
-
-                    if (!customRoutesInDept.length) {
-                        continue;
-                    }
-
-                    for (
-                        const [routeIndex, route]
-                        of customRoutesInDept.entries()
-                    ) {
-                        if (formStages?.pace) {
-                            await formStages.pace(routeIndex);
-                        }
-                        const routeDept =
-                            getRouteDept(
-                                route,
-                                normalizedDept
-                            );
-
-                        let $routeHost =
-                            typeof params.resolveCustomRouteHost === "function"
-                                ? params.resolveCustomRouteHost({
-                                    moduleCode: moduleCode,
-                                    dept: routeDept,
-                                    deptItem: deptItem,
-                                    route: route,
-                                    id: id,
-                                    prefix: prefix
-                                })
-                                : $();
-
-                        if (
-                            !$routeHost?.length &&
-                            moduleCode === viewIdModulePrefix.quotation
-                        ) {
-                            $routeHost =
-                                $(
-                                    `#decision-actions-qt-form_${deptItem}_${id}-${deptItem}`
-                                )
-                                    .first();
-                        }
-
-                        if (
-                            !$routeHost?.length &&
-                            moduleCode === viewIdModulePrefix.policyIssuance
-                        ) {
-                            $routeHost =
-                                $(
-                                    `#decision-actions-pi-form_${deptItem}_${id}-${deptItem}`
-                                )
-                                    .first();
-                        }
-
-                        if (!$routeHost.length) {
-                            console.warn(
-                                "Custom route host not found",
-                                {
-                                    moduleCode: moduleCode,
-                                    deptItem: deptItem,
-                                    routeDept: routeDept,
-                                    route: route
-                                }
-                            );
-
-                            continue;
-                        }
-
-                        const rawRouteKey =
-                            route?.routeId ||
-                            route?.id ||
-                            route?.actionCode ||
-                            routeIndex;
-
-                        const customButtonId =
-                            `${moduleCode}-custom-route-` +
-                            `${id}-` +
-                            `${routeDept}-` +
-                            `${safeKey(rawRouteKey)}-` +
-                            `${routeIndex}`;
-
-                        const $old =
-                            $(`#${customButtonId}`);
-
-                        if ($old.length) {
-                            try {
-                                $old.dxButton("instance")?.dispose();
-                            } catch (e) {}
-
-                            $old.remove();
-                        }
-
-                        const $customButton =
-                            $(
-                                `<div
-                                    id="${customButtonId}"
-                                    data-workflow-record-id="${id}"
-                                    data-custom-route-button="true">
-                                </div>`
-                            )
-                                .appendTo($routeHost);
-
-
-                        const formItems =
-                            getFormItems(routeDept);
-
-                        const latestTatObject =
-                            typeof tryParseJSON === "function"
-                                ? (
-                                    tryParseJSON(
-                                        formItems.turnAroundTimeAttributes,
-                                        "TAT Load Button Problem"
-                                    ) || {}
-                                )
-                                : {};
-
-                        var disabled = shouldDisableWorkflowButton({
-                            dept: routeDept,
-                            stageDept: formItems.stageDept || stageDept,
-                            formItems: formItems,
-                            tatObject: latestTatObject,
-                            type: "custom",
-                            items: $customButton
-                        });
-
-
-                        $customButton.dxButton({
-                            disabled: disabled,
-
-                            text:
-                                route?.displayStatus ||
-                                route?.actionName ||
-                                route?.actionCode ||
-                                "Custom action",
-
-                            icon:
-                                typeof getTransitionButtonIcon === "function"
-                                    ? getTransitionButtonIcon(
-                                        route,
-                                        route?.isReturn
-                                            ? "undo"
-                                            : ""
-                                    )
-                                    : undefined,
-
-                            type:
-                                route?.isReturn
-                                    ? "danger"
-                                    : "info",
-
-                            onClick: function () {
-                                const routeFormItems =
-                                    getFormItems(routeDept);
-
-                                const content =
-                                    getRemark(routeDept);
-
-                                if (
-                                    route?.isReturn &&
-                                    !content
-                                ) {
-                                    appNotifyWarning(
-                                        "Please put your reason to remarks!",
-                                        false
-                                    );
-
-                                    return;
-                                }
-
-                                routeFormItems.comment =
-                                    content || "";
-
-                                if (route?.isReturn) {
-                                    return returnToStepFn(
-                                        moduleConfig.formKey,
-                                        state.nextStep,
-                                        route,
-                                        routeFormItems,
-                                        params
-                                    );
-                                }
-
-                                return submitNextStepFn(
-                                    moduleConfig.formKey,
-                                    state.nextStep,
-                                    route,
-                                    routeFormItems,
-                                    params
-                                );
-                            }
-                        });
-
-                        if (
-                            typeof applyTransitionButtonClass === "function"
-                        ) {
-                            applyTransitionButtonClass(
-                                `#${customButtonId}`,
-                                route
-                            );
-                        }
-                    }
-                }
-            }
-
-            if (reload) {
-                cleanupDynamicButtons();
-            }
-
-            if (!guid) {
-                restoreWorkflowUiLockedGroups();
-                state.selectedGuid = null;
-                hideLoading(loadingClass, loadingHost);
-
-                return $.Deferred()
-                    .resolve()
-                    .promise();
-            }
-
-            state.selectedGuid = guid;
-            //End of lazy load workflow render 
-        return ajaxGet(
-            moduleConfig.workflowUrl(guid),
-            
-        )
-            .then(function (instance) {
-                state.workflowInstance =
-                    instance;
-
-                return $.when(
-                    loadScreenConditions(
-                        instance?.currentStep,
-                        params.selectedId ?? id,
-                        instance,
-                        params
-                    )
-                )
-                    .then(function () {
-                        const workflowDefinitionId =
-                            instance?.workflowDefinitionId ||
-                            "00000000-0000-0000-0000-000000000000";
-
-                        const currentStep =
-                            instance?.currentStep ?? 0;
-
-                        return ajaxGet(
-                            moduleConfig.nextStepUrl(
-                                workflowDefinitionId,
-                                currentStep
-                            ),
-                            null
-                        );
-                    })
-                    .then(function (data) {
-                        data =
-                            Array.isArray(data)
-                                ? data
-                                : [];
-
-                        const workflowUiLockPayload = { instance: instance, routes: data };
-                        applyWorkflowUiLockRules(workflowUiLockPayload);
-                        // Some dxForm groups are injected shortly after the workflow request.
-                        [100, 350].forEach(function (delay) {
-                            setTimeout(function () {
-                                applyWorkflowUiLockRules(workflowUiLockPayload);
-                            }, delay);
-                        });
-
-                        state.nextStep =
-                            state.nextStep || {};
-
-                        state.nextStep.instanceWorkflow =
-                            instance;
-
-                        state.nextStep.flowSteps =
-                            data;
-
-                        state.nextStep.currentStep =
-                            instance?.currentStep ?? 0;
-
-                        const customRoutes =
-                            data.filter(function (route) {
-                                return String(
-                                    route?.flowType || ""
-                                )
-                                    .trim()
-                                    .toLowerCase() === "custom";
-                            });
-
-                        const normalRoutes =
-                            selectRuntimeRoutes(data.filter(function (route) {
-                                return (
-                                    !route?.isReturn &&
-                                    String(
-                                        route?.flowType || ""
-                                    )
-                                        .trim()
-                                        .toLowerCase() !== "custom" &&
-                                    normalizeDept(
-                                        route?.fromNodeId
-                                    ) ===
-                                        normalizeDept(stageDept) &&
-                                    String(route?.fNodeId ?? "") ===
-                                        String(state.nextStep.currentStep ?? "")
-                                );
-                            }));
-
-                        const returnRoutes =
-                            data.filter(function (route) {
-                                return (
-                                    route?.isReturn &&
-                                    String(
-                                        route?.flowType || ""
-                                    )
-                                        .trim()
-                                        .toLowerCase() !== "custom" &&
-                                    normalizeDept(
-                                        route?.fromNodeId
-                                    ) ===
-                                        normalizeDept(stageDept) &&
-                                    String(route?.fNodeId ?? "") ===
-                                        String(state.nextStep.currentStep ?? "")
-                                );
-                            });
-
-                        return $.when(
-                            formStages?.enter
-                                ? formStages.enter("routeState")
-                                : null
-                        )
-                            .then(async function () {
-                                for (
-                                    const [routeIndex, route]
-                                    of returnRoutes.entries()
-                                ) {
-                                    if (formStages?.pace) {
-                                        await formStages.pace(
-                                            routeIndex
-                                        );
-                                    }
-                                    buildNormalRouteButton({
-                                        route: route,
-                                        type: "return",
-                                        routeIndex: routeIndex,
-                                        ...params
-                                    });
-                                }
-
-                                for (
-                                    const [routeIndex, route]
-                                    of normalRoutes.entries()
-                                ) {
-                                    if (formStages?.pace) {
-                                        await formStages.pace(
-                                            returnRoutes.length +
-                                            routeIndex
-                                        );
-                                    }
-
-                                    buildNormalRouteButton({
-                                        route: route,
-                                        type: "submit",
-                                        routeIndex: routeIndex,
-                                        ...params
-                                    });
-                                }
-                                await buildCustomRoutes(
-                                    customRoutes
-                                );
-
-                                if (
-                                    typeof params.onLoaded === "function"
-                                ) {
-                                    await params.onLoaded({
-                                        instance: instance,
-                                        routes: data,
-                                        normalRoutes: normalRoutes,
-                                        returnRoutes: returnRoutes,
-                                        customRoutes: customRoutes,
-                                        state: state,
-                                        params: params
-                                    });
-                                    
-                                }
-
-                                return {
-                                    instance: instance,
-                                    routes: data,
-                                    normalRoutes: normalRoutes,
-                                    returnRoutes: returnRoutes,
-                                    customRoutes: customRoutes,
-                                    state: state
-                                };
-                            });
-                    });
-            })
-            .always(function () {
-                hideLoading(loadingClass, loadingHost);
-            });
-    }
+    
     function getLoadingIndicator(actionRightId, hostSelector) {
         const $host = hostSelector ? $(hostSelector).first() : $();
         const selector = ($host.length
@@ -13470,318 +11907,7 @@
         const plainBody = $("<div>").html(body || "").text();
         //appNotifyInfo([title, plainBody].filter(Boolean).join(" - "));
     }
-
-    // REVIEW ONLY: centralized feature-rule diagnostic. Nothing in the application
-    // calls this helper; invoke window.checkFeatureRoleRule(...) manually when needed.
-    async function checkFeatureRoleRule(options) {
-        options = options || {};
-        const configuredRules = options.rules || options.rule || {};
-
-        function firstDefined() {
-            for (const value of arguments) {
-                if (value !== undefined && value !== null) return value;
-            }
-            return undefined;
-        }
-
-        function readRule(camelName, pascalName) {
-            return firstDefined(
-                configuredRules[camelName],
-                configuredRules[pascalName],
-                options[camelName],
-                options[pascalName]
-            );
-        }
-
-        function normalize(value) {
-            return String(value ?? "").trim().toUpperCase();
-        }
-
-        function asBoolean(value) {
-            if (typeof value === "string") {
-                return !["", "0", "false", "no", "off", "null", "undefined"]
-                    .includes(value.trim().toLowerCase());
-            }
-            return !!value;
-        }
-
-        function asList(value) {
-            if (value == null || value === "" || value === false) return [];
-            const values = Array.isArray(value)
-                ? value
-                : String(value).split(/[;,|]/);
-            return values.map(normalize).filter(Boolean);
-        }
-
-        function getGlobal(name) {
-            return firstDefined(window[name],
-                typeof globalThis !== "undefined" ? globalThis[name] : undefined);
-        }
-
-        function findPageState() {
-            return options.state
-                || window.PolicyIssuancePage?.state
-                || window.QuotationPage?.state
-                || {};
-        }
-
-        function routeValue(route, names) {
-            for (const name of names) {
-                const value = route?.[name];
-                if (value !== undefined && value !== null && value !== "") return value;
-            }
-            return "";
-        }
-
-        function matchesAllowed(actualValues, allowedValues) {
-            if (!allowedValues.length) return true;
-            const normalizedActual = actualValues.map(normalize).filter(Boolean);
-            return allowedValues.some(function (allowed) {
-                return allowed === "*" || normalizedActual.includes(allowed);
-            });
-        }
-
-        function safeJson(value) {
-            if (!value || typeof value !== "string") return value;
-            try {
-                return JSON.parse(value);
-            } catch (error) {
-                return null;
-            }
-        }
-
-        function resolveField(source, path) {
-            return String(path || "").split(".").filter(Boolean).reduce(function (value, key) {
-                return value == null ? undefined : value[key];
-            }, source);
-        }
-
-        function compareCondition(left, operator, right) {
-            const op = String(operator || "=").trim().toLowerCase().replace(/_/g, "");
-            if (op === "=" || op === "==") return left === right;
-            if (op === "!=" || op === "<>") return left !== right;
-            if (op === ">") return left > right;
-            if (op === ">=") return left >= right;
-            if (op === "<") return left < right;
-            if (op === "<=") return left <= right;
-            if (op === "contains") return Array.isArray(left)
-                ? left.includes(right)
-                : String(left ?? "").toLowerCase().includes(String(right ?? "").toLowerCase());
-            if (op === "in") return Array.isArray(right) && right.includes(left);
-            if (op === "notin") return Array.isArray(right) && !right.includes(left);
-            if (op === "isnull" || op === "isempty") return left == null || left === "";
-            if (op === "isnotnull" || op === "isnotempty") return left != null && left !== "";
-            return false;
-        }
-
-        async function evaluateCustomCondition(condition, context) {
-            condition = safeJson(condition);
-            if (condition == null || condition === "") return true;
-            if (typeof condition === "boolean") return condition;
-            if (typeof condition === "function") {
-                return asBoolean(await condition(context));
-            }
-
-            const type = String(condition.type ?? condition.Type ?? "").toLowerCase();
-            if (type === "group" || Array.isArray(condition.children ?? condition.Children)) {
-                const children = condition.children ?? condition.Children ?? [];
-                const values = await Promise.all(children.map(function (child) {
-                    return evaluateCustomCondition(child, context);
-                }));
-                const operator = String(condition.operator ?? condition.Operator ?? "AND").toUpperCase();
-                if (operator === "OR") return values.some(Boolean);
-                if (operator === "XOR") return values.filter(Boolean).length === 1;
-                if (operator === "NOT") return !values.some(Boolean);
-                return values.every(Boolean);
-            }
-
-            const source = String(condition.source ?? condition.Source ?? "").toLowerCase();
-            if (source === "custom") {
-                const handlerName = condition.handler ?? condition.Handler;
-                const handler = typeof handlerName === "function"
-                    ? handlerName
-                    : (handlerName ? window[handlerName] : null);
-                if (typeof handler !== "function") return false;
-                return asBoolean(await handler(condition.args ?? condition.Args ?? {}, context));
-            }
-
-            if (typeof window.evaluateConditionRule === "function") {
-                return asBoolean(await window.evaluateConditionRule(condition, context.formData));
-            }
-            return compareCondition(
-                resolveField(context.formData, condition.field ?? condition.Field),
-                condition.operator ?? condition.Operator,
-                condition.value ?? condition.Value
-            );
-        }
-
-        const state = findPageState();
-        const route = firstDefined(options.route, state.currentRoute, state.selectedRoute, null);
-        const role = firstDefined(options.role, state.currentUserRole, getGlobal("_roleAppName"), "");
-        const authenticatedSection = firstDefined(options.section, getGlobal("_role"), getGlobal("_userDepartment"), "");
-        const stageDeptValue = firstDefined(options.stageDept, state.stageDept, routeValue(route, ["fromNodeId", "FromNodeId"]), "");
-        const isDebugMode = asBoolean(firstDefined(options.isDebugMode, getGlobal("_isDebugMode"), false));
-        const isSuperUser = asBoolean(firstDefined(options.isSuperUser, getGlobal("_isSuperUser"), false));
-        const superUserBypass = firstDefined(options.superUserBypass, configuredRules.superUserBypass, true) !== false;
-        const allowedRoles = asList(readRule("roles", "Roles") ?? readRule("roleAllow", "RoleAllow"));
-        const allowedStageDepts = asList(readRule("stageDepts", "StageDepts") ?? readRule("stageDeptAllow", "StageDeptAllow"));
-        const allowedSections = asList(readRule("sections", "Sections") ?? readRule("sectionAllow", "SectionAllow"));
-        const onlyAllowFromRoute = readRule("onlyAllowFromRoute", "OnlyAllowFromRoute");
-        let customRouteCondition = readRule("customRouteCondition", "CustomRouteCondition");
-
-        const routeCandidates = [
-            routeValue(route, ["routeId", "RouteId", "id", "Id"]),
-            routeValue(route, ["fromNodeId", "FromNodeId", "fromDeptCode", "FromDeptCode"]),
-            routeValue(route, ["toNodeId", "ToNodeId", "toDeptCode", "ToDeptCode"]),
-            routeValue(route, ["actionCode", "ActionCode", "actionName", "ActionName"])
-        ];
-
-        async function checkOnlyAllowFromRoute() {
-            if (onlyAllowFromRoute == null || onlyAllowFromRoute === false || onlyAllowFromRoute === "") return true;
-            if (typeof onlyAllowFromRoute === "function") {
-                return asBoolean(await onlyAllowFromRoute({ route, state, options }));
-            }
-            if (onlyAllowFromRoute === true || normalize(onlyAllowFromRoute) === "TRUE") {
-                if (!route) return false;
-                const routeFrom = routeValue(route, ["fromNodeId", "FromNodeId", "fromDeptCode", "FromDeptCode"]);
-                return !stageDeptValue || !routeFrom || normalize(routeFrom) === normalize(stageDeptValue);
-            }
-            return !!route && matchesAllowed(routeCandidates, asList(onlyAllowFromRoute));
-        }
-
-        if (customRouteCondition === true) {
-            customRouteCondition = firstDefined(
-                route?.conditionJson,
-                route?.ConditionJson,
-                route?.data,
-                route?.Data,
-                null
-            );
-        }
-        const formData = firstDefined(options.formData, options.data, state.formData, {});
-        const evaluationContext = {
-            feature: options.feature || options.featureName || "Feature",
-            role,
-            authenticatedSection,
-            stageDept: stageDeptValue,
-            route,
-            state,
-            formData,
-            isDebugMode,
-            isSuperUser,
-            options
-        };
-
-        const settledChecks = await Promise.allSettled([
-            Promise.resolve(matchesAllowed(
-                [role],
-                allowedRoles
-            )),
-            Promise.resolve(matchesAllowed([stageDeptValue], allowedStageDepts)),
-            Promise.resolve(matchesAllowed([authenticatedSection], allowedSections)),
-            checkOnlyAllowFromRoute(),
-            evaluateCustomCondition(customRouteCondition, evaluationContext)
-        ]);
-        const rawChecks = settledChecks.map(function (item) {
-            return item.status === "fulfilled" && asBoolean(item.value);
-        });
-        const checkErrors = settledChecks.map(function (item) {
-            return item.status === "rejected"
-                ? String(item.reason?.message || item.reason || "Rule evaluation failed")
-                : "";
-        });
-
-        const checks = [
-            { key: "role", label: "Role", configured: !!allowedRoles.length, passed: rawChecks[0], actual: role, expected: allowedRoles, error: checkErrors[0] },
-            { key: "stageDept", label: "Stage dept", configured: !!allowedStageDepts.length, passed: rawChecks[1], actual: stageDeptValue, expected: allowedStageDepts, error: checkErrors[1] },
-            { key: "section", label: "Section allow", configured: !!allowedSections.length, passed: rawChecks[2], actual: authenticatedSection, expected: allowedSections, error: checkErrors[2] },
-            { key: "route", label: "Only allow from route", configured: onlyAllowFromRoute != null && onlyAllowFromRoute !== false && onlyAllowFromRoute !== "", passed: rawChecks[3], actual: routeCandidates.filter(Boolean), expected: onlyAllowFromRoute, error: checkErrors[3] },
-            { key: "customRoute", label: "Custom route condition", configured: customRouteCondition != null && customRouteCondition !== "", passed: rawChecks[4], actual: customRouteCondition == null ? "" : "evaluated", expected: customRouteCondition, error: checkErrors[4] }
-        ];
-        const rulesPassed = checks.every(function (item) { return item.passed; });
-        const bypassedBySuperUser = isSuperUser && superUserBypass && !rulesPassed;
-        const report = {
-            feature: evaluationContext.feature,
-            allowed: rulesPassed || (isSuperUser && superUserBypass),
-            rulesPassed,
-            bypassedBySuperUser,
-            isDebugMode,
-            isSuperUser,
-            role: normalize(role),
-            stageDept: normalize(stageDeptValue),
-            section: normalize(authenticatedSection),
-            route,
-            checks,
-            evaluatedAt: new Date().toISOString()
-        };
-
-        if (options.display !== false) showFeatureRoleRuleReport(report);
-        return report;
-    }
-
-    function showFeatureRoleRuleReport(report) {
-        const encode = function (value) {
-            return $("<div>").text(value == null ? "-" : String(value)).html();
-        };
-        const displayValue = function (value) {
-            if (Array.isArray(value)) return value.length ? value.join(", ") : "Any";
-            if (value && typeof value === "object") {
-                try { return JSON.stringify(value); } catch (error) { return "[object]"; }
-            }
-            return value === true ? "Required" : (value || "Any");
-        };
-        const badge = function (label, active, neutral) {
-            const color = neutral ? "#6c757d" : (active ? "#198754" : "#dc3545");
-            return `<span style="display:inline-block;margin:2px 6px 2px 0;padding:4px 9px;border-radius:12px;background:${color};color:#fff;font-size:12px">${encode(label)}</span>`;
-        };
-        const rows = report.checks.map(function (item) {
-            const status = !item.configured ? "NOT SET" : (item.passed ? "PASS" : "FAIL");
-            return `<tr>
-                <td style="padding:8px;border-bottom:1px solid #e5e7eb">${encode(item.label)}</td>
-                <td style="padding:8px;border-bottom:1px solid #e5e7eb">${badge(status, item.passed, !item.configured)}</td>
-                <td style="padding:8px;border-bottom:1px solid #e5e7eb;word-break:break-word">${encode(item.error || displayValue(item.actual))}</td>
-                <td style="padding:8px;border-bottom:1px solid #e5e7eb;word-break:break-word">${encode(displayValue(item.expected))}</td>
-            </tr>`;
-        }).join("");
-        const $content = $(`<div style="font-family:inherit;padding:4px">
-            <div style="margin-bottom:12px">
-                ${badge(report.allowed ? "ALLOWED" : "DENIED", report.allowed)}
-                ${badge(`Debug: ${report.isDebugMode ? "ON" : "OFF"}`, report.isDebugMode, !report.isDebugMode)}
-                ${badge(`Super user: ${report.isSuperUser ? "YES" : "NO"}`, report.isSuperUser, !report.isSuperUser)}
-                ${report.bypassedBySuperUser ? badge("SUPER USER BYPASS", true) : ""}
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:13px">
-                <thead><tr style="text-align:left;background:#f3f4f6"><th style="padding:8px">Rule</th><th style="padding:8px">Result</th><th style="padding:8px">Actual</th><th style="padding:8px">Expected</th></tr></thead>
-                <tbody>${rows}</tbody>
-            </table>
-        </div>`);
-
-        const $host = $("<div class='feature-role-rule-review-popup'>").appendTo(document.body);
-        const popup = $host.dxPopup({
-            title: `Feature rule review: ${report.feature}`,
-            width: "min(900px, 92vw)",
-            height: "auto",
-            maxHeight: "85vh",
-            showTitle: true,
-            dragEnabled: true,
-            closeOnOutsideClick: true,
-            contentTemplate: function (container) { $content.appendTo(container); },
-            toolbarItems: [{
-                widget: "dxButton",
-                toolbar: "bottom",
-                location: "after",
-                options: { text: "Close", onClick: function () { popup.hide(); } }
-            }],
-            onHidden: function () {
-                popup.dispose();
-                $host.remove();
-            }
-        }).dxPopup("instance");
-        popup.show();
-        return popup;
-    }
-
-    window.checkFeatureRoleRule = checkFeatureRoleRule;
+    
 
 
     window.WorkflowLoader =
