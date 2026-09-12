@@ -23,12 +23,6 @@
         const id = params.id;
         const guid = params.guid;
         const stageDept = params.stageDept;
-         window.checkFeatureRoleRule({
-                // feature: "Approve Button",
-                roles: _role,
-                stageDepts: params.data?.formItems?.stageDept,
-                sections: [_role]
-            }).then(x => console.log(x));
         const state = params.state || {};
         const deptCodes = params.deptCodes || (
             moduleCode === viewIdModulePrefix.policyIssuance ? piDeptModuleCode : qtDeptModuleCode
@@ -1391,11 +1385,25 @@
 
             state.selectedGuid = guid;
             //End of lazy load workflow render
-        return ajaxGet(
-            moduleConfig.workflowUrl(guid),
+        const workflowRequest = window.OverviewDataBootstrap
+            ? window.OverviewDataBootstrap.getWorkflow({
+                moduleCode: moduleCode,
+                guid: guid,
+                forceReload: params.forceWorkflowReload === true
+            })
+            : ajaxGet(moduleConfig.workflowUrl(guid), null).then(function (instance) {
+                const workflowDefinitionId = instance?.workflowDefinitionId
+                    || "00000000-0000-0000-0000-000000000000";
+                const currentStep = instance?.currentStep ?? 0;
+                return ajaxGet(moduleConfig.nextStepUrl(workflowDefinitionId, currentStep), null)
+                    .then(function (routes) {
+                        return { instance: instance, routes: Array.isArray(routes) ? routes : [] };
+                    });
+            });
 
-        )
-            .then(function (instance) {
+        return $.when(workflowRequest)
+            .then(function (snapshot) {
+                const instance = snapshot?.instance || null;
                 state.workflowInstance =
                     instance;
 
@@ -1408,20 +1416,7 @@
                     )
                 )
                     .then(function () {
-                        const workflowDefinitionId =
-                            instance?.workflowDefinitionId ||
-                            "00000000-0000-0000-0000-000000000000";
-
-                        const currentStep =
-                            instance?.currentStep ?? 0;
-
-                        return ajaxGet(
-                            moduleConfig.nextStepUrl(
-                                workflowDefinitionId,
-                                currentStep
-                            ),
-                            null
-                        );
+                        return snapshot?.routes || [];
                     })
                     .then(function (data) {
                         data =

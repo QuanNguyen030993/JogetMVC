@@ -38,7 +38,12 @@
 <div id="@PIViewIdHelper.Form(dept, policyIssuanceId)">
 </div>
 <script type="text/javascript">
-    $(function() {
+    $(async function() {
+    const initialFormData = await window.OverviewDataBootstrap.getFormData({
+        moduleCode: viewIdModulePrefix.policyIssuance,
+        id: @policyIssuanceId,
+        department: "@dept"
+    }).catch(function () { return {}; });
 
     var thisObject = new Object();
     thisObject.ModelName = "PolicyIssuance";
@@ -197,12 +202,8 @@
     //                     var items = [ `#${acceptButtonId}`, `#${declinedButtonId}`];
     //                                 var itemsDelay = [ acceptButtonId , panelStatusId, declinedButtonId, declinedStatusId,'', ''];
 
-    $.ajax({
-        url: `/api/PolicyIssuance/GetSingle/@policyIssuanceId`,
-        method: "GET"
-    }).done(function (formData) {
         $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm({
-            formData: formData || {},
+            formData: initialFormData,
             items: [
                 {
                     itemType: "group",
@@ -233,12 +234,6 @@
         // Decision/submit handlers depend on formData, so initialize them only
         // after the Policy Issuance record has been loaded and bound to dxForm.
         delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
-
-    }).fail(function (xhr) {
-        appErrorHandling(
-            `Cannot load Policy Issuance @policyIssuanceId before rendering PM decision buttons.`,
-            xhr);
-    });
 
     })
 </script>

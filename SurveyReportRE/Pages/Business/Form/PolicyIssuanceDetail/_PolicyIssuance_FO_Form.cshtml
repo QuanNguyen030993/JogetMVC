@@ -19,7 +19,12 @@
 <div id="@PIViewIdHelper.Form(dept, policyIssuanceId)">
 </div>
 <script type="text/javascript">
-    $(function() {
+    $(async function() {
+    const initialFormData = await window.OverviewDataBootstrap.getFormData({
+        moduleCode: viewIdModulePrefix.policyIssuance,
+        id: @policyIssuanceId,
+        department: "@dept"
+    }).catch(function () { return {}; });
     var thatObject = new Object();
     thatObject.ModelName = "PolicyIssuance";
 
@@ -94,7 +99,7 @@
     that3.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that3.moduleName, @(policyIssuanceId)), Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
 
     $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm({
-        dataSource: makeBasicDataSource(thatObject, true),
+        formData: initialFormData,
     items: [
             {
                 itemType: "group",

@@ -49,7 +49,12 @@
     }
 </style>
 <script type="text/javascript">
-    $(function() {
+    $(async function() {
+        const initialFormData = await window.OverviewDataBootstrap.getFormData({
+            moduleCode: viewIdModulePrefix.quotation,
+            id: @quotationId,
+            department: "@dept"
+        }).catch(function () { return {}; });
     const uwDept = "@dept";
 
         var thisObject = new Object();
@@ -126,7 +131,7 @@
             // var itemsDelay = [ acceptButtonId];
                 var itemsDelay = [acceptDecisionV2];
         $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
-             dataSource: makeBasicDataSource(that, true),
+             formData: initialFormData,
              items: [
                  {
              itemType: "group",

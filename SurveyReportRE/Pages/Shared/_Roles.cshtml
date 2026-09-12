@@ -1,5 +1,5 @@
 ﻿<script>
-     // REVIEW ONLY: centralized feature-rule diagnostic. Nothing in the application
+    // REVIEW ONLY: centralized feature-rule diagnostic. Nothing in the application
     // calls this helper; invoke window.checkFeatureRoleRule(...) manually when needed.
     async function checkFeatureRoleRule(options) {
         options = options || {};
@@ -42,15 +42,35 @@
         }
 
         function getGlobal(name) {
-            return firstDefined(window["_role"],
+            return firstDefined(window[name],
                 typeof globalThis !== "undefined" ? globalThis[name] : undefined);
         }
 
         function findPageState() {
-            return options.state
-                || window.PolicyIssuancePage?.state
-                || window.QuotationPage?.state
-                || {};
+            if (options.state) return options.state;
+
+            const requestedModule = normalize(firstDefined(
+                options.moduleCode,
+                options.module,
+                options.scheme,
+                ""
+            )).replace(/[^A-Z]/g, "");
+            const path = normalize(window.location?.pathname || "").replace(/[^A-Z]/g, "");
+            const isPolicyIssuance = requestedModule === "PI"
+                || requestedModule === "POLICYISSUANCE"
+                || path.includes("POLICYISSUANCEFORM");
+            const isQuotation = requestedModule === "QT"
+                || requestedModule === "QUOTATION"
+                || path.includes("QUOTATIONFORM");
+
+            if (isPolicyIssuance) return window.PolicyIssuancePage?.state || {};
+            if (isQuotation) return window.QuotationPage?.state || {};
+
+            const piState = window.PolicyIssuancePage?.state;
+            const qtState = window.QuotationPage?.state;
+            if (piState?.stageDept && !qtState?.stageDept) return piState;
+            if (qtState?.stageDept && !piState?.stageDept) return qtState;
+            return piState?.selectedId ? piState : (qtState || piState || {});
         }
 
         function routeValue(route, names) {
@@ -147,10 +167,23 @@
         const route = firstDefined(options.route, state.currentRoute, state.selectedRoute, null);
         const role = firstDefined(options.role, state.currentUserRole, getGlobal("_roleAppName"), "");
         const authenticatedSection = firstDefined(options.section, getGlobal("_role"), getGlobal("_userDepartment"), "");
-        const stageDeptValue = firstDefined(options.stageDept, state.stageDept, routeValue(route, ["fromNodeId", "FromNodeId"]), "");
+        const stageDeptValue = firstDefined(
+            options.stageDept,
+            options.formData?.stageDept,
+            options.formData?.StageDept,
+            options.data?.formItems?.stageDept,
+            options.data?.formItems?.StageDept,
+            options.data?.stageDept,
+            options.data?.StageDept,
+            state.stageDept,
+            routeValue(route, ["fromNodeId", "FromNodeId"]),
+            ""
+        );
         const isDebugMode = asBoolean(firstDefined(options.isDebugMode, getGlobal("_isDebugMode"), false));
         const isSuperUser = asBoolean(firstDefined(options.isSuperUser, getGlobal("_isSuperUser"), false));
-        const superUserBypass = firstDefined(options.superUserBypass, configuredRules.superUserBypass, true) !== false;
+        // Strict AND is the default: one failed configured rule means denied.
+        // A caller must explicitly opt in when it really wants super-user bypass.
+        const superUserBypass = firstDefined(options.superUserBypass, configuredRules.superUserBypass, false) === true;
         const allowedRoles = asList(readRule("roles", "Roles") ?? readRule("roleAllow", "RoleAllow"));
         const allowedStageDepts = asList(readRule("stageDepts", "StageDepts") ?? readRule("stageDeptAllow", "StageDeptAllow"));
         const allowedSections = asList(readRule("sections", "Sections") ?? readRule("sectionAllow", "SectionAllow"));
@@ -200,33 +233,73 @@
             options
         };
 
-        const settledChecks = await Promise.allSettled([
-            Promise.resolve(matchesAllowed(
-                [role],
-                allowedRoles
-            )),
-            Promise.resolve(matchesAllowed([stageDeptValue], allowedStageDepts)),
-            Promise.resolve(matchesAllowed([authenticatedSection], allowedSections)),
-            checkOnlyAllowFromRoute(),
-            evaluateCustomCondition(customRouteCondition, evaluationContext)
+        const now = function () {
+            return typeof performance !== "undefined" && typeof performance.now === "function"
+                ? performance.now()
+                : Date.now();
+        };
+        const evaluationStartedAt = now();
+        let completionSequence = 0;
+
+        async function runTimedCheck(key, evaluator) {
+            const startedAt = now();
+            try {
+                const value = await evaluator();
+                const finishedAt = now();
+                return {
+                    key: key,
+                    passed: asBoolean(value),
+                    error: "",
+                    startedAtMs: Number((startedAt - evaluationStartedAt).toFixed(2)),
+                    completedAtMs: Number((finishedAt - evaluationStartedAt).toFixed(2)),
+                    durationMs: Number((finishedAt - startedAt).toFixed(2)),
+                    completedOrder: ++completionSequence
+                };
+            } catch (error) {
+                const finishedAt = now();
+                return {
+                    key: key,
+                    passed: false,
+                    error: String(error?.message || error || "Rule evaluation failed"),
+                    startedAtMs: Number((startedAt - evaluationStartedAt).toFixed(2)),
+                    completedAtMs: Number((finishedAt - evaluationStartedAt).toFixed(2)),
+                    durationMs: Number((finishedAt - startedAt).toFixed(2)),
+                    completedOrder: ++completionSequence
+                };
+            }
+        }
+
+        const timedChecks = await Promise.all([
+            runTimedCheck("role", function () {
+                return matchesAllowed([role], allowedRoles);
+            }),
+            runTimedCheck("stageDept", function () {
+                return matchesAllowed([stageDeptValue], allowedStageDepts);
+            }),
+            runTimedCheck("section", function () {
+                return matchesAllowed([authenticatedSection], allowedSections);
+            }),
+            runTimedCheck("route", checkOnlyAllowFromRoute),
+            runTimedCheck("customRoute", function () {
+                return evaluateCustomCondition(customRouteCondition, evaluationContext);
+            })
         ]);
-        const rawChecks = settledChecks.map(function (item) {
-            return item.status === "fulfilled" && asBoolean(item.value);
-        });
-        const checkErrors = settledChecks.map(function (item) {
-            return item.status === "rejected"
-                ? String(item.reason?.message || item.reason || "Rule evaluation failed")
-                : "";
-        });
+        const timedByKey = Object.fromEntries(timedChecks.map(function (item) {
+            return [item.key, item];
+        }));
 
         const checks = [
-            { key: "role", label: "Role", configured: !!allowedRoles.length, passed: rawChecks[0], actual: role, expected: allowedRoles, error: checkErrors[0] },
-            { key: "stageDept", label: "Stage dept", configured: !!allowedStageDepts.length, passed: rawChecks[1], actual: stageDeptValue, expected: allowedStageDepts, error: checkErrors[1] },
-            { key: "section", label: "Section allow", configured: !!allowedSections.length, passed: rawChecks[2], actual: authenticatedSection, expected: allowedSections, error: checkErrors[2] },
-            { key: "route", label: "Only allow from route", configured: onlyAllowFromRoute != null && onlyAllowFromRoute !== false && onlyAllowFromRoute !== "", passed: rawChecks[3], actual: routeCandidates.filter(Boolean), expected: onlyAllowFromRoute, error: checkErrors[3] },
-            { key: "customRoute", label: "Custom route condition", configured: customRouteCondition != null && customRouteCondition !== "", passed: rawChecks[4], actual: customRouteCondition == null ? "" : "evaluated", expected: customRouteCondition, error: checkErrors[4] }
-        ];
-        const rulesPassed = checks.every(function (item) { return item.passed; });
+            { key: "role", label: "Role", configured: !!allowedRoles.length, actual: role, expected: allowedRoles },
+            { key: "stageDept", label: "Stage dept", configured: !!allowedStageDepts.length, actual: stageDeptValue, expected: allowedStageDepts },
+            { key: "section", label: "Section allow", configured: !!allowedSections.length, actual: authenticatedSection, expected: allowedSections },
+            { key: "route", label: "Only allow from route", configured: onlyAllowFromRoute != null && onlyAllowFromRoute !== false && onlyAllowFromRoute !== "", actual: routeCandidates.filter(Boolean), expected: onlyAllowFromRoute },
+            { key: "customRoute", label: "Custom route condition", configured: customRouteCondition != null && customRouteCondition !== "", actual: customRouteCondition == null ? "" : "evaluated", expected: customRouteCondition }
+        ].map(function (item) {
+            return Object.assign(item, timedByKey[item.key]);
+        });
+        const configuredChecks = checks.filter(function (item) { return item.configured; });
+        const rulesPassed = configuredChecks.length > 0
+            && configuredChecks.every(function (item) { return item.passed; });
         const bypassedBySuperUser = isSuperUser && superUserBypass && !rulesPassed;
         const report = {
             feature: evaluationContext.feature,
@@ -240,6 +313,10 @@
             section: normalize(authenticatedSection),
             route,
             checks,
+            timeline: checks.slice().sort(function (left, right) {
+                return left.completedOrder - right.completedOrder;
+            }),
+            totalDurationMs: Number((now() - evaluationStartedAt).toFixed(2)),
             evaluatedAt: new Date().toISOString()
         };
 
@@ -248,16 +325,15 @@
     }
 
     function showFeatureRoleRuleReport(report) {
-        debugger
         const encode = function (value) {
             return $("<div>").text(value == null ? "-" : String(value)).html();
         };
-        const displayValue = function (value) {
-            if (Array.isArray(value)) return value.length ? value.join(", ") : "Any";
+        const displayValue = function (value, emptyText) {
+            if (Array.isArray(value)) return value.length ? value.join(", ") : emptyText;
             if (value && typeof value === "object") {
                 try { return JSON.stringify(value); } catch (error) { return "[object]"; }
             }
-            return value === true ? "Required" : (value || "Any");
+            return value === true ? "Required" : (value || emptyText);
         };
         const badge = function (label, active, neutral) {
             const color = neutral ? "#6c757d" : (active ? "#198754" : "#dc3545");
@@ -268,9 +344,26 @@
             return `<tr>
                 <td style="padding:8px;border-bottom:1px solid #e5e7eb">${encode(item.label)}</td>
                 <td style="padding:8px;border-bottom:1px solid #e5e7eb">${badge(status, item.passed, !item.configured)}</td>
-                <td style="padding:8px;border-bottom:1px solid #e5e7eb;word-break:break-word">${encode(item.error || displayValue(item.actual))}</td>
-                <td style="padding:8px;border-bottom:1px solid #e5e7eb;word-break:break-word">${encode(displayValue(item.expected))}</td>
+                <td style="padding:8px;border-bottom:1px solid #e5e7eb;word-break:break-word">${encode(item.error || displayValue(item.actual, "Not available"))}</td>
+                <td style="padding:8px;border-bottom:1px solid #e5e7eb;word-break:break-word">${encode(displayValue(item.expected, "Any"))}</td>
             </tr>`;
+        }).join("");
+        const maxDuration = Math.max(1, ...report.timeline.map(function (item) {
+            return item.durationMs || 0;
+        }));
+        const timelineRows = report.timeline.map(function (item) {
+            const width = Math.max(3, Math.round(((item.durationMs || 0) / maxDuration) * 100));
+            const color = !item.configured ? "#6c757d" : (item.passed ? "#198754" : "#dc3545");
+            return `<div style="position:relative;padding:0 0 14px 30px">
+                <span style="position:absolute;left:-10px;top:0;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:${color};color:#fff;font-size:11px;font-weight:700">${item.completedOrder}</span>
+                <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:5px">
+                    <strong>${encode(item.label)}</strong>
+                    <span style="color:#6b7280;font-size:12px">ready +${item.completedAtMs} ms · ran ${item.durationMs} ms</span>
+                </div>
+                <div style="height:5px;border-radius:999px;background:#e5e7eb;overflow:hidden">
+                    <span style="display:block;width:${width}%;height:100%;background:${color}"></span>
+                </div>
+            </div>`;
         }).join("");
         const $content = $(`<div style="font-family:inherit;padding:4px">
             <div style="margin-bottom:12px">
@@ -283,6 +376,13 @@
                 <thead><tr style="text-align:left;background:#f3f4f6"><th style="padding:8px">Rule</th><th style="padding:8px">Result</th><th style="padding:8px">Actual</th><th style="padding:8px">Expected</th></tr></thead>
                 <tbody>${rows}</tbody>
             </table>
+            <div style="margin-top:18px;padding-top:12px;border-top:1px solid #e5e7eb">
+                <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+                    <strong>Rule completion timeline</strong>
+                    <span style="color:#6b7280;font-size:12px">Total ${report.totalDurationMs} ms</span>
+                </div>
+                <div style="margin-left:10px;border-left:2px solid #d1d5db">${timelineRows}</div>
+            </div>
         </div>`);
 
         const $host = $("<div class='feature-role-rule-review-popup'>").appendTo(document.body);

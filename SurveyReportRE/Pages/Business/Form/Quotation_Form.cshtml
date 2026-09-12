@@ -186,6 +186,12 @@ Note:
         done: false,
         firstLoadDone: false
     };
+    window.OverviewDataBootstrap.preload({
+        moduleCode: viewIdModulePrefix.quotation,
+        id: @ViewData["Id"],
+        guid: "@ViewData["Guid"]"
+    });
+
     var firstRender = true;
     setTimeout(() => {
         const quotationViewInstanceId = "@ViewData["Id"]";
@@ -220,6 +226,38 @@ Note:
         var quotationData = new Object();
         var tatObject = new Object();
         state.quoteDetails = {};
+
+        // ROLE RULE REVIEW EXAMPLE
+        // This deliberately runs for every opened Quotation while under review.
+        // Role + Actual Stage Dept + Section must all match the holding department.
+        async function showQuotationRoleReviewExample(quotation) {
+            if (typeof window.checkFeatureRoleRule !== "function") {
+                console.error("Quotation role review helper is unavailable");
+                return null;
+            }
+
+            const actualStageDept = String(quotation?.stageDept || "").trim().toUpperCase();
+            const report = await window.checkFeatureRoleRule({
+                feature: "Quotation role review example",
+                moduleCode: viewIdModulePrefix.quotation,
+                role: state.currentUserRole,
+                stageDept: actualStageDept,
+                section: _role,
+                formData: quotation,
+                state: state,
+                isDebugMode: typeof _isDebugMode !== "undefined" && _isDebugMode,
+                isSuperUser: typeof _isSuperUser !== "undefined" && _isSuperUser,
+                superUserBypass: false,
+                rules: {
+                    roles: [actualStageDept],
+                    stageDepts: [actualStageDept],
+                    sections: [actualStageDept]
+                }
+            });
+            console.log("Quotation role review example", report);
+            return report;
+        }
+        // END ROLE RULE REVIEW EXAMPLE
 
         const quotationRenderGate = (function () {
             var sequence = 0;
@@ -478,7 +516,7 @@ Note:
             );
         }
 
-        function selfLoadSelectedWorkflow() {
+        function selfLoadSelectedWorkflow(forceReload = false) {
             const selectedModel = getSelectedModel();
             return window.WorkflowLoader.load({
                 moduleCode: viewIdModulePrefix.quotation,
@@ -497,6 +535,7 @@ Note:
                 returnToStep: returnToStep,
                 formModuleKey: formModuleKeyQt,
                 reload: true,
+                forceWorkflowReload: forceReload === true,
                 data: {
                     formItems: quotationData,
                     tatObject: tatObject
@@ -909,7 +948,7 @@ Note:
             //             });
             //     });
         }
-        async function loadQuotePage(reset = false) {
+        async function loadQuotePage(reset = false, forceReload = false) {
             if (state.quotePaging.loading) return;
             if (!reset && state.quotePaging.done) return;
 
@@ -924,14 +963,13 @@ Note:
             state.quotePaging.loading = true;
 
             try {
-                var data = await $.ajax({
-                    url: buildListUrl(),
-                    method: "GET",
-                    contentType: "application/json"
+                var record = await window.OverviewDataBootstrap.getRecord({
+                    moduleCode: viewIdModulePrefix.quotation,
+                    id: @ViewData["Id"],
+                    forceReload: forceReload
                 });
+                var data = record ? [record] : [];
                 quotationRenderGate.setPhase("Quotation data received…", 38);
-                quotationData = data[0];
-                tatObject = tryParseJSON(quotationData.turnAroundTimeAttributes, "Submit Button Problem") || {};
                 const rows = Array.isArray(data)
                     ? data.map(item => ({ ...item, pIC: item.pic }))
                     : [];
@@ -940,6 +978,9 @@ Note:
                     state.quotePaging.done = true;
                     return false;
                 }
+
+                quotationData = rows[0];
+                tatObject = tryParseJSON(quotationData.turnAroundTimeAttributes, "Submit Button Problem") || {};
 
                 state.quotes = state.quotes.concat(rows);
 
@@ -990,7 +1031,7 @@ Note:
 
                 // loadQuotePage chi bind state, dxForm va PIC. Workflow/buttons duoc
                 // nap sau khi loading tong da dong o cuoi pipeline nay.
-                var loaded = await loadQuotePage(true);
+                var loaded = await loadQuotePage(true, true);
                 if (!loaded) {
                     quotationRenderGate.fail(renderToken, "Quotation refresh failed");
                     return;
@@ -1007,7 +1048,7 @@ Note:
                 await quotationRenderGate.complete(renderToken);
                 await quotationFormStages.enter("personInCharge");
                 await renderQuotationPersonInCharge();
-                await selfLoadSelectedWorkflow();
+                await selfLoadSelectedWorkflow(true);
                 invalidateSectionCommentCache(state.selectedGuid);
                 await quotationFormStages.enter("comments");
                 await loadQuotationSectionComments();
@@ -1029,12 +1070,11 @@ Note:
             if (quotationDepartmentRefreshes[dept]) return quotationDepartmentRefreshes[dept];
 
             quotationDepartmentRefreshes[dept] = (async function () {
-                var response = await $.ajax({
-                    url: `/api/Quotation/GetAll?key=@ViewData["Id"]`,
-                    method: "GET",
-                    contentType: "application/json"
+                var raw = await window.OverviewDataBootstrap.getRecord({
+                    moduleCode: viewIdModulePrefix.quotation,
+                    id: @ViewData["Id"],
+                    forceReload: true
                 });
-                var raw = Array.isArray(response) ? response[0] : response;
                 if (!raw) throw new Error("Quotation data was not found.");
                 var q = { ...raw, pIC: raw.pic ?? raw.pIC };
 
@@ -1107,6 +1147,11 @@ Note:
 
 
         async function renderDeptForms() {
+            const initializedForms = await window.OverviewDataBootstrap.waitForForms({
+                moduleCode: viewIdModulePrefix.quotation,
+                id: @ViewData["Id"],
+                departments: quotationDepartmentOrder
+            });
             quotationDepartmentOrder.forEach(function (item) {
                 quotationFormStages.prepareSection(
                     `#${formModuleKeyQt}-sec_${item}_@ViewData["Id"]`, @ViewData["Id"], item
@@ -1114,8 +1159,11 @@ Note:
             });
 
             for (const item of quotationDepartmentOrder) {
-                var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
-                $(`#${formId}`).dxForm({ formData: deptData[item], readOnly: true, colCount: 1 });
+                initializedForms[item].option({
+                    formData: deptData[item],
+                    readOnly: true,
+                    colCount: 1
+                });
                 await quotationFormStages.revealSection(
                     `#${formModuleKeyQt}-sec_${item}_@ViewData["Id"]`,
                     item
@@ -1922,6 +1970,7 @@ Note:
             updateHints();
             applyEditLock();
             await quotationRenderGate.complete(initialRenderToken);
+            await showQuotationRoleReviewExample(state.quotes[0]);
             firstRender = false;
             await quotationFormStages.enter("personInCharge");
             await renderQuotationPersonInCharge();

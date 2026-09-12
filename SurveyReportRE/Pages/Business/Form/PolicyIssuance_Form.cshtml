@@ -97,6 +97,11 @@ Note:
         done: false,
         firstLoadDone: false
     };
+    window.OverviewDataBootstrap.preload({
+        moduleCode: viewIdModulePrefix.policyIssuance,
+        id: @ViewData["Id"],
+        guid: "@ViewData["Guid"]"
+    });
     var firstRender = true;
     setTimeout(() => {
         const policyIssuanceViewInstanceId = "@ViewData["Id"]";
@@ -320,12 +325,10 @@ Note:
             if (state.piDetails[id]) {
                 return Promise.resolve(state.piDetails[id]);
             }
-            return $.ajax({
-                url: `/api/PolicyIssuance/GetAll?key=${id}`,
-                method: "GET",
-                contentType: "application/json"
-            }).then(detail => {
-                var item = Array.isArray(detail) ? detail[0] : detail;
+            return window.OverviewDataBootstrap.getRecord({
+                moduleCode: viewIdModulePrefix.policyIssuance,
+                id: id
+            }).then(item => {
                 if (item) {
                     state.piDetails[id] = item;
                 }
@@ -414,7 +417,7 @@ Note:
                 resolveSkipTSFromRequestType(q, "policyIssuanceType") === true
             );
         }
-        function selfLoadSelectedWorkflow() {
+        function selfLoadSelectedWorkflow(forceReload = false) {
             const selectedModel = getSelectedModel();
             return window.WorkflowLoader.load({
                 moduleCode: viewIdModulePrefix.policyIssuance,
@@ -432,7 +435,8 @@ Note:
                 submitNextStep: submitNextStep,
                 returnToStep: returnToStep,
                 formModuleKey: formModuleKeyPi,
-                reload: true
+                reload: true,
+                forceWorkflowReload: forceReload === true
             });
 
               // return ajaxGet(`/api/PolicyIssuance/GetPolicyIssuanceWorkflow/@ViewData["Guid"]`, null)
@@ -789,7 +793,7 @@ Note:
               //     });
           }
 
-        async function loadQuotePage(reset = false) {
+        async function loadQuotePage(reset = false, forceReload = false) {
             if (state.quotePaging.loading) return false;
             if (!reset && state.quotePaging.done) return false;
 
@@ -803,11 +807,12 @@ Note:
 
             state.quotePaging.loading = true;
             try {
-                var data = await $.ajax({
-                    url: buildListUrl(),
-                    method: "GET",
-                    contentType: "application/json"
+                var record = await window.OverviewDataBootstrap.getRecord({
+                    moduleCode: viewIdModulePrefix.policyIssuance,
+                    id: @ViewData["Id"],
+                    forceReload: forceReload
                 });
+                var data = record ? [record] : [];
                 policyIssuanceRenderGate.setPhase("Policy issuance data received…", 38);
 
                 const rows = Array.isArray(data)
@@ -857,7 +862,7 @@ Note:
                 }
 
                 // Chi load state, dxForm va PIC khi overlay con dang mo.
-                var loaded = await loadQuotePage(true);
+                var loaded = await loadQuotePage(true, true);
                 if (!loaded) {
                     policyIssuanceRenderGate.fail(renderToken, "Policy issuance refresh failed");
                     return;
@@ -876,7 +881,7 @@ Note:
                 firstRender = false;
                 await policyIssuanceFormStages.enter("personInCharge");
                 await renderPolicyIssuancePersonInCharge();
-                await selfLoadSelectedWorkflow();
+                await selfLoadSelectedWorkflow(true);
                 invalidateSectionCommentCache(state.selectedGuid);
                 await policyIssuanceFormStages.enter("comments");
                 await loadPolicyIssuanceSectionComments();
@@ -901,12 +906,11 @@ Note:
             if (policyIssuanceDepartmentRefreshes[dept]) return policyIssuanceDepartmentRefreshes[dept];
 
             policyIssuanceDepartmentRefreshes[dept] = (async function () {
-                var response = await $.ajax({
-                    url: `/api/PolicyIssuance/GetAll?key=@ViewData["Id"]`,
-                    method: "GET",
-                    contentType: "application/json"
+                var q = await window.OverviewDataBootstrap.getRecord({
+                    moduleCode: viewIdModulePrefix.policyIssuance,
+                    id: @ViewData["Id"],
+                    forceReload: true
                 });
-                var q = Array.isArray(response) ? response[0] : response;
                 if (!q) throw new Error("Policy issuance data was not found.");
 
                 var quoteIndex = state.quotes.findIndex(function (item) {
@@ -987,6 +991,11 @@ Note:
 
 
         async function renderDeptForms() {
+            const initializedForms = await window.OverviewDataBootstrap.waitForForms({
+                moduleCode: viewIdModulePrefix.policyIssuance,
+                id: @ViewData["Id"],
+                departments: policyIssuanceDepartmentOrder
+            });
             policyIssuanceDepartmentOrder.forEach(function (item) {
                 policyIssuanceFormStages.prepareSection(
                     `#${formModuleKeyPi}-sec_${item}_@ViewData["Id"]`, @ViewData["Id"], item
@@ -994,8 +1003,11 @@ Note:
             });
 
             for (const item of policyIssuanceDepartmentOrder) {
-                var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
-                $(`#${formId}`).dxForm({ formData: deptData[item], readOnly: true, colCount: 1 });
+                initializedForms[item].option({
+                    formData: deptData[item],
+                    readOnly: true,
+                    colCount: 1
+                });
                 await policyIssuanceFormStages.revealSection(
                     `#${formModuleKeyPi}-sec_${item}_@ViewData["Id"]`,
                     item
@@ -1960,7 +1972,6 @@ Note:
                 policyIssuanceRenderGate.fail(initialRenderToken, "Policy issuance data is unavailable");
                 return;
             }
-            await loadPIDetail(@ViewData["Id"]);
             applyNodeHighlights();
             applySectionFocusHighlight();
             updateHints();

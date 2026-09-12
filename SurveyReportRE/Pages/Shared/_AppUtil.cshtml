@@ -49,6 +49,182 @@
                     : _gridDefaultTake;
             }
 
+            // One request pipeline for overview record data and workflow metadata.
+            // Department partials consume these promises instead of loading the
+            // same Quotation/PolicyIssuance record independently.
+            window.OverviewDataBootstrap = window.OverviewDataBootstrap || (function () {
+                const recordEntries = new Map();
+                const workflowEntries = new Map();
+
+                function normalizeModule(moduleCode) {
+                    return String(moduleCode || "").replace(/\s+/g, "").toLowerCase();
+                }
+
+                function controllerName(moduleCode) {
+                    const normalized = normalizeModule(moduleCode);
+                    const policyPrefix = normalizeModule(window.viewIdModulePrefix?.policyIssuance || "pi");
+                    return normalized === "policyissuance" || normalized === "pi" || normalized === policyPrefix
+                        ? "PolicyIssuance"
+                        : "Quotation";
+                }
+
+                function recordKey(moduleCode, id) {
+                    return `${normalizeModule(moduleCode)}:${id}`;
+                }
+
+                function workflowKey(moduleCode, guid) {
+                    return `${normalizeModule(moduleCode)}:${String(guid || "").toLowerCase()}`;
+                }
+
+                function getRecord(options) {
+                    options = options || {};
+                    const key = recordKey(options.moduleCode, options.id);
+                    if (options.forceReload === true) recordEntries.delete(key);
+                    if (recordEntries.has(key)) return recordEntries.get(key).promise;
+
+                    const entry = { value: null, promise: null };
+                    entry.promise = Promise.resolve($.ajax({
+                        url: `/api/${controllerName(options.moduleCode)}/GetAll`,
+                        method: "GET",
+                        data: { key: options.id },
+                        contentType: "application/json"
+                    })).then(function (response) {
+                        const record = Array.isArray(response) ? response[0] : response;
+                        if (!record) throw new Error(`${controllerName(options.moduleCode)} ${options.id} was not found.`);
+                        entry.value = record;
+                        return record;
+                    }).catch(function (error) {
+                        recordEntries.delete(key);
+                        throw error;
+                    });
+                    recordEntries.set(key, entry);
+                    return entry.promise;
+                }
+
+                function peekRecord(moduleCode, id) {
+                    return recordEntries.get(recordKey(moduleCode, id))?.value || null;
+                }
+
+                function setRecord(moduleCode, id, record) {
+                    const key = recordKey(moduleCode, id);
+                    recordEntries.set(key, {
+                        value: record || null,
+                        promise: Promise.resolve(record || null)
+                    });
+                    return record;
+                }
+
+                function getFormData(options) {
+                    options = options || {};
+                    return getRecord(options).then(function (record) {
+                        const formData = Object.assign({}, record || {});
+                        if (options.department) formData.sectionName = options.department;
+                        formData.code = formData.quotationCode || formData.policyIssuanceCode || formData.code;
+                        return formData;
+                    });
+                }
+
+                function getWorkflow(options) {
+                    options = options || {};
+                    if (!options.guid) return Promise.resolve({ instance: null, routes: [] });
+                    const key = workflowKey(options.moduleCode, options.guid);
+                    if (options.forceReload === true) workflowEntries.delete(key);
+                    if (workflowEntries.has(key)) return workflowEntries.get(key);
+
+                    const controller = controllerName(options.moduleCode);
+                    const promise = Promise.resolve($.ajax({
+                        url: `/api/${controller}/Get${controller}Workflow/${encodeURIComponent(options.guid)}`,
+                        method: "GET"
+                    })).then(function (instance) {
+                        const definitionId = instance?.workflowDefinitionId
+                            || "00000000-0000-0000-0000-000000000000";
+                        const currentStep = instance?.currentStep ?? 0;
+                        return Promise.resolve($.ajax({
+                            url: `/api/StepsWorkflow/GetNextStep/${encodeURIComponent(definitionId)}/${encodeURIComponent(currentStep)}`,
+                            method: "GET"
+                        })).then(function (routes) {
+                            return {
+                                instance: instance,
+                                routes: Array.isArray(routes) ? routes : []
+                            };
+                        });
+                    }).catch(function (error) {
+                        workflowEntries.delete(key);
+                        throw error;
+                    });
+                    workflowEntries.set(key, promise);
+                    return promise;
+                }
+
+                function preload(options) {
+                    options = options || {};
+                    const record = getRecord(options);
+                    const workflow = getWorkflow(options);
+                    // Consumers await the same promises later in the render pipeline.
+                    // Attach handlers now so an early API failure is not reported as
+                    // an unhandled rejection before the overview displays its error UI.
+                    record.catch(function () {});
+                    workflow.catch(function () {});
+                    return {
+                        record: record,
+                        workflow: workflow
+                    };
+                }
+
+                function getFormId(moduleCode, dept, id) {
+                    const normalized = normalizeModule(moduleCode);
+                    const policyPrefix = normalizeModule(window.viewIdModulePrefix?.policyIssuance || "pi");
+                    const manager = normalized === "policyissuance" || normalized === "pi" || normalized === policyPrefix
+                        ? window.PolicyIssuanceIdManager
+                        : window.QuotationIdManager;
+                    return manager?.form?.(dept, id) || null;
+                }
+
+                function waitForForms(options) {
+                    options = options || {};
+                    const departments = Array.isArray(options.departments) ? options.departments : [];
+                    const timeout = Number(options.timeout) || 6000;
+                    const startedAt = Date.now();
+
+                    return new Promise(function (resolve, reject) {
+                        function inspect() {
+                            const forms = {};
+                            const missing = [];
+                            departments.forEach(function (dept) {
+                                const formId = getFormId(options.moduleCode, dept, options.id);
+                                let form = null;
+                                try {
+                                    form = formId ? $(`#${formId}`).dxForm("instance") : null;
+                                } catch (error) {}
+                                if (form) forms[dept] = form;
+                                else missing.push(dept);
+                            });
+
+                            if (!missing.length) {
+                                resolve(forms);
+                                return;
+                            }
+                            if (Date.now() - startedAt >= timeout) {
+                                reject(new Error(`Overview forms are not ready: ${missing.join(", ")}`));
+                                return;
+                            }
+                            window.setTimeout(inspect, 25);
+                        }
+                        inspect();
+                    });
+                }
+
+                return {
+                    preload: preload,
+                    getRecord: getRecord,
+                    getFormData: getFormData,
+                    peekRecord: peekRecord,
+                    setRecord: setRecord,
+                    getWorkflow: getWorkflow,
+                    waitForForms: waitForForms
+                };
+            })();
+
             //Performance check query in need
             function makeBasicDataSource(instance, isForm = false, configBefore = false) {
                 try {
@@ -580,9 +756,9 @@
                     return window.PolicyIssuanceSkipTSPromises[cacheKey];
                 }
 
-                window.PolicyIssuanceSkipTSPromises[cacheKey] = $.ajax({
-                    url: `/api/PolicyIssuance/GetSingle/${encodeURIComponent(recordId)}`,
-                    method: "GET"
+                window.PolicyIssuanceSkipTSPromises[cacheKey] = window.OverviewDataBootstrap.getRecord({
+                    moduleCode: viewIdModulePrefix.policyIssuance,
+                    id: recordId
                 }).then(function (record) {
                     return resolveSkipTSFromRequestType(record, "policyIssuanceType") === true;
                 }).catch(function (error) {
@@ -7844,7 +8020,7 @@
                 try {
                     await entry.refreshDepartment(dept);
                     if (typeof entry.reloadWorkflow === "function") {
-                        await entry.reloadWorkflow();
+                        await entry.reloadWorkflow(true);
                     }
                     finishDepartmentSectionLoading(loadingContext, `${dept} section refreshed`, false);
                 } catch (error) {
@@ -8192,7 +8368,7 @@
 
                 try {
                     if (typeof entry.reloadWorkflow === "function") {
-                        await entry.reloadWorkflow();
+                        await entry.reloadWorkflow(true);
                     }
                     if (typeof entry.refreshStatus === "function") {
                         await entry.refreshStatus();

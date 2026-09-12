@@ -16,7 +16,12 @@
 <div id="@QTViewIdHelper.Form(dept, quotationId)">
 </div>
 <script type="text/javascript">
-    $(function() {
+    $(async function() {
+    const initialFormData = await window.OverviewDataBootstrap.getFormData({
+        moduleCode: viewIdModulePrefix.quotation,
+        id: @quotationId,
+        department: "@dept"
+    }).catch(function () { return {}; });
     
 
     var sectionId = "@(ViewData["Cd"])";
@@ -60,7 +65,7 @@
     that3.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that3.moduleName, @(policyIssuanceId)), Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
 
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
-        dataSource: makeBasicDataSource(modelObject, true),
+        formData: initialFormData,
                  items: [
                       {
                           itemType: "group",

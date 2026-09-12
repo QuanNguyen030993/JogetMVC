@@ -17,7 +17,12 @@
 <div id="@QTViewIdHelper.Form(dept, quotationId)">
 </div>
 <script type="text/javascript">
-    $( function (){
+    $(async function (){
+        const initialFormData = await window.OverviewDataBootstrap.getFormData({
+            moduleCode: viewIdModulePrefix.quotation,
+            id: @quotationId,
+            department: "@dept"
+        }).catch(function () { return {}; });
         var thisObject = new Object();
         thisObject.ModelName =  "Quotation";
         thisObject.formId = `@QTViewIdHelper.Form(dept, quotationId)`;
@@ -294,7 +299,7 @@
 
 
     window.QuotationPage.state.formFO = $("#@QTViewIdHelper.Form(dept, quotationId)").dxForm({
-    dataSource: makeBasicDataSource(that, true)
+    formData: initialFormData
     //,
     // onContentReady: function (e) {
     //     var formData = e.component.option("formData") || {};
@@ -399,47 +404,9 @@
                  * =========================================================
                  */
 
-                var workflowResult =
-                    await loadSelectedWorkflow({
-
-                        moduleCode: viewIdModulePrefix.quotation,
-
-                        id: @(quotationId),
-
-                        guid: "@quotationGuid",
-
-                        reload: false,
-                    data: decisionContext
-                    });
-
-
-             
-
-                var customRouteObjects =
-                    workflowResult?.customRouteObjects || [];
-
-
-
-
-                /*
-                 * Chỉ lấy route của LMKT
-                 */
-                var lmktRoutes =
-                    customRouteObjects.filter(
-                        function (item) {
-                            return item.dept === "@dept";
-                        }
-                    );
-
-
-                /*
-                 * Enable toàn bộ custom route LMKT
-                 */
-                lmktRoutes.forEach(
-                    function (item) {
-                        item.enable();
-                    }
-                );
+                // Workflow/routes are rendered once by Quotation_Form after every
+                // department form has received the shared bootstrap formData.
+                var lmktRoutes = [];
 
 
                 /*

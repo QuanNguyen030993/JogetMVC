@@ -11,7 +11,12 @@
     }
 </style>
 <script type="text/javascript">
-    $(function () {
+    $(async function () {
+        const initialFormData = await window.OverviewDataBootstrap.getFormData({
+            moduleCode: viewIdModulePrefix.quotation,
+            id: @quotationId,
+            department: "@dept"
+        }).catch(function () { return {}; });
         var thisObject = new Object();
         thisObject.ModelName = "Quotation";
         thisObject.formId = `@QTViewIdHelper.Form(dept, quotationId)`;
@@ -169,7 +174,7 @@
     ];
 
     var formInstance =  $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
-    dataSource: makeBasicDataSource(that, true),
+    formData: initialFormData,
      items: [
          {
              itemType: "group",
@@ -282,46 +287,8 @@
                  * CUSTOM ROUTE
                  * =========================================================
                  */
-                var workflowResult =
-                    await loadSelectedWorkflow({
-
-                        moduleCode: viewIdModulePrefix.quotation,
-
-                        id: @(quotationId),
-
-                        guid: "@quotationGuid",
-
-                        reload: false,
-                        data: decisionContext
-                    });
-
-
-
-                var customRouteObjects =
-                    workflowResult?.customRouteObjects || [];
-
-
-
-
-                /*
-                 * Chỉ lấy route của LMKT
-                 */
-                var lmktRoutes =
-                    customRouteObjects.filter(
-                        function (item) {
-                            return item.dept === "@dept";
-                        }
-                    );
-
-
-                /*
-                 * Enable toàn bộ custom route LMKT
-                 */
-                lmktRoutes.forEach(
-                    function (item) {
-                        item.enable();
-                    }
-                );
+                // Quotation_Form owns the single workflow render pass.
+                var lmktRoutes = [];
 
 
                 /*

@@ -43,7 +43,12 @@
     }
 </style>
 <script type="text/javascript">
-    $(function() {
+    $(async function() {
+    const initialFormData = await window.OverviewDataBootstrap.getFormData({
+        moduleCode: viewIdModulePrefix.policyIssuance,
+        id: @policyIssuanceId,
+        department: "@dept"
+    }).catch(function () { return {}; });
     var thisObject = new Object();
     thisObject.ModelName =  "PolicyIssuance";       
     thisObject.formId = `@PIViewIdHelper.Form(dept, policyIssuanceId)`;
@@ -289,7 +294,7 @@
     var itemsDelay = [acceptDecisionV2];
 
     $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm({
-        dataSource: makeBasicDataSource(thisObject, true),
+        formData: initialFormData,
        
          items: [
               {
@@ -491,46 +496,8 @@
              * =========================================================
              */
 
-            var workflowResult =
-                await loadSelectedWorkflow({
-
-                    moduleCode: viewIdModulePrefix.policyIssuance,
-
-                    id: @(policyIssuanceId),
-
-                    guid: "@quotationGuid",
-
-                    reload: false,
-                    data: decisionContext
-                });
-
-
-
-            var customRouteObjects =
-                workflowResult?.customRouteObjects || [];
-
-
-
-
-            /*
-             * Chỉ lấy route của LMKT
-             */
-            var lmktRoutes =
-                customRouteObjects.filter(
-                    function (item) {
-                        return item.dept === "@dept";
-                    }
-                );
-
-
-            /*
-             * Enable toàn bộ custom route LMKT
-             */
-            lmktRoutes.forEach(
-                function (item) {
-                    item.enable();
-                }
-            );
+            // PolicyIssuance_Form owns the single workflow render pass.
+            var lmktRoutes = [];
 
 
             /*
