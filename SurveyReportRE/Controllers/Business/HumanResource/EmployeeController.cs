@@ -222,6 +222,10 @@ public class EmployeeController : BaseControllerApi<Employee>
         if (employee == null)
             return NotFound(new { success = false, message = "Current employee was not found." });
 
+        var assignedRole = employee.Department?.Trim().ToUpperInvariant() ?? "";
+        var hasAssignedRole = SelfServiceRoles.ContainsKey(assignedRole);
+        var canChangeRole = !hasAssignedRole;
+
         return Ok(new
         {
             success = true,
@@ -231,6 +235,11 @@ public class EmployeeController : BaseControllerApi<Employee>
                 employee.FullName,
                 employee.AccountName,
                 role = employee.Department,
+                hasAssignedRole,
+                canChangeRole,
+                roleLockMessage = canChangeRole
+                    ? ""
+                    : $"Workflow role {assignedRole} has already been assigned and cannot be changed in Account Settings.",
                 roles = SelfServiceRoles.Select(item => new
                 {
                     code = item.Key,
@@ -272,18 +281,28 @@ public class EmployeeController : BaseControllerApi<Employee>
     public async Task<IActionResult> UpdateMyRole([FromBody] UpdateMyRoleRequest request)
     {
         var role = request?.Role?.Trim().ToUpperInvariant() ?? "";
-        //if (!SelfServiceRoles.ContainsKey(role))
-        //{
-        //    return BadRequest(new
-        //    {
-        //        success = false,
-        //        message = "Role must be one of: FO, TS, PM, UW, LMKT."
-        //    });
-        //}
+        if (!SelfServiceRoles.ContainsKey(role))
+        {
+            return BadRequest(new
+            {
+                success = false,
+                message = $"Role must be one of: {string.Join(", ", SelfServiceRoles.Keys)}."
+            });
+        }
 
         var employee = await GetCurrentEmployeeAsync();
         if (employee == null)
             return NotFound(new { success = false, message = "Current employee was not found." });
+
+        var assignedRole = employee.Department?.Trim().ToUpperInvariant() ?? "";
+        if (SelfServiceRoles.ContainsKey(assignedRole))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                success = false,
+                message = $"Workflow role {assignedRole} has already been assigned and cannot be changed in Account Settings."
+            });
+        }
 
         employee.Department = role;
         await _BaseRepository.UpdateData(

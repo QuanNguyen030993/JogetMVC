@@ -12,6 +12,25 @@
         };
         const gridOption = new PolicyIssuanceGridOption("@PolicyIssuanceSubmittedRequestModel.ModelName", "User", gridParams);
         gridOption.overrideGetUrl = "/api/PolicyIssuance/SubmittedList";
+        const prepareToolbar = gridOption.onToolbarPreparing.bind(gridOption);
+        gridOption.onToolbarPreparing = function (e) {
+            prepareToolbar(e);
+            const hasRefresh = e.toolbarOptions.items.some(item =>
+                item.name === "submittedRequestRefresh" || item.options?.icon === "refresh");
+            if (hasRefresh) return;
+
+            e.toolbarOptions.items.unshift({
+                name: "submittedRequestRefresh",
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    icon: "refresh",
+                    hint: "Refresh",
+                    elementAttr: { "aria-label": "Refresh submitted policy issuances" },
+                    onClick: function () { e.component.refresh(); }
+                }
+            });
+        };
         new MGrid(null, $("#dataGrid_@PolicyIssuanceSubmittedRequestModel.PageName"), gridOption, null);
     });
 </script>

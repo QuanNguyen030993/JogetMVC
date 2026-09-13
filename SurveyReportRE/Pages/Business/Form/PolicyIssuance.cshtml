@@ -6,6 +6,7 @@
 <script>
     $(function () {
         var mGridOption = new Object();
+        var _loginAccount = window._loginAccount || _loginUser;
         mGridOption.isAllowRowMenu = true;
         if (!_isSuperUser)
         {
@@ -16,6 +17,14 @@
         mGridOption.refField = "leaderPIC";
         if (_roleAppName == "HOD")
         mGridOption.refField = "hodpic";
+
+        // Current-stage access: both department role and assigned account must match.
+        mGridOption.refKey2 = _role;
+        mGridOption.refField2 = "stageDept";
+        mGridOption.refOperator2 = "=";
+        mGridOption.refKey3 = _loginAccount;
+        mGridOption.refField3 = "stageAccount";
+        mGridOption.refOperator3 = "=";
         }
         var mGrid = new MGrid(null, $(`#dataGrid_@PolicyIssuanceModel.ModelName`), new PolicyIssuanceGridOption('@PolicyIssuanceModel.ModelName', "User", mGridOption), null);
     });

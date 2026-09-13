@@ -1654,8 +1654,7 @@
 
 .management-header-actions .square-btn,
 .management-header-actions #notificationBtn,
-.management-header-actions #userGuideLauncher,
-.management-header-actions #tmivTourGuideLauncher {
+.management-header-actions #userGuideLauncher {
     width: var(--management-header-control-height) !important;
     height: var(--management-header-control-height) !important;
     min-width: var(--management-header-control-height);
@@ -1670,8 +1669,7 @@
     justify-content: center;
 }
 
-.management-header-actions #userGuideLauncher,
-.management-header-actions #tmivTourGuideLauncher {
+.management-header-actions #userGuideLauncher {
     display: inline-flex;
 }
 

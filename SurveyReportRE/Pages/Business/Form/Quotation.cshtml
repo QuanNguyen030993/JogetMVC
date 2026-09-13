@@ -6,6 +6,7 @@
 <script>
     $(function () {
         var mGridOption = new Object();
+        var _loginAccount = window._loginAccount || _loginUser;
         mGridOption.isAllowRowMenu = true;
         mGridOption.isShowingRenewButton = true;
         mGridOption.refOperator = "contains";
@@ -17,6 +18,14 @@
             mGridOption.refField = "leaderPIC";
         if (_roleAppName == "HOD")
             mGridOption.refField = "hodpic";    
+
+        // Current-stage access: both department role and assigned account must match.
+        mGridOption.refKey5 = _role;
+        mGridOption.refField5 = "stageDept";
+        mGridOption.refOperator5 = "=";
+        mGridOption.refKey6 = _loginAccount;
+        mGridOption.refField6 = "stageAccount";
+        mGridOption.refOperator6 = "=";
         }
         mGridOption.refKey2 = "Quotation confirmed";
         mGridOption.refField2 = "workflowStatus";

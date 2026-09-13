@@ -6,17 +6,40 @@
     $(function () {
         const gridParams = {
             isAllowRowMenu: false,
-            refOperator: "contains",
+            refOperator: "=",
             refKey: _role,
             refField: "stageDept",
+            refOperator2: "=",
+            refKey2: _branch,
+            refField2: "branchCode",
             gridEditorOptions: {
                 editing: { allowUpdating: false, allowAdding: false, allowDeleting: false }
             }
         };
+        const gridOption = new QuotationGridOption("@QuotationTeamRequestModel.ModelName", "User", gridParams);
+        const prepareToolbar = gridOption.onToolbarPreparing.bind(gridOption);
+        gridOption.onToolbarPreparing = function (e) {
+            prepareToolbar(e);
+            const hasRefresh = e.toolbarOptions.items.some(item =>
+                item.name === "teamRequestRefresh" || item.options?.icon === "refresh");
+            if (hasRefresh) return;
+
+            e.toolbarOptions.items.unshift({
+                name: "teamRequestRefresh",
+                location: "after",
+                widget: "dxButton",
+                options: {
+                    icon: "refresh",
+                    hint: "Refresh",
+                    elementAttr: { "aria-label": "Refresh quotation team requests" },
+                    onClick: function () { e.component.refresh(); }
+                }
+            });
+        };
         new MGrid(
             null,
             $("#dataGrid_@QuotationTeamRequestModel.PageName"),
-            new QuotationGridOption("@QuotationTeamRequestModel.ModelName", "User", gridParams),
+            gridOption,
             null
         );
     });
