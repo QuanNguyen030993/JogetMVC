@@ -10698,11 +10698,18 @@
                         const dept = normalizeDeptKey($(this).data("key"));
                         const $co = $(this).find(".dept-callout");
                         if (!$co.length) return;
+                        const isReferenceDepartment = $(this).attr("data-reference") === "true";
                         const pic = picMap[dept] || "";
                         const $overviewRoot = $(this).closest(
                             `[id^='${viewIdModulePrefix.quotation}-overviewRoot_'], ` +
                             `[id^='${viewIdModulePrefix.policyIssuance}-overviewRoot_']`
                         );
+                        if (isReferenceDepartment) {
+                            $co.removeAttr("data-pic-account");
+                            $co.find(".co-text").text("Reference details");
+                            $co.css({ color: "" });
+                            return;
+                        }
                         syncDeptNodeAssignmentMenu(
                             dept,
                             !!String(pic).trim(),
@@ -10710,9 +10717,7 @@
                         );
                         $co.attr("data-pic-account", pic);
                         if (!pic) {
-                            $co.find(".co-text").text(
-                                $(this).attr("data-reference") === "true" ? "Reference" : "-"
-                            );
+                            $co.find(".co-text").text("-");
                             $co.css({ color: "" });
                             return;
                         }

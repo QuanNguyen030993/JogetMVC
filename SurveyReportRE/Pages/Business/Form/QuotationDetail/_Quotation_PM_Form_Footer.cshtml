@@ -21,7 +21,7 @@
      var dept = "@dept";
              var pageLayout = window.QuotationPage;
        var stateLayout = pageLayout.state;
-    $("#@QTViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "Save", icon: "save", type: "default", onClick:
+    $("#@QTViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "", icon: "save", hint: "Save PM section", elementAttr: { "aria-label": "Save PM section" }, type: "default", visible: false, onClick:
          function (e) {
                var formId = "@QTViewIdHelper.Form(dept, quotationId)";
                if (typeof validateEnabledOverviewSection === "function" && !validateEnabledOverviewSection(formId)) return;

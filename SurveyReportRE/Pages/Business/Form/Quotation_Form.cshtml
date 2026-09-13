@@ -262,20 +262,31 @@ Note:
                 const details = qtDeptModuleCode.map(function (dept) {
                     const formId = window.QuotationIdManager.form(dept, @ViewData["Id"]);
                     const form = $(`#${formId}`).dxForm("instance");
+                    const saveButtonId = window.QuotationIdManager.btnSave(dept, @ViewData["Id"]);
+                    const saveButton = $(`#${saveButtonId}`).dxButton("instance");
                     const actualAllow = !!form && form.option("disabled") !== true && form.option("readOnly") !== true;
                     const expectedAllow = dept !== "PM" && (reviewSuperUser
                         || (phase1RoleAndStagePassed && dept === actualStageDept));
+                    const actualSaveVisible = saveButton?.option("visible") === true;
+                    const expectedSaveVisible = expectedAllow;
                     return {
                         dept: dept,
                         actualAllow: actualAllow,
                         expectedAllow: expectedAllow,
+                        actualSaveVisible: actualSaveVisible,
+                        expectedSaveVisible: expectedSaveVisible,
                         matched: actualAllow === expectedAllow
+                            && actualSaveVisible === expectedSaveVisible
                     };
                 });
                 return {
                     passed: details.every(function (item) { return item.matched; }),
-                    actual: details.map(function (item) { return `${item.dept}:${item.actualAllow ? "ALLOW" : "LOCK"}`; }).join(", "),
-                    expected: details.map(function (item) { return `${item.dept}:${item.expectedAllow ? "ALLOW" : "LOCK"}`; }).join(", "),
+                    actual: details.map(function (item) {
+                        return `${item.dept}:${item.actualAllow ? "ALLOW" : "LOCK"}/${item.actualSaveVisible ? "SAVE" : "NO SAVE"}`;
+                    }).join(", "),
+                    expected: details.map(function (item) {
+                        return `${item.dept}:${item.expectedAllow ? "ALLOW" : "LOCK"}/${item.expectedSaveVisible ? "SAVE" : "NO SAVE"}`;
+                    }).join(", "),
                     details: details
                 };
             };
@@ -1398,6 +1409,7 @@ Note:
             setTimeout(function () {
                 qtDeptModuleCode.forEach(async function (item) {
                     var formId = window.QuotationIdManager.form(item, @ViewData["Id"]);
+                    var saveButtonId = window.QuotationIdManager.btnSave(item, @ViewData["Id"]);
                     var form = $(`#${formId}`).dxForm("instance");
                     var formData = form?.option("formData") || {};
                     var commonRule = {
@@ -1421,12 +1433,20 @@ Note:
                                 readOnly: isReferenceDepartment || !decision.phase1Allowed
                                 // disabled: !decision.phase1Allowed
                             });
-                            if (isReferenceDepartment) form?.option("disabled", true);
+                            // PM remains interactive for expand/collapse and data
+                            // inspection, while every editor stays read-only.
+                            if (isReferenceDepartment) form?.option("disabled", false);
                             form?.repaint();
                             setAttachmentPermissionForSection(
                                 `#${formModuleKeyQt}-sec_${item}_@ViewData["Id"]`,
                                 !isReferenceDepartment && decision.phase1Allowed
                             );
+                            // Save is part of the same section permission result; do
+                            // not evaluate a second, potentially divergent button rule.
+                            $(`#${saveButtonId}`).dxButton("instance")?.option({
+                                visible: !isReferenceDepartment && decision.allowed,
+                                disabled: isReferenceDepartment || !decision.allowed
+                            });
                         }
                     });
 
@@ -1458,19 +1478,6 @@ Note:
                             if (remarkControl && typeof remarkControl.option === "function") {
                                 remarkControl.option("disableComment", item === "PM" || !decision.allowed);
                             }
-                        }
-                    });
-
-                    var saveButtonId = window.QuotationIdManager.btnSave(item, @ViewData["Id"]);
-                    await window.applyFeatureRoleControlRule({
-                        ...commonRule,
-                        feature: `Quotation save button · ${item}`,
-                        controlType: "button",
-                        apply: function (decision) {
-                            $(`#${saveButtonId}`).dxButton("instance")?.option({
-                                visible: item !== "PM" && decision.allowed,
-                                disabled: item === "PM" || !decision.allowed
-                            });
                         }
                     });
 

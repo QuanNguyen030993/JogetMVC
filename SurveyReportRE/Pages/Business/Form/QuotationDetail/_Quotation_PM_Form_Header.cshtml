@@ -6,8 +6,11 @@
 
 <div class="dept-title">@dept</div>
 <div class="dept-form-header">
-    <div class="dept-form-header__assign">
-        <div id="@QTViewIdHelper.AssigneeBox(dept, quotationId)"></div>
+    <div class="dept-form-header__assign dept-form-header__assign--reference">
+        <span class="dept-reference-details-badge">
+            <i class="fa fa-bookmark-o" aria-hidden="true"></i>
+            Reference details
+        </span>
     </div>
     <div id="@QTViewIdHelper.BtnToggleResForm"></div>
 </div>

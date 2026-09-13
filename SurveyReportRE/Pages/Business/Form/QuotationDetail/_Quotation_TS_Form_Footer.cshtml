@@ -383,9 +383,12 @@
     }
 
     $("#@QTViewIdHelper.BtnSave(dept, quotationId)").dxButton({
-        text: "Save",
+        text: "",
         icon: "save",
+        hint: "Save TS section",
+        elementAttr: { "aria-label": "Save TS section" },
         type: "default",
+        visible: false,
         onClick: function () {
             const formId = "@QTViewIdHelper.Form(dept, quotationId)";
             if (typeof validateEnabledOverviewSection === "function" && !validateEnabledOverviewSection(formId)) return;
