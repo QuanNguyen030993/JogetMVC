@@ -1445,7 +1445,7 @@
     width: 100%;
     min-height: 27px;
     display: grid;
-    grid-template-columns: 16px minmax(0, 1fr) 14px;
+    grid-template-columns: 16px minmax(0, 1fr) 14px 22px;
     align-items: center;
     gap: 6px;
     padding: 4px 7px;
@@ -1492,6 +1492,27 @@
 .management-topbar .tab-overflow-item.is-active .tab-overflow-item-check {
     visibility: visible;
 }
+
+.management-topbar .tab-overflow-item-close {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--theme-muted);
+    cursor: pointer;
+}
+
+    .management-topbar .tab-overflow-item-close:hover,
+    .management-topbar .tab-overflow-item-close:focus-visible {
+        outline: none;
+        background: color-mix(in srgb, var(--theme-danger) 14%, transparent);
+        color: var(--theme-danger);
+    }
 
 /* jQuery UI appends loaded form panes inside #tablist. Keep their origin
           aligned with the menu and place them immediately below the header. */

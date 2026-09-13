@@ -537,11 +537,13 @@
         $tabs.children("ul").children("li").each(function (index) {
             var $tab = $(this);
             var title = $tab.find("a").first().text().trim() || `Tab ${index + 1}`;
-            var $item = $("<button>", {
-                type: "button",
+            var tabId = $tab.attr("id") || "";
+            var $item = $("<div>", {
                 class: "tab-overflow-item",
                 title: title,
                 role: "menuitem",
+                tabindex: "0",
+                "data-tab-id": tabId,
                 "data-tab-index": index
             });
 
@@ -557,6 +559,16 @@
                 class: "fa fa-check tab-overflow-item-check",
                 "aria-hidden": "true"
             }).appendTo($item);
+            $("<button>", {
+                type: "button",
+                class: "tab-overflow-item-close",
+                title: `Close ${title}`,
+                "aria-label": `Close ${title}`,
+                "data-tab-id": tabId
+            }).append($("<i>", {
+                class: "fa fa-times",
+                "aria-hidden": "true"
+            })).appendTo($item);
 
             if ($tab.hasClass("ui-tabs-active")) {
                 $item.addClass("is-active").attr("aria-current", "page");
@@ -605,7 +617,9 @@
             $button.attr("aria-expanded", willOpen ? "true" : "false");
         });
 
-        $menu.off("click.tabOverflow").on("click.tabOverflow", ".tab-overflow-item", function () {
+        $menu.off(".tabOverflow")
+            .on("click.tabOverflow", ".tab-overflow-item", function (event) {
+            if ($(event.target).closest(".tab-overflow-item-close").length) return;
             var tabIndex = Number($(this).attr("data-tab-index"));
             if (!Number.isInteger(tabIndex)) return;
 
@@ -614,7 +628,23 @@
             tabElement?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
             $menu.prop("hidden", true);
             $button.attr("aria-expanded", "false");
-        });
+            })
+            .on("keydown.tabOverflow", ".tab-overflow-item", function (event) {
+                if (event.target !== this || (event.key !== "Enter" && event.key !== " ")) return;
+                event.preventDefault();
+                $(this).trigger("click");
+            })
+            .on("click.tabOverflow", ".tab-overflow-item-close", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                var tabId = $(this).attr("data-tab-id");
+                var $tab = $nav.children("li").filter(function () {
+                    return this.id === tabId;
+                });
+                if (!$tab.length) return;
+
+                nativeRemoveTab($tab);
+            });
 
         $(document)
             .off("click.tabOverflow keydown.tabOverflow")
