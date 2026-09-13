@@ -1421,6 +1421,11 @@ Note:
                         isDebugMode: _isDebugMode,
                         isSuperUser: _isSuperUser
                     };
+                    var remarkControl = remarkBoxs?.[item]?.controlRemark;
+                    // Fail closed while the section rule is still evaluating.
+                    if (remarkControl && typeof remarkControl.option === "function") {
+                        remarkControl.option("disableComment", true);
+                    }
 
                     await window.applyFeatureRoleControlRule({
                         ...commonRule,
@@ -1447,6 +1452,12 @@ Note:
                                 visible: !isReferenceDepartment && decision.allowed,
                                 disabled: isReferenceDepartment || !decision.allowed
                             });
+                            if (remarkControl && typeof remarkControl.option === "function") {
+                                remarkControl.option(
+                                    "disableComment",
+                                    isReferenceDepartment || !decision.allowed
+                                );
+                            }
                         }
                     });
 
@@ -1465,18 +1476,6 @@ Note:
                                 );
                             } catch (error) {
                                 console.warn(`Quotation comment role state was not ready for ${item}.`, error);
-                            }
-                        }
-                    });
-
-                    await window.applyFeatureRoleControlRule({
-                        ...commonRule,
-                        feature: `Quotation remark · ${item}`,
-                        controlType: "remark",
-                        apply: function (decision) {
-                            var remarkControl = remarkBoxs?.[item]?.controlRemark;
-                            if (remarkControl && typeof remarkControl.option === "function") {
-                                remarkControl.option("disableComment", item === "PM" || !decision.allowed);
                             }
                         }
                     });
@@ -2079,9 +2078,14 @@ Note:
                     sectionName: stageDept,
                     controlRemark: editorControl
                 };
+                // The editor is never writable before its section permission has
+                // completed both phases.
+                if (editorControl && typeof editorControl.option === "function") {
+                    editorControl.option("disableComment", true);
+                }
                 window.applyFeatureRoleControlRule({
-                    feature: `Quotation remark · ${stageDept}`,
-                    controlType: "remark",
+                    feature: `Quotation section/remark · ${stageDept}`,
+                    controlType: "section",
                     dept: stageDept,
                     stageDept: stageDept,
                     role: state.currentUserRole,
