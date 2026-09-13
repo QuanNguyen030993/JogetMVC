@@ -1015,13 +1015,14 @@
                 formItems: buttonFormItems,
                 type: "route",
                 items: $button
-                });
+            });
 
-                    if (isReturn && isReturnNeedAccepted) {
-                        if (!(options.data.tatObject[buttonFormItems.stageDept]?.AcceptDate) && options.data.tatObject[buttonFormItems.stageDept]?.AcceptDate == ""){
-                            buttonDisabled = false;
-                        }
+            if (isReturn && isReturnNeedAccepted) {
+                if (!(options.data.tatObject[buttonFormItems.stageDept]?.AcceptDate)
+                    && options.data.tatObject[buttonFormItems.stageDept]?.AcceptDate == "") {
+                    buttonDisabled = false;
                 }
+            }
 
             $button.dxButton({
                 disabled: buttonDisabled,
@@ -1289,7 +1290,6 @@
                             type: "custom",
                             items: $customButton
                         });
-
 
                         $customButton.dxButton({
                             disabled: disabled,

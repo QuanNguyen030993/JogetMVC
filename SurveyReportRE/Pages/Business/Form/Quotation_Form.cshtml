@@ -229,7 +229,7 @@ Note:
 
         // ROLE RULE REVIEW EXAMPLE
         // This deliberately runs for every opened Quotation while under review.
-        // Phase 1 gates by role. Phase 2 inspects the rendered action permissions.
+        // Phase 1 gates by role, stage department and section. Phase 2 inspects actions.
         async function showQuotationRoleReviewExample(quotation) {
             if (typeof window.checkFeatureRoleRule !== "function") {
                 console.error("Quotation role review helper is unavailable");
@@ -237,6 +237,9 @@ Note:
             }
 
             const actualStageDept = String(quotation?.stageDept || "").trim().toUpperCase();
+            const actualRole = String(state.currentUserRole || "").trim().toUpperCase();
+            const reviewSuperUser = String(_isSuperUser).trim().toLowerCase() === "true";
+            const phase1RoleAndStagePassed = actualRole === actualStageDept;
             const $reviewRoot = $(`#${quotationOverviewRootId}`);
             const inspectButtons = function ($buttons) {
                 var total = 0;
@@ -260,7 +263,8 @@ Note:
                     const formId = window.QuotationIdManager.form(dept, @ViewData["Id"]);
                     const form = $(`#${formId}`).dxForm("instance");
                     const actualAllow = !!form && form.option("disabled") !== true && form.option("readOnly") !== true;
-                    const expectedAllow = dept === actualStageDept;
+                    const expectedAllow = reviewSuperUser
+                        || (phase1RoleAndStagePassed && dept === actualStageDept);
                     return {
                         dept: dept,
                         actualAllow: actualAllow,
@@ -283,7 +287,8 @@ Note:
                         disabled = $editor.tmivcommenteditorroute("option", "disableComment") === true;
                     }
                     const actualAllow = $editor.length > 0 && !disabled;
-                    const expectedAllow = dept !== actualStageDept;
+                    const expectedAllow = reviewSuperUser
+                        || (phase1RoleAndStagePassed && dept !== actualStageDept);
                     return { dept, actualAllow, expectedAllow, matched: actualAllow === expectedAllow };
                 });
                 return {
@@ -301,7 +306,8 @@ Note:
                         disabled = control.option("disableComment") === true;
                     }
                     const actualAllow = !!control && !disabled;
-                    const expectedAllow = dept === actualStageDept;
+                    const expectedAllow = !!control && (reviewSuperUser
+                        || (phase1RoleAndStagePassed && dept === actualStageDept));
                     return { dept, actualAllow, expectedAllow, matched: actualAllow === expectedAllow };
                 });
                 return {
@@ -323,9 +329,11 @@ Note:
                 state: state,
                 isDebugMode: typeof _isDebugMode !== "undefined" && _isDebugMode,
                 isSuperUser: typeof _isSuperUser !== "undefined" && _isSuperUser,
-                superUserBypass: false,
+                superUserBypass: true,
                 rules: {
-                    roles: [actualStageDept]
+                    roles: [actualStageDept],
+                    stageDepts: [actualStageDept],
+                    sections: [actualStageDept]
                 },
                 phase2Checks: [
                     {
@@ -1226,10 +1234,25 @@ Note:
                 await loadQuotationSectionComments(dept);
                 var section = document.getElementById(`${formModuleKeyQt}-sec_${dept}_@ViewData["Id"]`);
                 await window.refreshOverviewDepartmentWidgets?.(section);
-                setAttachmentPermissionForSection(
-                    `#${formModuleKeyQt}-sec_${dept}_@ViewData["Id"]`,
-                    _isSuperUser || state.currentUserRole === dept
-                );
+                /* role enable/disable restored code
+                 * Legacy: setAttachmentPermissionForSection(section, _isSuperUser || state.currentUserRole === dept).
+                 */
+                await window.applyFeatureRoleControlRule({
+                    feature: `Quotation refreshed attachments · ${dept}`,
+                    controlType: "section",
+                    dept: dept,
+                    stageDept: state.stageDept,
+                    role: state.currentUserRole,
+                    formData: q,
+                    isDebugMode: _isDebugMode,
+                    isSuperUser: _isSuperUser,
+                    apply: function (decision) {
+                        setAttachmentPermissionForSection(
+                            `#${formModuleKeyQt}-sec_${dept}_@ViewData["Id"]`,
+                            decision.phase1Allowed
+                        );
+                    }
+                });
             })().finally(function () {
                 delete quotationDepartmentRefreshes[dept];
             });
@@ -1335,37 +1358,108 @@ Note:
         }
 
         function applyEditLock() {
-            const roleApply = {};
-              $.each(qtDeptModuleCode, function (itemIndex, item) {
-                roleApply[item]= !(state.currentUserRole === item);
+            /*
+             * role enable/disable restored code
+             * Legacy: roleApply[item] = state.currentUserRole !== item, followed
+             * by separate Save, dxForm and attachment mutations.
+             */
+            // role enable/disable restored code
+            // const roleApply = {};
+            // $.each(qtDeptModuleCode, function (_, item) {
+            //     roleApply[item] = !(state.currentUserRole === item);
+            // });
+            // $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
+            // $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
+            // $(`#${formId}`).dxForm("instance")?.option("disabled", roleApply[item]);
+            // setAttachmentPermissionForSection(sectionSelector, !roleApply[item]);
+            setTimeout(function () {
+                qtDeptModuleCode.forEach(async function (item) {
+                    var formId = window.QuotationIdManager.form(item, @ViewData["Id"]);
+                    var form = $(`#${formId}`).dxForm("instance");
+                    var formData = form?.option("formData") || {};
+                    var commonRule = {
+                        role: state.currentUserRole,
+                        stageDept: stageDept,
+                        dept: item,
+                        formData: formData,
+                        state: state,
+                        isDebugMode: _isDebugMode,
+                        isSuperUser: _isSuperUser
+                    };
 
-            });
-            
+                    await window.applyFeatureRoleControlRule({
+                        ...commonRule,
+                        feature: `Quotation section · ${item}`,
+                        controlType: "section",
+                        apply: function (decision) {
+                            debugger
+                            form?.option({
+                                readOnly: !decision.phase1Allowed
+                                // disabled: !decision.phase1Allowed
+                            });
+                            form?.repaint();
+                            setAttachmentPermissionForSection(
+                                `#${formModuleKeyQt}-sec_${item}_@ViewData["Id"]`,
+                                decision.phase1Allowed
+                            );
+                        }
+                    });
 
-            setTimeout(() => {
-                 $.each(qtDeptModuleCode, function (itemIndex, item) {
-                    var saveButtonId = window.QuotationIdManager.btnSave(item,@ViewData["Id"]);
-                    $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
+                    await window.applyFeatureRoleControlRule({
+                        ...commonRule,
+                        feature: `Quotation comment · ${item}`,
+                        controlType: "comment",
+                        apply: function (decision) {
+                            var $commentEditor = $(`#${formModuleKeyQt}-commentEditor_${item}_@ViewData["Id"]`);
+                            if (!$commentEditor.length) return;
+                            try {
+                                $commentEditor.tmivcommenteditorroute(
+                                    "option",
+                                    "disableComment",
+                                    !decision.allowed
+                                );
+                            } catch (error) {
+                                console.warn(`Quotation comment role state was not ready for ${item}.`, error);
+                            }
+                        }
+                    });
+
+                    await window.applyFeatureRoleControlRule({
+                        ...commonRule,
+                        feature: `Quotation remark · ${item}`,
+                        controlType: "remark",
+                        apply: function (decision) {
+                            var remarkControl = remarkBoxs?.[item]?.controlRemark;
+                            if (remarkControl && typeof remarkControl.option === "function") {
+                                remarkControl.option("disableComment", !decision.allowed);
+                            }
+                        }
+                    });
+
+                    var saveButtonId = window.QuotationIdManager.btnSave(item, @ViewData["Id"]);
+                    await window.applyFeatureRoleControlRule({
+                        ...commonRule,
+                        feature: `Quotation save button · ${item}`,
+                        controlType: "button",
+                        apply: function (decision) {
+                            $(`#${saveButtonId}`).dxButton("instance")?.option({
+                                visible: decision.allowed,
+                                disabled: !decision.allowed
+                            });
+                        }
+                    });
+
                     if (item === "TS") {
-                          var formId = window.QuotationIdManager.form(stageDept,@ViewData["Id"]);
-                                        var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-                                         var tatObject = new Object();
-                                            tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "Submit Button Problem") || {};
+                        var tat = tryParseJSON(
+                            formData.turnAroundTimeAttributes,
+                            "Submit Button Problem"
+                        ) || {};
+                        /* role enable/disable restored code */
                         $(`#qt-make-option-TS-@ViewData["Id"]`).dxButton("instance")?.option({
-                            // visible: _isSuperUser === "true" ? true : !roleApply[item],
-                            // disabled: _isSuperUser === "true" ? false : roleApply[item]
-                            disabled: (stageDept == "TS" && tatObject["TS"].AcceptDate) ? false : true
+                            disabled: (stageDept == "TS" && tat?.TS?.AcceptDate) ? false : true
                         });
                     }
-                    var formId = window.QuotationIdManager.form(item,@ViewData["Id"]);
-                    $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
-                     $(`#${formId}`).dxForm("instance")?.repaint();
-                    setAttachmentPermissionForSection(
-                        `#${formModuleKeyQt}-sec_${item}_@ViewData["Id"]`,
-                        !roleApply[item]
-                    );
                 });
-               
             }, 1);
 
 
@@ -1395,24 +1489,41 @@ Note:
             $(`#${formModuleKeyQt}-focusDeptPill`).text(`Focus: ${focusDept}`);
 
             QtRoles.forEach(k => {
-                const canEdit = (state.currentUserRole === k);
-                const icon = canEdit
-                    ? `<span class="lock editable" title="Editable" aria-label="Editable">
+                /* role enable/disable restored code: const canEdit = (state.currentUserRole === k); */
+                const renderHint = function (canEdit) {
+                    const icon = canEdit
+                        ? `<span class="lock editable" title="Editable" aria-label="Editable">
                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                <rect x="5" y="11" width="14" height="10" rx="2"/>
                                <path d="M8 11V7a4 4 0 0 1 7.5-2"/>
                                <path d="M12 15v2"/>
                              </svg>
                            </span>`
-                    : `<span class="lock readonly" title="Read only" aria-label="Read only">
+                        : `<span class="lock readonly" title="Read only" aria-label="Read only">
                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                <rect x="5" y="11" width="14" height="10" rx="2"/>
                                <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
                                <path d="M12 15v2"/>
                              </svg>
                            </span>`;
-
-                $(`#${formModuleKeyQt}-hint_${k}_@ViewData["Id"]`).html(icon);
+                    $(`#${formModuleKeyQt}-hint_${k}_@ViewData["Id"]`).html(icon);
+                };
+                const evaluatedRole = state.currentUserRole;
+                const evaluatedStage = stageDept;
+                renderHint(false);
+                window.applyFeatureRoleControlRule({
+                    feature: `Quotation section hint · ${k}`,
+                    controlType: "section",
+                    dept: k,
+                    stageDept: evaluatedStage,
+                    role: evaluatedRole,
+                    isDebugMode: _isDebugMode,
+                    isSuperUser: _isSuperUser,
+                    apply: function (decision) {
+                        if (state.currentUserRole !== evaluatedRole || stageDept !== evaluatedStage) return;
+                        renderHint(decision.phase1Allowed);
+                    }
+                });
             });
         }
 
@@ -1936,6 +2047,28 @@ Note:
                     sectionName: stageDept,
                     controlRemark: editorControl
                 };
+                window.applyFeatureRoleControlRule({
+                    feature: `Quotation remark · ${stageDept}`,
+                    controlType: "remark",
+                    dept: stageDept,
+                    stageDept: stageDept,
+                    role: state.currentUserRole,
+                    formData: q,
+                    state: state,
+                    isDebugMode: _isDebugMode,
+                    isSuperUser: _isSuperUser,
+                    apply: function (decision) {
+                        var remarkBoxId = window.QuotationIdManager.remarkBox(
+                            stageDept,
+                            @ViewData["Id"]
+                        );
+                        $(`#${remarkBoxId}`).tmivhtmleditorcommentbox(
+                            "option",
+                            "disableComment",
+                            !decision.allowed
+                        );
+                    }
+                });
                 return editorControl;
             };
 

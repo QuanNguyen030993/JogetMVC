@@ -1,6 +1,6 @@
 ﻿<script>
-    // REVIEW ONLY: centralized feature-rule diagnostic. Nothing in the application
-    // calls this helper; invoke window.checkFeatureRoleRule(...) manually when needed.
+    // Centralized feature-rule diagnostic. AppUtil invokes it with display:false for
+    // runtime control rules; invoke it manually with display:true for the review UI.
     async function checkFeatureRoleRule(options) {
         options = options || {};
         const configuredRules = options.rules || options.rule || {};
@@ -275,18 +275,17 @@
             }
         }
 
-        const roleTiming = await runTimedCheck("role", function () {
-            return matchesAllowed([role], allowedRoles);
-        });
         const roleConfigured = !!allowedRoles.length;
-        const rolePassed = roleConfigured && roleTiming.passed;
         const suppliedPhase2Checks = Array.isArray(options.phase2Checks)
             ? options.phase2Checks
             : [];
         const reservedCheckKeys = new Set(["role", "stageDept", "section", "route", "customRoute"]);
-        const phase2Definitions = [
+        const phase1Definitions = [
+            { key: "role", label: "Role", configured: roleConfigured, actual: role, expected: allowedRoles, required: true, evaluate: function () { return matchesAllowed([role], allowedRoles); } },
             { key: "stageDept", label: "Stage dept", configured: !!allowedStageDepts.length, actual: stageDeptValue, expected: allowedStageDepts, required: true, evaluate: function () { return matchesAllowed([stageDeptValue], allowedStageDepts); } },
-            { key: "section", label: "Section allow", configured: !!allowedSections.length, actual: authenticatedSection, expected: allowedSections, required: true, evaluate: function () { return matchesAllowed([authenticatedSection], allowedSections); } },
+            { key: "section", label: "Section allow", configured: !!allowedSections.length, actual: authenticatedSection, expected: allowedSections, required: true, evaluate: function () { return matchesAllowed([authenticatedSection], allowedSections); } }
+        ];
+        const phase2Definitions = [
             { key: "route", label: "Only allow from route", configured: onlyAllowFromRoute != null && onlyAllowFromRoute !== false && onlyAllowFromRoute !== "", actual: routeCandidates.filter(Boolean), expected: onlyAllowFromRoute, required: true, evaluate: checkOnlyAllowFromRoute },
             { key: "customRoute", label: "Custom route condition", configured: customRouteCondition != null && customRouteCondition !== "", actual: customRouteCondition == null ? "" : "evaluated", expected: customRouteCondition, required: true, evaluate: function () { return evaluateCustomCondition(customRouteCondition, evaluationContext); } }
         ].concat(suppliedPhase2Checks.map(function (definition, index) {
@@ -303,51 +302,79 @@
                     : function () { return definition.value; }
             };
         }));
-        let phase2Timings = [];
-        if (rolePassed) {
-            phase2Timings = await Promise.all(phase2Definitions
-                .filter(function (definition) { return definition.configured; })
-                .map(function (definition) {
-                    return runTimedCheck(definition.key, definition.evaluate);
-                }));
-        }
-        const timedChecks = [roleTiming].concat(phase2Timings);
-        const timedByKey = Object.fromEntries(timedChecks.map(function (item) {
+
+        const phase1Timings = await Promise.all(phase1Definitions
+            .filter(function (definition) { return definition.configured; })
+            .map(function (definition) {
+                return runTimedCheck(definition.key, definition.evaluate);
+            }));
+        const phase1TimingByKey = Object.fromEntries(phase1Timings.map(function (item) {
             return [item.key, item];
         }));
-
-        const checks = [{
-            key: "role", label: "Role", phase: 1, configured: roleConfigured,
-            required: true, actual: role, expected: allowedRoles
-        }].concat(phase2Definitions.map(function (definition) {
-            return Object.assign({ phase: 2 }, definition);
-        })).map(function (item) {
-            const timing = timedByKey[item.key];
-            return Object.assign(item, timing || {
+        const phase1Checks = phase1Definitions.map(function (definition) {
+            const timing = phase1TimingByKey[definition.key];
+            return Object.assign({ phase: 1 }, definition, timing || {
                 passed: false,
-                skipped: item.configured && !rolePassed,
+                skipped: false,
                 error: "",
                 startedAtMs: null,
                 completedAtMs: null,
                 durationMs: null,
                 completedOrder: null
             }, {
-                actual: timing?.actual !== undefined ? timing.actual : item.actual,
-                expected: timing?.expected !== undefined ? timing.expected : item.expected
+                actual: timing?.actual !== undefined ? timing.actual : definition.actual,
+                expected: timing?.expected !== undefined ? timing.expected : definition.expected
             });
         });
-        const requiredPhase2Checks = checks.filter(function (item) {
-            return item.phase === 2 && item.configured && item.required;
+        const requiredPhase1Checks = phase1Checks.filter(function (item) {
+            return item.configured && item.required;
         });
-        const phase2Passed = rolePassed && requiredPhase2Checks.every(function (item) {
+        const phase1Passed = roleConfigured && requiredPhase1Checks.every(function (item) {
             return item.passed;
         });
-        const rulesPassed = rolePassed && phase2Passed;
+
+        let phase2Timings = [];
+        if (phase1Passed) {
+            phase2Timings = await Promise.all(phase2Definitions
+                .filter(function (definition) { return definition.configured; })
+                .map(function (definition) {
+                    return runTimedCheck(definition.key, definition.evaluate);
+                }));
+        }
+        const phase2TimingByKey = Object.fromEntries(phase2Timings.map(function (item) {
+            return [item.key, item];
+        }));
+        const phase2Checks = phase2Definitions.map(function (definition) {
+            const timing = phase2TimingByKey[definition.key];
+            return Object.assign({ phase: 2 }, definition, timing || {
+                passed: false,
+                skipped: definition.configured && !phase1Passed,
+                error: "",
+                startedAtMs: null,
+                completedAtMs: null,
+                durationMs: null,
+                completedOrder: null
+            }, {
+                actual: timing?.actual !== undefined ? timing.actual : definition.actual,
+                expected: timing?.expected !== undefined ? timing.expected : definition.expected
+            });
+        });
+        const checks = phase1Checks.concat(phase2Checks);
+        const requiredPhase2Checks = phase2Checks.filter(function (item) {
+            return item.configured && item.required;
+        });
+        const phase2Passed = phase1Passed && requiredPhase2Checks.every(function (item) {
+            return item.passed;
+        });
+        const rulesPassed = phase1Passed && phase2Passed;
         const bypassedBySuperUser = isSuperUser && superUserBypass && !rulesPassed;
         const report = {
             feature: evaluationContext.feature,
             allowed: rulesPassed || (isSuperUser && superUserBypass),
             rulesPassed,
+            phase1Passed,
+            phase2Passed,
+            superUserBypass,
             bypassedBySuperUser,
             isDebugMode,
             isSuperUser,
@@ -357,8 +384,8 @@
             route,
             checks,
             phases: [
-                { key: "role", label: "Phase 1 · Role gate", executed: true, passed: rolePassed },
-                { key: "actions", label: "Phase 2 · Action permissions", executed: rolePassed, passed: phase2Passed }
+                { key: "access", label: "Phase 1 · Role / Stage dept / Section", executed: true, passed: phase1Passed },
+                { key: "actions", label: "Phase 2 · Action permissions", executed: phase1Passed, passed: phase2Passed }
             ],
             timeline: checks.filter(function (item) {
                 return item.completedOrder != null;

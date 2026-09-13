@@ -36,7 +36,8 @@
             guid: "@(quotationGuid)",
             sectionName: "@dept",
             titleName: "Upload Quotation",
-            uploaderAllow: _role == "@dept"
+            /* role enable/disable restored code: uploaderAllow: _role == "@dept" */
+            uploaderAllow: false
         };
 
         that.data = {
@@ -59,7 +60,8 @@
             guid: "@(quotationGuid)",
             sectionName: "@dept",
             titleName: "Upload Supporting Document",
-            uploaderAllow: _role == "@dept"
+            /* role enable/disable restored code: uploaderAllow: _role == "@dept" */
+            uploaderAllow: false
         };
 
         that2.data = {
@@ -310,6 +312,10 @@
 
                 /*
                  * Nếu muốn enable tất cả decision button
+                 */
+                /* role enable/disable restored code
+                 * Legacy: decisionContext.enable();
+                 * Restored as active legacy while button-rule refactor is paused.
                  */
                 decisionContext.enable();
 

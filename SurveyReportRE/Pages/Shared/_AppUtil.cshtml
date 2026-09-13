@@ -714,13 +714,13 @@
                         var form = data.component;
                         var formData = form?.option("formData") || {};
                         var currentRole = typeof _role === "undefined" ? "" : String(_role);
-
-                        return $("<div>").dxSwitch({
+                        var $switch = $("<div>").dxSwitch({
                             value: resolveSkipTSFromRequestType(formData, typeFieldName) === true,
                             switchedOnText: "Yes",
                             switchedOffText: "No",
                             showText: true,
-                            disabled: currentRole.trim().toUpperCase() !== "FO",
+                            /* role enable/disable restored code: disabled: currentRole.trim().toUpperCase() !== "FO" */
+                            disabled: true,
                             onValueChanged: function (event) {
                                 var latestFormData = form?.option("formData") || {};
                                 var pascalFieldName = typeFieldName.charAt(0).toUpperCase() + typeFieldName.slice(1);
@@ -735,6 +735,20 @@
                                 );
                             }
                         }).appendTo(itemElement);
+                        window.applyFeatureRoleControlRule({
+                            feature: "Policy Issuance Skip TS switch · FO",
+                            controlType: "section",
+                            dept: _role,
+                            stageDept: formData.stageDept || formData.StageDept,
+                            role: currentRole,
+                            formData: formData,
+                            isDebugMode: _isDebugMode,
+                            isSuperUser: _isSuperUser,
+                            apply: function (decision) {
+                                $switch.dxSwitch("instance")?.option("disabled", !decision.allowed);
+                            }
+                        });
+                        return $switch;
                     }
                 };
             }
@@ -2481,16 +2495,33 @@
                                              return normalizeCommentDepartment(currentStageDept);
                                          }
 
-                                         function shouldDisableRouteComment() {
-                                             var sectionDept = normalizeCommentDepartment(dept);
-                                             var currentStageDept = getCommentStageDepartment();
-                                    console.log(currentStageDept);
-                                    return !sectionDept
-                                                 || !currentStageDept
-                                                 || sectionDept === currentStageDept;
-                                         }
-                                         function shouldDisableComment() {
-                                             return shouldDisableRouteComment();
+                                         /*
+                                          * role enable/disable restored code
+                                          * Legacy comment rule:
+                                          * disable when section/stage is missing or sectionDept === currentStageDept.
+                                          */
+                                         function applyRouteCommentRoleRule() {
+                                             var workflowPage = moduleKey === viewIdModulePrefix.quotation
+                                                 ? window.QuotationPage
+                                                 : window.PolicyIssuancePage;
+                                             return window.applyFeatureRoleControlRule({
+                                                 feature: `${moduleKey} comment · ${dept}`,
+                                                 controlType: "comment",
+                                                 dept: dept,
+                                                 stageDept: getCommentStageDepartment(),
+                                                 role: workflowPage?.state?.currentUserRole || _role,
+                                                 state: workflowPage?.state || {},
+                                                 isDebugMode: _isDebugMode,
+                                                 isSuperUser: _isSuperUser,
+                                                 apply: function (decision) {
+                                                     routeEditorOptions.disableComment = !decision.allowed;
+                                                     $(itemElement).tmivcommenteditorroute(
+                                                         "option",
+                                                         "disableComment",
+                                                         !decision.allowed
+                                                     );
+                                                 }
+                                             });
                                          }
 
                                         // routeEditorOptions = {
@@ -2546,10 +2577,11 @@
                                         //     }
                                         // };
 
-                                        function renderRouteEditorItems(comments) {
-                                            routeEditorOptions.items = comments || [];
-                                            routeEditorOptions.disableComment = shouldDisableRouteComment();
-                                            $(itemElement).tmivcommenteditorroute(routeEditorOptions);
+                                         function renderRouteEditorItems(comments) {
+                                             routeEditorOptions.items = comments || [];
+                                             routeEditorOptions.disableComment = true;
+                                             $(itemElement).tmivcommenteditorroute(routeEditorOptions);
+                                             applyRouteCommentRoleRule();
                                             // $(itemElement).tmivhtmleditorcommentbox(routeEditorOptions);
                                         }
 
@@ -2588,7 +2620,8 @@
                                             onChange: function (value) {
                                                 parentForm.updateData(updateField, value);
                                             },
-                                            disableComment: shouldDisableComment(),
+                                            // role enable/disable restored code: legacy initialized from shouldDisableComment().
+                                            disableComment: true,
                                             onSubmit: function (newComment) {
                                                 var commentText = newComment.Content || newComment.text || "";
                                                 var commentData = {
@@ -2620,13 +2653,13 @@
                                             }
                                         };
                                         item.control = $(itemElement).tmivcommenteditorroute(routeEditorOptions);
+                                        applyRouteCommentRoleRule();
                                         var routePermissionKey = [moduleKey, id, dept, guid].join(":");
                                         routeCommentPermissionRefreshers.set(routePermissionKey, {
                                             element: itemElement[0],
                                             refresh: function () {
                                                 routeEditorOptions.fromDepartment = normalizeCommentDepartment(_role);
-                                                routeEditorOptions.disableComment = shouldDisableRouteComment();
-                                                $(itemElement).tmivcommenteditorroute(routeEditorOptions);
+                                                applyRouteCommentRoleRule();
                                             }
                                         });
 
@@ -2976,7 +3009,8 @@
                                             type: "Discussion",
                                             author: _displayName,
                                             createdBy: _loginUser,
-                                            disableComment: false,
+                                            // role enable/disable restored code: legacy remark editor started enabled.
+                                            disableComment: true,
                                             emptyText: "No comments.",
                                             headerTitle: "",
                                             // routeLabel: "Route to:",
@@ -10881,8 +10915,7 @@
             formItems: decisionFormItems,
             tatObject: decisionTatObject,
             type: "early-decision",
-            items:  $(`#${formProps.formId}`)
-
+            items: $(`#${formProps.formId}`)
         });
 
         var rendered =
@@ -11083,10 +11116,10 @@
                      return !hasAcceptDate ;
                  else
                      return hasAcceptDate; //|| hasActionStatus;
-            }
-        }
+             }
+         }
 
-        function normalizeDecisionFieldButtons(params) {
+         function normalizeDecisionFieldButtons(params) {
             return params.reduce(function (items, item) {
                 if (Array.isArray(item)) return items.concat(normalizeDecisionFieldButtons(item));
                 if (item) items.push(item);
@@ -12072,6 +12105,107 @@
         };
     }
 
+
+    /**
+     * Central adapter for role-driven state on controls rendered by the
+     * Quotation and Policy Issuance overview forms.
+     */
+    async function applyFeatureRoleControlRule(options) {
+        options = options || {};
+        const normalizeRuleValue = value => String(value || "").trim().toUpperCase();
+        const controlType = String(options.controlType || "section").trim().toLowerCase();
+        const controlDept = normalizeRuleValue(options.dept);
+        const stageDept = normalizeRuleValue(options.stageDept);
+        const role = normalizeRuleValue(options.role);
+        const sameAsStage = !!controlDept && !!stageDept && controlDept === stageDept;
+        const phase1SectionAllowed = controlType === "comment" ? !sameAsStage : sameAsStage;
+        const phase1AllowedSections = controlType === "comment"
+            ? (phase1SectionAllowed ? [controlDept] : [`ANY EXCEPT ${stageDept}`])
+            : [stageDept];
+
+        if (typeof window.checkFeatureRoleRule !== "function") {
+            const unavailable = {
+                allowed: false,
+                phase1Allowed: false,
+                controlType,
+                dept: controlDept,
+                stageDept,
+                role,
+                error: "checkFeatureRoleRule is unavailable"
+            };
+            await options.apply?.(unavailable);
+            return unavailable;
+        }
+
+        let report;
+        try {
+            const phase2Allow = typeof options.allowWhen === "function"
+                ? !!(await options.allowWhen({
+                    controlType,
+                    dept: controlDept,
+                    stageDept,
+                    role,
+                    defaultAllowed: true,
+                    sectionAllowed: phase1SectionAllowed,
+                    formData: options.formData || {}
+                }))
+                : true;
+
+            report = await window.checkFeatureRoleRule({
+                feature: options.feature || `${controlType} · ${controlDept || "unknown"}`,
+                role,
+                stageDept,
+                section: controlDept,
+                route: options.route,
+                formData: options.formData || {},
+                state: options.state || {},
+                isDebugMode: typeof options.isDebugMode !== "undefined"
+                    ? options.isDebugMode
+                    : window._isDebugMode,
+                isSuperUser: typeof options.isSuperUser !== "undefined"
+                    ? options.isSuperUser
+                    : window._isSuperUser,
+                superUserBypass: options.superUserBypass !== false,
+                display: false,
+                rules: {
+                    roles: [stageDept],
+                    stageDepts: [stageDept],
+                    sections: phase1AllowedSections,
+                    onlyAllowFromRoute: options.onlyAllowFromRoute,
+                    customRouteCondition: options.customRouteCondition
+                },
+                phase2Checks: [{
+                    key: `control_${controlType}_${controlDept || "unknown"}`,
+                    label: `${controlType} allow · ${controlDept || "unknown"}`,
+                    required: true,
+                    evaluate: function () {
+                        return {
+                            passed: phase2Allow,
+                            actual: phase2Allow ? "ALLOW" : "LOCK",
+                            expected: "ALLOW"
+                        };
+                    }
+                }]
+            });
+        } catch (error) {
+            console.warn("Feature role control rule failed; control remains locked.", error);
+            report = { allowed: false, error: error?.message || String(error) };
+        }
+        const decision = {
+            allowed: report.allowed === true,
+            phase1Allowed: report.phase1Passed,
+                // || (report.isSuperUser === true && report.superUserBypass === true),
+            controlType,
+            dept: controlDept,
+            stageDept,
+            role,
+            report
+        };
+        await options.apply?.(decision);
+        return decision;
+    }
+
+    window.applyFeatureRoleControlRule = applyFeatureRoleControlRule;
 
     function showTMIVComPopupNotification(title, body) {
         $.tmivnotify({

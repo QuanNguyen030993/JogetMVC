@@ -47,7 +47,8 @@
     that.guid ="@(quotationGuid)";
     that.sectionName = "@(dept)";
     that.titleName = "Upload Quotation";
-    that.uploaderAllow = _role == "@dept";
+    /* role enable/disable restored code: that.uploaderAllow = _role == "@dept"; */
+    that.uploaderAllow = false;
     that.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that.moduleName, @(quotationId)), Department: "@(dept)", FieldName: "Quotation", FormId: "@(QTViewIdHelper.Form(dept, quotationId))" , CustomField : "Quotation",ValidationRules: [{ type: "required" }]}; //{"SectionName":"default_FO_410"}
 
 
@@ -59,8 +60,9 @@
     that2.guid ="@(quotationGuid)";
     that2.sectionName = "@(dept)";
     that2.titleName = "Upload Supporting Document";
-    // that2.uploaderAllow = _role == "@dept";
-    that2.uploaderAllow = _role == "@dept";
+    // role enable/disable restored code: that2.uploaderAllow = _role == "@dept";
+    /* role enable/disable restored code: that2.uploaderAllow = _role == "@dept"; */
+    that2.uploaderAllow = false;
     that2.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that2.moduleName, @(quotationId)), Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
 
          var sectionId = `${viewIdModulePrefix.quotation}-body_@(dept)_RES`;
@@ -73,7 +75,8 @@
       thatRes.guid = "@quotationGuid" ;
       thatRes.sectionName = "@(dept)";
       thatRes.titleName = "Upload RES Form";
-      thatRes.uploaderAllow = _role == "@dept";
+      /* role enable/disable restored code: thatRes.uploaderAllow = _role == "@dept"; */
+      thatRes.uploaderAllow = false;
       thatRes.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, thatRes.moduleName, @(quotationId)), Department: "@(dept)", FieldName: thatRes.moduleName, FormId: "@(QTViewIdHelper.Form(dept, quotationId))", CustomField: "resAttachment", ValidationRules: [{ type: "required" }]}; //{"SectionName":"default_FO_410"}
 
 
@@ -380,6 +383,10 @@
 
                 /*
                  * Nếu muốn enable tất cả decision button
+                 */
+                /* role enable/disable restored code
+                 * Legacy: decisionContext.enable();
+                 * Restored as active legacy while button-rule refactor is paused.
                  */
                 decisionContext.enable();
 

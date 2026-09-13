@@ -953,10 +953,25 @@ Note:
                 await loadPolicyIssuanceSectionComments(dept);
                 var section = document.getElementById(`${formModuleKeyPi}-sec_${dept}_@ViewData["Id"]`);
                 await window.refreshOverviewDepartmentWidgets?.(section);
-                setAttachmentPermissionForSection(
-                    `#${formModuleKeyPi}-sec_${dept}_@ViewData["Id"]`,
-                    _isSuperUser || state.currentUserRole === dept
-                );
+                /* role enable/disable restored code
+                 * Legacy: setAttachmentPermissionForSection(section, _isSuperUser || state.currentUserRole === dept).
+                 */
+                await window.applyFeatureRoleControlRule({
+                    feature: `Policy Issuance refreshed attachments · ${dept}`,
+                    controlType: "section",
+                    dept: dept,
+                    stageDept: state.stageDept,
+                    role: state.currentUserRole,
+                    formData: q,
+                    isDebugMode: _isDebugMode,
+                    isSuperUser: _isSuperUser,
+                    apply: function (decision) {
+                        setAttachmentPermissionForSection(
+                            `#${formModuleKeyPi}-sec_${dept}_@ViewData["Id"]`,
+                            decision.phase1Allowed
+                        );
+                    }
+                });
             })().finally(function () {
                 delete policyIssuanceDepartmentRefreshes[dept];
             });
@@ -1021,26 +1036,96 @@ Note:
 
         
         function applyEditLock() {
-            const roleApply = {};
-              $.each(piDeptModuleCode, function (itemIndex, item) {
-                roleApply[item]= !(state.currentUserRole === item);
+            /*
+             * role enable/disable restored code
+             * Legacy: roleApply[item] = state.currentUserRole !== item, followed
+             * by separate Save, dxForm and attachment mutations.
+             */
+            // role enable/disable restored code
+            // const roleApply = {};
+            // $.each(piDeptModuleCode, function (_, item) {
+            //     roleApply[item] = !(state.currentUserRole === item);
+            // });
+            // $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
+            // $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
+            // $(`#${formId}`).dxForm("instance")?.option("disabled", roleApply[item]);
+            // setAttachmentPermissionForSection(sectionSelector, !roleApply[item]);
+            setTimeout(function () {
+                piDeptModuleCode.forEach(async function (item) {
+                    var formId = window.PolicyIssuanceIdManager.form(item, @ViewData["Id"]);
+                    var form = $(`#${formId}`).dxForm("instance");
+                    var formData = form?.option("formData") || {};
+                    var commonRule = {
+                        role: state.currentUserRole,
+                        stageDept: stageDept,
+                        dept: item,
+                        formData: formData,
+                        state: state,
+                        isDebugMode: _isDebugMode,
+                        isSuperUser: _isSuperUser
+                    };
 
-            });
+                    await window.applyFeatureRoleControlRule({
+                        ...commonRule,
+                        feature: `Policy Issuance section · ${item}`,
+                        controlType: "section",
+                        apply: function (decision) {
+                            form?.option({
+                                readOnly: !decision.phase1Allowed//,
+                                // disabled: !decision.phase1Allowed
+                            });
+                            form?.repaint();
+                            setAttachmentPermissionForSection(
+                                `#${formModuleKeyPi}-sec_${item}_@ViewData["Id"]`,
+                                decision.phase1Allowed
+                            );
+                        }
+                    });
 
+                    await window.applyFeatureRoleControlRule({
+                        ...commonRule,
+                        feature: `Policy Issuance comment · ${item}`,
+                        controlType: "comment",
+                        apply: function (decision) {
+                            var $commentEditor = $(`#${formModuleKeyPi}-commentEditor_${item}_@ViewData["Id"]`);
+                            if (!$commentEditor.length) return;
+                            try {
+                                $commentEditor.tmivcommenteditorroute(
+                                    "option",
+                                    "disableComment",
+                                    !decision.allowed
+                                );
+                            } catch (error) {
+                                console.warn(`Policy Issuance comment role state was not ready for ${item}.`, error);
+                            }
+                        }
+                    });
 
-            setTimeout(() => {
-                 $.each(piDeptModuleCode, function (itemIndex, item) {
-                       var saveButtonId = window.PolicyIssuanceIdManager.btnSave(item,@ViewData["Id"]);
-                    $(`#${saveButtonId}`).dxButton("instance")?.option("visible", _isSuperUser ? true : !roleApply[item]);
-                     var formId = window.PolicyIssuanceIdManager.form(item,@ViewData["Id"]);
-                 $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
-                    $(`#${formId}`).dxForm("instance")?.repaint();
-                    setAttachmentPermissionForSection(
-                        `#${formModuleKeyPi}-sec_${item}_@ViewData["Id"]`,
-                        !roleApply[item]
-                    );
+                    await window.applyFeatureRoleControlRule({
+                        ...commonRule,
+                        feature: `Policy Issuance remark · ${item}`,
+                        controlType: "remark",
+                        apply: function (decision) {
+                            var remarkControl = remarkBoxs?.[item]?.controlRemark;
+                            if (remarkControl && typeof remarkControl.option === "function") {
+                                remarkControl.option("disableComment", !decision.allowed);
+                            }
+                        }
+                    });
+
+                    var saveButtonId = window.PolicyIssuanceIdManager.btnSave(item, @ViewData["Id"]);
+                    await window.applyFeatureRoleControlRule({
+                        ...commonRule,
+                        feature: `Policy Issuance save button · ${item}`,
+                        controlType: "button",
+                        apply: function (decision) {
+                            $(`#${saveButtonId}`).dxButton("instance")?.option({
+                                visible: decision.allowed,
+                                disabled: !decision.allowed
+                            });
+                        }
+                    });
                 });
-               
             }, 1);
 
            
@@ -1069,24 +1154,41 @@ Note:
             // $(`#${formModuleKeyPi}-focusDeptPill`).text(`Focus: ${state.focusDept}`);
 
             PiRoles.forEach(k => {
-                const canEdit = (state.currentUserRole === k);
-                const icon = canEdit
-                ? `<span class="lock editable" title="Editable" aria-label="Editable">
+                /* role enable/disable restored code: const canEdit = (state.currentUserRole === k); */
+                const renderHint = function (canEdit) {
+                    const icon = canEdit
+                    ? `<span class="lock editable" title="Editable" aria-label="Editable">
                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                        <rect x="5" y="11" width="14" height="10" rx="2"/>
                        <path d="M8 11V7a4 4 0 0 1 7.5-2"/>
                        <path d="M12 15v2"/>
                      </svg>
                    </span>`
-                : `<span class="lock readonly" title="Read only" aria-label="Read only">
+                    : `<span class="lock readonly" title="Read only" aria-label="Read only">
                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                        <rect x="5" y="11" width="14" height="10" rx="2"/>
                        <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
                        <path d="M12 15v2"/>
                      </svg>
                    </span>`;
-
-                $(`#${formModuleKeyPi}-hint_${k}_@ViewData["Id"]`).html(icon);
+                    $(`#${formModuleKeyPi}-hint_${k}_@ViewData["Id"]`).html(icon);
+                };
+                const evaluatedRole = state.currentUserRole;
+                const evaluatedStage = stageDept;
+                renderHint(false);
+                window.applyFeatureRoleControlRule({
+                    feature: `Policy Issuance section hint · ${k}`,
+                    controlType: "section",
+                    dept: k,
+                    stageDept: evaluatedStage,
+                    role: evaluatedRole,
+                    isDebugMode: _isDebugMode,
+                    isSuperUser: _isSuperUser,
+                    apply: function (decision) {
+                        if (state.currentUserRole !== evaluatedRole || stageDept !== evaluatedStage) return;
+                        renderHint(decision.phase1Allowed);
+                    }
+                });
             });
         }
 
@@ -1612,6 +1714,28 @@ Note:
                     sectionName: stageDept,
                     controlRemark: editorControl
                 };
+                window.applyFeatureRoleControlRule({
+                    feature: `Policy Issuance remark · ${stageDept}`,
+                    controlType: "remark",
+                    dept: stageDept,
+                    stageDept: stageDept,
+                    role: state.currentUserRole,
+                    formData: q,
+                    state: state,
+                    isDebugMode: _isDebugMode,
+                    isSuperUser: _isSuperUser,
+                    apply: function (decision) {
+                        var remarkBoxId = window.PolicyIssuanceIdManager.remarkBox(
+                            stageDept,
+                            @ViewData["Id"]
+                        );
+                        $(`#${remarkBoxId}`).tmivhtmleditorcommentbox(
+                            "option",
+                            "disableComment",
+                            !decision.allowed
+                        );
+                    }
+                });
                 return editorControl;
             };
 
