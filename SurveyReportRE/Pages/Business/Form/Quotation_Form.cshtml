@@ -228,7 +228,7 @@ Note:
         state.quoteDetails = {};
 
         // ROLE RULE REVIEW EXAMPLE
-        // This deliberately runs for every opened Quotation while under review.
+        // Invoked explicitly from the Maintenance Info review action.
         // Phase 1 gates by role, stage department and section. Phase 2 inspects actions.
         async function showQuotationRoleReviewExample(quotation) {
             if (typeof window.checkFeatureRoleRule !== "function") {
@@ -320,6 +320,7 @@ Note:
             const returnHostId = window.QuotationIdManager.btnReturnBranch(actualStageDept, @ViewData["Id"]);
             const submitHostId = window.QuotationIdManager.btnSubmitBranch(actualStageDept, @ViewData["Id"]);
             const report = await window.checkFeatureRoleRule({
+                display: true,
                 feature: "Quotation role review example",
                 moduleCode: viewIdModulePrefix.quotation,
                 role: state.currentUserRole,
@@ -527,7 +528,15 @@ Note:
             moduleCode: formModuleKeyQt,
             recordId: quotationViewInstanceId,
             rootId: quotationOverviewRootId,
-            renderGate: quotationRenderGate
+            renderGate: quotationRenderGate,
+            showRoleReview: function () {
+                const quotation = state.quotes?.[0] || quotationData;
+                if (!quotation || !Object.keys(quotation).length) {
+                    DevExpress.ui.notify("Quotation role review data is not ready.", "warning", 1600);
+                    return Promise.resolve(null);
+                }
+                return showQuotationRoleReviewExample(quotation);
+            }
         };
         window.QuotationRenderGates = window.QuotationRenderGates || {};
         window.QuotationRenderGates[quotationViewInstanceId] = quotationRenderGate;
@@ -2234,7 +2243,6 @@ Note:
             invalidateSectionCommentCache(state.selectedGuid);
             await quotationFormStages.enter("comments");
             await loadQuotationSectionComments();
-            await showQuotationRoleReviewExample(state.quotes[0]);
              
 
         });

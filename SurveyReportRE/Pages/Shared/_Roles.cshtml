@@ -414,7 +414,9 @@
             evaluatedAt: new Date().toISOString()
         };
 
-        if (options.display !== false) showFeatureRoleRuleReport(report);
+        // Runtime role-control evaluations stay silent. The review UI must opt in
+        // explicitly (currently from the Maintenance Info action).
+        if (options.display === true) showFeatureRoleRuleReport(report);
         return report;
     }
 

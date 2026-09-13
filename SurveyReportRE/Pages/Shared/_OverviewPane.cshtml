@@ -282,6 +282,10 @@
                     </div>
                 </div>
 
+                <div class="admin-actions" data-role-review-actions style="display:none;">
+                    <div data-role-review-button></div>
+                </div>
+
             </div>
         `);
 
@@ -290,6 +294,53 @@
         const canSwitchMaintenanceRole =
             String(window._isDebugMode).toLowerCase() === "true"
             || String(window._isSuperUser).toLowerCase() === "true";
+        const overviewRegistryKey = "@moduleCode:@maintenanceInstanceId";
+        const $roleReviewActions = panel.find("[data-role-review-actions]");
+        const $roleReviewButton = panel.find("[data-role-review-button]");
+
+        function getRoleReviewHandler() {
+            const entry = (window.OverviewViewRegistry || {})[overviewRegistryKey];
+            return typeof entry?.showRoleReview === "function"
+                ? entry.showRoleReview.bind(entry)
+                : null;
+        }
+
+        function syncRoleReviewAction() {
+            const canReview = canSwitchMaintenanceRole && !!getRoleReviewHandler();
+            $roleReviewActions.toggle(canReview);
+            return canReview;
+        }
+
+        if (canSwitchMaintenanceRole && $roleReviewButton.length) {
+            $roleReviewButton.dxButton({
+                text: "Review role rules",
+                icon: "search",
+                type: "normal",
+                stylingMode: "outlined",
+                width: "100%",
+                onClick: async function (event) {
+                    const showRoleReview = getRoleReviewHandler();
+                    if (!showRoleReview) {
+                        syncRoleReviewAction();
+                        DevExpress.ui.notify("Role review is not available for this form.", "warning", 1600);
+                        return;
+                    }
+
+                    event.component.option("disabled", true);
+                    panel.removeClass("show");
+                    try {
+                        await showRoleReview();
+                    } catch (error) {
+                        console.error("Role review could not be opened.", error);
+                        DevExpress.ui.notify("Role review could not be opened.", "error", 1800);
+                    } finally {
+                        event.component.option("disabled", false);
+                    }
+                }
+            });
+        }
+        syncRoleReviewAction();
+
         const $maintenanceRoleFloat = $("#@Id("roleSwitcherFloat")");
         $maintenanceRoleFloat.toggleClass("is-visible", canSwitchMaintenanceRole);
 
@@ -501,6 +552,7 @@
             const willShow = !panel.hasClass("show");
             panel.toggleClass("show", willShow);
             if (willShow) {
+                syncRoleReviewAction();
                 ensureMaintenanceRoleSelect();
                 reloadMaintenanceInfo();
             }

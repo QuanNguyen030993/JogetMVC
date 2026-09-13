@@ -33848,6 +33848,15 @@ aside {
         word-break: break-all;
     }
 
+.admin-actions {
+    padding-top: 10px;
+}
+
+    .admin-actions .dx-button {
+        border-radius: 7px;
+        font-weight: 600;
+    }
+
 .maintenance-value-list {
     display: grid;
     gap: 5px;
