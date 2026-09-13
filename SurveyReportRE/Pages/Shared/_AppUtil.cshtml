@@ -2463,24 +2463,35 @@
 
                                         var routeEditorOptions = null;
 
-                                        function normalizeCommentDepartment(value) {
-                                            return String(value || "").trim().toUpperCase();
-                                        }
+                                         function normalizeCommentDepartment(value) {
+                                             return String(value || "").trim().toUpperCase();
+                                         }
 
-                                        function shouldDisableRouteComment() {
-                                            var sectionDept = normalizeCommentDepartment(dept);
-                                            var currentRole = normalizeCommentDepartment(_role);
-                                            return !sectionDept
-                                                || !currentRole
-                                                || sectionDept !== currentRole;
-                                        }
-                                        function shouldDisableComment() {
-                                            var sectionDept = normalizeCommentDepartment(dept);
-                                            var currentRole = normalizeCommentDepartment(_role);
-                                            return !sectionDept
-                                                || !currentRole
-                                                || sectionDept !== currentRole;
-                                        }
+                                         function getCommentStageDepartment() {
+                                             var workflowPage = moduleKey === viewIdModulePrefix.quotation
+                                                 ? window.QuotationPage
+                                                 : window.PolicyIssuancePage;
+                                             var currentStageDept = workflowPage?.state?.stageDept;
+
+                                             if (!currentStageDept && dataFormId) {
+                                                 var formData = $(`#${dataFormId}`).dxForm("instance")?.option("formData");
+                                                 currentStageDept = formData?.stageDept || formData?.StageDept;
+                                             }
+
+                                             return normalizeCommentDepartment(currentStageDept);
+                                         }
+
+                                         function shouldDisableRouteComment() {
+                                             var sectionDept = normalizeCommentDepartment(dept);
+                                             var currentStageDept = getCommentStageDepartment();
+                                    console.log(currentStageDept);
+                                    return !sectionDept
+                                                 || !currentStageDept
+                                                 || sectionDept === currentStageDept;
+                                         }
+                                         function shouldDisableComment() {
+                                             return shouldDisableRouteComment();
+                                         }
 
                                         // routeEditorOptions = {
                                         //     items: initialComments,
@@ -2554,15 +2565,7 @@
                                         if (typeof $.fn.tmivcommenteditorroute !== "function") {
                                             throw new Error("TMIVCom CommentEditorRoute is not loaded.");
                                         }
-                                        var typeRequest = moduleKey == viewIdModulePrefix.quotation ? "Quotation" : "PolicyIssuance";
-                                         var isdisableComment =  shouldDisableComment();
-                                         try {
-                                             const formItems = $(`[data-form-part='bodyForm'][data-form-dept='${dept}']`).dxForm("instance").option("formItems");
-                                            if (formItems.stageDept == _role)  isdisableComment = true;
-                                         }
-                                         catch{
-
-                                         }
+                                         var typeRequest = moduleKey == viewIdModulePrefix.quotation ? "Quotation" : "PolicyIssuance";
 
                                         routeEditorOptions = {
                                             items: initialComments,
