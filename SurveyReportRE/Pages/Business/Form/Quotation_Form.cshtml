@@ -222,7 +222,8 @@ Note:
         var stageAccount = "";
 
         var deptData = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
-        var remarkBoxs = { FO: {}, TS: {}, UW: {}, LMKT: {}, PM: {} };
+        // Remark editors are registered lazily for the record's active stage only.
+        var remarkBoxs = {};
         var quotationData = new Object();
         var tatObject = new Object();
         state.quoteDetails = {};
@@ -309,18 +310,25 @@ Note:
                     details: details
                 };
             };
-            const inspectAllDepartmentRemarks = function () {
-                const details = qtDeptModuleCode.map(function (dept) {
-                    const control = remarkBoxs?.[dept]?.controlRemark;
-                    var disabled = true;
-                    if (control && typeof control.option === "function") {
-                        disabled = control.option("disableComment") === true;
-                    }
-                    const actualAllow = !!control && !disabled;
-                    const expectedAllow = !!control && dept !== "PM" && (reviewSuperUser
-                        || (phase1RoleAndStagePassed && dept === actualStageDept));
-                    return { dept, actualAllow, expectedAllow, matched: actualAllow === expectedAllow };
-                });
+            const inspectStageRemark = function () {
+                const dept = actualStageDept;
+                const control = remarkBoxs?.[dept]?.controlRemark;
+                const remarkBoxId = window.QuotationIdManager.remarkBox(dept, @ViewData["Id"]);
+                const visible = $(`#${remarkBoxId}`).closest(".dept-remark-panel").is(":visible");
+                var disabled = true;
+                if (control && typeof control.option === "function") {
+                    disabled = control.option("disableComment") === true;
+                }
+                const actualAllow = !!control && visible && !disabled;
+                const expectedAllow = !!control && dept !== "PM" && (reviewSuperUser || phase1RoleAndStagePassed);
+                const details = [{
+                    dept,
+                    visible,
+                    disabled,
+                    actualAllow,
+                    expectedAllow,
+                    matched: actualAllow === expectedAllow
+                }];
                 return {
                     passed: details.every(function (item) { return item.matched; }),
                     actual: details.map(function (item) { return `${item.dept}:${item.actualAllow ? "ALLOW" : "LOCK"}`; }).join(", "),
@@ -380,7 +388,7 @@ Note:
                     },
                     {
                         key: "remarkAllowAll", label: "Remark allow · stage department only", required: true,
-                        evaluate: inspectAllDepartmentRemarks
+                        evaluate: inspectStageRemark
                     },
                     {
                         key: "returnButton", label: "Return button", required: false,
@@ -1391,6 +1399,37 @@ Note:
             // resetOverviewAnimation(prefix);
         }
 
+        async function applyQuotationStageRemarkRule(formData) {
+            const activeStageDept = String(stageDept || "").trim().toUpperCase();
+            if (!activeStageDept || !window.QuotationIdManager.validateDepartment(activeStageDept)) return null;
+
+            const remarkBoxId = window.QuotationIdManager.remarkBox(activeStageDept, @ViewData["Id"]);
+            const $remarkPanel = $(`#${remarkBoxId}`).closest(".dept-remark-panel");
+            const remarkControl = remarkBoxs?.[activeStageDept]?.controlRemark;
+
+            $remarkPanel.hide();
+            if (!remarkControl || typeof remarkControl.option !== "function") return null;
+            remarkControl.option("disableComment", true);
+
+            return window.applyFeatureRoleControlRule({
+                feature: `Quotation stage remark · ${activeStageDept}`,
+                controlType: "section",
+                dept: activeStageDept,
+                stageDept: activeStageDept,
+                role: state.currentUserRole,
+                formData: formData || {},
+                state: state,
+                isDebugMode: _isDebugMode,
+                isSuperUser: _isSuperUser,
+                apply: function (decision) {
+                    if (String(stageDept || "").trim().toUpperCase() !== activeStageDept) return;
+                    const visible = activeStageDept !== "PM" && decision.allowed;
+                    remarkControl.option("disableComment", !visible);
+                    $remarkPanel.toggle(visible);
+                }
+            });
+        }
+
         function applyEditLock() {
             /*
              * role enable/disable restored code
@@ -1407,6 +1446,7 @@ Note:
             // $(`#${formId}`).dxForm("instance")?.option("disabled", roleApply[item]);
             // setAttachmentPermissionForSection(sectionSelector, !roleApply[item]);
             setTimeout(function () {
+                applyQuotationStageRemarkRule(getSelectedModel() || {});
                 qtDeptModuleCode.forEach(async function (item) {
                     var formId = window.QuotationIdManager.form(item, @ViewData["Id"]);
                     var saveButtonId = window.QuotationIdManager.btnSave(item, @ViewData["Id"]);
@@ -1421,12 +1461,6 @@ Note:
                         isDebugMode: _isDebugMode,
                         isSuperUser: _isSuperUser
                     };
-                    var remarkControl = remarkBoxs?.[item]?.controlRemark;
-                    // Fail closed while the section rule is still evaluating.
-                    if (remarkControl && typeof remarkControl.option === "function") {
-                        remarkControl.option("disableComment", true);
-                    }
-
                     await window.applyFeatureRoleControlRule({
                         ...commonRule,
                         feature: `Quotation section · ${item}`,
@@ -1452,12 +1486,6 @@ Note:
                                 visible: !isReferenceDepartment && decision.allowed,
                                 disabled: isReferenceDepartment || !decision.allowed
                             });
-                            if (remarkControl && typeof remarkControl.option === "function") {
-                                remarkControl.option(
-                                    "disableComment",
-                                    isReferenceDepartment || !decision.allowed
-                                );
-                            }
                         }
                     });
 
@@ -2066,8 +2094,9 @@ Note:
 
                 $(actionBar).closest(".dept-footer").show();
                 $(actionBar).css("display", "block");
+                const activeRemarkBoxId = window.QuotationIdManager.remarkBox(stageDept, @ViewData["Id"]);
                 const editorControl = TinyMCEElementMaker(
-                    ".htmleditor",
+                    `#${activeRemarkBoxId}`,
                     stageDept,
                     @ViewData["Id"],
                     remarkBoxs?.[stageDept]?.controlRemark,
@@ -2078,44 +2107,17 @@ Note:
                     sectionName: stageDept,
                     controlRemark: editorControl
                 };
-                // The editor is never writable before its section permission has
-                // completed both phases.
-                if (editorControl && typeof editorControl.option === "function") {
-                    editorControl.option("disableComment", true);
-                }
-                window.applyFeatureRoleControlRule({
-                    feature: `Quotation section/remark · ${stageDept}`,
-                    controlType: "section",
-                    dept: stageDept,
-                    stageDept: stageDept,
-                    role: state.currentUserRole,
-                    formData: q,
-                    state: state,
-                    isDebugMode: _isDebugMode,
-                    isSuperUser: _isSuperUser,
-                    apply: function (decision) {
-                        var remarkBoxId = window.QuotationIdManager.remarkBox(
-                            stageDept,
-                            @ViewData["Id"]
-                        );
-                        $(`#${remarkBoxId}`).tmivhtmleditorcommentbox(
-                            "option",
-                            "disableComment",
-                            stageDept === "PM" || !decision.allowed
-                        );
-                    }
-                });
+                applyQuotationStageRemarkRule(q);
                 return editorControl;
             };
 
+            // Department loop below only binds section data; it does not create remarks.
+            // The single editor is created from stageDept after the loop.
             $.each(qtDeptModuleCode, function (itemIndex, item) {
                 deptData[item] = { ...q, id: q.id, sectionName: item, code: q.quotationCode };
-                if (stageDept === item) {
-                    ensureActiveRemarkEditor();
-                } else {
-                    $(`#${window.QuotationIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "none" });
-                }
+                $(`#${window.QuotationIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "none" });
             });
+            ensureActiveRemarkEditor();
 
             await quotationFormStages.enter("formData");
             await renderDeptForms();

@@ -36523,6 +36523,11 @@ textarea {
     opacity: .55;
 }
 
+/* Remarks are fail-closed until the active-stage section role rule passes. */
+:is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-remark-panel {
+    display: none;
+}
+
     :is([id^="qt-overviewRoot_"], [id^="pi-overviewRoot_"]) .dept-tree .dept-idle-clock::before {
         top: 2px;
         height: 2px;

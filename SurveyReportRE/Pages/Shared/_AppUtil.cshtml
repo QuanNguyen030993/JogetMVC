@@ -2964,7 +2964,11 @@
                     const remarkBoxId = idManager.remarkBox(dept, id);
                     const actionBarId = idManager.actionBarDept(dept, id);
                     const actionBar = document.getElementById(actionBarId);
+                    const requestedRemarkElement = classform
+                        ? document.querySelector(classform)
+                        : null;
                     const remarkElement = document.getElementById(remarkBoxId)
+                        || requestedRemarkElement
                         || actionBar?.querySelector(".htmleditor");
                     var $element = remarkElement ? $(remarkElement) : $();
                     if (!$element.length) {

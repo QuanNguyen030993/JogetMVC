@@ -134,9 +134,159 @@ Note:
         var stageAccount = "";
 
         var deptData = { FO: {}, TS: {}, PM: {} };
-        var remarkBoxs = { FO: {}, TS: {}, PM: {} };
+        // Remark editors are registered lazily for the record's active stage only.
+        var remarkBoxs = {};
 
         state.piDetails = {};
+
+        async function showPolicyIssuanceRoleReview(policyIssuance) {
+            if (typeof window.checkFeatureRoleRule !== "function") {
+                console.error("Policy Issuance role review helper is unavailable");
+                return null;
+            }
+
+            const actualStageDept = String(policyIssuance?.stageDept || "").trim().toUpperCase();
+            const actualRole = String(state.currentUserRole || "").trim().toUpperCase();
+            const reviewSuperUser = String(_isSuperUser).trim().toLowerCase() === "true";
+            const phase1RoleAndStagePassed = actualRole === actualStageDept;
+            const $reviewRoot = $(`#${policyIssuanceOverviewRootId}`);
+            const inspectButtons = function ($buttons) {
+                var total = 0;
+                var enabled = 0;
+                $buttons.each(function () {
+                    total += 1;
+                    const instance = $(this).dxButton("instance");
+                    const disabled = instance
+                        ? instance.option("disabled") === true
+                        : ($(this).is(":disabled") || $(this).attr("aria-disabled") === "true" || $(this).hasClass("dx-state-disabled"));
+                    if (!disabled) enabled += 1;
+                });
+                return {
+                    passed: enabled > 0,
+                    actual: `${enabled}/${total} enabled`,
+                    expected: "At least one enabled button"
+                };
+            };
+            const inspectSections = function () {
+                const details = piDeptModuleCode.map(function (dept) {
+                    const formId = window.PolicyIssuanceIdManager.form(dept, @ViewData["Id"]);
+                    const form = $(`#${formId}`).dxForm("instance");
+                    const saveButtonId = window.PolicyIssuanceIdManager.btnSave(dept, @ViewData["Id"]);
+                    const saveButton = $(`#${saveButtonId}`).dxButton("instance");
+                    const actualAllow = !!form && form.option("disabled") !== true && form.option("readOnly") !== true;
+                    const expectedAllow = reviewSuperUser || (phase1RoleAndStagePassed && dept === actualStageDept);
+                    const actualSaveVisible = saveButton?.option("visible") === true;
+                    return {
+                        dept,
+                        actualAllow,
+                        expectedAllow,
+                        actualSaveVisible,
+                        expectedSaveVisible: expectedAllow,
+                        matched: actualAllow === expectedAllow && actualSaveVisible === expectedAllow
+                    };
+                });
+                return {
+                    passed: details.every(item => item.matched),
+                    actual: details.map(item => `${item.dept}:${item.actualAllow ? "ALLOW" : "LOCK"}/${item.actualSaveVisible ? "SAVE" : "NO SAVE"}`).join(", "),
+                    expected: details.map(item => `${item.dept}:${item.expectedAllow ? "ALLOW" : "LOCK"}/${item.expectedSaveVisible ? "SAVE" : "NO SAVE"}`).join(", "),
+                    details
+                };
+            };
+            const inspectComments = function () {
+                const details = piDeptModuleCode.map(function (dept) {
+                    const $editor = $(`#${formModuleKeyPi}-commentEditor_${dept}_@ViewData["Id"]`);
+                    var disabled = true;
+                    if ($editor.length && typeof $editor.tmivcommenteditorroute === "function") {
+                        disabled = $editor.tmivcommenteditorroute("option", "disableComment") === true;
+                    }
+                    const actualAllow = $editor.length > 0 && !disabled;
+                    const expectedAllow = reviewSuperUser || (phase1RoleAndStagePassed && dept === actualStageDept);
+                    return { dept, actualAllow, expectedAllow, matched: actualAllow === expectedAllow };
+                });
+                return {
+                    passed: details.every(item => item.matched),
+                    actual: details.map(item => `${item.dept}:${item.actualAllow ? "ALLOW" : "LOCK"}`).join(", "),
+                    expected: details.map(item => `${item.dept}:${item.expectedAllow ? "ALLOW" : "LOCK"}`).join(", "),
+                    details
+                };
+            };
+            const inspectStageRemark = function () {
+                const dept = actualStageDept;
+                const control = remarkBoxs?.[dept]?.controlRemark;
+                const remarkBoxId = window.PolicyIssuanceIdManager.remarkBox(dept, @ViewData["Id"]);
+                const visible = $(`#${remarkBoxId}`).closest(".dept-remark-panel").is(":visible");
+                const disabled = !control || typeof control.option !== "function"
+                    || control.option("disableComment") === true;
+                const actualAllow = !!control && visible && !disabled;
+                const expectedAllow = !!control && (reviewSuperUser || phase1RoleAndStagePassed);
+                const details = [{ dept, visible, disabled, actualAllow, expectedAllow, matched: actualAllow === expectedAllow }];
+                return {
+                    passed: details[0].matched,
+                    actual: `${dept}:${actualAllow ? "ALLOW" : "LOCK"}`,
+                    expected: `${dept}:${expectedAllow ? "ALLOW" : "LOCK"}`,
+                    details
+                };
+            };
+
+            const returnHostId = window.PolicyIssuanceIdManager.btnReturnBranch(actualStageDept, @ViewData["Id"]);
+            const submitHostId = window.PolicyIssuanceIdManager.btnSubmitBranch(actualStageDept, @ViewData["Id"]);
+            const report = await window.checkFeatureRoleRule({
+                display: true,
+                feature: "Policy Issuance role review",
+                moduleCode: viewIdModulePrefix.policyIssuance,
+                role: actualRole,
+                stageDept: actualStageDept,
+                section: actualRole,
+                formData: policyIssuance,
+                state,
+                isDebugMode: typeof _isDebugMode !== "undefined" && _isDebugMode,
+                isSuperUser: typeof _isSuperUser !== "undefined" && _isSuperUser,
+                superUserBypass: true,
+                rules: {
+                    roles: [actualStageDept],
+                    stageDepts: [actualStageDept],
+                    sections: [actualStageDept]
+                },
+                phase1Checks: [{
+                    key: "commentAllow",
+                    label: "Comment allow",
+                    required: true,
+                    actual: actualRole,
+                    expected: actualRole,
+                    evaluate: function () {
+                        return { passed: !!actualRole, actual: actualRole, expected: actualRole };
+                    }
+                }],
+                phase2Checks: [{
+                    key: "accept", label: "Accept", required: false,
+                    evaluate: function () {
+                        return inspectButtons($reviewRoot.find(".dx-button").filter(function () {
+                            return /^accept$/i.test($(this).text().trim());
+                        }));
+                    }
+                }, {
+                    key: "sectionAllowAll", label: "Section allow · stage department only", required: true,
+                    evaluate: inspectSections
+                }, {
+                    key: "commentAllowInStageDept", label: "Comment allow in stageDept", required: true,
+                    evaluate: inspectComments
+                }, {
+                    key: "remarkAllowAll", label: "Remark allow · stage department only", required: true,
+                    evaluate: inspectStageRemark
+                }, {
+                    key: "returnButton", label: "Return button", required: false,
+                    evaluate: function () { return inspectButtons($(`#${returnHostId}`).find("[data-workflow-route-button]")); }
+                }, {
+                    key: "customButton", label: "Custom button", required: false,
+                    evaluate: function () { return inspectButtons($reviewRoot.find("[data-custom-route-button]")); }
+                }, {
+                    key: "routeButton", label: "Route button", required: false,
+                    evaluate: function () { return inspectButtons($(`#${submitHostId}`).find("[data-workflow-route-button]")); }
+                }]
+            });
+            console.log("Policy Issuance role review", report);
+            return report;
+        }
 
         const policyIssuanceRenderGate = (function () {
             var sequence = 0;
@@ -275,7 +425,15 @@ Note:
             moduleCode: formModuleKeyPi,
             recordId: policyIssuanceViewInstanceId,
             rootId: policyIssuanceOverviewRootId,
-            renderGate: policyIssuanceRenderGate
+            renderGate: policyIssuanceRenderGate,
+            showRoleReview: function () {
+                const policyIssuance = state.quotes?.[0];
+                if (!policyIssuance || !Object.keys(policyIssuance).length) {
+                    DevExpress.ui.notify("Policy Issuance role review data is not ready.", "warning", 1600);
+                    return Promise.resolve(null);
+                }
+                return showPolicyIssuanceRoleReview(policyIssuance);
+            }
         };
         window.PolicyIssuanceRenderGates = window.PolicyIssuanceRenderGates || {};
         window.PolicyIssuanceRenderGates[policyIssuanceViewInstanceId] = policyIssuanceRenderGate;
@@ -1035,6 +1193,36 @@ Note:
         }
 
         
+        async function applyPolicyIssuanceStageRemarkRule(formData) {
+            const activeStageDept = String(stageDept || "").trim().toUpperCase();
+            if (!activeStageDept || !window.PolicyIssuanceIdManager.validateDepartment(activeStageDept)) return null;
+
+            const remarkBoxId = window.PolicyIssuanceIdManager.remarkBox(activeStageDept, @ViewData["Id"]);
+            const $remarkPanel = $(`#${remarkBoxId}`).closest(".dept-remark-panel");
+            const remarkControl = remarkBoxs?.[activeStageDept]?.controlRemark;
+
+            $remarkPanel.hide();
+            if (!remarkControl || typeof remarkControl.option !== "function") return null;
+            remarkControl.option("disableComment", true);
+
+            return window.applyFeatureRoleControlRule({
+                feature: `Policy Issuance stage remark · ${activeStageDept}`,
+                controlType: "section",
+                dept: activeStageDept,
+                stageDept: activeStageDept,
+                role: state.currentUserRole,
+                formData: formData || {},
+                state: state,
+                isDebugMode: _isDebugMode,
+                isSuperUser: _isSuperUser,
+                apply: function (decision) {
+                    if (String(stageDept || "").trim().toUpperCase() !== activeStageDept) return;
+                    remarkControl.option("disableComment", !decision.allowed);
+                    $remarkPanel.toggle(decision.allowed);
+                }
+            });
+        }
+
         function applyEditLock() {
             /*
              * role enable/disable restored code
@@ -1051,6 +1239,7 @@ Note:
             // $(`#${formId}`).dxForm("instance")?.option("disabled", roleApply[item]);
             // setAttachmentPermissionForSection(sectionSelector, !roleApply[item]);
             setTimeout(function () {
+                applyPolicyIssuanceStageRemarkRule(getSelectedModel() || {});
                 piDeptModuleCode.forEach(async function (item) {
                     var formId = window.PolicyIssuanceIdManager.form(item, @ViewData["Id"]);
                     var form = $(`#${formId}`).dxForm("instance");
@@ -1097,18 +1286,6 @@ Note:
                                 );
                             } catch (error) {
                                 console.warn(`Policy Issuance comment role state was not ready for ${item}.`, error);
-                            }
-                        }
-                    });
-
-                    await window.applyFeatureRoleControlRule({
-                        ...commonRule,
-                        feature: `Policy Issuance remark · ${item}`,
-                        controlType: "remark",
-                        apply: function (decision) {
-                            var remarkControl = remarkBoxs?.[item]?.controlRemark;
-                            if (remarkControl && typeof remarkControl.option === "function") {
-                                remarkControl.option("disableComment", !decision.allowed);
                             }
                         }
                     });
@@ -1703,8 +1880,9 @@ Note:
 
                 $(actionBar).closest(".dept-footer").show();
                 $(actionBar).css("display", "block");
+                const activeRemarkBoxId = window.PolicyIssuanceIdManager.remarkBox(stageDept, @ViewData["Id"]);
                 const editorControl = TinyMCEElementMaker(
-                    ".htmleditor",
+                    `#${activeRemarkBoxId}`,
                     stageDept,
                     @ViewData["Id"],
                     remarkBoxs?.[stageDept]?.controlRemark,
@@ -1714,41 +1892,17 @@ Note:
                     sectionName: stageDept,
                     controlRemark: editorControl
                 };
-                window.applyFeatureRoleControlRule({
-                    feature: `Policy Issuance remark · ${stageDept}`,
-                    controlType: "remark",
-                    dept: stageDept,
-                    stageDept: stageDept,
-                    role: state.currentUserRole,
-                    formData: q,
-                    state: state,
-                    isDebugMode: _isDebugMode,
-                    isSuperUser: _isSuperUser,
-                    apply: function (decision) {
-                        var remarkBoxId = window.PolicyIssuanceIdManager.remarkBox(
-                            stageDept,
-                            @ViewData["Id"]
-                        );
-                        $(`#${remarkBoxId}`).tmivhtmleditorcommentbox(
-                            "option",
-                            "disableComment",
-                            !decision.allowed
-                        );
-                    }
-                });
+                applyPolicyIssuanceStageRemarkRule(q);
                 return editorControl;
             };
 
+            // Department loop below only binds section data; it does not create remarks.
+            // The single editor is created from stageDept after the loop.
             $.each(piDeptModuleCode, function (itemIndex, item) {
                 deptData[item] = { ...q, id: q.id, sectionName: item, code: q.policyIssuanceCode };
-                if (stageDept === item) {
-                    ensureActiveRemarkEditor();
-                }
-                else {
-                    $(`#${PolicyIssuanceIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "none" });
-                }
-                
+                $(`#${PolicyIssuanceIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "none" });
             });
+            ensureActiveRemarkEditor();
 
 
             await policyIssuanceFormStages.enter("formData");
