@@ -263,8 +263,8 @@ Note:
                     const formId = window.QuotationIdManager.form(dept, @ViewData["Id"]);
                     const form = $(`#${formId}`).dxForm("instance");
                     const actualAllow = !!form && form.option("disabled") !== true && form.option("readOnly") !== true;
-                    const expectedAllow = reviewSuperUser
-                        || (phase1RoleAndStagePassed && dept === actualStageDept);
+                    const expectedAllow = dept !== "PM" && (reviewSuperUser
+                        || (phase1RoleAndStagePassed && dept === actualStageDept));
                     return {
                         dept: dept,
                         actualAllow: actualAllow,
@@ -287,8 +287,8 @@ Note:
                         disabled = $editor.tmivcommenteditorroute("option", "disableComment") === true;
                     }
                     const actualAllow = $editor.length > 0 && !disabled;
-                    const expectedAllow = reviewSuperUser
-                        || (phase1RoleAndStagePassed && dept === actualStageDept);
+                    const expectedAllow = dept !== "PM" && (reviewSuperUser
+                        || (phase1RoleAndStagePassed && dept === actualStageDept));
                     return { dept, actualAllow, expectedAllow, matched: actualAllow === expectedAllow };
                 });
                 return {
@@ -306,7 +306,7 @@ Note:
                         disabled = control.option("disableComment") === true;
                     }
                     const actualAllow = !!control && !disabled;
-                    const expectedAllow = !!control && (reviewSuperUser
+                    const expectedAllow = !!control && dept !== "PM" && (reviewSuperUser
                         || (phase1RoleAndStagePassed && dept === actualStageDept));
                     return { dept, actualAllow, expectedAllow, matched: actualAllow === expectedAllow };
                 });
@@ -1263,7 +1263,7 @@ Note:
                     apply: function (decision) {
                         setAttachmentPermissionForSection(
                             `#${formModuleKeyQt}-sec_${dept}_@ViewData["Id"]`,
-                            decision.phase1Allowed
+                            dept !== "PM" && decision.phase1Allowed
                         );
                     }
                 });
@@ -1407,14 +1407,16 @@ Note:
                         controlType: "section",
                         apply: function (decision) {
                             debugger
+                            const isReferenceDepartment = item === "PM";
                             form?.option({
-                                readOnly: !decision.phase1Allowed
+                                readOnly: isReferenceDepartment || !decision.phase1Allowed
                                 // disabled: !decision.phase1Allowed
                             });
+                            if (isReferenceDepartment) form?.option("disabled", true);
                             form?.repaint();
                             setAttachmentPermissionForSection(
                                 `#${formModuleKeyQt}-sec_${item}_@ViewData["Id"]`,
-                                decision.phase1Allowed
+                                !isReferenceDepartment && decision.phase1Allowed
                             );
                         }
                     });
@@ -1430,7 +1432,7 @@ Note:
                                 $commentEditor.tmivcommenteditorroute(
                                     "option",
                                     "disableComment",
-                                    !decision.allowed
+                                    item === "PM" || !decision.allowed
                                 );
                             } catch (error) {
                                 console.warn(`Quotation comment role state was not ready for ${item}.`, error);
@@ -1445,7 +1447,7 @@ Note:
                         apply: function (decision) {
                             var remarkControl = remarkBoxs?.[item]?.controlRemark;
                             if (remarkControl && typeof remarkControl.option === "function") {
-                                remarkControl.option("disableComment", !decision.allowed);
+                                remarkControl.option("disableComment", item === "PM" || !decision.allowed);
                             }
                         }
                     });
@@ -1457,8 +1459,8 @@ Note:
                         controlType: "button",
                         apply: function (decision) {
                             $(`#${saveButtonId}`).dxButton("instance")?.option({
-                                visible: decision.allowed,
-                                disabled: !decision.allowed
+                                visible: item !== "PM" && decision.allowed,
+                                disabled: item === "PM" || !decision.allowed
                             });
                         }
                     });
@@ -1535,7 +1537,7 @@ Note:
                     isSuperUser: _isSuperUser,
                     apply: function (decision) {
                         if (state.currentUserRole !== evaluatedRole || stageDept !== evaluatedStage) return;
-                        renderHint(decision.phase1Allowed);
+                        renderHint(k !== "PM" && decision.phase1Allowed);
                     }
                 });
             });
@@ -2079,7 +2081,7 @@ Note:
                         $(`#${remarkBoxId}`).tmivhtmleditorcommentbox(
                             "option",
                             "disableComment",
-                            !decision.allowed
+                            stageDept === "PM" || !decision.allowed
                         );
                     }
                 });

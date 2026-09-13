@@ -37936,3 +37936,58 @@ code,
     overflow-wrap: anywhere;
     white-space: normal;
 }
+
+/* Quotation PM is a reference-only department, not a workflow stage. */
+[id^="qt-overviewRoot_"] .dept-section.dept-section--reference {
+    border-color: color-mix(in srgb, #64748b 46%, var(--theme-border));
+    border-left-color: #64748b;
+    background:
+        linear-gradient(135deg, rgba(100, 116, 139, .055) 25%, transparent 25%) 0 0 / 14px 14px,
+        linear-gradient(315deg, rgba(100, 116, 139, .055) 25%, transparent 25%) 0 0 / 14px 14px,
+        var(--theme-surface);
+    box-shadow: inset 0 0 0 1px rgba(100, 116, 139, .08), 0 4px 10px rgba(15, 23, 42, .06);
+}
+
+[id^="qt-overviewRoot_"] .dept-section.dept-section--reference::before {
+    content: "REFERENCE · READ ONLY";
+    position: absolute;
+    top: -9px;
+    right: 18px;
+    z-index: 2;
+    padding: 2px 8px;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: var(--theme-surface, #fff);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .08em;
+}
+
+[id^="qt-deptTree_"] .dept-node.dept-node--reference .dept-circle {
+    color: #475569;
+    border-color: #94a3b8;
+    border-style: dashed;
+    background: color-mix(in srgb, #e2e8f0 58%, var(--theme-surface, #fff));
+    box-shadow: 0 0 0 4px rgba(100, 116, 139, .10), 0 7px 18px rgba(15, 23, 42, .09);
+}
+
+[id^="qt-deptTree_"] .dept-node.dept-node--reference .dept-callout {
+    border-color: #cbd5e1;
+    background: color-mix(in srgb, #f1f5f9 72%, var(--theme-surface, #fff));
+}
+
+.dept-reference-badge {
+    position: absolute;
+    right: -10px;
+    bottom: -7px;
+    padding: 1px 4px;
+    color: #fff;
+    border: 2px solid var(--theme-surface, #fff);
+    border-radius: 999px;
+    background: #64748b;
+    font-size: 6px;
+    font-weight: 900;
+    letter-spacing: .04em;
+    line-height: 1.25;
+}

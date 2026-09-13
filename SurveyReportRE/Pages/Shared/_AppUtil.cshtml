@@ -3777,7 +3777,8 @@
 
             $matchingNodes.each(function () {
                 var $node = $(this);
-                var enabled = Boolean(hasAssignee);
+                var isReferenceDepartment = $node.attr("data-reference") === "true";
+                var enabled = Boolean(hasAssignee) || isReferenceDepartment;
                 $node
                     .attr("data-has-assignee", String(enabled))
                     .toggleClass("fan-open", enabled && $node.hasClass("fan-open"));
@@ -4436,11 +4437,12 @@
                 const dataForm = sourceData[dept];
                 if (!dataForm) continue;
 
+                const isReferenceDepartment = isQuotation && dept === "PM";
                 const currentPic = getDefaultPicByDept(dept, dataForm);
                 const $section = $(`#${moduleKey}-sec_${dept}_${dataForm.id}`);
                 $section
                     .find(".dept-upperbody, .dept-body")
-                    .toggle(!!currentPic);
+                    .toggle(isReferenceDepartment || !!currentPic);
                 // Comments are part of the workflow history and must remain
                 // visible even before a department member is assigned. The
                 // comment editor's disableComment rule controls write access.
@@ -4449,16 +4451,17 @@
                     .show();
                 $section
                     .find(".dept-footer")
-                    .toggle(!!currentPic || getActiveStage() === dept);
+                    .toggle(isReferenceDepartment || !!currentPic || getActiveStage() === dept);
 
                 await renderDepartmentAssigneeBox(`#${idManager.assigneeBox(dept, dataForm.id)}`, {
                     groupName: dept,
                     dataForm: dataForm,
-                    isDisabled: dept == "LMKT" ? true : false,
+                    isDisabled: dept === "LMKT" || isReferenceDepartment,
                     currentSection: function () {
                         return workflowPage?.state?.currentUserRole || _role;
                     },
                     onClosed: function (selectedItems) {
+                        if (isReferenceDepartment) return;
                         if (!renderState.isAssigneeBoxRender || !Array.isArray(selectedItems)) return;
 
                         const formId = idManager.form(dept, this.dataForm.id);
@@ -10707,7 +10710,9 @@
                         );
                         $co.attr("data-pic-account", pic);
                         if (!pic) {
-                            $co.find(".co-text").text("-");
+                            $co.find(".co-text").text(
+                                $(this).attr("data-reference") === "true" ? "Reference" : "-"
+                            );
                             $co.css({ color: "" });
                             return;
                         }

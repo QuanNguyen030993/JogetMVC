@@ -16,8 +16,11 @@
     {
         @foreach (string item in deptModuleCodes)
         {
+            var isReferenceDepartment = item == "PM";
 
-            <section id="@Id($"sec_{item}")" class="dept-section">
+            <section id="@Id($"sec_{item}")"
+                     class="dept-section@(isReferenceDepartment ? " dept-section--reference" : "")"
+                     data-section-mode="@(isReferenceDepartment ? "reference" : "workflow")">
                 <!-- 1. Header -->
                 <div id="@Id($"sec_{item}-header")" class="dept-header">
                     @{

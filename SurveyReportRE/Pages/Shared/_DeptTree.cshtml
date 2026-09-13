@@ -45,14 +45,16 @@
         @for (var deptIndex = 0; deptIndex < deptCodes.Length; deptIndex++)
         {
             var deptCode = deptCodes[deptIndex];
-            <div class="@($"{Model.Prefix}")-dept-tree dept-node"
+            var isReferenceDepartment = moduleCode == QTViewIdHelper.Prefix && deptCode == "PM";
+            <div class="@($"{Model.Prefix}-dept-tree dept-node{(isReferenceDepartment ? " dept-node--reference" : "")}")"
                  data-key="@deptCode"
-                 data-has-assignee="false"
+                 data-reference="@(isReferenceDepartment ? "true" : "false")"
+                 data-has-assignee="@(isReferenceDepartment ? "true" : "false")"
                  data-target="#@($"{Model.Prefix}-sec_{deptCode}_{Model.Id}")">
 
                 <div class="dept-callout" data-pic-for="@deptCode">
                     <span class="co-icon"></span>
-                    <span class="co-text">-</span>
+                    <span class="co-text">@(isReferenceDepartment ? "Reference" : "-")</span>
                 </div>
 
                 <div class="dept-subnodes"
@@ -79,10 +81,14 @@
                      tabindex="0"
                      aria-haspopup="menu"
                      aria-expanded="false"
-                     aria-disabled="true"
-                     title="Double-click to open @deptCode section shortcuts"
+                     aria-disabled="@(isReferenceDepartment ? "false" : "true")"
+                     title="@(isReferenceDepartment ? "Open PM reference section" : $"Double-click to open {deptCode} section shortcuts")"
                      aria-label="Open @deptCode section shortcuts">
                     @deptCode
+                    @if (isReferenceDepartment)
+                    {
+                        <span class="dept-reference-badge" aria-hidden="true">REF</span>
+                    }
                 </div>
             </div>
         }

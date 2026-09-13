@@ -2,9 +2,7 @@
 
 @{
     string dept = "PM";
-    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
-    long policyIssuanceId = 0;
-    string cloneQuotationGuid = "";
+    long quotationId = Convert.ToInt64(ViewData["Id"]);
 }
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
@@ -24,148 +22,62 @@
     }).catch(function () { return {}; });
     
 
-    var sectionId = "@(ViewData["Cd"])";
-    var modelObject = new Object();
-    modelObject.ModelName = "Quotation"; 
-    // var that = new Object();
-    // that.ModelName = "Quotation";
-    // that.moduleName = "default";
-    // that.editorType = "dxFileUploader"
-    // that.id = @(quotationId);
-    // that.guid = "@(quotationGuid)";
-    // that.sectionName = "@(dept)";
-    // that.titleName = "Upload Quotation";
-    // role enable/disable restored code: that.uploaderAllow = _role == "@dept";
-    // that.data = { SectionName: `${sectionId}_${that.moduleName}_@(quotationId)`, Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" };; //{"SectionName":"default_FO_410"}
-
-
-    var that2 = new Object();
-    that2.ModelName = "Quotation";
-    that2.moduleName = "supportingDoc";
-    that2.editorType = "dxFileUploader"
-    that2.id = @(quotationId);
-    that2.guid = "@(quotationGuid)";
-    that2.sectionName = "@(dept)";
-    that2.titleName = "Upload Supporting Document";
-    /* role enable/disable restored code: that2.uploaderAllow = _role == "@dept"; */
-    that2.uploaderAllow = false;
-    that2.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that2.moduleName, @(quotationId)), Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept,quotationId))" }; //{"SectionName":"default_FO_410"}
-    
-    
-    var that3 = new Object();
-    that3.ModelName = "PolicyIssuance";
-    that3.moduleName = "defaultDoc";
-    that3.editorType = "dxFileUploader"
-    that3.id = @(policyIssuanceId);
-    that3.guid = "@(quotationGuid)";
-    that3.cloneId = @quotationId;
-    that3.cloneGuid = "@(cloneQuotationGuid)";
-    that3.sectionName = "@(dept)";
-    that3.titleName = "Upload Document";
-    /* role enable/disable restored code: that3.uploaderAllow = _role == "@dept"; */
-    that3.uploaderAllow = false;
-    that3.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that3.moduleName, @(policyIssuanceId)), Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
-
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
         formData: initialFormData,
-                 items: [
-                      {
-                          itemType: "group",
-                          name: "decision@(dept)Group",
-                          cssClass: "workflow-decision-group qt-decision-group-@(dept)",
-                          elementAttr: {
-                              id: "@(QTViewIdHelper.Prefix)-decision-group-@(dept)-@(quotationId)",
-                              "data-form-group-name": "decision@(dept)Group",
-                              "data-route-dept": "@dept"
-                          },
-                          caption: "Decision",
-                          colCount: 2,
-                          items: [
-         {
-    dataField: "decision",
-    label: { text: "Decision" },
-    editorType: "dxRadioGroup",
-    editorOptions: {
+        readOnly: true,
+        disabled: true,
         items: [
-            { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
-            // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
-            { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
-        ],
-         displayExpr: "text",
-         valueExpr: "id",
-         layout: "horizontal",
-         itemTemplate: function(itemData, _, itemElement) {
-         setTimeout(() => {
-          var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-          var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Load Button Problem");
-          if (tatObject) if (tatObject[`@dept`]?.AcceptDate)
-          {
-            $(`#AC_@QTViewIdHelper.Decision(dept, quotationId)`).addClass("btn-success");
-            $(`#${itemData.id}`).dxButton("instance").option("disabled", true);
-            if (itemData.id === "RJ_@QTViewIdHelper.Decision(dept, quotationId)" ) $(`#RJ_@QTViewIdHelper.Decision(dept, quotationId)`).dxButton("instance").option("disabled", false);
-          }
-         },_delayRenderDecisionButton);
+            {
+                itemType: "group",
+                name: "pmReferenceInformation",
+                caption: "Reference Information",
+                colCount: 1,
+                items: [{
+                    dataField: "inceptionDate",
+                    label: { text: "Inception Date" },
+                    editorType: "dxDateBox",
+                    editorOptions: {
+                        width: 200,
+                        displayFormat: "dd/MM/yyyy",
+                        readOnly: true
+                    }
+                }]
+            },
+            {
+                itemType: "group",
+                name: "paProcess",
+                caption: "PA Process",
+                colCount: 1,
+                items: [{
+                    itemType: "simple",
+                    template: function (_, itemElement) {
+                        const paGridParams = {
+                            refKey: 1,
+                            isAllowRowMenu: false,
+                            gridEditorOptions: {
+                                editing: {
+                                    allowUpdating: false,
+                                    allowAdding: false,
+                                    allowDeleting: false
+                                }
+                            }
+                        };
+                        const gridOptions = new PolicyIssuanceSubDetailsGridOption(
+                            "PolicyIssuanceSubDetails",
+                            "User",
+                            paGridParams
+                        );
+                        new MGrid(null, itemElement, gridOptions, null);
+                    }
+                }]
+            }
+        ]
+    });
+    viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)", ["PA Process"]);
 
-         $(`<div id='${itemData.id}'>`).dxButton({
-         text: itemData.text,
-         width: "100%",
-         height: "100%",
-         onClick: function (e){
-             if (_ == 0)
-                 {
-                      var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                       var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
-                      tatObject[`@dept`].AcceptDate = formatDateToString(new Date()).gmt7;
-                      formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                      var passingObject = new Object();
-                      passingObject.statusName = "@dept Process"; // base on Dept
-                      passingObject.Comment = `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`;  // base on Dept
-                      passingObject.formItems = formItems;
-                      passingObject.dept = `@dept`;
-                      passingObject.url = '/api/Quotation/UpdateData';
-                      passingObject.urlLog = `/api/Quotation/LogAction`;
-                      passingObject.schemeName = `Quotation`;
-                      acceptDecision(passingObject, `@dept`);
-                 }
-                 if (_ == 1)
-                 {
-                      var formItems = $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
-                      var tatObject = tryParseJSON(formItems.turnAroundTimeAttributes, "TAT Button Problem");
-                      tatObject[`@dept`].AcceptDate = "";
-                      formItems.turnAroundTimeAttributes = JSON.stringify(tatObject);
-                      var passingObject = new Object();
-                      passingObject.statusName = "@dept Pending"; // base on Dept
-                      passingObject.Comment = `Quotation ${formItems.quotationCode} rejected by ${_displayName}!`;  // base on Dept
-                      passingObject.formItems = formItems;
-                      passingObject.dept = `@dept`;
-                      passingObject.url = '/api/Quotation/UpdateData';
-                      passingObject.urlLog = `/api/Quotation/LogAction`;
-                      passingObject.schemeName = `Quotation`;
-                      rejectDecision(passingObject);
-                 }
-                 }
-                     }).appendTo(itemElement);
-                  itemElement
-                },
-                isRequired: true
-                }
-            }]}, 
-            { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(null ,null ,that3) },
-          ]
-       });
-       viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)");
-
-       setTimeout(() => {
-           var picJson = PIC_JSON || "{}";
-           var picMap = parsePicMap(picJson);
-           var picVal = picMap["@dept"] || "";
-           var sectionId = `#qt-sec_@(dept)_@(quotationId)`;
-           if (!picVal) {
-               $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
-           } else {
-               $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
-           }
-       }, 100);
-    })
+    $(`#qt-sec_@(dept)_@(quotationId)`)
+        .addClass("dept-section--reference")
+        .attr("data-section-mode", "reference");
+    });
 
 </script>
