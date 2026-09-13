@@ -288,7 +288,7 @@ Note:
                     }
                     const actualAllow = $editor.length > 0 && !disabled;
                     const expectedAllow = reviewSuperUser
-                        || (phase1RoleAndStagePassed && dept !== actualStageDept);
+                        || (phase1RoleAndStagePassed && dept === actualStageDept);
                     return { dept, actualAllow, expectedAllow, matched: actualAllow === expectedAllow };
                 });
                 return {
@@ -335,6 +335,20 @@ Note:
                     stageDepts: [actualStageDept],
                     sections: [actualStageDept]
                 },
+                phase1Checks: [{
+                    key: "commentAllow",
+                    label: "Comment allow",
+                    required: true,
+                    actual: actualRole,
+                    expected: actualRole,
+                    evaluate: function () {
+                        return {
+                            passed: !!actualRole,
+                            actual: actualRole,
+                            expected: actualRole
+                        };
+                    }
+                }],
                 phase2Checks: [
                     {
                         key: "accept", label: "Accept", required: false,
@@ -349,7 +363,7 @@ Note:
                         evaluate: inspectAllDepartmentSections
                     },
                     {
-                        key: "commentAllowAll", label: "Comment allow · inverse of section", required: true,
+                        key: "commentAllowInStageDept", label: "Comment allow in stageDept", required: true,
                         evaluate: inspectAllDepartmentComments
                     },
                     {

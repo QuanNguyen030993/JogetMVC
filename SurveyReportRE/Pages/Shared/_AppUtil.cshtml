@@ -12118,9 +12118,10 @@
         const stageDept = normalizeRuleValue(options.stageDept);
         const role = normalizeRuleValue(options.role);
         const sameAsStage = !!controlDept && !!stageDept && controlDept === stageDept;
-        const phase1SectionAllowed = controlType === "comment" ? !sameAsStage : sameAsStage;
+        const roleMatchesStage = !!role && !!stageDept && role === stageDept;
+        const phase1SectionAllowed = controlType === "comment" ? roleMatchesStage : sameAsStage;
         const phase1AllowedSections = controlType === "comment"
-            ? (phase1SectionAllowed ? [controlDept] : [`ANY EXCEPT ${stageDept}`])
+            ? [controlDept]
             : [stageDept];
 
         if (typeof window.checkFeatureRoleRule !== "function") {
@@ -12139,17 +12140,18 @@
 
         let report;
         try {
+            const defaultPhase2Allow = controlType === "comment" ? sameAsStage : true;
             const phase2Allow = typeof options.allowWhen === "function"
                 ? !!(await options.allowWhen({
                     controlType,
                     dept: controlDept,
                     stageDept,
                     role,
-                    defaultAllowed: true,
+                    defaultAllowed: defaultPhase2Allow,
                     sectionAllowed: phase1SectionAllowed,
                     formData: options.formData || {}
                 }))
-                : true;
+                : defaultPhase2Allow;
 
             report = await window.checkFeatureRoleRule({
                 feature: options.feature || `${controlType} · ${controlDept || "unknown"}`,
@@ -12174,15 +12176,35 @@
                     onlyAllowFromRoute: options.onlyAllowFromRoute,
                     customRouteCondition: options.customRouteCondition
                 },
+                phase1Checks: controlType === "comment" ? [{
+                    key: `comment_role_${controlDept || "unknown"}`,
+                    label: "Comment allow",
+                    required: true,
+                    actual: role,
+                    expected: role,
+                    evaluate: function () {
+                        return {
+                            passed: !!role,
+                            actual: role,
+                            expected: role
+                        };
+                    }
+                }] : [],
                 phase2Checks: [{
                     key: `control_${controlType}_${controlDept || "unknown"}`,
-                    label: `${controlType} allow · ${controlDept || "unknown"}`,
+                    label: controlType === "comment"
+                        ? `Comment allow in stageDept · ${stageDept || "unknown"}`
+                        : `${controlType} allow · ${controlDept || "unknown"}`,
                     required: true,
                     evaluate: function () {
                         return {
                             passed: phase2Allow,
-                            actual: phase2Allow ? "ALLOW" : "LOCK",
-                            expected: "ALLOW"
+                            actual: controlType === "comment"
+                                ? controlDept
+                                : (phase2Allow ? "ALLOW" : "LOCK"),
+                            expected: controlType === "comment"
+                                ? stageDept
+                                : "ALLOW"
                         };
                     }
                 }]

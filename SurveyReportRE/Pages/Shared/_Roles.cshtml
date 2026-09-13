@@ -276,6 +276,9 @@
         }
 
         const roleConfigured = !!allowedRoles.length;
+        const suppliedPhase1Checks = Array.isArray(options.phase1Checks)
+            ? options.phase1Checks
+            : [];
         const suppliedPhase2Checks = Array.isArray(options.phase2Checks)
             ? options.phase2Checks
             : [];
@@ -284,7 +287,20 @@
             { key: "role", label: "Role", configured: roleConfigured, actual: role, expected: allowedRoles, required: true, evaluate: function () { return matchesAllowed([role], allowedRoles); } },
             { key: "stageDept", label: "Stage dept", configured: !!allowedStageDepts.length, actual: stageDeptValue, expected: allowedStageDepts, required: true, evaluate: function () { return matchesAllowed([stageDeptValue], allowedStageDepts); } },
             { key: "section", label: "Section allow", configured: !!allowedSections.length, actual: authenticatedSection, expected: allowedSections, required: true, evaluate: function () { return matchesAllowed([authenticatedSection], allowedSections); } }
-        ];
+        ].concat(suppliedPhase1Checks.map(function (definition, index) {
+            const requestedKey = definition.key || `phase1_${index + 1}`;
+            return {
+                key: reservedCheckKeys.has(requestedKey) ? `phase1_${requestedKey}` : requestedKey,
+                label: definition.label || definition.key || `Phase 1 check ${index + 1}`,
+                configured: definition.configured !== false,
+                actual: definition.actual,
+                expected: definition.expected,
+                required: definition.required !== false,
+                evaluate: typeof definition.evaluate === "function"
+                    ? function () { return definition.evaluate(evaluationContext); }
+                    : function () { return definition.value; }
+            };
+        }));
         const phase2Definitions = [
             { key: "route", label: "Only allow from route", configured: onlyAllowFromRoute != null && onlyAllowFromRoute !== false && onlyAllowFromRoute !== "", actual: routeCandidates.filter(Boolean), expected: onlyAllowFromRoute, required: true, evaluate: checkOnlyAllowFromRoute },
             { key: "customRoute", label: "Custom route condition", configured: customRouteCondition != null && customRouteCondition !== "", actual: customRouteCondition == null ? "" : "evaluated", expected: customRouteCondition, required: true, evaluate: function () { return evaluateCustomCondition(customRouteCondition, evaluationContext); } }
@@ -384,7 +400,9 @@
             route,
             checks,
             phases: [
-                { key: "access", label: "Phase 1 · Role / Stage dept / Section", executed: true, passed: phase1Passed },
+                { key: "access", label: suppliedPhase1Checks.length
+                    ? "Phase 1 · Role / Stage dept / Section / Comment"
+                    : "Phase 1 · Role / Stage dept / Section", executed: true, passed: phase1Passed },
                 { key: "actions", label: "Phase 2 · Action permissions", executed: phase1Passed, passed: phase2Passed }
             ],
             timeline: checks.filter(function (item) {
