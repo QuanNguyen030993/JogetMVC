@@ -229,7 +229,7 @@ Note:
 
         // ROLE RULE REVIEW EXAMPLE
         // This deliberately runs for every opened Quotation while under review.
-        // Role + Actual Stage Dept + Section must all match the holding department.
+        // Phase 1 gates by role. Phase 2 inspects the rendered action permissions.
         async function showQuotationRoleReviewExample(quotation) {
             if (typeof window.checkFeatureRoleRule !== "function") {
                 console.error("Quotation role review helper is unavailable");
@@ -237,6 +237,82 @@ Note:
             }
 
             const actualStageDept = String(quotation?.stageDept || "").trim().toUpperCase();
+            const $reviewRoot = $(`#${quotationOverviewRootId}`);
+            const inspectButtons = function ($buttons) {
+                var total = 0;
+                var enabled = 0;
+                $buttons.each(function () {
+                    total += 1;
+                    var instance = $(this).dxButton("instance");
+                    var disabled = instance
+                        ? instance.option("disabled") === true
+                        : ($(this).is(":disabled") || $(this).attr("aria-disabled") === "true" || $(this).hasClass("dx-state-disabled"));
+                    if (!disabled) enabled += 1;
+                });
+                return {
+                    passed: enabled > 0,
+                    actual: `${enabled}/${total} enabled`,
+                    expected: "At least one enabled button"
+                };
+            };
+            const inspectAllDepartmentSections = function () {
+                const details = qtDeptModuleCode.map(function (dept) {
+                    const formId = window.QuotationIdManager.form(dept, @ViewData["Id"]);
+                    const form = $(`#${formId}`).dxForm("instance");
+                    const actualAllow = !!form && form.option("disabled") !== true && form.option("readOnly") !== true;
+                    const expectedAllow = dept === actualStageDept;
+                    return {
+                        dept: dept,
+                        actualAllow: actualAllow,
+                        expectedAllow: expectedAllow,
+                        matched: actualAllow === expectedAllow
+                    };
+                });
+                return {
+                    passed: details.every(function (item) { return item.matched; }),
+                    actual: details.map(function (item) { return `${item.dept}:${item.actualAllow ? "ALLOW" : "LOCK"}`; }).join(", "),
+                    expected: details.map(function (item) { return `${item.dept}:${item.expectedAllow ? "ALLOW" : "LOCK"}`; }).join(", "),
+                    details: details
+                };
+            };
+            const inspectAllDepartmentComments = function () {
+                const details = qtDeptModuleCode.map(function (dept) {
+                    const $editor = $(`#${formModuleKeyQt}-commentEditor_${dept}_@ViewData["Id"]`);
+                    var disabled = true;
+                    if ($editor.length && typeof $editor.tmivcommenteditorroute === "function") {
+                        disabled = $editor.tmivcommenteditorroute("option", "disableComment") === true;
+                    }
+                    const actualAllow = $editor.length > 0 && !disabled;
+                    const expectedAllow = dept !== actualStageDept;
+                    return { dept, actualAllow, expectedAllow, matched: actualAllow === expectedAllow };
+                });
+                return {
+                    passed: details.every(function (item) { return item.matched; }),
+                    actual: details.map(function (item) { return `${item.dept}:${item.actualAllow ? "ALLOW" : "LOCK"}`; }).join(", "),
+                    expected: details.map(function (item) { return `${item.dept}:${item.expectedAllow ? "ALLOW" : "LOCK"}`; }).join(", "),
+                    details: details
+                };
+            };
+            const inspectAllDepartmentRemarks = function () {
+                const details = qtDeptModuleCode.map(function (dept) {
+                    const control = remarkBoxs?.[dept]?.controlRemark;
+                    var disabled = true;
+                    if (control && typeof control.option === "function") {
+                        disabled = control.option("disableComment") === true;
+                    }
+                    const actualAllow = !!control && !disabled;
+                    const expectedAllow = dept === actualStageDept;
+                    return { dept, actualAllow, expectedAllow, matched: actualAllow === expectedAllow };
+                });
+                return {
+                    passed: details.every(function (item) { return item.matched; }),
+                    actual: details.map(function (item) { return `${item.dept}:${item.actualAllow ? "ALLOW" : "LOCK"}`; }).join(", "),
+                    expected: details.map(function (item) { return `${item.dept}:${item.expectedAllow ? "ALLOW" : "LOCK"}`; }).join(", "),
+                    details: details
+                };
+            };
+            const returnHostId = window.QuotationIdManager.btnReturnBranch(actualStageDept, @ViewData["Id"]);
+            const submitHostId = window.QuotationIdManager.btnSubmitBranch(actualStageDept, @ViewData["Id"]);
             const report = await window.checkFeatureRoleRule({
                 feature: "Quotation role review example",
                 moduleCode: viewIdModulePrefix.quotation,
@@ -249,10 +325,42 @@ Note:
                 isSuperUser: typeof _isSuperUser !== "undefined" && _isSuperUser,
                 superUserBypass: false,
                 rules: {
-                    roles: [actualStageDept],
-                    stageDepts: [actualStageDept],
-                    sections: [actualStageDept]
-                }
+                    roles: [actualStageDept]
+                },
+                phase2Checks: [
+                    {
+                        key: "accept", label: "Accept", required: false,
+                        evaluate: function () {
+                            return inspectButtons($reviewRoot.find(".dx-button").filter(function () {
+                                return /^accept$/i.test($(this).text().trim());
+                            }));
+                        }
+                    },
+                    {
+                        key: "sectionAllowAll", label: "Section allow · stage department only", required: true,
+                        evaluate: inspectAllDepartmentSections
+                    },
+                    {
+                        key: "commentAllowAll", label: "Comment allow · inverse of section", required: true,
+                        evaluate: inspectAllDepartmentComments
+                    },
+                    {
+                        key: "remarkAllowAll", label: "Remark allow · stage department only", required: true,
+                        evaluate: inspectAllDepartmentRemarks
+                    },
+                    {
+                        key: "returnButton", label: "Return button", required: false,
+                        evaluate: function () { return inspectButtons($(`#${returnHostId}`).find("[data-workflow-route-button]")); }
+                    },
+                    {
+                        key: "customButton", label: "Custom button", required: false,
+                        evaluate: function () { return inspectButtons($reviewRoot.find("[data-custom-route-button]")); }
+                    },
+                    {
+                        key: "routeButton", label: "Route button", required: false,
+                        evaluate: function () { return inspectButtons($(`#${submitHostId}`).find("[data-workflow-route-button]")); }
+                    }
+                ]
             });
             console.log("Quotation role review example", report);
             return report;
@@ -1970,7 +2078,6 @@ Note:
             updateHints();
             applyEditLock();
             await quotationRenderGate.complete(initialRenderToken);
-            await showQuotationRoleReviewExample(state.quotes[0]);
             firstRender = false;
             await quotationFormStages.enter("personInCharge");
             await renderQuotationPersonInCharge();
@@ -1978,6 +2085,7 @@ Note:
             invalidateSectionCommentCache(state.selectedGuid);
             await quotationFormStages.enter("comments");
             await loadQuotationSectionComments();
+            await showQuotationRoleReviewExample(state.quotes[0]);
              
 
         });

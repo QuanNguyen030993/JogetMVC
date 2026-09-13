@@ -246,9 +246,15 @@
             try {
                 const value = await evaluator();
                 const finishedAt = now();
+                const detail = value && typeof value === "object" && !Array.isArray(value)
+                    ? value
+                    : { passed: value };
                 return {
                     key: key,
-                    passed: asBoolean(value),
+                    passed: asBoolean(detail.passed),
+                    actual: detail.actual,
+                    expected: detail.expected,
+                    details: detail.details,
                     error: "",
                     startedAtMs: Number((startedAt - evaluationStartedAt).toFixed(2)),
                     completedAtMs: Number((finishedAt - evaluationStartedAt).toFixed(2)),
@@ -269,37 +275,74 @@
             }
         }
 
-        const timedChecks = await Promise.all([
-            runTimedCheck("role", function () {
-                return matchesAllowed([role], allowedRoles);
-            }),
-            runTimedCheck("stageDept", function () {
-                return matchesAllowed([stageDeptValue], allowedStageDepts);
-            }),
-            runTimedCheck("section", function () {
-                return matchesAllowed([authenticatedSection], allowedSections);
-            }),
-            runTimedCheck("route", checkOnlyAllowFromRoute),
-            runTimedCheck("customRoute", function () {
-                return evaluateCustomCondition(customRouteCondition, evaluationContext);
-            })
-        ]);
+        const roleTiming = await runTimedCheck("role", function () {
+            return matchesAllowed([role], allowedRoles);
+        });
+        const roleConfigured = !!allowedRoles.length;
+        const rolePassed = roleConfigured && roleTiming.passed;
+        const suppliedPhase2Checks = Array.isArray(options.phase2Checks)
+            ? options.phase2Checks
+            : [];
+        const reservedCheckKeys = new Set(["role", "stageDept", "section", "route", "customRoute"]);
+        const phase2Definitions = [
+            { key: "stageDept", label: "Stage dept", configured: !!allowedStageDepts.length, actual: stageDeptValue, expected: allowedStageDepts, required: true, evaluate: function () { return matchesAllowed([stageDeptValue], allowedStageDepts); } },
+            { key: "section", label: "Section allow", configured: !!allowedSections.length, actual: authenticatedSection, expected: allowedSections, required: true, evaluate: function () { return matchesAllowed([authenticatedSection], allowedSections); } },
+            { key: "route", label: "Only allow from route", configured: onlyAllowFromRoute != null && onlyAllowFromRoute !== false && onlyAllowFromRoute !== "", actual: routeCandidates.filter(Boolean), expected: onlyAllowFromRoute, required: true, evaluate: checkOnlyAllowFromRoute },
+            { key: "customRoute", label: "Custom route condition", configured: customRouteCondition != null && customRouteCondition !== "", actual: customRouteCondition == null ? "" : "evaluated", expected: customRouteCondition, required: true, evaluate: function () { return evaluateCustomCondition(customRouteCondition, evaluationContext); } }
+        ].concat(suppliedPhase2Checks.map(function (definition, index) {
+            const requestedKey = definition.key || `phase2_${index + 1}`;
+            return {
+                key: reservedCheckKeys.has(requestedKey) ? `phase2_${requestedKey}` : requestedKey,
+                label: definition.label || definition.key || `Phase 2 check ${index + 1}`,
+                configured: definition.configured !== false,
+                actual: definition.actual,
+                expected: definition.expected,
+                required: definition.required === true,
+                evaluate: typeof definition.evaluate === "function"
+                    ? function () { return definition.evaluate(evaluationContext); }
+                    : function () { return definition.value; }
+            };
+        }));
+        let phase2Timings = [];
+        if (rolePassed) {
+            phase2Timings = await Promise.all(phase2Definitions
+                .filter(function (definition) { return definition.configured; })
+                .map(function (definition) {
+                    return runTimedCheck(definition.key, definition.evaluate);
+                }));
+        }
+        const timedChecks = [roleTiming].concat(phase2Timings);
         const timedByKey = Object.fromEntries(timedChecks.map(function (item) {
             return [item.key, item];
         }));
 
-        const checks = [
-            { key: "role", label: "Role", configured: !!allowedRoles.length, actual: role, expected: allowedRoles },
-            { key: "stageDept", label: "Stage dept", configured: !!allowedStageDepts.length, actual: stageDeptValue, expected: allowedStageDepts },
-            { key: "section", label: "Section allow", configured: !!allowedSections.length, actual: authenticatedSection, expected: allowedSections },
-            { key: "route", label: "Only allow from route", configured: onlyAllowFromRoute != null && onlyAllowFromRoute !== false && onlyAllowFromRoute !== "", actual: routeCandidates.filter(Boolean), expected: onlyAllowFromRoute },
-            { key: "customRoute", label: "Custom route condition", configured: customRouteCondition != null && customRouteCondition !== "", actual: customRouteCondition == null ? "" : "evaluated", expected: customRouteCondition }
-        ].map(function (item) {
-            return Object.assign(item, timedByKey[item.key]);
+        const checks = [{
+            key: "role", label: "Role", phase: 1, configured: roleConfigured,
+            required: true, actual: role, expected: allowedRoles
+        }].concat(phase2Definitions.map(function (definition) {
+            return Object.assign({ phase: 2 }, definition);
+        })).map(function (item) {
+            const timing = timedByKey[item.key];
+            return Object.assign(item, timing || {
+                passed: false,
+                skipped: item.configured && !rolePassed,
+                error: "",
+                startedAtMs: null,
+                completedAtMs: null,
+                durationMs: null,
+                completedOrder: null
+            }, {
+                actual: timing?.actual !== undefined ? timing.actual : item.actual,
+                expected: timing?.expected !== undefined ? timing.expected : item.expected
+            });
         });
-        const configuredChecks = checks.filter(function (item) { return item.configured; });
-        const rulesPassed = configuredChecks.length > 0
-            && configuredChecks.every(function (item) { return item.passed; });
+        const requiredPhase2Checks = checks.filter(function (item) {
+            return item.phase === 2 && item.configured && item.required;
+        });
+        const phase2Passed = rolePassed && requiredPhase2Checks.every(function (item) {
+            return item.passed;
+        });
+        const rulesPassed = rolePassed && phase2Passed;
         const bypassedBySuperUser = isSuperUser && superUserBypass && !rulesPassed;
         const report = {
             feature: evaluationContext.feature,
@@ -313,7 +356,13 @@
             section: normalize(authenticatedSection),
             route,
             checks,
-            timeline: checks.slice().sort(function (left, right) {
+            phases: [
+                { key: "role", label: "Phase 1 · Role gate", executed: true, passed: rolePassed },
+                { key: "actions", label: "Phase 2 · Action permissions", executed: rolePassed, passed: phase2Passed }
+            ],
+            timeline: checks.filter(function (item) {
+                return item.completedOrder != null;
+            }).sort(function (left, right) {
                 return left.completedOrder - right.completedOrder;
             }),
             totalDurationMs: Number((now() - evaluationStartedAt).toFixed(2)),
@@ -340,13 +389,22 @@
             return `<span style="display:inline-block;margin:2px 6px 2px 0;padding:4px 9px;border-radius:12px;background:${color};color:#fff;font-size:12px">${encode(label)}</span>`;
         };
         const rows = report.checks.map(function (item) {
-            const status = !item.configured ? "NOT SET" : (item.passed ? "PASS" : "FAIL");
+            const status = item.skipped
+                ? "SKIPPED"
+                : (!item.configured ? "NOT SET" : (item.passed ? "PASS" : "FAIL"));
             return `<tr>
+                <td style="padding:8px;border-bottom:1px solid #e5e7eb">Phase ${item.phase}</td>
                 <td style="padding:8px;border-bottom:1px solid #e5e7eb">${encode(item.label)}</td>
-                <td style="padding:8px;border-bottom:1px solid #e5e7eb">${badge(status, item.passed, !item.configured)}</td>
+                <td style="padding:8px;border-bottom:1px solid #e5e7eb">${badge(status, item.passed, !item.configured || item.skipped)}</td>
                 <td style="padding:8px;border-bottom:1px solid #e5e7eb;word-break:break-word">${encode(item.error || displayValue(item.actual, "Not available"))}</td>
                 <td style="padding:8px;border-bottom:1px solid #e5e7eb;word-break:break-word">${encode(displayValue(item.expected, "Any"))}</td>
             </tr>`;
+        }).join("");
+        const phaseBadges = report.phases.map(function (phase) {
+            const label = phase.executed
+                ? `${phase.label}: ${phase.passed ? "PASS" : "FAIL"}`
+                : `${phase.label}: SKIPPED`;
+            return badge(label, phase.passed, !phase.executed);
         }).join("");
         const maxDuration = Math.max(1, ...report.timeline.map(function (item) {
             return item.durationMs || 0;
@@ -372,8 +430,9 @@
                 ${badge(`Super user: ${report.isSuperUser ? "YES" : "NO"}`, report.isSuperUser, !report.isSuperUser)}
                 ${report.bypassedBySuperUser ? badge("SUPER USER BYPASS", true) : ""}
             </div>
+            <div style="margin-bottom:12px">${phaseBadges}</div>
             <table style="width:100%;border-collapse:collapse;font-size:13px">
-                <thead><tr style="text-align:left;background:#f3f4f6"><th style="padding:8px">Rule</th><th style="padding:8px">Result</th><th style="padding:8px">Actual</th><th style="padding:8px">Expected</th></tr></thead>
+                <thead><tr style="text-align:left;background:#f3f4f6"><th style="padding:8px">Phase</th><th style="padding:8px">Rule</th><th style="padding:8px">Result</th><th style="padding:8px">Actual</th><th style="padding:8px">Expected</th></tr></thead>
                 <tbody>${rows}</tbody>
             </table>
             <div style="margin-top:18px;padding-top:12px;border-top:1px solid #e5e7eb">
@@ -385,27 +444,58 @@
             </div>
         </div>`);
 
-        const $host = $("<div class='feature-role-rule-review-popup'>").appendTo(document.body);
-        const popup = $host.dxPopup({
+        if (typeof $.fn.floatpopup !== "function") {
+            throw new Error("TMIVCom .floatpopup() is not loaded.");
+        }
+
+        $(".feature-role-rule-review-popup-host").each(function () {
+            try { $(this).floatpopup("dispose"); } catch (error) { $(this).remove(); }
+        });
+        const $host = $("<div class='feature-role-rule-review-popup-host'>").appendTo(document.body);
+        let popup = null;
+        $host.floatpopup({
+            visible: false,
             title: `Feature rule review: ${report.feature}`,
-            width: "min(900px, 92vw)",
-            height: "auto",
-            maxHeight: "85vh",
             showTitle: true,
+            showCloseButton: true,
+            width: "min(980px, calc(100vw - 32px))",
+            height: "min(820px, calc(100vh - 32px))",
+            maxWidth: "calc(100vw - 32px)",
+            maxHeight: "calc(100vh - 32px)",
+            position: "center",
+            shading: true,
+            hideOnOutsideClick: true,
+            closeOnEscape: true,
             dragEnabled: true,
-            closeOnOutsideClick: true,
-            contentTemplate: function (container) { $content.appendTo(container); },
+            resizeEnabled: true,
+            restorePosition: true,
+            content: $content[0],
+            wrapperAttr: { className: "feature-role-rule-review-popup" },
+            elementAttr: { className: "feature-role-rule-review-floatpopup" },
             toolbarItems: [{
-                widget: "dxButton",
+                name: "fullscreen",
+                text: "Toggle fullscreen",
                 toolbar: "bottom",
                 location: "after",
-                options: { text: "Close", onClick: function () { popup.hide(); } }
+                onClick: function (event) {
+                    const component = event.component;
+                    component.option("fullScreen", !component.option("fullScreen"));
+                }
+            }, {
+                name: "close",
+                text: "Close",
+                toolbar: "bottom",
+                location: "after",
+                onClick: function (event) { event.component.hide(); }
             }],
             onHidden: function () {
+                if (!popup) return;
                 popup.dispose();
                 $host.remove();
+                popup = null;
             }
-        }).dxPopup("instance");
+        });
+        popup = $host.floatpopup("instance");
         popup.show();
         return popup;
     }

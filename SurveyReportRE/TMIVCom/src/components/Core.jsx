@@ -18,6 +18,7 @@ import PreviewOffice from "../components/PreviewOffice.jsx";
 // import Map from "../components/Map.jsx";
 import FileUploader from "../components/FileUploader.jsx";
 import Notification, { notify } from "../components/Notification.jsx";
+import FloatPopup from "../components/FloatPopup.jsx";
 import React from "react";
 import { DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore } from "../DataGrid";
 
@@ -493,6 +494,116 @@ createJQueryPlugin("selectbox", "SelectBox");
 createJQueryPlugin("tagbox", "TagBox");
 createJQueryPlugin("dropdownbox", "DropDownBox");
 $.fn.tmivtagbox = $.fn.tagbox;
+
+const getFloatPopupFacade = (element) => {
+    const getInstance = () => roots.get(element);
+    const call = (method, ...args) => {
+        const instance = getInstance();
+        if (!instance) return undefined;
+        const control = instance.ref?.current;
+        if (control?.[method]) return control[method](...args);
+
+        if (["show", "hide", "toggle"].includes(method)) {
+            const nextVisible = method === "show"
+                ? true
+                : method === "hide"
+                    ? false
+                    : (args[0] === undefined ? !instance.options.visible : Boolean(args[0]));
+            instance.options.visible = nextVisible;
+            const Component = controls[instance.name];
+            instance.root.render(<Component ref={instance.ref} {...instance.options}/>);
+            return Promise.resolve(nextVisible);
+        }
+        return undefined;
+    };
+
+    return {
+        show: () => call("show"),
+        hide: () => call("hide"),
+        toggle: (showing) => call("toggle", showing),
+        option(name, value) {
+            const instance = getInstance();
+            if (!instance) return undefined;
+            if (arguments.length === 0) {
+                return instance.ref?.current?.option?.() ?? { ...instance.options };
+            }
+            if (typeof name === "object" && name) {
+                Object.assign(instance.options, name);
+                if (instance.ref?.current?.option) instance.ref.current.option(name);
+                else {
+                    const Component = controls[instance.name];
+                    instance.root.render(<Component ref={instance.ref} {...instance.options}/>);
+                }
+                return this;
+            }
+            if (arguments.length === 1) {
+                return instance.ref?.current?.option?.(name) ?? instance.options[name];
+            }
+            instance.options[name] = value;
+            if (instance.ref?.current?.option) instance.ref.current.option(name, value);
+            else {
+                const Component = controls[instance.name];
+                instance.root.render(<Component ref={instance.ref} {...instance.options}/>);
+            }
+            return this;
+        },
+        content: () => call("content"),
+        element: () => call("element"),
+        repaint: () => call("repaint"),
+        focus: () => call("focus"),
+        dispose() {
+            const instance = getInstance();
+            if (!instance) return;
+            instance.root.unmount();
+            roots.delete(element);
+            element.replaceChildren();
+        }
+    };
+};
+
+// DevExtreme-like usage:
+// $("#popup").floatpopup(options)
+// $("#popup").floatpopup("show")
+// $("#popup").floatpopup("option", "title", "New title")
+// $("#popup").floatpopup("instance").hide()
+$.fn.floatpopup = function(arg1, arg2, arg3) {
+    if (typeof arg1 === "string") {
+        if (arg1 === "instance") {
+            return this.length === 1 ? getFloatPopupFacade(this[0]) : undefined;
+        }
+        if (arg1 === "option") {
+            const facade = this.length ? getFloatPopupFacade(this[0]) : null;
+            if (arguments.length === 1) return facade?.option();
+            if (arguments.length === 2 && typeof arg2 === "string") return facade?.option(arg2);
+            this.each(function() {
+                const current = getFloatPopupFacade(this);
+                if (typeof arg2 === "object") current.option(arg2);
+                else current.option(arg2, arg3);
+            });
+            return this;
+        }
+        if (["show", "hide", "toggle", "repaint", "focus", "dispose"].includes(arg1)) {
+            this.each(function() { getFloatPopupFacade(this)[arg1](arg2); });
+            return this;
+        }
+        if (["content", "element"].includes(arg1)) {
+            return this.length === 1 ? getFloatPopupFacade(this)[arg1]() : undefined;
+        }
+        return this;
+    }
+
+    const suppliedOptions = arg1 || {};
+    return this.each(function() {
+        const hasExplicitContent = suppliedOptions.content !== undefined
+            || suppliedOptions.contentRender
+            || suppliedOptions.contentComponent
+            || suppliedOptions.contentTemplate;
+        const initialContent = hasExplicitContent ? {} : { content: this.innerHTML };
+        mount(this, "FloatPopup", { ...initialContent, ...suppliedOptions });
+    });
+};
+
+$.fn.tmivfloatpopup = $.fn.floatpopup;
 
 
 $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
@@ -1512,6 +1623,11 @@ register(
 );
 
 register(
+    "FloatPopup",
+    FloatPopup
+);
+
+register(
     "CommentEditorRoute",
     CommentEditorRoute
 );
@@ -1534,6 +1650,7 @@ window.TMIVCom.DxCompatibleDataGrid = DxCompatibleDataGrid;
 window.TMIVCom.GridArrayStore = GridArrayStore;
 window.TMIVCom.GridCustomStore = GridCustomStore;
 window.TMIVCom.TagBox = TagBox;
+window.TMIVCom.FloatPopup = FloatPopup;
 
 const jqueryInstances = [window.jQuery, window.$].filter(
     (instance, index, instances) => instance && instances.indexOf(instance) === index
@@ -1561,5 +1678,5 @@ if (typeof window !== "undefined") {
     //}, 5000);
 }
 
-export { TagBox, DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore };
-export default { DateBox, TimeBox, HtmlEditor, HtmlEditorCommentBox, CustomGrid, DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, TagBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, notify, TourGuide, startTour, exportTour };
+export { TagBox, FloatPopup, DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore };
+export default { DateBox, TimeBox, HtmlEditor, HtmlEditorCommentBox, CustomGrid, DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, TagBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, FloatPopup, notify, TourGuide, startTour, exportTour };
