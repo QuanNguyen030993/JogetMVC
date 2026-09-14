@@ -1,7 +1,5 @@
 ﻿<script>
     function loadSelectedWorkflow(params) {
-
-         
         //start render workflowc lazy load, all view department with decision load first , second time in QT or PI  _Form
         params = params || {};
         const moduleCode = String(params.moduleCode || "")
@@ -1565,4 +1563,8 @@
                 hideLoading(loadingClass, loadingHost);
             });
     }
+    
+    window.WorkflowLoader.load =
+        loadSelectedWorkflow;
+
 </script>

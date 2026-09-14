@@ -254,6 +254,16 @@
                 </div>
 
                 <div class="admin-row">
+                    <label>Stage Dept</label>
+                    <span data-maintenance-stagedept>${'@Model.Guid'}</span>
+                </div> 
+                
+                <div class="admin-row">
+                    <label>Stage Account</label>
+                    <span data-maintenance-stageaccount>${'@Model.Guid'}</span>
+                </div> 
+
+                <div class="admin-row">
                     <label>Person in Charge (PIC)</label>
                     <div class="maintenance-value-list" data-maintenance-pic>
                         <span class="maintenance-empty">-</span>
@@ -417,6 +427,17 @@
         }
 
         ensureMaintenanceRoleSelect();
+           function parseMaintenanceRawValue(value) {
+            if (!value) return {};
+            if (typeof value === "object") return value;
+            try {
+                const parsed = value;
+                return parsed ;
+            } catch (error) {
+                console.warn("Maintenance info JSON could not be parsed.", error);
+                return {};
+            }
+        }
 
         function parseMaintenanceMap(value) {
             if (!value) return {};
@@ -480,9 +501,47 @@
             $container.append(renderPicInline(valueMap, departments));
         }
 
+        function renderMaintenanceStaging($container, rawValue, departments) {
+            const valueMap = parseMaintenanceRawValue(rawValue);
+            const hasValue = Object.values(valueMap)
+                .some(value => value != null && value !== "");
+
+            $container.empty();
+            if (!hasValue) {
+                $("<span>", { class: "maintenance-empty", text: "-" }).appendTo($container);
+                return;
+            }
+
+            $container.append(`<div >${rawValue}</div>`);
+        }
+        
+        function renderMaintenanceStagingAccount($container, rawValue, departments) {
+            const valueMap = parseMaintenanceRawValue(rawValue);
+            const hasValue = Object.values(valueMap)
+                .some(value => value != null && value !== "");
+
+            $container.empty();
+            if (!hasValue) {
+                $("<span>", { class: "maintenance-empty", text: "-" }).appendTo($container);
+                return;
+            }
+
+            $container.append(`<div >${rawValue}</div>`);
+        }
+
         function renderMaintenanceFields($targetPanel, formData, targetModuleCode = "@moduleCode") {
             formData = formData || {};
             const departments = getMaintenanceRoles(targetModuleCode);
+            renderMaintenanceStaging(
+                $targetPanel.find("[data-maintenance-stagedept]"),
+                formData.stageDept,
+                departments
+            );
+            renderMaintenanceStagingAccount(
+                $targetPanel.find("[data-maintenance-stageaccount]"),
+                formData.stageAccount,
+                departments
+            );
             renderMaintenancePic(
                 $targetPanel.find("[data-maintenance-pic]"),
                 formData.pIC ?? formData.pic ?? formData.PIC,
@@ -526,6 +585,7 @@
                 cache: false
             }).then(function (response) {
                 const formData = Array.isArray(response) ? response[0] : response;
+                console.log(formData);
                 renderMaintenanceInfo(formData || {});
                 return formData;
             }).catch(function (error) {

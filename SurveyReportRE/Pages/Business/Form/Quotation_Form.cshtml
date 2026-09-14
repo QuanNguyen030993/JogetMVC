@@ -243,6 +243,7 @@ Note:
             const phase1RoleAndStagePassed = actualRole === actualStageDept;
             const $reviewRoot = $(`#${quotationOverviewRootId}`);
             const inspectButtons = function ($buttons) {
+                
                 var total = 0;
                 var enabled = 0;
                 $buttons.each(function () {
@@ -1261,7 +1262,6 @@ Note:
                     assignmentLifecycle,
                     0
                 );
-
                 var decisionEntry = window.WorkflowDecisionRegistry?.[`${formId}:${dept}`];
                 if (decisionEntry) {
                     renderDecisionDeferredV2(
@@ -1466,7 +1466,6 @@ Note:
                         feature: `Quotation section · ${item}`,
                         controlType: "section",
                         apply: function (decision) {
-                            debugger
                             const isReferenceDepartment = item === "PM";
                             form?.option({
                                 readOnly: isReferenceDepartment || !decision.phase1Allowed

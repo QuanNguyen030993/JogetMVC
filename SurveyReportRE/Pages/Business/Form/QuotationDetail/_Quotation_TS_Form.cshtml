@@ -18,6 +18,7 @@
             department: "@dept"
         }).catch(function () { return {}; });
         var thisObject = new Object();
+        thisObject.id = @ViewData["Id"];
         thisObject.ModelName = "Quotation";
         thisObject.formId = `@QTViewIdHelper.Form(dept, quotationId)`;
         thisObject.dept = "@dept";

@@ -395,7 +395,6 @@
                         }
                         else {
                             var params = new URLSearchParams();
-                            debugger
                               if (instance?.refKey)
                                 params.set("refKey", instance?.refKey);
                               if (instance?.refField)
@@ -8123,69 +8122,7 @@
                 window.setTimeout(function () { syncOverviewAdminRefreshButtons(); }, 3000);
            }
 
-           function applyAcceptedDepartmentDecision(schemeName, recordId, dept, responseData) {
-                var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
-                var isPolicyIssuance = normalizedScheme === "policyissuance" || normalizedScheme === viewIdModulePrefix.policyIssuance;
-                var manager = isPolicyIssuance
-                    ? window.PolicyIssuanceIdManager
-                    : window.QuotationIdManager;
-                var formId = manager?.form?.(dept, recordId);
-                var form = formId ? $(`#${formId}`).dxForm("instance") : null;
-                var acceptedAt = responseData?.acceptedAt || new Date().toISOString();
-                var section = resolveDepartmentSection(schemeName, recordId, dept);
-
-                if (section) {
-                    $(section)
-                        .find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer")
-                        .show();
-                    setDeptSectionCollapsed($(section), false);
-                }
-
-                if (!form) return Promise.resolve(false);
-
-                var formItems = form.option("formData") || {};
-                var tatObject = tryParseJSON(
-                    formItems.turnAroundTimeAttributes,
-                    "Accepted decision TAT update"
-                ) || {};
-                tatObject[dept] = tatObject[dept] || {};
-                tatObject[dept].AcceptDate = acceptedAt;
-                tatObject[dept].CompleteDate = acceptedAt;
-                form.updateData("turnAroundTimeAttributes", JSON.stringify(tatObject));
-                if (responseData?.workflowStatus) {
-                    form.updateData("workflowStatus", responseData.workflowStatus);
-                }
-
-                var registryKey = `${formId}:${String(dept || "").trim().toUpperCase()}`;
-                var decisionEntry = window.WorkflowDecisionRegistry[registryKey];
-                if (decisionEntry) {
-                    renderDecisionDeferredV2(
-                        decisionEntry.formProps,
-                        decisionEntry.groupName,
-                        decisionEntry.mainFields,
-                        ...decisionEntry.params
-                    );
-                } else if (section) {
-                    $(section).find("[id^='AC_']").each(function () {
-                        $(this).addClass("btn-success");
-                        $(this).dxButton("instance")?.option("disabled", true);
-                    });
-                }
-
-                return new Promise(function (resolve) {
-                    window.setTimeout(function () {
-                        var overviewRoot = section?.closest(
-                            `[id^='${viewIdModulePrefix.quotation}-overviewRoot_'], ` +
-                            `[id^='${viewIdModulePrefix.policyIssuance}-overviewRoot_']`);
-                        // if (overviewRoot) mountOverviewDecisionDocks(overviewRoot);
-                        // renderDecisionDeferredV2 has already rebuilt the decision
-                        // field from the updated TAT. Repainting here recreates the
-                        // template and resets the freshly rendered Accepted status.
-                        resolve(true);
-                    }, Math.max(0, Number(FormStageDelay?.unlockForm) || 0) + 120);
-                });
-           }
-           window.applyAcceptedDepartmentDecision = applyAcceptedDepartmentDecision;
+           
 
            function beginWorkflowElementLoading(element, message, scope) {
                 if (!element) return null;
@@ -10816,243 +10753,9 @@
                     });
                 }
 
-    async function delayAcceptStatusV2Promise(
-        mainFields,
-        formProps,
-        ...params
-    ) {
-        var delayObject = structuredClone(formProps);
+    
 
-        var decisionItems =
-            normalizeDecisionFieldButtons(params);
-
-        var decisionFieldName =
-            getDecisionFieldName(
-                formProps,
-                decisionItems
-            );
-
-        var decisionGroupName =
-            `decision${delayObject.dept}Group.${decisionFieldName}`;
-
-        var decisionRegistryKey =
-            `${formProps.formId}:` +
-            `${String(delayObject.dept || "")
-                .trim()
-                .toUpperCase()}`;
-    if (delayObject.subDeptComponent)
-              {
-                  decisionGroupName =
-              `decision${delayObject.subDeptComponent}Group.${decisionFieldName}`;
-              decisionRegistryKey =
-            `${formProps.formId}:` +
-            `${String(delayObject.subDeptComponent || "")
-                .trim()
-                .toUpperCase()}`;
-              }
-        window.WorkflowDecisionRegistry =
-            window.WorkflowDecisionRegistry || {};
-
-        window.WorkflowDecisionRegistry[
-            decisionRegistryKey
-        ] = {
-            formProps: formProps,
-            groupName: decisionGroupName,
-            mainFields: mainFields,
-            params: params
-        };
-
-        var initialStatusId =
-            getDecisionFieldStatusId(
-                formProps,
-                decisionItems,
-                params[1] || params[3]
-            );
-
-        /*
-         * Chờ form load đến routeState thực sự.
-         */
-        await waitForDecisionRouteStage(
-            formProps.formId
-        );
-
-        /*
-         * Giữ delay hiện tại nếu renderDecisionDeferredV2
-         * vẫn cần khoảng delay này.
-         */
-        await new Promise(function (resolve) {
-            setTimeout(
-                resolve,
-                Math.max(
-                    0,
-                    Number(FormStageDelay?.routeComponent) || 0
-                )
-            );
-        });
-
-        /*
-         * Render Decision.
-         */
-        renderDecisionDeferredV2(
-            formProps,
-            decisionGroupName,
-            mainFields,
-            ...params
-        );
-
-        /*
-         * renderDecisionDeferredV2 bên trong lại dùng
-         * _delayUnlockForm nên cần chờ nó render xong.
-         */
-        await new Promise(function (resolve) {
-            setTimeout(
-                resolve,
-                Math.max(
-                    0,
-                    Number(_delayUnlockForm) || 0
-                ) + 20
-            );
-        });
-
-        /*
-         * Sau khi render mới query DOM + dxButton instance.
-         */
-        var decisionForm = $(`#${formProps.formId}`).dxForm("instance");
-        var decisionFormItems = decisionForm?.option("formData") || {};
-        var decisionTatObject = tryParseJSON(
-            decisionFormItems.turnAroundTimeAttributes,
-            "Decision Button TAT Problem"
-        ) || {};
-        var ruleDisabled = shouldDisableWorkflowButton({
-            dept: delayObject.dept,
-            stageDept: decisionFormItems.stageDept,
-            formItems: decisionFormItems,
-            tatObject: decisionTatObject,
-            type: "early-decision",
-            items: $(`#${formProps.formId}`)
-        });
-
-        var rendered =
-            getDecisionRenderedObjects(
-                formProps,
-                decisionItems,
-                initialStatusId,
-                { disabled: ruleDisabled }
-            );
-        rendered.setDisabled(ruleDisabled);
-        return {
-            formProps: formProps,
-            formItems: decisionFormItems,
-            tatObject: decisionTatObject,
-            formId: formProps.formId,
-            dept: delayObject.dept,
-            groupName: decisionGroupName,
-            registryKey: decisionRegistryKey,
-            params: params,
-            status: rendered.status,
-            actionHost: rendered.actionHost,
-            buttons: rendered.buttons,
-            primaryButton: rendered.primaryButton,
-            enable: rendered.enable,
-            disable: rendered.disable,
-            setDisabled: rendered.setDisabled,
-            getButton: rendered.getButton,
-            ruleDisabled: ruleDisabled
-        };
-    }
-
-
-        function appendDecisionStatusLoader($host) {
-            return $(`
-                <span class="decision-common-status-loader dept-section-action-loader" aria-hidden="true">
-                    <span></span><span></span><span></span>
-                </span>`).appendTo($host);
-        }
-
-        function setDecisionCommonStatus(statusId, typeRender, state) {
-
-            // var $status = ensureDecisionCommonStatus(statusId, buttonId);
-            try
-            {
-                var $status = $(`#${statusId}`);
-            }
-            catch{
-                if (typeRender === "onLoaded")
-                return "No status";
-            }
-            // var $button = buttonId ? $(`#${buttonId}`) : $();
-            if (!$status.length) return;
-
-
-            if (typeRender === "onLoading") {
-                  $status
-                .removeClass("status-success accepted approved rejected declined unknown is-loading")
-                .removeAttr("title")
-                .css({ color: "", backgroundColor: "", border: "" })
-                .empty();
-
-
-                $status
-                    .addClass("is-loading")
-                    .css({
-                        color: "var(--form-status-pending-text)",
-                        backgroundColor: "var(--form-status-pending-bg)",
-                        border: "1px solid var(--form-status-border)"
-                    });
-                appendDecisionStatusLoader($status);
-                return;
-            }
-            else {
-                $status.empty();
-            }
-            var statusText = String(state || "No status").trim() || "No status";
-            var normalizedStatus = statusText.toLowerCase();
-            var isAccepted = normalizedStatus.includes("accept") || normalizedStatus.includes("approv");
-            var isRejected = normalizedStatus.includes("reject") || normalizedStatus.includes("declin") || normalizedStatus.includes("refus");
-
-            if (isAccepted) {
-                $status.addClass("statusTag status-success accepted");
-            } else if (isRejected) {
-                $status.addClass("statusTag rejected");
-            } else {
-                $status.addClass("statusTag unknown");
-            }
-
-            $status
-                .css({ width: "fit-content" })
-                .text(state || "No status");
-        }
-
-        function getDecisionCommonStatus(formItems, dept, tatObject) {
-            var rawActionStatus = formItems?.actionStatus;
-            var actionStatus = rawActionStatus && typeof rawActionStatus === "object"
-                ? rawActionStatus
-                : (tryParseJSON(rawActionStatus, "Decision Status Load Problem") || {});
-            var storedStatus = actionStatus[`${dept}Button`] || actionStatus[dept];
-            var statusText = "";
-
-            if (storedStatus && typeof storedStatus === "object") {
-                statusText = storedStatus.text
-                    || storedStatus.displayStatus
-                    || storedStatus.actionName
-                    || storedStatus.actionCode
-                    || storedStatus.statusName
-                    || "";
-            } else if (typeof storedStatus === "string") {
-                statusText = storedStatus;
-            }
-
-            if (statusText) return { text: statusText, title: "" };
-            var acceptDate = tatObject?.[dept]?.AcceptDate;
-            if (acceptDate) {
-                return {
-                    text: "Accepted",
-                    title: `Accepted at: ${fmtTimeLocal(acceptDate)}`
-                };
-            }
-
-            return { text: "No status", title: "" };
-        }
+        
 
         function hasWorkflowButtonStatus(formItems, dept) {
             var rawActionStatus = formItems?.actionStatus;
@@ -11069,69 +10772,7 @@
             return true;
         }
 
-        function shouldDisableWorkflowButton(options) {
-            options = options || {};
-            var formItems = options.formItems || {};
-            var buttonDept = normalizeDeptKey(options.dept);
-            var currentStageDept = normalizeDeptKey(
-                options.stageDept
-                || formItems.stageDept
-                || formItems.StageDept
-                || window.QuotationPage?.state?.stageDept
-                || window.PolicyIssuancePage?.state?.stageDept
-            );
-            var currentRole = normalizeDeptKey(
-                typeof options.role !== "undefined"
-                    ? options.role
-                    : (typeof _role !== "undefined" ? _role : "")
-            );
-            var tatObject = options.tatObject;
-
-            if (!tatObject || typeof tatObject !== "object") {
-                tatObject = tryParseJSON(
-                    formItems.turnAroundTimeAttributes,
-                    "Workflow Button TAT Problem"
-                ) || {};
-            }
-
-            // Default is disabled. A button is actionable only for the current
-            // stage and the role currently being used in the form.
-            var ownsCurrentStage = !!buttonDept && buttonDept === currentStageDept;
-            var roleMatchesStage = !!currentStageDept && currentRole === currentStageDept;
-            if (!ownsCurrentStage || !roleMatchesStage) return true;
-            //decision / route / custom
-           if (options.type == "late-decision" || options.type == "early-decision")
-            {
-                 console.log(options.type, options.items);
-                 var isFoDecision = currentRole === "FO";
-                 var hasAcceptDate = isFoDecision ? true : !!tatObject?.[buttonDept]?.AcceptDate;
-                 if (isFoDecision)
-                     return !hasAcceptDate ;
-                 else
-                     return hasAcceptDate; //|| hasActionStatus;
-            }
-            if (options.type == "route")
-            {
-                console.log("route", options.items);
-                 var isFoRoute = currentRole === "FO";
-                 var hasAcceptDate = isFoRoute ? true : !!tatObject?.[buttonDept]?.AcceptDate;
-                 // var hasActionStatus = hasWorkflowButtonStatus(formItems, buttonDept);
-                 if (isFoRoute)
-                     return !hasAcceptDate ;
-                 else
-                     return !hasAcceptDate; //|| hasActionStatus;
-            }
-            if (options.type == "custom")
-            {
-                 console.log("custom");
-                 var isFoCustom = currentRole === "FO";
-                 var hasAcceptDate = isFoCustom ? true : !!tatObject?.[buttonDept]?.AcceptDate;
-                 if (isFoCustom)
-                     return !hasAcceptDate ;
-                 else
-                     return hasAcceptDate; //|| hasActionStatus;
-             }
-         }
+        
 
          function normalizeDecisionFieldButtons(params) {
             return params.reduce(function (items, item) {
@@ -11171,167 +10812,7 @@
                 || `decision-actions-${getDecisionFieldKey(formProps)}`;
         }
 
-        /**
-         * Renders a stable workflow decision field. Status is the primary element;
-         * the action host always exists so flow routes can inject buttons even when
-         * this field has no local Accept button.
-         */
-        function workflowDecisionField(formProps, ...params) {
-            var buttonItems = normalizeDecisionFieldButtons(params);
-            var primaryItem = buttonItems[0] || {};
-            var primaryButtonId = getDelayAcceptButtonId(primaryItem);
-            var commonStatusId = getDecisionFieldStatusId(formProps, buttonItems);
-            var actionHostId = getDecisionFieldActionHostId(formProps);
-            return {
-                dataField: formProps?.decisionDataField || primaryItem.dataField || "decision",
-                name: getDecisionFieldName(formProps, buttonItems),
-                label: {
-                    text: formProps?.labelText || primaryItem.labelText || "Decision",
-                    visible: formProps?.labelVisible !== false && primaryItem.labelVisible !== false
-                },
-                visible: false,
-                itemType: "simple",
-                colSpan: primaryItem.colSpan || formProps?.decisionColSpan || 1,
-                cssClass: "workflow-decision-field decision-field-v2",
-                template: function (data, itemElement) {
-                    // Keep both rows as direct children of dx-field-item-content so
-                    // ensureDecisionCommonStatus reuses them instead of creating a
-                    // second action row and moving the primary button away.
-                    var $content = $(itemElement)
-                        .addClass("workflow-decision-field-content decision-field-v2-content");
-                    var $statusRow = $(`<div id="${commonStatusId}" class="decision-status-row accept-status-indicator decision-common-status decision-status-button statusTag unknown">`, {
-                        "aria-live": "polite",
-                        "data-decision-status-host": "true"
-                    }).appendTo($content);
-
-                    appendDecisionStatusLoader($statusRow);
-                    // $("<span>", {
-                    //     id: commonStatusId,
-                    //     class: "accept-status-indicator decision-common-status decision-status-button",
-                    //     role: "status",
-                    //     "aria-live": "polite"
-                    // }).appendTo($statusRow);
-
-                    var $actionRow = $("<div>", {
-                        id: actionHostId,
-                        class: "decision-action-row",
-                        "data-decision-action-host": "true",
-                        "data-route-dept": formProps?.dept || ""
-                    }).appendTo($content);
-
-                    buttonItems.forEach(function (item, index) {
-                        var config = typeof item === "string" ? { buttonId: item } : item;
-                        var buttonId = getDelayAcceptButtonId(config);
-                        if (!buttonId) return;
-
-                        var options = {
-                            elementAttr: { id: buttonId },
-                            disabled: true,
-                            text: config.text || (index === 0 ? "Accept" : ""),
-                            icon: config.icon || (index === 0 ? "check" : undefined),
-                            type: config.type || (index === 0 ? "success" : "default"),
-                            stylingMode: config.stylingMode || "contained"
-                        };
-                        if (typeof config.onClick === "function" && config.useDefaultDecisionClick !== true) {
-                            options.onClick = function (event) {
-                                return config.onClick(event, {
-                                    formProps: formProps,
-                                    config: config,
-                                    formId: formProps?.formId,
-                                    dept: formProps?.dept
-                                });
-                            };
-                        }
-
-                        var $button = $("<div>", { id: buttonId })
-                            .dxButton(options)
-                            .appendTo($actionRow);
-                        if (config.buttonClass) $button.addClass(config.buttonClass);
-                    });
-                    //??
-                    // setDecisionCommonStatus(
-                    //     commonStatusId,
-                    //     primaryButtonId,
-                    //     formProps?.initialDecisionStatus || primaryItem.initialDecisionStatus || "No status"
-                    // );
-                }
-            };
-        }
-
-        // Compatibility alias. Use workflowDecisionField for new and refactored forms. //comment out 2026-08-07
-        // function decisionFieldV2(formProps, ...params) {
-        //     return workflowDecisionField(formProps, ...params);
-        // }
-
-        // Compatibility wrapper for existing department forms. New forms should pass
-        // config objects to workflowDecisionField(formProps, ...buttonConfigs).
-        function decisionField(formId, dept, acceptButtonId, acceptStatusElement, rejectButtonId, rejectStatusElement) {
-            var items = [];
-            if (acceptButtonId) {
-                items.push({
-                    buttonId: acceptButtonId,
-                    statusId: acceptStatusElement || rejectStatusElement,
-                    text: "Accept",
-                    icon: "check",
-                    type: "success",
-                    disabled: true,
-                    useDefaultDecisionClick: true
-                });
-            }
-            if (rejectButtonId) {
-                items.push({
-                    buttonId: rejectButtonId,
-                    statusId: rejectStatusElement,
-                    text: "Reject",
-                    icon: "close",
-                    type: "danger",
-                    disabled: true
-                });
-            }
-            return workflowDecisionField({ formId: formId, dept: dept }, ...items);
-        }
-
-
-
-            function getDelayAcceptButtonId(item) {
-                if (!item) return "";
-                if (typeof item === "string") return item;
-                return item.buttonId || item.id || item.elementId || "";
-            }
-
-            function getDelayAcceptStatusId(item) {
-                if (!item || typeof item === "string") return "";
-                return item.statusId || item.statusElement || item.statusElementId || "";
-            }
-
-            function updateDelayAcceptStatus(statusId, acceptDate, defaultStatus = null) {
-                setTimeout(() => {
-                    if (!statusId || !acceptDate)
-                    {
-                        // console.log("Cannot load status from " + statusId, statusId);
-                        // console.log("Cannot load acceptDate from " + statusId, acceptDate);
-                    }
-                    var statusLabel = defaultStatus;
-                    if (acceptDate)
-                    statusLabel = "Accepted";
-                    if (acceptDate && defaultStatus)
-                    statusLabel = defaultStatus;
-                    // if (statusLabel && typeof statusLabel === "object") {
-                    //     statusLabel = statusLabel.text
-                    //         || statusLabel.displayStatus
-                    //         || statusLabel.actionName
-                    //         || statusLabel.actionCode
-                    //         || statusLabel.statusName;
-                    // }
-
-                    setDecisionCommonStatus(
-                        statusId,
-                        "onLoaded",
-                        statusLabel == null ? "No status" : (statusLabel != "Accepted" ? statusLabel : `Accepted at: ${fmtTimeLocal(acceptDate)}`)
-                    );
-                }, _delayLoadFormDetailStatus);
-            }
-
+             
             function isRouteDecisionButton(item) {
                 return item && typeof item === "object" && (item.isRouteButton || item.route || item.findRoute);
             }
@@ -11433,82 +10914,7 @@
        };
     }
 
-            function getDelayAcceptStoredStatus(formItems, dept, item) {
-                if (!item || typeof item !== "object") return null;
-                if (item.acceptStatus) return item.acceptStatus;
-
-                var statusField = item.acceptStatusField || item.actionStatusField || "actionStatus";
-                var statusObject = tryParseJSON(formItems?.[statusField], "Delay AcceptStatus Problem") || {};
-                var buttonStatus = statusObject[`${dept}Button`];
-
-                if (buttonStatus) return buttonStatus;
-                return statusObject[dept] || null;
-            }
-
-            function renderDelayAcceptStoredStatusButton(formId, dept, item, formItems, tatObject) {
-                var buttonId = getDelayAcceptButtonId(item);
-                if (!buttonId || !item || typeof item !== "object") return false;
-                if (item.trackDecisionStatus === false) return false;
-
-                var storedStatus = getDelayAcceptStoredStatus(formItems, dept, item);
-                var statusText = "";
-                var statusIcon = item.icon || "check";
-                var statusClass = item.buttonClass || "dx-button-info";
-
-                if (storedStatus && typeof storedStatus === "object") {
-                    statusText = storedStatus.text || storedStatus.displayStatus || storedStatus.actionName || storedStatus.actionCode || "";
-                    statusIcon = storedStatus.icon || statusIcon;
-                    statusClass = storedStatus.buttonClass || statusClass;
-                } else if (typeof storedStatus === "string") {
-                    statusText = storedStatus;
-                }
-
-                if (!statusText && item.useTatAcceptStatus && tatObject?.[dept]?.AcceptDate) {
-                    statusText = item.tatStatusText || "Submitted";
-                }
-
-                if (!statusText) return false;
-
-                var $host = $(`#${buttonId}`);
-                if (!$host.length) return false;
-
-                // Status la chip/button nho o hang tren; button thao tac goc duoc giu
-                // o hang duoi de layout khong nhay khi actionStatus/TAT tra ve.
-                var statusElementId = getDelayAcceptStatusId(item) || item.statusButtonId || `${buttonId}_status`;
-                // setDecisionCommonStatus(
-                //     statusElementId,
-                //     buttonId,
-                //     item.statusTitle || statusText
-                // );
-
-                return true;
-            }
-
-            // function buildDefaultDecisionClick(formId, dept) {
-            //     return function (e) {
-            //         var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
-            //         var passingObject = {
-            //             statusName: `${dept} Process`,
-            //             Comment: `Quotation ${formItems.quotationCode} accepted by ${_displayName}!`,
-            //             formItems: formItems,
-            //             dept: dept,
-            //             url: "/api/Quotation/UpdateData",
-            //             urlLog: "/api/Quotation/LogAction",
-            //             schemeName: "Quotation"
-            //         };
-
-            //         acceptDecision(passingObject);
-            //     };
-            // }
-            function buildDefaultDecisionClick(formProps) {
-                return function (e) {
-
-                         var objSnapshot = cloneReusableOptions(formProps);
-                         objSnapshot.triggerEvent = e;
-
-                            acceptDecision(objSnapshot, objSnapshot.dept);
-                };
-            }
+            
 
 
             function buildRouteDecisionClick(formId, dept, item) {
@@ -11621,193 +11027,7 @@
                 }
             }
 
-                function renderDecisionDeferredV2(formProps, groupName, mainField, ...params) {
-                 const formDataClone = structuredClone(formProps); // Form view cshtml invoke by 1 function as loop
-                    var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
-                    var commonStatusId = getDecisionFieldStatusId(
-                        formProps,
-                        normalizedDecisionItems,
-                        params[1] || params[3]
-                    );
-
-                    setTimeout(() => {
-                        var form = $(`#${formDataClone.formId}`).dxForm("instance");
-                        if (!form) {
-                            setDecisionCommonStatus(commonStatusId, "onLoaded", "Form unavailable");
-                            return;
-                        }
-
-                        var formItems = form.option("formData") || {};
-                        if (formItems)
-                        {
-
-                        }
-                        else {
-                            console.log("Form " + " no data");
-                        }
-                        var rawPic = formItems.pic ?? formItems.pIC ?? formItems.PIC;
-                        if (rawPic == null && typeof PIC_JSON !== "undefined") {
-                            rawPic = PIC_JSON;
-                        }
-                        var picObject = rawPic && typeof rawPic === "object"
-                            ? rawPic
-                            : (tryParseJSON(rawPic || "{}", "PIC Load Problem") || {});
-                        var pic = picObject[formDataClone.dept];
-                        if (!pic) {
-                            setDecisionCommonStatus(commonStatusId, "onLoaded", "Not assigned");
-                            setDecisionButtonsDisabled(
-                                normalizedDecisionItems.map(item => getDelayAcceptButtonId(item)),
-                                true
-                            );
-                            return;
-
-                        }
-
-                        try {
-                            form.itemOption(groupName, "visible", pic ? true : false);
-                        } catch (e) {
-                        }
-
-
-                       var latestFormItems = form.option("formData") || {};
-                       var latestTatObject = tryParseJSON(latestFormItems.turnAroundTimeAttributes, "TAT Load Button Problem") || {};
-                        var customStatus = tryParseJSON(latestFormItems.actionStatus || "", "Custom parsing problem") || {};
-                       // Legacy callers (UW/LMKT) pass buttonId/statusId pairs.
-                       // Status element ids must not be initialized or disabled as buttons.
-                           var usesLegacyStringPairs = params.length > 0 && params.every(item => typeof item === "string");
-                           var buttonItems = usesLegacyStringPairs
-                               ? params.filter((item, index) => index % 2 === 0 && item)
-                               : params.filter(item => getDelayAcceptButtonId(item));
-                           var renderedStoredStatus = false;
-                           buttonItems.forEach(item => {
-                               if (renderDelayAcceptStoredStatusButton(formDataClone.formId, formDataClone.dept, item, latestFormItems, latestTatObject)) {
-                                   renderedStoredStatus = true;
-                                   return;
-                               }
-
-                               if (item && typeof item === "object" && typeof item.loadRouteButtons === "function" && !isRouteDecisionButton(item) && !item.useDefaultDecisionClick && !item.createButton) {
-                                   item.loadRouteButtons({
-                                       formId: formDataClone.formId,
-                                       dept: formDataClone.dept,
-                                       formItems: latestFormItems,
-                                       tatObject: latestTatObject,
-                                       config: item
-                                   });
-                                   return;
-                               }
-                               applyDelayDecisionButton(formDataClone, item);
-
-                               if (item && typeof item === "object" && typeof item.loadRouteButtons === "function") {
-                                   item.loadRouteButtons({
-                                       formId: formDataClone.formId,
-                                       dept: formDataClone.dept,
-                                       formItems: latestFormItems,
-                                       tatObject: latestTatObject,
-                                       config: item
-                                   });
-                               }
-                           });
-                          var finalDecisionStatus = getDecisionCommonStatus(
-                                    latestFormItems,
-                                    formDataClone.dept,
-                                    latestTatObject
-                            );
-
-                          setDecisionCommonStatus(
-                                commonStatusId,
-                                "onLoading",
-                                finalDecisionStatus.title || finalDecisionStatus.text
-                            );
-
-                      if (latestTatObject?.[formDataClone.dept]?.AcceptDate)
-                      {
-                          if (formDataClone.dept != "FO") //exception for FO
-                             disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
-                              var acceptButtonId = getDelayAcceptButtonId(params[0]);
-                              var skipAcceptedMainFields = params[0] && typeof params[0] === "object" && params[0].skipAcceptedMainFields;
-                              if (acceptButtonId)
-                                 {
-                                  if (!skipAcceptedMainFields) {
-                                      if (mainField) {
-                                            form.option("items", [
-                                                ...form.option("items"),
-                                                ...mainField
-                                            ]);
-                                        }
-                                        else {
-                                            form.option("items", [
-                                                ...form.option("items"),
-                                                ]);
-                                        }
-                                  }
-                              }
-
-                               updateDelayAcceptStatus(
-                                   commonStatusId,
-                                   latestTatObject[formDataClone.dept]?.AcceptDate
-                               );
-                      } // if TAT Accept and Button Accept
-                      else {
-                              if (params.length > 0)
-                              {
-                                   updateDelayAcceptStatus(
-                                       commonStatusId,
-                                       latestTatObject[formDataClone.dept]?.AcceptDate
-                                   );
-                              }
-                          }
-                         if (formDataClone.dept == "FO"){
-
-                             if (formItems.stageDept == "Client") { //  another logic
-
-                                      var storedStatus = getDelayAcceptStoredStatus(formItems, formItems.stageDept, formItems);
-                                      if (storedStatus != "Accepted")
-                                         {
-                                              updateDelayAcceptStatus(
-                                              commonStatusId,
-                                              latestTatObject[formDataClone.dept]?.CompleteDate, storedStatus
-                                          );
-                                          console.log(buttonItems);
-                                          disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
-                                          return;
-                                      }
-
-                              }
-                              else {
-                                  updateDelayAcceptStatus(
-                                  commonStatusId,
-                                  null);
-                                  return;
-                              }
-
-                          }
-
-
-                          if (latestFormItems.actionStatus) // trend to priority this field
-                          {
-                                  updateDelayAcceptStatus(
-                                  commonStatusId,
-                                  latestTatObject[formDataClone.dept]?.AcceptDate,
-                                  customStatus[formDataClone.dept]
-                                  );
-                                  disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
-                          }
-                          setDecisionButtonsDisabled(
-                              buttonItems.map(item => getDelayAcceptButtonId(item)),
-                              shouldDisableWorkflowButton({
-                                  dept: formDataClone.dept,
-                                  stageDept: latestFormItems.stageDept,
-                                  formItems: latestFormItems,
-                                  tatObject: latestTatObject,
-                                  type: "late-decision",
-                                  items: buttonItems.map(item => getDelayAcceptButtonId(item))
-                              })
-                          );
-
-    }, _delayUnlockForm);
-
-
-    }
+                
 
         // =========================================================================
         // UTILITY FUNCTIONS FROM appUtil.js (ADDED 2026-07-09)
@@ -11889,6 +11109,7 @@
         }
          function setDecisionButtonsDisabled(items, disabled) {
              $.each(items, function(itemIndex, item) {
+                 debugger
                  if (!item) return;
                  try {
                      $(`#${item}`).dxButton("instance")?.option("disabled", !!disabled);
@@ -12125,6 +11346,7 @@
      * Quotation and Policy Issuance overview forms.
      */
     async function applyFeatureRoleControlRule(options) {
+        // console.log("From apply",options);
         options = options || {};
         const normalizeRuleValue = value => String(value || "").trim().toUpperCase();
         const controlType = String(options.controlType || "section").trim().toLowerCase();
@@ -12154,75 +11376,90 @@
 
         let report;
         try {
-            const defaultPhase2Allow = controlType === "comment" ? sameAsStage : true;
-            const phase2Allow = typeof options.allowWhen === "function"
-                ? !!(await options.allowWhen({
-                    controlType,
-                    dept: controlDept,
-                    stageDept,
-                    role,
-                    defaultAllowed: defaultPhase2Allow,
-                    sectionAllowed: phase1SectionAllowed,
-                    formData: options.formData || {}
-                }))
-                : defaultPhase2Allow;
+                   const defaultPhase2Allow = controlType === "comment" ? sameAsStage : true;
 
             report = await window.checkFeatureRoleRule({
-                feature: options.feature || `${controlType} · ${controlDept || "unknown"}`,
-                role,
-                stageDept,
-                section: controlDept,
-                route: options.route,
-                formData: options.formData || {},
-                state: options.state || {},
-                isDebugMode: typeof options.isDebugMode !== "undefined"
-                    ? options.isDebugMode
-                    : window._isDebugMode,
-                isSuperUser: typeof options.isSuperUser !== "undefined"
-                    ? options.isSuperUser
-                    : window._isSuperUser,
-                superUserBypass: options.superUserBypass !== false,
-                display: false,
-                rules: {
-                    roles: [stageDept],
-                    stageDepts: [stageDept],
-                    sections: phase1AllowedSections,
-                    onlyAllowFromRoute: options.onlyAllowFromRoute,
-                    customRouteCondition: options.customRouteCondition
-                },
-                phase1Checks: controlType === "comment" ? [{
-                    key: `comment_role_${controlDept || "unknown"}`,
-                    label: "Comment allow",
-                    required: true,
-                    actual: role,
-                    expected: role,
-                    evaluate: function () {
-                        return {
-                            passed: !!role,
+                        feature: options.feature || `${controlType} · ${controlDept || "unknown"}`,
+                        role,
+                        stageDept,
+                        section: controlDept,
+                        route: options.route,
+                        formData: options.formData || {},
+                        state: options.state || {},
+                        isDebugMode: typeof options.isDebugMode !== "undefined"
+                            ? options.isDebugMode
+                            : window._isDebugMode,
+                        isSuperUser: typeof options.isSuperUser !== "undefined"
+                            ? options.isSuperUser
+                            : window._isSuperUser,
+                        superUserBypass: options.superUserBypass !== false,
+                        display: false,
+                        rules: {
+                            roles: [stageDept],
+                            stageDepts: [stageDept],
+                            sections: phase1AllowedSections,
+                            onlyAllowFromRoute: options.onlyAllowFromRoute,
+                            customRouteCondition: options.customRouteCondition
+                        },
+                        phase1Checks: controlType === "comment" ? [{
+                            key: `comment_role_${controlDept || "unknown"}`,
+                            label: "Comment allow",
+                            required: true,
                             actual: role,
-                            expected: role
-                        };
-                    }
-                }] : [],
-                phase2Checks: [{
-                    key: `control_${controlType}_${controlDept || "unknown"}`,
-                    label: controlType === "comment"
-                        ? `Comment allow in stageDept · ${stageDept || "unknown"}`
-                        : `${controlType} allow · ${controlDept || "unknown"}`,
-                    required: true,
-                    evaluate: function () {
-                        return {
-                            passed: phase2Allow,
-                            actual: controlType === "comment"
-                                ? controlDept
-                                : (phase2Allow ? "ALLOW" : "LOCK"),
-                            expected: controlType === "comment"
-                                ? stageDept
-                                : "ALLOW"
-                        };
-                    }
-                }]
-            });
+                            expected: role,
+                            evaluate: function () {
+                                return {
+                                    passed: !!role,
+                                    actual: role,
+                                    expected: role
+                                };
+                            }
+                        }] : [],
+                        phase2Checks: [{
+                            key: `control_${controlType}_${controlDept || "unknown"}`,
+                            label: controlType === "comment"
+                                ? `Comment allow in stageDept · ${stageDept || "unknown"}`
+                                : `${controlType} allow · ${controlDept || "unknown"}`,
+                            required: true,
+                            evaluate: function () {
+                                return {
+                                    passed: phase2Allow,
+                                    actual: controlType === "comment"
+                                        ? controlDept
+                                        : (phase2Allow ? "ALLOW" : "LOCK"),
+                                    expected: controlType === "comment"
+                                        ? stageDept
+                                        : "ALLOW"
+                                };
+                            }
+                        }]
+                    });
+            switch (controlType) {
+                case "comment":
+                    const phase2Allow = typeof options.allowWhen === "function"
+                        ? !!(await options.allowWhen({
+                            controlType,
+                            dept: controlDept,
+                            stageDept,
+                            role,
+                            defaultAllowed: defaultPhase2Allow,
+                            sectionAllowed: phase1SectionAllowed,
+                            formData: options.formData || {}
+                        }))
+                        : defaultPhase2Allow;
+
+                    
+                    break;
+                case "accept": {
+                  
+                    break;
+                }
+
+                default:
+                    //defaultPhase2Allow = true;
+                    break;
+            }
+            
         } catch (error) {
             console.warn("Feature role control rule failed; control remains locked.", error);
             report = { allowed: false, error: error?.message || String(error) };
@@ -12261,8 +11498,5 @@
 
     window.WorkflowLoader =
         window.WorkflowLoader || {};
-
-    window.WorkflowLoader.load =
-        loadSelectedWorkflow;
 
 </script>

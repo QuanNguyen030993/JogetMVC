@@ -35614,8 +35614,8 @@ textarea {
         margin-bottom: 10px;
         border-bottom: 1px solid #e2e8f0;
         color: var(--form-group-title-color) !important;
-        font-size: 12px;
-        font-weight: 700;
+        font-size: var(--management-font-title) !important;
+        font-weight: var(--form-group-title-weight) !important;
         letter-spacing: .05em;
         text-transform: uppercase;
         cursor: pointer;
@@ -37963,6 +37963,7 @@ code,
 }
 
 [id^="qt-overviewRoot_"] .dept-section.dept-section--reference::before {
+    display: none;
     content: "REFERENCE DETAILS";
     position: absolute;
     top: -9px;

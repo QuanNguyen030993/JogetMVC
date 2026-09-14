@@ -2,6 +2,8 @@
     // Centralized feature-rule diagnostic. AppUtil invokes it with display:false for
     // runtime control rules; invoke it manually with display:true for the review UI.
     async function checkFeatureRoleRule(options) {
+        
+        // console.log("From check",options);
         options = options || {};
         const configuredRules = options.rules || options.rule || {};
 
@@ -220,6 +222,7 @@
             );
         }
         const formData = firstDefined(options.formData, options.data, state.formData, {});
+        
         const evaluationContext = {
             feature: options.feature || options.featureName || "Feature",
             role,
@@ -301,9 +304,25 @@
                     : function () { return definition.value; }
             };
         }));
+        const tatObject = tryParseJSON(
+                     options.formData?.turnAroundTimeAttributes,
+                    "Check role TAT Problem"
+                ) || {};
+
+        const stageAccounts = Array.isArray(options.formData?.stageAccount)
+        ? options.formData?.stageAccount
+        : [options.formData?.stageAccount];
+        const acceptRuleEnable =
+        (tatObject ? (((tatObject[options.stageDept]?.AcceptDate || "") != "") ? true : false) : false) &&
+        (stageAccounts
+        .filter(Boolean)
+        .map(x => String(x).trim().toUpperCase())
+        .includes(String(_loginUser || "").trim().toUpperCase()));
+        console.log("Check rule",acceptRuleEnable);
         const phase2Definitions = [
             { key: "route", label: "Only allow from route", configured: onlyAllowFromRoute != null && onlyAllowFromRoute !== false && onlyAllowFromRoute !== "", actual: routeCandidates.filter(Boolean), expected: onlyAllowFromRoute, required: true, evaluate: checkOnlyAllowFromRoute },
-            { key: "customRoute", label: "Custom route condition", configured: customRouteCondition != null && customRouteCondition !== "", actual: customRouteCondition == null ? "" : "evaluated", expected: customRouteCondition, required: true, evaluate: function () { return evaluateCustomCondition(customRouteCondition, evaluationContext); } }
+            { key: "customRoute", label: "Custom route condition", configured: customRouteCondition != null && customRouteCondition !== "", actual: customRouteCondition == null ? "" : "evaluated", expected: customRouteCondition, required: true, evaluate: function () { return evaluateCustomCondition(customRouteCondition, evaluationContext); } },
+            { key: "accept", label: "Accept condition", passed: acceptRuleEnable }
         ].concat(suppliedPhase2Checks.map(function (definition, index) {
             const requestedKey = definition.key || `phase2_${index + 1}`;
             return {
