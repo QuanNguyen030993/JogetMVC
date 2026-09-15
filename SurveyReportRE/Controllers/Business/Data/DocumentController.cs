@@ -18,6 +18,7 @@ using Syncfusion.XlsIO.Implementation.XmlSerialization;
 using Syncfusion.XlsIO.Implementation;
 using System.Xml;
 using ERPCore.ControllerUtil;
+using ERPCore.Storage;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
@@ -27,14 +28,17 @@ public class DocumentController : BaseControllerApi<Document>
     private readonly IBaseRepository<Constant> _constantRepository;
     private readonly IConfiguration configuration;
     private readonly IConfigurationSection path;
+    private readonly ISharePointDocumentStorage sharePointDocumentStorage;
     private static string Query;
     public DocumentController(IBaseRepository<Document> BaseRepository
         , IConfiguration config
-        , IHttpContextAccessor httpContextAccessor) : base(BaseRepository, httpContextAccessor)
+        , IHttpContextAccessor httpContextAccessor
+        , ISharePointDocumentStorage sharePointDocumentStorage) : base(BaseRepository, httpContextAccessor)
     {
         configuration = config;
         _BaseRepository = BaseRepository;
         path = _BaseRepository._baseConfiguration.GetSection("BlobStorage:Path");
+        this.sharePointDocumentStorage = sharePointDocumentStorage;
         _constantRepository = new BaseRepository<Constant>(configuration, _httpContextAccessor);
         //_httpClientFactory = httpClientFactory;
     }
@@ -63,6 +67,66 @@ public class DocumentController : BaseControllerApi<Document>
         return guidPath;
     }
 
+    private string ResolveSharePointDownloadCachePath(Document document)
+    {
+        var cacheDirectory = System.IO.Path.Combine(
+            path.Value,
+            "SharePointDownloadCache",
+            document.Id.ToString());
+        var extension = string.IsNullOrWhiteSpace(document.FileType)
+            ? System.IO.Path.GetExtension(document.FileName ?? string.Empty)
+            : document.FileType;
+        return System.IO.Path.Combine(cacheDirectory, document.Guid + extension);
+    }
+
+    private async Task<string> MaterializeSharePointDocumentAsync(
+        Document document,
+        CancellationToken cancellationToken)
+    {
+        var localPath = ResolveSharePointDownloadCachePath(document);
+        if (System.IO.File.Exists(localPath))
+            return localPath;
+
+        var cacheDirectory = System.IO.Path.GetDirectoryName(localPath)!;
+        Directory.CreateDirectory(cacheDirectory);
+        var temporaryPath = localPath + "." + Guid.NewGuid().ToString("N") + ".download";
+
+        try
+        {
+            await using var remoteStream = await sharePointDocumentStorage
+                .DownloadFromDocumentUrlAsync(document.SubDirectory!, cancellationToken);
+            await using (var localStream = new FileStream(
+                temporaryPath,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None,
+                81920,
+                useAsync: true))
+            {
+                await remoteStream.CopyToAsync(localStream, cancellationToken);
+                await localStream.FlushAsync(cancellationToken);
+            }
+
+            try
+            {
+                System.IO.File.Move(temporaryPath, localPath);
+            }
+            catch (IOException) when (System.IO.File.Exists(localPath))
+            {
+                // A concurrent request completed the same cache file first.
+                System.IO.File.Delete(temporaryPath);
+            }
+
+            return localPath;
+        }
+        catch
+        {
+            if (System.IO.File.Exists(temporaryPath))
+                System.IO.File.Delete(temporaryPath);
+            throw;
+        }
+    }
+
 
 
     public async Task<IActionResult> StreamDocument(long id)
@@ -77,7 +141,21 @@ public class DocumentController : BaseControllerApi<Document>
             }
             if (IsRemoteDocumentUrl(Document.SubDirectory))
             {
-                return Redirect(Document.SubDirectory);
+                // SharePoint downloads are materialized completely on the local
+                // application server first. The browser then receives the same
+                // local FileStream response used by locally stored documents.
+                string cachedPath = await MaterializeSharePointDocumentAsync(
+                    Document,
+                    HttpContext.RequestAborted);
+                var cachedStream = System.IO.File.Open(
+                    cachedPath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read);
+                return File(
+                    cachedStream,
+                    Util.GetMimeType(Document.FileName),
+                    Path.GetFileName(Document.FileName));
             }
 
             string fullPath = ResolveLocalDocumentPath(Document);
