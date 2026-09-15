@@ -17,7 +17,10 @@
             moduleCode: viewIdModulePrefix.quotation,
             id: @quotationId,
             department: "@dept"
-        }).catch(function () { return {}; });
+        }).catch(function (error) {
+            console.warn("Quotation LMKT initial data is unavailable; decision hydration will retry.", error);
+            return null;
+        });
 
         var sectionId = "@(ViewData["Cd"])";
 
@@ -28,6 +31,7 @@
             prefix: "@prefix"
         };
         thisObject.id = @ViewData["Id"];
+        thisObject.record = initialFormData;
         var that = {
             ModelName: "Quotation",
             moduleName: "default",
@@ -198,7 +202,7 @@
 
         $(`#${formId}`).dxForm({
 
-            formData: initialFormData,
+            formData: initialFormData || {},
 
             items: [
                 {
@@ -315,9 +319,9 @@
                  */
                 /* role enable/disable restored code
                  * Legacy: decisionContext.enable();
-                 * Restored as active legacy while button-rule refactor is paused.
+                 * Kept for rollback; Accept state now belongs to the central rule.
                  */
-                decisionContext.enable();
+                // role enable/disable restored code: decisionContext.enable();
 
 
                 /*

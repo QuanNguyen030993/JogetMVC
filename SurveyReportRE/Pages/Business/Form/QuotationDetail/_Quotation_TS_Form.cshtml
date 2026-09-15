@@ -16,7 +16,10 @@
             moduleCode: viewIdModulePrefix.quotation,
             id: @quotationId,
             department: "@dept"
-        }).catch(function () { return {}; });
+    }).catch(function (error) {
+        console.warn("Quotation TS initial data is unavailable; decision hydration will retry.", error);
+        return null;
+    });
         var thisObject = new Object();
         thisObject.id = @ViewData["Id"];
         thisObject.ModelName = "Quotation";
@@ -25,6 +28,7 @@
         thisObject.prefix = viewIdModulePrefix.quotation;
         thisObject.schemeName = "Quotation";
         thisObject.decisionColSpan = 2;
+        thisObject.record = initialFormData;
 
         var that = new Object();
     var sectionId = "@(ViewData["Cd"])";
@@ -177,7 +181,7 @@
     ];
 
     var formInstance =  $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
-    formData: initialFormData,
+    formData: initialFormData || {},
      items: [
          {
              itemType: "group",
@@ -269,9 +273,9 @@
                  */
                 /* role enable/disable restored code
                  * Legacy: decisionContext.enable();
-                 * Restored as active legacy while button-rule refactor is paused.
+                 * Kept for rollback; Accept state now belongs to the central rule.
                  */
-                decisionContext.enable();
+                // role enable/disable restored code: decisionContext.enable();
 
 
                 /*

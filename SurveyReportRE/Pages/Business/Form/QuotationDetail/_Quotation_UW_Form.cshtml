@@ -54,7 +54,10 @@
             moduleCode: viewIdModulePrefix.quotation,
             id: @quotationId,
             department: "@dept"
-        }).catch(function () { return {}; });
+        }).catch(function (error) {
+            console.warn("Quotation UW initial data is unavailable; decision hydration will retry.", error);
+            return null;
+        });
     const uwDept = "@dept";
 
         var thisObject = new Object();
@@ -62,6 +65,8 @@
         thisObject.formId = `@QTViewIdHelper.Form(dept, quotationId)`;
             thisObject.dept = `@dept`;
         thisObject.prefix = `@prefix`;
+        thisObject.id = @quotationId;
+        thisObject.record = initialFormData;
 
 
          // var items = [
@@ -133,7 +138,7 @@
             // var itemsDelay = [ acceptButtonId];
                 var itemsDelay = [acceptDecisionV2];
         $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
-             formData: initialFormData,
+             formData: initialFormData || {},
              items: [
                  {
              itemType: "group",
@@ -277,7 +282,11 @@
           //           }
           //       }
           //   }
-    delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
+    // role enable/disable restored code: delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
+    delayAcceptStatusV2Promise(mainFields, thisObject, ...itemsDelay)
+        .catch(function (error) {
+            console.error("Quotation UW decision hydration failed.", error);
+        });
 
     setTimeout(() => {
         var picJson = PIC_JSON || "{}";

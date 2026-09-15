@@ -22,7 +22,10 @@
             moduleCode: viewIdModulePrefix.quotation,
             id: @quotationId,
             department: "@dept"
-        }).catch(function () { return {}; });
+        }).catch(function (error) {
+            console.warn("Quotation FO initial data is unavailable; decision hydration will retry.", error);
+            return null;
+        });
         var thisObject = new Object();
         thisObject.ModelName =  "Quotation";
         thisObject.formId = `@QTViewIdHelper.Form(dept, quotationId)`;
@@ -30,6 +33,7 @@
         thisObject.subDeptComponent = `Client`;
         thisObject.prefix = `@prefix`;
         thisObject.id = @ViewData["Id"];
+        thisObject.record = initialFormData;
 
         // var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
         // var panelStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
@@ -157,6 +161,7 @@
 
                  // { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" ,editorOptions:{ switchedOnText: "Yes", switchedOffText: "No"} },
                  {itemType: "group",
+                name: "requestInformationGroup",
                 caption: "Request Information",
                 colCount: 3,
                 items: [
@@ -168,8 +173,11 @@
                       valueExpr: "id"
                  },
                     { dataField: "quotationType",visible: false, label:  { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
-                    // Skip TS is selected at Quotation Request and is intentionally
-                    // not mixed into the Request Information fields here.
+                    {
+                        dataField: "packageRequest",
+                        editorType: "dxCheckBox",
+                        label: { text: "Package Of Quotation" }
+                    },
                     {
                         dataField: "businessChannelName",
                         isRequired: true,
@@ -194,8 +202,16 @@
 
                  { dataField:"subject", label:{text:"Subject"}, editorType:"dxTextArea", colSpan:3},
 
-                            ]}
-                ,
+                            ]},
+                {
+                    itemType: "group",
+                    name: "workflowOptionsGroup",
+                    caption: "Workflow Options",
+                    colCount: 3,
+                    items: [
+                        makeSkipTSCheckboxFormItem("quotationType")
+                    ]
+                },
                 { itemType: "group", caption: "Attachment", colCount: 1, items: attachmentByCase(that , that2)},
                 { itemType: "group", name:"resAttachment", caption: "RES Attachment", colCount: 1, items:  attachmentByCase(thatRes) },
                 {
@@ -302,7 +318,16 @@
 
 
     window.QuotationPage.state.formFO = $("#@QTViewIdHelper.Form(dept, quotationId)").dxForm({
-    formData: initialFormData
+    formData: initialFormData || {},
+    onFieldDataChanged: function (event) {
+        if (event.dataField !== "packageRequest" && event.dataField !== "requestedDate") return;
+        var formData = event.component.option("formData") || {};
+        var calculatedDueDate = calculatePackageDueDate(
+            formData.requestedDate || formData.RequestedDate,
+            formData.packageRequest === true || formData.PackageRequest === true
+        );
+        if (calculatedDueDate) event.component.updateData("dueDate", calculatedDueDate);
+    }
     //,
     // onContentReady: function (e) {
     //     var formData = e.component.option("formData") || {};
@@ -386,9 +411,9 @@
                  */
                 /* role enable/disable restored code
                  * Legacy: decisionContext.enable();
-                 * Restored as active legacy while button-rule refactor is paused.
+                 * Kept for rollback; Accept state now belongs to the central rule.
                  */
-                decisionContext.enable();
+                // role enable/disable restored code: decisionContext.enable();
 
 
                 /*
