@@ -1,4 +1,52 @@
 ﻿<script>
+    // ITAcceptDemo: temporary UI-only switch for IT testing.
+    window.ITAcceptDemo = window.ITAcceptDemo || Object.freeze({
+        enabled: true,
+        role: "IT",
+        requireDebugOrSuperUser: true
+    });
+
+    function isITAcceptDemoEnabled(formProps) {
+        var config = window.ITAcceptDemo;
+        if (!config?.enabled) return false;
+        var role = String(
+            formProps?.role ?? (typeof _role !== "undefined" ? _role : window._role) ?? ""
+        ).trim().toUpperCase();
+        var isDebug = String(
+            typeof _isDebugMode !== "undefined" ? _isDebugMode : window._isDebugMode
+        ).toLowerCase() === "true";
+        var isSuperUser = String(
+            typeof _isSuperUser !== "undefined" ? _isSuperUser : window._isSuperUser
+        ).toLowerCase() === "true";
+        return role === config.role
+            && (!config.requireDebugOrSuperUser || isDebug || isSuperUser);
+    }
+
+    function isITAcceptDemoItem(item, index) {
+        if (!item || typeof item === "string") return index === 0;
+        return item.controlType === "accept"
+            || item.useDefaultDecisionClick === true
+            || String(item.text || "").trim().toLowerCase() === "accept";
+    }
+
+    function applyITAcceptDemoState(formProps, items) {
+        // ITAcceptDemo: only Accept controls are forced on; route/custom/return
+        // controls are deliberately excluded.
+        if (!isITAcceptDemoEnabled(formProps)) return false;
+        normalizeDecisionFieldButtons(items || [])
+            .filter(isITAcceptDemoItem)
+            .map(function (item) { return getDelayAcceptButtonId(item); })
+            .filter(Boolean)
+            .forEach(function (buttonId) {
+                var $button = $(`#${buttonId}`);
+                var instance = $button.dxButton("instance");
+                if (!instance) return;
+                instance.option({ visible: true, disabled: false });
+                $button.attr("data-it-accept-demo", "true");
+            });
+        return true;
+    }
+
     /**
          * Renders a stable workflow decision field. Status is the primary element;
          * the action host always exists so flow routes can inject buttons even when
@@ -47,6 +95,11 @@
                                 normalizedDecisionItems.map(item => getDelayAcceptButtonId(item)),
                                 true
                             );
+                            // ITAcceptDemo: missing assignment must not hide/lock Accept during demo.
+                            if (isITAcceptDemoEnabled(formDataClone)) {
+                                try { form.itemOption(groupName, "visible", true); } catch (e) { }
+                                applyITAcceptDemoState(formDataClone, normalizedDecisionItems);
+                            }
                             return;
 
                         }
@@ -95,6 +148,8 @@
                                    });
                                }
                            });
+                           // ITAcceptDemo: button hydration may restore configured disabled state.
+                           applyITAcceptDemoState(formDataClone, buttonItems);
                           var finalDecisionStatus = getDecisionCommonStatus(
                                     latestFormItems,
                                     formDataClone.dept,
@@ -111,6 +166,8 @@
                       {
                           if (formDataClone.dept != "FO") //exception for FO
                              disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
+                          // ITAcceptDemo: accepted/TAT state must not lock Accept during demo.
+                          applyITAcceptDemoState(formDataClone, buttonItems);
                               var acceptButtonId = getDelayAcceptButtonId(params[0]);
                               var skipAcceptedMainFields = params[0] && typeof params[0] === "object" && params[0].skipAcceptedMainFields;
                               if (acceptButtonId)
@@ -157,6 +214,8 @@
                                           );
                                           console.log(buttonItems);
                                           disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
+                                          // ITAcceptDemo: re-enable before the FO early return.
+                                          applyITAcceptDemoState(formDataClone, buttonItems);
                                           return;
                                       }
 
@@ -179,6 +238,8 @@
                                   customStatus[formDataClone.dept]
                                   );
                                   disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
+                                  // ITAcceptDemo: actionStatus must not lock the demo Accept control.
+                                  applyITAcceptDemoState(formDataClone, buttonItems);
                           }
 
                           window.applyFeatureRoleControlRule({
@@ -200,6 +261,8 @@
                               buttonItems.map(item => getDelayAcceptButtonId(item)),
                               !!attribAccept
                           );
+                          // ITAcceptDemo: preserve the role result but override UI state for IT.
+                          applyITAcceptDemoState(formDataClone, buttonItems);
                         });
             }, _delayUnlockForm);
 
@@ -350,6 +413,8 @@
                 { disabled: ruleDisabled }
             );
         rendered.setDisabled(ruleDisabled);
+        // ITAcceptDemo: this promise can be the last writer of disabled state.
+        applyITAcceptDemoState(formProps, decisionItems);
         return {
             formProps: formProps,
             formItems: decisionFormItems,
@@ -510,7 +575,16 @@
                 } else if (section) {
                     $(section).find("[id^='AC_']").each(function () {
                         $(this).addClass("btn-success");
-                        $(this).dxButton("instance")?.option("disabled", true);
+                        var $acceptButton = $(this);
+                        $acceptButton.dxButton("instance")?.option("disabled", true);
+                        // ITAcceptDemo: accepted-action fallback must not be the
+                        // final writer that locks Accept after the demo click.
+                        if (isITAcceptDemoEnabled({ dept: dept })) {
+                            $acceptButton
+                                .attr("data-it-accept-demo", "true")
+                                .dxButton("instance")
+                                ?.option({ visible: true, disabled: false });
+                        }
                     });
                 }
 
@@ -721,7 +795,8 @@
                     text: formProps?.labelText || primaryItem.labelText || "Decision",
                     visible: formProps?.labelVisible !== false && primaryItem.labelVisible !== false
                 },
-                visible: false,
+                // ITAcceptDemo: render the item so its Accept button can exist.
+                visible: isITAcceptDemoEnabled(formProps),
                 itemType: "simple",
                 colSpan: primaryItem.colSpan || formProps?.decisionColSpan || 1,
                 cssClass: "workflow-decision-field decision-field-v2",
@@ -758,7 +833,11 @@
 
                         var options = {
                             elementAttr: { id: buttonId },
-                            disabled: true,
+                            // ITAcceptDemo: initial dxButton state for Accept demo.
+                            disabled: isITAcceptDemoEnabled(formProps)
+                                && isITAcceptDemoItem(config, index)
+                                ? false
+                                : true,
                             text: config.text || (index === 0 ? "Accept" : ""),
                             icon: config.icon || (index === 0 ? "check" : undefined),
                             type: config.type || (index === 0 ? "success" : "default"),
@@ -779,6 +858,11 @@
                             .dxButton(options)
                             .appendTo($actionRow);
                         if (config.buttonClass) $button.addClass(config.buttonClass);
+                        // ITAcceptDemo: mark and normalize the rendered Accept control.
+                        if (isITAcceptDemoEnabled(formProps) && isITAcceptDemoItem(config, index)) {
+                            $button.attr("data-it-accept-demo", "true");
+                            $button.dxButton("instance")?.option({ visible: true, disabled: false });
+                        }
                     });
                     //??
                     // setDecisionCommonStatus(
