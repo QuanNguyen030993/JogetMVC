@@ -32,9 +32,35 @@
         margin: 0;
         padding-left: 22px;
     }
-</style>
-<div id="gridPA_@policyIssuanceId"></div>
 
+    .pi-pm-pa-process-group .pi-pm-pa-process-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid var(--theme-border, #dbe3ef);
+        border-radius: 8px;
+        background: var(--theme-surface, #fff);
+        box-sizing: border-box;
+    }
+
+    .pi-pm-pa-process-copy {
+        min-width: 0;
+    }
+
+    .pi-pm-pa-process-copy strong,
+    .pi-pm-pa-process-copy span {
+        display: block;
+    }
+
+    .pi-pm-pa-process-copy span {
+        margin-top: 2px;
+        color: var(--theme-muted, #64748b);
+        font-size: 11px;
+    }
+</style>
 <div id="@PIViewIdHelper.Form(dept, policyIssuanceId)">
 </div>
 <script type="text/javascript">
@@ -43,13 +69,18 @@
         moduleCode: viewIdModulePrefix.policyIssuance,
         id: @policyIssuanceId,
         department: "@dept"
-    }).catch(function () { return {}; });
+    }).catch(function (error) {
+        console.warn("Policy Issuance PM initial data is unavailable; form binding will continue from the overview.", error);
+        return null;
+    });
 
     var thisObject = new Object();
     thisObject.ModelName = "PolicyIssuance";
     thisObject.formId = `@PIViewIdHelper.Form(dept, policyIssuanceId)`;
         thisObject.dept = "@dept";
         thisObject.prefix = viewIdModulePrefix.policyIssuance;
+        thisObject.id = @policyIssuanceId;
+        thisObject.record = initialFormData;
 
 
     var thisObjectDetails = new Object();
@@ -96,7 +127,9 @@
     /* role enable/disable restored code: that3.uploaderAllow = _role == "@dept"; */
     that3.uploaderAllow = false;
     that3.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that3.moduleName, @(policyIssuanceId)), Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
-    var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, policyIssuanceId)`;
+    // Keep the delayed lookup on the exact same PI id rendered by decisionField.
+    // Using QTViewIdHelper here made getDelayAcceptButtonId resolve a non-existing id.
+    var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
     var panelStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
     var itemsDelay = [acceptButtonId, panelStatusId];
 
@@ -177,23 +210,60 @@
                         }
                     }
                     ]}
-                    ,{ itemType: "group" , caption: "PA Process",items :[
+                    ,{
+                    itemType: "group",
+                    name: "paProcessGroup",
+                    cssClass: "pi-pm-pa-process-group",
+                    caption: "PA Process",
+                    colCount: 1,
+                    items: [
                     {
-                        editorType: "simple"
-                        , template: function (data, itemElement) {
-                            var additionOptions = new Object();
-                            additionOptions.refKey = 1;
-                            var gridOptions = new PolicyIssuanceSubDetailsGridOption("PolicyIssuanceSubDetails", "User", additionOptions);
-                            new MGrid(null, itemElement, gridOptions, null);
-                                // grid.component.option("width", "100%");
-                                // grid.appendTo(itemElement);
+                        itemType: "simple",
+                        label: { visible: false },
+                        template: function () {
+                            var $buttonHost = $("<div class='pa-process-launcher'>").dxButton({
+                                text: "Open PA Process",
+                                icon: "list",
+                                stylingMode: "outlined",
+                                onClick: function () {
+                                    openPaProcessPopup({
+                                        key: "policy-issuance-@policyIssuanceId",
+                                        title: "PA Process · Policy Issuance @policyIssuanceId",
+                                        createContent: function (gridHost) {
+                                            var additionOptions = new Object();
+                                            additionOptions.refField = "PolicyIssuanceId";
+                                            additionOptions.refKey = @policyIssuanceId;
+                                            additionOptions.height = "100%";
+                                            additionOptions.overrideGetUrl = "/api/PolicyIssuanceSubDetails/GetPaProcess/PolicyIssuance/@policyIssuanceId";
+                                            additionOptions.gridEditorOptions = {
+                                                editing: {
+                                                    mode: "row",
+                                                    allowUpdating: true,
+                                                    allowAdding: true,
+                                                    allowDeleting: true,
+                                                    selectTextOnEditStart: true,
+                                                    startEditAction: "click"
+                                                }
+                                            };
+                                            var gridOptions = new PolicyIssuanceSubDetailsGridOption(
+                                                "PolicyIssuanceSubDetails",
+                                                "User",
+                                                additionOptions
+                                            );
+                                            new MGrid(null, gridHost, gridOptions, null);
+                                        }
+                                    });
+                                }
+                            });
 
-                                // $("#gridPA_@policyIssuanceId").dxDataGrid("instance").option("editing", {
-                                // mode:"cell", allowUpdating: !roTS, allowAdding: !roTS, allowDeleting: !roTS
-                                // });
-
+                            return $("<div class='pi-pm-pa-process-row'></div>").append(
+                                $("<div class='pi-pm-pa-process-copy'></div>").append(
+                                    $("<strong></strong>").text("PA Process"),
+                                    $("<span></span>").text("Review and maintain PA process details for this policy issuance.")
+                                ),
+                                $buttonHost
+                            );
                         }
-
                     }
                ]}];
     // var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
@@ -204,7 +274,7 @@
     //                                 var itemsDelay = [ acceptButtonId , panelStatusId, declinedButtonId, declinedStatusId,'', ''];
 
         $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm({
-            formData: initialFormData,
+            formData: initialFormData || {},
             items: [
                 {
                     itemType: "group",
@@ -234,7 +304,11 @@
 
         // Decision/submit handlers depend on formData, so initialize them only
         // after the Policy Issuance record has been loaded and bound to dxForm.
-        delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
+        // role enable/disable restored code: delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
+        delayAcceptStatusV2Promise(mainFields, thisObject, ...itemsDelay)
+            .catch(function (error) {
+                console.error("Policy Issuance PM decision hydration failed.", error);
+            });
 
     })
 </script>
