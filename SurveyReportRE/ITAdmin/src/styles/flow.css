@@ -23,9 +23,8 @@
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     "tools"
-    "diagram"
-    "configure"
-    "settings";
+    "settings"
+    "split";
   gap: 14px;
   height: auto;
   align-items: start;
@@ -141,30 +140,55 @@
 }
 
 .flow-properties-panel {
-  grid-area: configure;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  position: static;
-  height: auto;
-  max-height: none;
+  gap: 0;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid #dbe3ef;
+  border-radius: 14px;
+  background: #f8fafc;
 }
 
 .flow-properties-scroll-container {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: auto;
-  max-height: none;
-  overflow: visible;
-  padding-right: 0;
+  min-height: 0;
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 10px;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .flow-panel-heading {
-  padding: 14px 16px;
-  border: 1px solid #dbeafe;
-  border-radius: 16px;
+  display: flex;
+  flex: 0 0 auto;
+  padding: 12px 14px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 0;
+  border-bottom: 1px solid #dbeafe;
+  border-radius: 13px 13px 0 0;
   background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.flow-panel-heading > div { min-width: 0; }
+
+.flow-panel-size {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  background: #fff;
+  color: #2563eb;
+  font-size: 9px !important;
+  font-weight: 800;
 }
 
 .flow-panel-heading h3 {
@@ -248,13 +272,100 @@
 }
 
 .flow-canvas-panel {
-  grid-area: diagram;
   min-height: 700px;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid #e2e8f0;
   box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06);
 }
+
+.flow-split-workspace {
+  --flow-diagram-width: 64%;
+  grid-area: split;
+  display: grid;
+  min-width: 0;
+  min-height: 560px;
+  height: clamp(560px, calc(100vh - 285px), 780px);
+  grid-template-columns: minmax(420px, calc(var(--flow-diagram-width) - 5px)) 10px minmax(310px, 1fr);
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.flow-split-diagram {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.flow-split-diagram .flow-canvas-panel,
+.flow-split-diagram .workflow-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 0 !important;
+  border-radius: 14px;
+}
+
+.flow-splitter {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  width: 10px;
+  min-height: 100%;
+  place-items: center;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.flow-splitter::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 4px;
+  width: 2px;
+  border-radius: 999px;
+  background: #d6e0ec;
+  content: '';
+  transition: width .15s ease, left .15s ease, background .15s ease;
+}
+
+.flow-splitter > span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 18px;
+  height: 42px;
+  place-items: center;
+  align-content: center;
+  gap: 3px;
+  border: 1px solid #cbd8e7;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, .12);
+}
+
+.flow-splitter i {
+  display: block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #7890ad;
+}
+
+.flow-splitter:hover::before,
+.flow-splitter:focus-visible::before,
+.flow-split-workspace.is-resizing .flow-splitter::before {
+  left: 3px;
+  width: 4px;
+  background: #3b82f6;
+}
+
+.flow-splitter:focus-visible { outline: none; }
+.flow-split-workspace.is-resizing { cursor: col-resize; }
+.flow-split-workspace.is-resizing .flow-split-diagram,
+.flow-split-workspace.is-resizing .flow-properties-panel { pointer-events: none; }
+body.flow-split-resizing { cursor: col-resize !important; user-select: none !important; }
 
 @media (max-width: 1050px) {
   .flow-diagram-tools {
@@ -267,6 +378,10 @@
 
   .workflow-settings-actions .workflow-id-field {
     grid-column: 1 / -1;
+  }
+
+  .flow-split-workspace {
+    grid-template-columns: minmax(380px, calc(var(--flow-diagram-width) - 5px)) 10px minmax(290px, 1fr);
   }
 }
 
@@ -284,6 +399,17 @@
   .workflow-settings-actions .workflow-id-field {
     grid-column: auto;
   }
+
+  .flow-split-workspace {
+    height: auto;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+    overflow: visible;
+  }
+
+  .flow-split-diagram { height: 520px; }
+  .flow-splitter { display: none; }
+  .flow-properties-panel { height: min(620px, 70vh); margin-top: 10px; }
 }
 
 .workflow-canvas {
@@ -442,7 +568,7 @@
 
 /* Stats Tables styling */
 .flow-stats-container {
-  margin-top: 20%;
+  margin-top: 0;
   clear: both;
   display: block;
   background: white;

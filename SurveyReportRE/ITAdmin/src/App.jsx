@@ -142,7 +142,8 @@ const loginContextValue = (key) => {
 };
 
 function App() {
-  const reportPreviewMode = import.meta.env.DEV && new URLSearchParams(window.location.search).get('preview') === 'report';
+  const devPreviewSection = import.meta.env.DEV ? new URLSearchParams(window.location.search).get('preview') : '';
+  const devPreviewMode = devPreviewSection === 'report' || devPreviewSection === 'flow';
   const [loginStats,setLoginStats]=useState([]);
   const [disk,setDisk]=useState(0);
   const [ticketData,setTicketData]=useState([]);
@@ -156,14 +157,14 @@ function App() {
   const [currentDepartment, setCurrentDepartment] = useState(() => String(loginContextValue('_role') || '').trim());
   const [isImpersonating, setIsImpersonating] = useState(() => String(loginContextValue('_isDebugMode') || '').toLowerCase() === 'true');
   const [returningAccount, setReturningAccount] = useState(false);
-  const [adminAccess, setAdminAccess] = useState(reportPreviewMode ? 'allowed' : 'checking');
+  const [adminAccess, setAdminAccess] = useState(devPreviewMode ? 'allowed' : 'checking');
   const [serverRole, setServerRole] = useState('');
   const [serverEnvironment, setServerEnvironment] = useState('');
   const [jogetEnvironment, setJogetEnvironment] = useState('');
 //  const [appsettings, setAppsettings] = useState(null);
 
   useEffect(() => {
-    if (reportPreviewMode) return undefined;
+    if (devPreviewMode) return undefined;
     let cancelled = false;
     const loadLoginContext = async () => {
       try {
@@ -201,7 +202,7 @@ function App() {
     };
     loadLoginContext();
     return () => { cancelled = true; };
-  }, [reportPreviewMode]);
+  }, [devPreviewMode]);
 
   const returnToAdminAccount = async () => {
     setReturningAccount(true);
@@ -395,7 +396,7 @@ function App() {
     detail: onlineUsers.length ? 'SignalR sessions currently online' : 'No active SignalR session'
   }), [onlineUsers]);
 
-  const [activeSection, setActiveSection] = useState(reportPreviewMode ? 'report-builder' : 'dashboard');
+  const [activeSection, setActiveSection] = useState(devPreviewSection === 'flow' ? 'flow' : (devPreviewSection === 'report' ? 'report-builder' : 'dashboard'));
   const [selectedWorkflowId, setSelectedWorkflowId] = useState(null);
 
   const menuItems = [

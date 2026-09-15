@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import appsettings from '../../../host.json';
 import {
     useEdgesState,
@@ -528,6 +528,43 @@ function Flow({ id: propId }) {
     const [activeStatsTab, setActiveStatsTab] = useState('nodes');
     const [isPaletteDragging, setIsPaletteDragging] = useState(false);
     const [draggedLaneIndex, setDraggedLaneIndex] = useState(null);
+    const splitWorkspaceRef = useRef(null);
+    const [diagramWidthPercent, setDiagramWidthPercent] = useState(() => {
+        const savedWidth = Number(window.localStorage.getItem('flow-designer-diagram-width'));
+        return Number.isFinite(savedWidth) && savedWidth >= 42 && savedWidth <= 78 ? savedWidth : 64;
+    });
+    const [isSplitResizing, setIsSplitResizing] = useState(false);
+
+    const resizeSplitFromPointer = useCallback((clientX) => {
+        const bounds = splitWorkspaceRef.current?.getBoundingClientRect();
+        if (!bounds?.width) return;
+        const nextWidth = ((clientX - bounds.left) / bounds.width) * 100;
+        setDiagramWidthPercent(Math.min(78, Math.max(42, nextWidth)));
+    }, []);
+
+    useEffect(() => {
+        if (!isSplitResizing) return undefined;
+
+        const handlePointerMove = (event) => {
+            event.preventDefault();
+            resizeSplitFromPointer(event.clientX);
+        };
+        const handlePointerUp = () => setIsSplitResizing(false);
+
+        window.addEventListener('pointermove', handlePointerMove);
+        window.addEventListener('pointerup', handlePointerUp, { once: true });
+        document.body.classList.add('flow-split-resizing');
+
+        return () => {
+            window.removeEventListener('pointermove', handlePointerMove);
+            window.removeEventListener('pointerup', handlePointerUp);
+            document.body.classList.remove('flow-split-resizing');
+        };
+    }, [isSplitResizing, resizeSplitFromPointer]);
+
+    useEffect(() => {
+        window.localStorage.setItem('flow-designer-diagram-width', String(Math.round(diagramWidthPercent * 10) / 10));
+    }, [diagramWidthPercent]);
 
     const focusNode = useCallback(
         (nodeId) => {
@@ -3084,7 +3121,7 @@ const updateSelectedEdge = useCallback(
                         </div>
                     )}
 
-                    <div className="flow-sidebar-card">
+                    {/* <div className="flow-sidebar-card">
                         <h3>Quick actions</h3>
                         <button type="button" className="flow-action-btn" onClick={() => setNodes((currentNodes) => layoutNodes(currentNodes, edges, true))}>
                             Auto layout
@@ -3092,60 +3129,104 @@ const updateSelectedEdge = useCallback(
                         <button type="button" className="flow-action-btn secondary" onClick={addNode}>
                             Add node
                         </button>
-                    </div>
+                    </div> */}
                 </aside>
 
-                <Diagram
-                    nodes={nodes}
-                    edges={edges}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    setEdges={setEdges}
-                    onConnect={onConnect}
-                    selectedNode={selectedNode}
-                    setSelectedNode={setSelectedNode}
-                    selectedEdge={selectedEdge}
-                    setSelectedEdge={setSelectedEdge}
-                    setReactFlowInstance={setReactFlowInstance}
-                    onDrop={onDrop}
-                    onDragOver={onDragOver}
-                    onNodeDragStop={(_, node) => {
-                        setNodes((currentNodes) =>
-                            currentNodes.map((item) =>
-                                item.id === node.id
-                                    ? {
-                                        ...item,
-                                        position: node.position,
-                                        data: {
-                                            ...item.data,
-                                            manualPositioned: true,
-                                        },
-                                    }
-                                    : item,
-                            ),
-                        );
-                        setSelectedNode(node);
-                    }}
-                    loading={loading}
-                />
-
-                <aside className="flow-properties-panel">
-                    <div className="flow-panel-heading">
-                        <h3>Configure workflow</h3>
-                        <p>Select a node or transition on the diagram to edit its configuration.</p>
+                <div
+                    ref={splitWorkspaceRef}
+                    className={`flow-split-workspace${isSplitResizing ? ' is-resizing' : ''}`}
+                    style={{ '--flow-diagram-width': `${diagramWidthPercent}%` }}
+                >
+                    <div className="flow-split-diagram">
+                        <Diagram
+                            nodes={nodes}
+                            edges={edges}
+                            onNodesChange={onNodesChange}
+                            onEdgesChange={onEdgesChange}
+                            setEdges={setEdges}
+                            onConnect={onConnect}
+                            selectedNode={selectedNode}
+                            setSelectedNode={setSelectedNode}
+                            selectedEdge={selectedEdge}
+                            setSelectedEdge={setSelectedEdge}
+                            setReactFlowInstance={setReactFlowInstance}
+                            onDrop={onDrop}
+                            onDragOver={onDragOver}
+                            onNodeDragStop={(_, node) => {
+                                setNodes((currentNodes) =>
+                                    currentNodes.map((item) =>
+                                        item.id === node.id
+                                            ? {
+                                                ...item,
+                                                position: node.position,
+                                                data: {
+                                                    ...item.data,
+                                                    manualPositioned: true,
+                                                },
+                                            }
+                                            : item,
+                                    ),
+                                );
+                                setSelectedNode(node);
+                            }}
+                            loading={loading}
+                        />
                     </div>
-                    <div className="flow-properties-scroll-container">
-                        {error && <div className="flow-error">{error}</div>}
-                        {nodeDetails}
-                        {edgeDetails}
-                        {!selectedNode && !selectedEdge && (
-                            <div className="flow-empty-state">
-                                <h3>No item selected</h3>
-                                <p>Select a node or connect two nodes to edit transition attributes such as action name, step no and condition JSON.</p>
+
+                    <div
+                        className="flow-splitter"
+                        role="separator"
+                        aria-label="Resize Diagram and properties panels"
+                        aria-orientation="vertical"
+                        aria-valuemin="42"
+                        aria-valuemax="78"
+                        aria-valuenow={Math.round(diagramWidthPercent)}
+                        tabIndex={0}
+                        onPointerDown={(event) => {
+                            if (event.button !== 0) return;
+                            event.preventDefault();
+                            setIsSplitResizing(true);
+                            resizeSplitFromPointer(event.clientX);
+                        }}
+                        onDoubleClick={() => setDiagramWidthPercent(64)}
+                        onKeyDown={(event) => {
+                            if (event.key === 'ArrowLeft') {
+                                event.preventDefault();
+                                setDiagramWidthPercent(width => Math.max(42, width - 2));
+                            }
+                            if (event.key === 'ArrowRight') {
+                                event.preventDefault();
+                                setDiagramWidthPercent(width => Math.min(78, width + 2));
+                            }
+                            if (event.key === 'Home') setDiagramWidthPercent(42);
+                            if (event.key === 'End') setDiagramWidthPercent(78);
+                        }}
+                        title="Kéo để thay đổi kích thước; nhấp đúp để đặt lại"
+                    >
+                        <span><i /><i /><i /></span>
+                    </div>
+
+                    <aside className="flow-properties-panel">
+                        <div className="flow-panel-heading">
+                            <div>
+                                <h3>Configure workflow</h3>
+                                <p>Select a node or transition on the diagram to edit its configuration.</p>
                             </div>
-                        )}
-                    </div>
-                </aside>
+                            <span className="flow-panel-size" title="Diagram width">{Math.round(diagramWidthPercent)}%</span>
+                        </div>
+                        <div className="flow-properties-scroll-container">
+                            {error && <div className="flow-error">{error}</div>}
+                            {nodeDetails}
+                            {edgeDetails}
+                            {!selectedNode && !selectedEdge && (
+                                <div className="flow-empty-state">
+                                    <h3>No item selected</h3>
+                                    <p>Select a node or connect two nodes to edit transition attributes such as action name, step no and condition JSON.</p>
+                                </div>
+                            )}
+                        </div>
+                    </aside>
+                </div>
             </div>
 
             {/* Stats Summary List */}

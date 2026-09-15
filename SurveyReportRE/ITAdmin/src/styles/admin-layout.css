@@ -429,7 +429,7 @@ th, td { vertical-align: middle; }
 .flow-canvas-panel { min-height: 620px; border-radius: var(--admin-radius); box-shadow: var(--admin-shadow); }
 .workflow-canvas { min-height: 620px; }
 .flow-panel-heading { padding: 10px 12px; border-radius: var(--admin-radius); }
-.flow-sidebar, .flow-properties-panel, .flow-properties-scroll-container { gap: 10px; }
+.flow-sidebar { gap: 10px; }
 .workflow-settings-actions { gap: 8px; margin-top: 8px; }
 .workflow-settings-actions .flow-action-btn { min-height: 32px; margin-bottom: 0; }
 .flow-form-card { gap: 8px; }
