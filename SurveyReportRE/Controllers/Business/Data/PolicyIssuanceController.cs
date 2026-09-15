@@ -382,6 +382,18 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         foreach (PolicyIssuance item in PolicyIssuanceData)
         {
 
+            // Package Of Policy follows the linked Quotation and is not trusted
+            // from the browser when a source quotation is available.
+            if (item.QuotationId.HasValue)
+            {
+                Quotation? sourceQuotation = await _quotationRepository.GetSingleObject(
+                    quotation => quotation.Id == item.QuotationId.Value);
+                if (sourceQuotation != null)
+                {
+                    item.PackageRequest = sourceQuotation.PackageRequest == true;
+                }
+            }
+
             if (IsDirectEndorseRequest(item, out bool? skipTs))
             {
                 if (!string.Equals(item.RequestType?.Trim(), "Endorsement", StringComparison.OrdinalIgnoreCase))
@@ -425,6 +437,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
             JsonConvert.PopulateObject(JsonConvert.SerializeObject(item), PolicyIssuance);
             PolicyIssuance.PolicyIssuanceRequest = requestNo;
+            ApplyPolicyPackageDueDate(PolicyIssuance);
             List<FormatCodeNo> tableConfig = new List<FormatCodeNo>();
             tableConfig = await _formatCodeNoRepository.GetListObjectFullInclude(l => l.NoSeqCode == nameof(PolicyIssuance) + "Code");
             PolicyIssuance.PolicyIssuanceCode = await ControllerUtil.GenerateNumberSeqAsync(tableConfig, _formatCodeNoRepository, nameof(PolicyIssuance));
@@ -808,6 +821,141 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             dept,
             acceptedAt,
             workflowStatus = policyIssuance.WorkflowStatus
+        });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> BypassTS([FromBody] AcceptTaskRequest request)
+    {
+        if (request.Id <= 0)
+            return BadRequest(new { message = "A valid Policy Issuance id is required." });
+
+        PolicyIssuance? policyIssuance = await _BaseRepository.GetSingleObject(item =>
+            item.Id == request.Id && !item.Deleted);
+        if (policyIssuance == null)
+            return NotFound(new { message = $"Policy Issuance {request.Id} was not found." });
+
+        InstanceWorkflow? instanceWorkflow = await _instanceWorkflowRepository.GetSingleObject(item =>
+            item.RecordGuid == policyIssuance.Guid && !item.Deleted);
+        if (instanceWorkflow == null)
+            return Conflict(new { message = "The Policy Issuance workflow instance was not found." });
+
+        List<StepsWorkflow> workflowSteps = await _stepsWorkflowRepository.GetListObject(item =>
+            item.WorkflowDefinitionId == instanceWorkflow.WorkflowDefinitionId && !item.Deleted);
+        const string submitToPmStepCode = "SUBMIT_TO_PM";
+        StepsWorkflow? pmTransition = workflowSteps
+            .Where(item => string.Equals(
+                item.StepCode?.Trim(),
+                submitToPmStepCode,
+                StringComparison.OrdinalIgnoreCase))
+            .OrderBy(item => item.SortOrder)
+            .FirstOrDefault();
+        if (pmTransition == null || string.IsNullOrWhiteSpace(pmTransition.TNodeId))
+        {
+            return Conflict(new
+            {
+                message = $"StepsWorkflow code '{submitToPmStepCode}' was not found or has no target node. Bypass was not applied."
+            });
+        }
+
+        string targetDepartment = string.IsNullOrWhiteSpace(pmTransition.ToNodeId)
+            ? "PM"
+            : pmTransition.ToNodeId.Trim().ToUpperInvariant();
+
+        JObject tat;
+        try { tat = JObject.Parse(policyIssuance.TurnAroundTimeAttributes ?? "{}"); }
+        catch { tat = new JObject(); }
+
+        DateTime bypassedAt = DateTime.Now;
+        JObject tsTat = tat["TS"] as JObject ?? new JObject();
+        tsTat["ReceiveDate"] = bypassedAt;
+        tsTat["AcceptDate"] = bypassedAt;
+        tsTat["CompleteDate"] = bypassedAt;
+        tat["TS"] = tsTat;
+
+        string? pmAccount = null;
+        if (!string.IsNullOrWhiteSpace(policyIssuance.PIC))
+        {
+            try
+            {
+                PICAttributes? pic = JsonConvert.DeserializeObject<PICAttributes>(policyIssuance.PIC);
+                if (pic != null)
+                    pmAccount = Util.PICPicker(pic, targetDepartment);
+            }
+            catch (JsonException)
+            {
+                // Demo bypass still moves the stage even when legacy PIC JSON is malformed.
+            }
+        }
+
+        policyIssuance.StageDept = targetDepartment;
+        policyIssuance.StageAccount = pmAccount ?? "";
+        policyIssuance.TurnAroundTimeAttributes = tat.ToString(Formatting.None);
+        if (!string.IsNullOrWhiteSpace(pmTransition.StatusName))
+            policyIssuance.WorkflowStatus = pmTransition.StatusName;
+        if (pmTransition.StatusId.HasValue && pmTransition.StatusId.Value > 0)
+            policyIssuance.StatusId = pmTransition.StatusId;
+
+        instanceWorkflow.CurrentStep = pmTransition.TNodeId;
+        instanceWorkflow.CurrentOwnerRoleCode = targetDepartment;
+        instanceWorkflow.LastActionCode = string.IsNullOrWhiteSpace(pmTransition.ActionCode)
+            ? submitToPmStepCode
+            : pmTransition.ActionCode.Trim();
+        await _instanceWorkflowRepository.UpdateData(
+            instanceWorkflow,
+            JsonConvert.SerializeObject(new
+            {
+                instanceWorkflow.CurrentStep,
+                instanceWorkflow.CurrentOwnerRoleCode,
+                instanceWorkflow.LastActionCode
+            }),
+            instanceWorkflow.Id,
+            "Id");
+
+        await _BaseRepository.UpdateData(
+            policyIssuance,
+            JsonConvert.SerializeObject(new
+            {
+                policyIssuance.StageDept,
+                policyIssuance.StageAccount,
+                policyIssuance.TurnAroundTimeAttributes,
+                policyIssuance.WorkflowStatus,
+                policyIssuance.StatusId
+            }),
+            policyIssuance.Id,
+            "Id");
+
+        string actor = ControllerUtil.GetCurrentContextUser(_httpContextAccessor, configuration);
+        await ControllerHelper.DistributeWorkflowRefresh(
+            _usersSessionRepository,
+            nameof(PolicyIssuance),
+            policyIssuance.Id,
+            "update",
+            actor,
+            policyIssuance.StageAccount,
+            "TS",
+            targetDepartment,
+            DOMAIN_NAME,
+            data: new
+            {
+                stageDept = policyIssuance.StageDept,
+                stageAccount = policyIssuance.StageAccount,
+                turnAroundTimeAttributes = policyIssuance.TurnAroundTimeAttributes,
+                currentStep = instanceWorkflow.CurrentStep,
+                workflowStepCode = pmTransition.StepCode,
+                bypassedAt
+            });
+
+        return Ok(new
+        {
+            success = true,
+            id = policyIssuance.Id,
+            stageDept = policyIssuance.StageDept,
+            stageAccount = policyIssuance.StageAccount,
+            turnAroundTimeAttributes = policyIssuance.TurnAroundTimeAttributes,
+            currentStep = instanceWorkflow.CurrentStep,
+            workflowStepCode = pmTransition.StepCode,
+            bypassedAt
         });
     }
 
@@ -1217,8 +1365,10 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             }
             policyIssuance.StageDept = initialStageDept;
 
-
-            policyIssuance = await _BaseRepository.InsertData(JsonConvert.DeserializeObject<PolicyIssuance>(JsonConvert.SerializeObject(policyIssuance)));
+            PolicyIssuance policyIssuanceEntity = JsonConvert.DeserializeObject<PolicyIssuance>(
+                JsonConvert.SerializeObject(policyIssuance));
+            ApplyPolicyPackageDueDate(policyIssuanceEntity);
+            policyIssuance = await _BaseRepository.InsertData(policyIssuanceEntity);
 
 
             TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(policyIssuance.TurnAroundTimeAttributes);
@@ -1519,8 +1669,37 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                 ["ActionCode"] = stepsWorkflow.ActionCode ?? ""
             };
 
-            notificationTemplate.Title = MailUtil.TitleContentHandle(notificationTemplate.Title, templateData).Trim();
-            notificationTemplate.Content = MailUtil.TitleContentHandle(notificationTemplate.Content, templateData).Trim();
+            if (!string.IsNullOrWhiteSpace(notificationTemplate.NotificationQuery))
+            {
+                try
+                {
+                    DataTable query = DataUtil.ExecuteSelectQuery(
+                        _BaseRepository._connectionString,
+                        notificationTemplate.NotificationQuery,
+                        ("PolicyIssuanceId", quotation.Id));
+                    if (query.Rows.Count > 0)
+                    {
+                        foreach (var item in Util.MakeQueryIntoDirectory(query.Rows[0]))
+                        {
+                            templateData[item.Key] = item.Value;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(
+                        ex,
+                        "Unable to resolve notification query fields for template {NotificationTemplateId}.",
+                        notificationTemplate.Id);
+                }
+            }
+
+            notificationTemplate.Title = MailUtil.TitleContentHandle(
+                ControllerUtil.ResolveTemplatePlaceholders(notificationTemplate.Title, templateData),
+                templateData).Trim();
+            notificationTemplate.Content = MailUtil.TitleContentHandle(
+                ControllerUtil.ResolveTemplatePlaceholders(notificationTemplate.Content, templateData),
+                templateData).Trim();
             return notificationTemplate;
         }
         else
@@ -1620,12 +1799,37 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
 
         return filteredBase;
     }
+    private static void ApplyPolicyPackageDueDate(PolicyIssuance policyIssuance)
+    {
+        if (!policyIssuance.RequestDate.HasValue) return;
+        policyIssuance.DueDate = policyIssuance.RequestDate.Value.Date
+            .AddDays(policyIssuance.PackageRequest == true ? 5 : 3);
+    }
+
+    private static string AddPolicyDueDateToValues(string values, DateTime? dueDate)
+    {
+        JObject payload;
+        try { payload = JObject.Parse(values ?? "{}"); }
+        catch (JsonException) { payload = new JObject(); }
+        if (dueDate.HasValue) payload["DueDate"] = dueDate.Value;
+        return payload.ToString(Formatting.None);
+    }
+
     [HttpPut]
     public override HttpResponseMessage UpdateData([FromForm] UpdateFormCollection form)
     {
+        PolicyIssuance currentPolicyIssuance = _BaseRepository
+            .GetSingleObject(item => item.Id == form.key)
+            .GetAwaiter().GetResult();
         var entity = new PolicyIssuance();
+        if (currentPolicyIssuance != null)
+        {
+            JsonConvert.PopulateObject(JsonConvert.SerializeObject(currentPolicyIssuance), entity);
+        }
         JsonConvert.PopulateObject(form.values, entity);
-        _BaseRepository.UpdateData(entity, form.values, form.key, "Id").GetAwaiter().GetResult();
+        ApplyPolicyPackageDueDate(entity);
+        string normalizedValues = AddPolicyDueDateToValues(form.values, entity.DueDate);
+        _BaseRepository.UpdateData(entity, normalizedValues, form.key, "Id").GetAwaiter().GetResult();
 
         // PM Accept is persisted through this shared UpdateData endpoint. Once the
         // PM acceptance timestamp is present, materialize the matching checklist
@@ -1662,9 +1866,18 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
     [HttpPut]
     public HttpResponseMessage UpdateDataAutoSaved([FromForm] UpdateFormCollection form)
     {
+        PolicyIssuance currentPolicyIssuance = _BaseRepository
+            .GetSingleObject(item => item.Id == form.key)
+            .GetAwaiter().GetResult();
         var entity = new PolicyIssuance();
+        if (currentPolicyIssuance != null)
+        {
+            JsonConvert.PopulateObject(JsonConvert.SerializeObject(currentPolicyIssuance), entity);
+        }
         JsonConvert.PopulateObject(form.values, entity);
-        _BaseRepository.UpdateData(entity, form.values, form.key, "Id").GetAwaiter().GetResult();
+        ApplyPolicyPackageDueDate(entity);
+        string normalizedValues = AddPolicyDueDateToValues(form.values, entity.DueDate);
+        _BaseRepository.UpdateData(entity, normalizedValues, form.key, "Id").GetAwaiter().GetResult();
 
 
 
@@ -1987,7 +2200,8 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
             {
                 PolicyIssuanceId = policyIssuance.Id,
                 LineName = quotation?.LineName,
-                ProductName = quotation?.ProductName
+                ProductName = quotation?.ProductName,
+                BusinessChannelName = quotation?.BusinessChannelName
             };
         }
 
@@ -2004,6 +2218,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         quotationFields.TryGetValue(policyIssuance.Id, out var quotation);
         response["lineName"] = quotation?.LineName ?? "";
         response["productName"] = quotation?.ProductName ?? "";
+        response["businessChannelName"] = quotation?.BusinessChannelName ?? "";
         return response;
     }
 
@@ -2012,6 +2227,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         public long PolicyIssuanceId { get; init; }
         public string? LineName { get; init; }
         public string? ProductName { get; init; }
+        public string? BusinessChannelName { get; init; }
     }
 
     [HttpDelete]
