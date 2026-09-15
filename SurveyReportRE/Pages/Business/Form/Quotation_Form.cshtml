@@ -176,6 +176,8 @@ Note:
     state.selectedId = null;
     state.selectedGuid = null;
     state.selectedCodeNo = null;
+    state.formData = null;
+    state.stageAccount = "";
     var selectedAttachmentId = null;
     var stageDept = null;
     
@@ -615,6 +617,9 @@ Note:
             PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
             var map = parsePicMap(PIC_JSON);
             stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
+            q.stageAccount = stageAccount;
+            state.stageAccount = stageAccount;
+            state.formData = q;
         }
 
         async function loadQuotationSectionComments(refreshDept) {
@@ -1249,6 +1254,9 @@ Note:
                 PIC_JSON = q.pIC || "{}";
                 var picMap = parsePicMap(PIC_JSON);
                 stageAccount = picMap[stageDept] || "(Unassigned)";
+                q.stageAccount = stageAccount;
+                state.stageAccount = stageAccount;
+                state.formData = q;
                 quotationData = q;
                 deptData[dept] = { ...q, id: q.id, sectionName: dept, code: q.quotationCode };
                 var formId = window.QuotationIdManager.form(dept, @ViewData["Id"]);
