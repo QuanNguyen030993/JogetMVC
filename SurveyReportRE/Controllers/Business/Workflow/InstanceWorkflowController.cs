@@ -1401,8 +1401,10 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             {
                 ToName = creator.FullName,
                 ToEmail = creator.Email,
-                Subject = $"{MailUtil.TitleContentHandle(mailTemplate.PrefixTitleMail, templateData)} {MailUtil.TitleContentHandle(mailTemplate.TemplateMailTitle, templateData)}".Trim(),
-                HtmlBody = MailUtil.BodyContentHandle(mailTemplate.TemplateContent, templateData),
+                Subject = $"{MailUtil.TitleContentHandle(ControllerUtil.ResolveTemplatePlaceholders(mailTemplate.PrefixTitleMail, templateData), templateData)} {MailUtil.TitleContentHandle(ControllerUtil.ResolveTemplatePlaceholders(mailTemplate.TemplateMailTitle, templateData), templateData)}".Trim(),
+                HtmlBody = MailUtil.BodyContentHandle(
+                    ControllerUtil.ResolveTemplatePlaceholders(mailTemplate.TemplateContent, templateData),
+                    templateData),
                 TextBody = "",
                 CC = string.Join(';', ccEmails),
                 BCC = mailTemplate.BCC ?? ""
@@ -1526,8 +1528,10 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             {
                 ToName = creator.FullName,
                 ToEmail = creator.Email,
-                Subject = $"{MailUtil.TitleContentHandle(mailTemplate.PrefixTitleMail, templateData)} {MailUtil.TitleContentHandle(mailTemplate.TemplateMailTitle, templateData)}".Trim(),
-                HtmlBody = MailUtil.BodyContentHandle(mailTemplate.TemplateContent, templateData),
+                Subject = $"{MailUtil.TitleContentHandle(ControllerUtil.ResolveTemplatePlaceholders(mailTemplate.PrefixTitleMail, templateData), templateData)} {MailUtil.TitleContentHandle(ControllerUtil.ResolveTemplatePlaceholders(mailTemplate.TemplateMailTitle, templateData), templateData)}".Trim(),
+                HtmlBody = MailUtil.BodyContentHandle(
+                    ControllerUtil.ResolveTemplatePlaceholders(mailTemplate.TemplateContent, templateData),
+                    templateData),
                 TextBody = "",
                 CC = string.Join(';', ccEmails),
                 BCC = mailTemplate.BCC ?? ""
@@ -1625,7 +1629,8 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
 
         string moduleName = fallbackTransferObject.ModuleName?.ToString() ?? nameof(Quotation);
         string recordCode = fallbackTransferObject.Code?.ToString() ?? "";
-        string titleTemplate = MailUtil.TitleContentHandle(notificationTemplate.Title, templateData).Trim();
+        string resolvedTitle = ControllerUtil.ResolveTemplatePlaceholders(notificationTemplate.Title, templateData);
+        string titleTemplate = MailUtil.TitleContentHandle(resolvedTitle, templateData).Trim();
         string title;
         try
         {
@@ -1651,9 +1656,10 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             contentTemplate,
             _businessConfig.CurrentValue.HardCodeObject?.Comment,
             comment);
-        string message = string.IsNullOrWhiteSpace(contentWithComment)
+        string resolvedContent = ControllerUtil.ResolveTemplatePlaceholders(contentWithComment, templateData);
+        string message = string.IsNullOrWhiteSpace(resolvedContent)
             ? comment
-            : MailUtil.BodyContentHandle(contentWithComment, templateData).Trim();
+            : MailUtil.BodyContentHandle(resolvedContent, templateData).Trim();
 
         dynamic transferObject = new
         {

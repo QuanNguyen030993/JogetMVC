@@ -406,9 +406,15 @@ public class QuotationController : BaseControllerApi<Quotation>
                 flowDictionaryData = Util.MakeQueryIntoDirectory(query.Rows[0]);
                 MailQueue mailQueue = new MailQueue();
 
-                string contentHandle = MailUtil.BodyContentHandle(mailTemplate.TemplateContent, new Dictionary<string, object>());
-                mailTemplate.TemplateMailTitle = MailUtil.TitleContentHandle(mailTemplate.TemplateMailTitle, new Dictionary<string, object>());
-                mailTemplate.PrefixTitleMail = MailUtil.TitleContentHandle(mailTemplate.PrefixTitleMail, new Dictionary<string, object>());
+                string contentHandle = MailUtil.BodyContentHandle(
+                    ControllerUtil.ResolveTemplatePlaceholders(mailTemplate.TemplateContent, flowDictionaryData),
+                    flowDictionaryData);
+                mailTemplate.TemplateMailTitle = MailUtil.TitleContentHandle(
+                    ControllerUtil.ResolveTemplatePlaceholders(mailTemplate.TemplateMailTitle, flowDictionaryData),
+                    flowDictionaryData);
+                mailTemplate.PrefixTitleMail = MailUtil.TitleContentHandle(
+                    ControllerUtil.ResolveTemplatePlaceholders(mailTemplate.PrefixTitleMail, flowDictionaryData),
+                    flowDictionaryData);
                 if (mailTemplate != null && rqEmployee != null)
                 {
                     if (mailTemplate.IsActive ?? false)
@@ -1354,7 +1360,9 @@ public class QuotationController : BaseControllerApi<Quotation>
                     $"Quotation workflow '{workflowDefinition.WorkflowCode}' has no initial department.");
             }
             quotation.StageDept = initialStageDept;
-            quotation = await _BaseRepository.InsertData(JsonConvert.DeserializeObject<Quotation>(JsonConvert.SerializeObject(quotation)));
+            Quotation quotationEntity = JsonConvert.DeserializeObject<Quotation>(JsonConvert.SerializeObject(quotation));
+            ApplyPackageDueDate(quotationEntity);
+            quotation = await _BaseRepository.InsertData(quotationEntity);
 
 
             TurnAroundAttributes result = JsonConvert.DeserializeObject<TurnAroundAttributes>(quotation.TurnAroundTimeAttributes);
@@ -1615,7 +1623,8 @@ public class QuotationController : BaseControllerApi<Quotation>
             ["ActionCode"] = stepsWorkflow.ActionCode ?? ""
         };
 
-        string title = MailUtil.TitleContentHandle(notificationTemplate.Title, templateData).Trim();
+        string resolvedTitle = ControllerUtil.ResolveTemplatePlaceholders(notificationTemplate.Title, templateData);
+        string title = MailUtil.TitleContentHandle(resolvedTitle, templateData).Trim();
         return string.IsNullOrWhiteSpace(title) ? fallbackTitle : title;
     }
     private async Task<NotificationTemplate> ResolveRouteTransitionNotificationTitleAsyncV2(
@@ -1680,8 +1689,37 @@ public class QuotationController : BaseControllerApi<Quotation>
             ["ActionCode"] = stepsWorkflow.ActionCode ?? ""
         };
 
-        notificationTemplate.Title = MailUtil.TitleContentHandle(notificationTemplate.Title, templateData).Trim();
-        notificationTemplate.Content = MailUtil.TitleContentHandle(notificationTemplate.Content, templateData).Trim();
+        if (!string.IsNullOrWhiteSpace(notificationTemplate.NotificationQuery))
+        {
+            try
+            {
+                DataTable query = DataUtil.ExecuteSelectQuery(
+                    _BaseRepository._connectionString,
+                    notificationTemplate.NotificationQuery,
+                    ("QuotationId", quotation.Id));
+                if (query.Rows.Count > 0)
+                {
+                    foreach (var item in Util.MakeQueryIntoDirectory(query.Rows[0]))
+                    {
+                        templateData[item.Key] = item.Value;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Unable to resolve notification query fields for template {NotificationTemplateId}.",
+                    notificationTemplate.Id);
+            }
+        }
+
+        notificationTemplate.Title = MailUtil.TitleContentHandle(
+            ControllerUtil.ResolveTemplatePlaceholders(notificationTemplate.Title, templateData),
+            templateData).Trim();
+        notificationTemplate.Content = MailUtil.TitleContentHandle(
+            ControllerUtil.ResolveTemplatePlaceholders(notificationTemplate.Content, templateData),
+            templateData).Trim();
         return notificationTemplate;
     }
         else
@@ -1992,12 +2030,37 @@ public class QuotationController : BaseControllerApi<Quotation>
 
         return filteredBase;
     }
+    private static void ApplyPackageDueDate(Quotation quotation)
+    {
+        if (!quotation.RequestedDate.HasValue) return;
+        quotation.DueDate = quotation.RequestedDate.Value.Date
+            .AddDays(quotation.PackageRequest == true ? 5 : 3);
+    }
+
+    private static string AddQuotationDueDateToValues(string values, DateTime? dueDate)
+    {
+        JObject payload;
+        try { payload = JObject.Parse(values ?? "{}"); }
+        catch (JsonException) { payload = new JObject(); }
+        if (dueDate.HasValue) payload["DueDate"] = dueDate.Value;
+        return payload.ToString(Formatting.None);
+    }
+
     [HttpPut]
     public override HttpResponseMessage UpdateData([FromForm] UpdateFormCollection form)
     {
+        Quotation currentQuotation = _BaseRepository
+            .GetSingleObject(item => item.Id == form.key)
+            .GetAwaiter().GetResult();
         var entity = new Quotation();
+        if (currentQuotation != null)
+        {
+            JsonConvert.PopulateObject(JsonConvert.SerializeObject(currentQuotation), entity);
+        }
         JsonConvert.PopulateObject(form.values, entity);
-        _BaseRepository.UpdateData(entity, form.values, form.key, "Id").GetAwaiter().GetResult();
+        ApplyPackageDueDate(entity);
+        string normalizedValues = AddQuotationDueDateToValues(form.values, entity.DueDate);
+        _BaseRepository.UpdateData(entity, normalizedValues, form.key, "Id").GetAwaiter().GetResult();
 
 
 
@@ -2027,9 +2090,18 @@ public class QuotationController : BaseControllerApi<Quotation>
     [HttpPut]
     public  HttpResponseMessage UpdateDataAutoSaved([FromForm] UpdateFormCollection form)
     {
+        Quotation currentQuotation = _BaseRepository
+            .GetSingleObject(item => item.Id == form.key)
+            .GetAwaiter().GetResult();
         var entity = new Quotation();
+        if (currentQuotation != null)
+        {
+            JsonConvert.PopulateObject(JsonConvert.SerializeObject(currentQuotation), entity);
+        }
         JsonConvert.PopulateObject(form.values, entity);
-        _BaseRepository.UpdateData(entity, form.values, form.key, "Id").GetAwaiter().GetResult();
+        ApplyPackageDueDate(entity);
+        string normalizedValues = AddQuotationDueDateToValues(form.values, entity.DueDate);
+        _BaseRepository.UpdateData(entity, normalizedValues, form.key, "Id").GetAwaiter().GetResult();
 
 
 
