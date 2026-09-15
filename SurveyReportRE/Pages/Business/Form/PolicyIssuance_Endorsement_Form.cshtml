@@ -990,7 +990,7 @@ Note:
             })().catch(function (err) {
                 console.error("reloadPolicyIssuanceComponents error:", err);
                 policyIssuanceRenderGate.fail(renderToken, "Policy issuance refresh failed");
-            })().finally(function () {
+            }).finally(function () {
                 policyIssuanceReloadPromise = null;
             });
 
