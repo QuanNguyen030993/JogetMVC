@@ -19,11 +19,14 @@
         moduleCode: viewIdModulePrefix.quotation,
         id: @quotationId,
         department: "@dept"
-    }).catch(function () { return {}; });
-    
+    }).catch(function (error) {
+        console.warn("Quotation PM initial data is unavailable; form binding will continue from the overview.", error);
+        return null;
+    });
 
+        console.log(initialFormData);
     $(`#@QTViewIdHelper.Form(dept, quotationId)`).dxForm({
-        formData: initialFormData,
+        formData: initialFormData || {},
         readOnly: true,
         disabled: false,
         items: [
@@ -51,23 +54,38 @@
                 items: [{
                     itemType: "simple",
                     template: function (_, itemElement) {
-                        const paGridParams = {
-                            refKey: 1,
-                            isAllowRowMenu: false,
-                            gridEditorOptions: {
-                                editing: {
-                                    allowUpdating: false,
-                                    allowAdding: false,
-                                    allowDeleting: false
-                                }
+                        return $("<div class='pa-process-launcher'>").dxButton({
+                            text: "Open PA Process",
+                            icon: "detailslayout",
+                            stylingMode: "outlined",
+                            onClick: function () {
+                                openPaProcessPopup({
+                                    key: "quotation-@quotationId",
+                                    title: "PA Process · Quotation @quotationId",
+                                    createContent: function (gridHost) {
+                                        const paGridParams = {
+                                            height: "100%",
+                                            isAllowRowMenu: false,
+                                            overrideGetUrl: "/api/PolicyIssuanceSubDetails/GetPaProcess/Quotation/@quotationId",
+                                            gridEditorOptions: {
+                                                editing: {
+                                                    mode: "row",
+                                                    allowUpdating: false,
+                                                    allowAdding: false,
+                                                    allowDeleting: false
+                                                }
+                                            }
+                                        };
+                                        const gridOptions = new PolicyIssuanceSubDetailsGridOption(
+                                            "PolicyIssuanceSubDetails",
+                                            "User",
+                                            paGridParams
+                                        );
+                                        new MGrid(null, gridHost, gridOptions, null);
+                                    }
+                                });
                             }
-                        };
-                        const gridOptions = new PolicyIssuanceSubDetailsGridOption(
-                            "PolicyIssuanceSubDetails",
-                            "User",
-                            paGridParams
-                        );
-                        new MGrid(null, itemElement, gridOptions, null);
+                        });
                     }
                 }]
             }
