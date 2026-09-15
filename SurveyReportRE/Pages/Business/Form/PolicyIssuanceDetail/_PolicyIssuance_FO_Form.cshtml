@@ -24,7 +24,10 @@
         moduleCode: viewIdModulePrefix.policyIssuance,
         id: @policyIssuanceId,
         department: "@dept"
-    }).catch(function () { return {}; });
+    }).catch(function (error) {
+        console.warn("Policy Issuance FO initial data is unavailable; form binding will continue from the overview.", error);
+        return null;
+    });
     var thatObject = new Object();
     thatObject.ModelName = "PolicyIssuance";
 
@@ -68,6 +71,9 @@
     /* role enable/disable restored code: that.uploaderAllow = _role == "@dept"; */
     that.uploaderAllow = false;
     that.isRenderUploader = false;
+    // These rows belong to the source Quotation. Policy Issuance may reference
+    // them, but must never delete or recategorize the source documents.
+    that.mappedFromQuotation = true;
     that.data = { SectionName: window.IdManager.attachmentSectionKey(sectionIdQt, that.moduleName, @(cloneId)), Department: "@(dept)", FieldName: that.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
     that.showFillListSelect = true;
     that.sectionId = sectionId;
@@ -85,6 +91,7 @@
     that2.titleName = "Upload Supporting Document";
     /* role enable/disable restored code: that2.uploaderAllow = _role == "@dept"; */
     that2.uploaderAllow = false;
+    that2.mappedFromQuotation = true;
     that2.data = { SectionName: window.IdManager.attachmentSectionKey(sectionIdQt, that2.moduleName, @(cloneId)), Department: "@(dept)", FieldName: that2.moduleName, FormId: "@(QTViewIdHelper.Form(dept, cloneId))" }; //{"SectionName":"default_FO_410"}
 
     var that3 = new Object();
@@ -102,7 +109,17 @@
     that3.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that3.moduleName, @(policyIssuanceId)), Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
 
     $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm({
-        formData: initialFormData,
+        formData: initialFormData || {},
+        onFieldDataChanged: function (event) {
+            var formData = event.component.option("formData") || {};
+            if (event.dataField === "policyRequest" || event.dataField === "requestDate") {
+                var calculatedDueDate = calculatePackageDueDate(
+                    formData.requestDate || formData.RequestDate,
+                    formData.policyRequest === true || formData.PolicyRequest === true
+                );
+                if (calculatedDueDate) event.component.updateData("dueDate", calculatedDueDate);
+            }
+        },
     items: [
             {
                 itemType: "group",
@@ -203,7 +220,7 @@
             /* LEGACY ROLLBACK - DevExtreme dxDateBox
             */
             {
-                                  dataField: "requestedDate",
+                                  dataField: "requestDate",
                                   editorType: "dxDateBox",
                                   editorOptions: { displayFormat: "dd/MM/yyyy" },
                                   label: {  template: labelTpl("RequestedDate - Ngày yêu cầu") }
@@ -215,7 +232,7 @@
                                   label: { template: labelTpl("DueDate - Due date") }
                                 }
             // makeTmivDateBoxFormItem({
-            //     dataField: "requestedDate",
+            //     dataField: "requestDate",
             //     label: { template: labelTpl("RequestedDate - Ngày yêu cầu") }
             // }),
             // makeTmivDateBoxFormItem({
@@ -246,6 +263,7 @@
 
                  // { dataField:"surveyNeeded", label:{text:"Survey Needed"}, editorType:"dxSwitch" ,editorOptions:{ switchedOnText: "Yes", switchedOffText: "No"} },
                  {itemType: "group",
+                name: "requestInformationGroup",
                 caption: "Request Information",
                 colCount: 3,
                 items: [
@@ -258,6 +276,11 @@
                  },
                     { dataField: "quotationType",visible: false, label: { template: labelTpl("QuotationType - Loại đơn quotation type (ví dụ: New)") } },
                     {
+                        dataField: "policyRequest",
+                        editorType: "dxCheckBox",
+                        label: { text: "Package Of Policy" }
+                    },
+                    {
                         dataField: "businessChannelName",
                         isRequired: true,
                         editorType: "dxSelectBox",
@@ -267,6 +290,32 @@
                             displayExpr: "value",
                             valueExpr: "value",
                             searchEnabled: true,
+                            showClearButton: true,
+                            onSelectionChanged: function (event) {
+                                // Initial data binding must keep BI Commission disabled;
+                                // only a user selection enables it.
+                                if (!event.event) return;
+                                var form = $("#@PIViewIdHelper.Form(dept, policyIssuanceId)")
+                                    .dxForm("instance");
+                                form?.getEditor("biCommission")?.option("disabled", false);
+                            }
+                        }
+                    },
+                    {
+                        dataField: "biCommission",
+                        name: "biCommission",
+                        editorType: "dxSelectBox",
+                        visible: true,
+                        label: { text: "BI Commission" },
+                        editorOptions: {
+                            disabled: true,
+                            items: [
+                                { text: "5%", value: 5 },
+                                { text: "10%", value: 10 },
+                                { text: "15%", value: 15 }
+                            ],
+                            displayExpr: "text",
+                            valueExpr: "value",
                             showClearButton: true
                         }
                     },
@@ -288,7 +337,7 @@
                     caption: "Workflow Options",
                     colCount: 3,
                     items: [
-                        makeSkipTSSwitchFormItem("policyIssuanceType")
+                        makeSkipTSCheckboxFormItem("policyIssuanceType")
                     ]
                 },{
                 itemType: "group",
