@@ -27,6 +27,11 @@
             return String(value ?? "").trim().toUpperCase();
         }
 
+        function normalizeAccount(value) {
+            const normalized = String(value ?? "").trim();
+            return normalize(normalized.split("\\").pop());
+        }
+
         function asBoolean(value) {
             if (typeof value === "string") {
                 return !["", "0", "false", "no", "off", "null", "undefined"]
@@ -166,13 +171,30 @@
         }
 
         const state = findPageState();
+        const stateRecord = Array.isArray(state.quotes)
+            ? (state.quotes.find(function (item) {
+                return String(item?.id) === String(options.id ?? state.selectedId);
+            }) || state.quotes[0])
+            : null;
+        const formDataCandidates = [
+            options.formData,
+            options.data?.formItems,
+            state.formData,
+            stateRecord,
+            options.data
+        ];
+        const formData = formDataCandidates.find(function (candidate) {
+            return !!candidate
+                && typeof candidate === "object"
+                && Object.keys(candidate).length > 0;
+        }) || {};
         const route = firstDefined(options.route, state.currentRoute, state.selectedRoute, null);
         const role = firstDefined(options.role, state.currentUserRole, getGlobal("_roleAppName"), "");
         const authenticatedSection = firstDefined(options.section, getGlobal("_role"), getGlobal("_userDepartment"), "");
         const stageDeptValue = firstDefined(
             options.stageDept,
-            options.formData?.stageDept,
-            options.formData?.StageDept,
+            formData.stageDept,
+            formData.StageDept,
             options.data?.formItems?.stageDept,
             options.data?.formItems?.StageDept,
             options.data?.stageDept,
@@ -221,8 +243,6 @@
                 null
             );
         }
-        const formData = firstDefined(options.formData, options.data, state.formData, {});
-        
         const evaluationContext = {
             feature: options.feature || options.featureName || "Feature",
             role,
@@ -285,7 +305,7 @@
         const suppliedPhase2Checks = Array.isArray(options.phase2Checks)
             ? options.phase2Checks
             : [];
-        const reservedCheckKeys = new Set(["role", "stageDept", "section", "route", "customRoute"]);
+        const reservedCheckKeys = new Set(["role", "stageDept", "section", "route", "customRoute", "accept", "acceptDate"]);
         const phase1Definitions = [
             { key: "role", label: "Role", configured: roleConfigured, actual: role, expected: allowedRoles, required: true, evaluate: function () { return matchesAllowed([role], allowedRoles); } },
             { key: "stageDept", label: "Stage dept", configured: !!allowedStageDepts.length, actual: stageDeptValue, expected: allowedStageDepts, required: true, evaluate: function () { return matchesAllowed([stageDeptValue], allowedStageDepts); } },
@@ -304,25 +324,82 @@
                     : function () { return definition.value; }
             };
         }));
-        const tatObject = tryParseJSON(
-                     options.formData?.turnAroundTimeAttributes,
-                    "Check role TAT Problem"
-                ) || {};
+        const rawPic = formData.pIC ?? formData.pic ?? formData.PIC;
+        const picMap = typeof rawPic === "object"
+            ? (rawPic || {})
+            : (safeJson(rawPic) || {});
+        const stageAccountValue = formData.stageAccount
+            || formData.StageAccount
+            || state.stageAccount
+            || picMap[normalize(stageDeptValue)]
+            || picMap[String(stageDeptValue || "").toLowerCase()]
+            || "";
+        const stageAccounts = (Array.isArray(stageAccountValue)
+            ? stageAccountValue
+            : String(stageAccountValue || "").split(/[;,|]/))
+            .map(normalizeAccount)
+            .filter(Boolean);
+        const loginAccount = normalizeAccount(firstDefined(
+            getGlobal("_loginAccount"),
+            getGlobal("_loginUser"),
+            ""
+        ));
+        const acceptRuleEnable = !!loginAccount && stageAccounts.includes(loginAccount);
+        const isAcceptControl = normalize(options.controlType) === "ACCEPT";
+        const rawTat = formData.turnAroundTimeAttributes
+            ?? formData.TurnAroundTimeAttributes
+            ?? {};
+        const tatObject = typeof rawTat === "object"
+            ? (rawTat || {})
+            : (safeJson(rawTat) || {});
+        const acceptDept = normalize(firstDefined(
+            options.section,
+            options.dept,
+            stageDeptValue,
+            ""
+        ));
+        const acceptTat = Object.keys(tatObject).reduce(function (result, key) {
+            return result || (normalize(key) === acceptDept ? tatObject[key] : null);
+        }, null) || {};
+        const acceptDate = firstDefined(
+            acceptTat.AcceptDate,
+            acceptTat.acceptDate,
+            ""
+        );
 
-        const stageAccounts = Array.isArray(options.formData?.stageAccount)
-        ? options.formData?.stageAccount
-        : [options.formData?.stageAccount];
-        const acceptRuleEnable =
-        (tatObject ? (((tatObject[options.stageDept]?.AcceptDate || "") != "") ? true : false) : false) &&
-        (stageAccounts
-        .filter(Boolean)
-        .map(x => String(x).trim().toUpperCase())
-        .includes(String(_loginUser || "").trim().toUpperCase()));
-        console.log("Check rule",acceptRuleEnable);
         const phase2Definitions = [
             { key: "route", label: "Only allow from route", configured: onlyAllowFromRoute != null && onlyAllowFromRoute !== false && onlyAllowFromRoute !== "", actual: routeCandidates.filter(Boolean), expected: onlyAllowFromRoute, required: true, evaluate: checkOnlyAllowFromRoute },
             { key: "customRoute", label: "Custom route condition", configured: customRouteCondition != null && customRouteCondition !== "", actual: customRouteCondition == null ? "" : "evaluated", expected: customRouteCondition, required: true, evaluate: function () { return evaluateCustomCondition(customRouteCondition, evaluationContext); } },
-            { key: "accept", label: "Accept condition", passed: acceptRuleEnable }
+            {
+                key: "accept",
+                label: "Accept · stage account",
+                configured: isAcceptControl,
+                actual: loginAccount,
+                expected: stageAccounts,
+                required: true,
+                evaluate: function () {
+                    return {
+                        passed: acceptRuleEnable,
+                        actual: loginAccount,
+                        expected: stageAccounts
+                    };
+                }
+            },
+            {
+                key: "acceptDate",
+                label: "Accept · not completed",
+                configured: isAcceptControl,
+                actual: acceptDate || "EMPTY",
+                expected: "EMPTY",
+                required: true,
+                evaluate: function () {
+                    return {
+                        passed: !acceptDate,
+                        actual: acceptDate || "EMPTY",
+                        expected: "EMPTY"
+                    };
+                }
+            }
         ].concat(suppliedPhase2Checks.map(function (definition, index) {
             const requestedKey = definition.key || `phase2_${index + 1}`;
             return {
@@ -337,7 +414,6 @@
                     : function () { return definition.value; }
             };
         }));
-
         const phase1Timings = await Promise.all(phase1Definitions
             .filter(function (definition) { return definition.configured; })
             .map(function (definition) {
