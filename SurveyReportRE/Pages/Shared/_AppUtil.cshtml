@@ -34,6 +34,167 @@
             return scrollView;
         }
 
+        /* PA Process FloatPopup restored code.
+         * Keep this block commented so the previous implementation can be restored quickly.
+        function openPaProcessFloatPopup(options) {
+            options = options || {};
+            if (typeof $.fn.floatpopup !== "function") {
+                appNotify({ message: "TMIVCom FloatPopup is not loaded.", type: "error" });
+                return null;
+            }
+
+            var popupKey = String(options.key || "default").replace(/[^a-zA-Z0-9_-]/g, "-");
+            var hostClass = `pa-process-popup-host-${popupKey}`;
+            $(`.${hostClass}`).each(function () {
+                try { $(this).floatpopup("dispose"); } catch (error) { $(this).remove(); }
+            });
+
+            var $content = $("<div class='pa-process-popup-content'>");
+            var $gridHost = $("<div class='pa-process-popup-grid'>").appendTo($content);
+            var $host = $("<div>", { class: `pa-process-popup-host ${hostClass}` }).appendTo(document.body);
+            var popup = null;
+            var contentCreated = false;
+
+            $host.floatpopup({
+                visible: false,
+                title: options.title || "PA Process",
+                showTitle: true,
+                showCloseButton: true,
+                width: options.width || "min(1100px, calc(100vw - 32px))",
+                height: options.height || "min(720px, calc(100vh - 32px))",
+                maxWidth: "calc(100vw - 32px)",
+                maxHeight: "calc(100vh - 32px)",
+                position: "center",
+                shading: true,
+                hideOnOutsideClick: true,
+                closeOnEscape: true,
+                dragEnabled: true,
+                resizeEnabled: true,
+                restorePosition: true,
+                content: $content[0],
+                wrapperAttr: { className: "pa-process-popup-wrapper" },
+                elementAttr: { className: "pa-process-floatpopup" },
+                toolbarItems: [{
+                    name: "fullscreen",
+                    text: "Toggle fullscreen",
+                    toolbar: "bottom",
+                    location: "after",
+                    onClick: function (event) {
+                        event.component.option("fullScreen", !event.component.option("fullScreen"));
+                    }
+                }, {
+                    name: "close",
+                    text: "Close",
+                    toolbar: "bottom",
+                    location: "after",
+                    onClick: function (event) { event.component.hide(); }
+                }],
+                onShown: function () {
+                    if (contentCreated) return;
+                    contentCreated = true;
+                    try {
+                        // MGrid expects a jQuery container (it calls addClass and
+                        // dxDataGrid directly on the host), not a raw DOM node.
+                        options.createContent?.($gridHost);
+                    } catch (error) {
+                        $gridHost.empty().append(
+                            $("<div class='pa-process-popup-error'>").text(error?.message || "PA Process could not be loaded.")
+                        );
+                    }
+                },
+                onHidden: function () {
+                    if (!popup) return;
+                    popup.dispose();
+                    $host.remove();
+                    popup = null;
+                }
+            });
+
+            popup = $host.floatpopup("instance");
+            popup.show();
+            return popup;
+        }
+        window.openPaProcessFloatPopup = openPaProcessFloatPopup;
+        */
+
+        function openPaProcessPopup(options) {
+            options = options || {};
+            debugger
+            var popupKey = String(options.key || "default").replace(/[^a-zA-Z0-9_-]/g, "-");
+            var hostId = `pa-process-popup-host-${popupKey}`;
+            var $existingHost = $(`#${hostId}`);
+            if ($existingHost.length) {
+                try { $existingHost.dxPopup("instance")?.dispose(); } catch (error) { }
+                $existingHost.remove();
+            }
+
+            var $host = $("<div>", {
+                id: hostId,
+                class: "pa-process-popup-host"
+            }).appendTo(document.body);
+            var $gridHost = null;
+
+            var popup = $host.dxPopup({
+                visible: false,
+                title: options.title || "PA Process",
+                showTitle: true,
+                showCloseButton: true,
+                width: options.width || "min(1100px, calc(100vw - 32px))",
+                height: options.height || "min(720px, calc(100vh - 32px))",
+                maxWidth: "calc(100vw - 32px)",
+                maxHeight: "calc(100vh - 32px)",
+                position: { my: "center", at: "center", of: window },
+                shading: true,
+                closeOnOutsideClick: true,
+                dragEnabled: true,
+                resizeEnabled: true,
+                wrapperAttr: { class: "pa-process-popup-wrapper" },
+                toolbarItems: [{
+                    toolbar: "bottom",
+                    location: "after",
+                    widget: "dxButton",
+                    options: {
+                        text: "Close",
+                        icon: "close",
+                        stylingMode: "contained",
+                        onClick: function () { popup.hide(); }
+                    }
+                }],
+                contentTemplate: function (contentElement) {
+                    var $content = $("<div class='pa-process-popup-content'>");
+                    $gridHost = $("<div class='pa-process-popup-grid'>").appendTo($content);
+                    var $scrollView = popupStandardContentByScroll($content)
+                        .addClass("pa-process-popup-scroll");
+
+                    $(contentElement).append($scrollView);
+
+                    try {
+                        // The PA grid is intentionally created inside dxPopup.contentTemplate.
+                        options.createContent?.($gridHost);
+                    } catch (error) {
+                        $gridHost.empty().append(
+                            $("<div class='pa-process-popup-error'>").text(error?.message || "PA Process could not be loaded.")
+                        );
+                    }
+                },
+                onShown: function () {
+                    window.setTimeout(function () {
+                        try { $gridHost?.dxDataGrid("instance")?.updateDimensions(); } catch (error) { }
+                    }, 0);
+                },
+                onHidden: function (event) {
+                    window.setTimeout(function () {
+                        event.component.dispose();
+                        $host.remove();
+                    }, 0);
+                }
+            }).dxPopup("instance");
+
+            popup.show();
+            return popup;
+        }
+        window.openPaProcessPopup = openPaProcessPopup;
+
             const _gridDefaultTake = 50;
             const _gridMaxTake = 200;
 
@@ -703,21 +864,30 @@
                 return resolvePolicyIssuanceSkipTS(scopedData);
             }
 
-            function makeSkipTSSwitchFormItem(typeFieldName) {
+            function calculatePackageDueDate(requestDate, isPackageRequest) {
+                if (!requestDate) return null;
+                var result = new Date(requestDate);
+                if (Number.isNaN(result.getTime())) return null;
+                result.setDate(result.getDate() + (isPackageRequest === true ? 5 : 3));
+                return result;
+            }
+
+            function makeSkipTSCheckboxFormItem(typeFieldName) {
                 return {
                     itemType: "simple",
                     name: "skipTS",
                     dataField: typeFieldName,
-                    label: { text: "Skip TS" },
+                    label: { visible: false },
                     template: function (data, itemElement) {
                         var form = data.component;
                         var formData = form?.option("formData") || {};
                         var currentRole = typeof _role === "undefined" ? "" : String(_role);
-                        var $switch = $("<div>").dxSwitch({
+                        var moduleLabel = String(typeFieldName || "").toLowerCase() === "quotationtype"
+                            ? "Quotation"
+                            : "Policy Issuance";
+                        var $checkbox = $("<div>").dxCheckBox({
                             value: resolveSkipTSFromRequestType(formData, typeFieldName) === true,
-                            switchedOnText: "Yes",
-                            switchedOffText: "No",
-                            showText: true,
+                            text: "Skip TS",
                             /* role enable/disable restored code: disabled: currentRole.trim().toUpperCase() !== "FO" */
                             disabled: true,
                             onValueChanged: function (event) {
@@ -735,7 +905,7 @@
                             }
                         }).appendTo(itemElement);
                         window.applyFeatureRoleControlRule({
-                            feature: "Policy Issuance Skip TS switch · FO",
+                            feature: `${moduleLabel} Skip TS checkbox · FO`,
                             controlType: "section",
                             dept: _role,
                             stageDept: formData.stageDept || formData.StageDept,
@@ -744,12 +914,17 @@
                             isDebugMode: _isDebugMode,
                             isSuperUser: _isSuperUser,
                             apply: function (decision) {
-                                $switch.dxSwitch("instance")?.option("disabled", !decision.allowed);
+                                $checkbox.dxCheckBox("instance")?.option("disabled", !decision.allowed);
                             }
                         });
-                        return $switch;
+                        return $checkbox;
                     }
                 };
+            }
+
+            // Compatibility for any partial that has not been migrated yet.
+            function makeSkipTSSwitchFormItem(typeFieldName) {
+                return makeSkipTSCheckboxFormItem(typeFieldName);
             }
 
             function loadPolicyIssuanceSkipTS(recordId, formId) {
@@ -1133,10 +1308,10 @@
                                     quotationData.Quotation.PIC = { FO: makeRequestAccount, TS: "", UW: "", LKMT: "" };
                                     quotationData.Quotation.TurnAroundTimeAttributes = {
                                                 FO: { AcceptDate: new Date(), CompleteDate: new Date(),ReceiveDate:  new Date() }
-                                                , TS: { AcceptDate: "", CompleteDate: "" }
-                                                , UW: { AcceptDate: "", CompleteDate: "" }
-                                                , LMKT: { AcceptDate: "", CompleteDate: "" }
-                                                , PM: { AcceptDate: "", CompleteDate: "" }
+                                                , TS: { AcceptDate: "", CompleteDate: "",ReceiveDate:"" }
+                                                , UW: { AcceptDate: "", CompleteDate: "" ,ReceiveDate:""}
+                                                , LMKT: { AcceptDate: "", CompleteDate: "",ReceiveDate:"" }
+                                                , PM: { AcceptDate: "", CompleteDate: "",ReceiveDate:"" }
                                         };
                                     quotationData.Quotation.TurnAroundTimeAttributes = JSON.stringify(quotationData.Quotation.TurnAroundTimeAttributes);
                                     quotationData.Quotation.PIC[submitData?.deptTarget] = submitData?.to || "";
@@ -1336,6 +1511,12 @@
                                      policyIssuance = ObjectPopulateKey(item, true, false);
                                      policyIssuance.Subject = combinePolicyIssuanceSubject(item);
                                      policyIssuance.RequestDate = new Date();
+                                     policyIssuance.PackageRequest = item.packageRequest === true
+                                         || item.PackageRequest === true;
+                                     policyIssuance.DueDate = calculatePackageDueDate(
+                                         policyIssuance.RequestDate,
+                                         policyIssuance.PackageRequest
+                                     );
                                      var pics = JSON.parse(item.pic || "{}");
                                      policyIssuance.PIC = {
                                          FO: pics.FO || "",
@@ -1346,10 +1527,10 @@
                                       policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
                                           policyIssuance.TurnAroundTimeAttributes = JSON.stringify({
                                                 FO: { AcceptDate: new Date(), CompleteDate: new Date(), ReceiveDate:  new Date() }
-                                                , TS: { AcceptDate: "", CompleteDate: "" }
-                                                , UW: { AcceptDate: "", CompleteDate: "" }
-                                                , LMKT: { AcceptDate: "", CompleteDate: "" }
-                                                , PM: { AcceptDate: "", CompleteDate: "" }
+                                                , TS: { AcceptDate: "", CompleteDate: "", ReceiveDate:  "" }
+                                                , UW: { AcceptDate: "", CompleteDate: "", ReceiveDate:  "" }
+                                                , LMKT: { AcceptDate: "", CompleteDate: "", ReceiveDate: ""}
+                                    , PM: { AcceptDate: "", CompleteDate: "", ReceiveDate: "" }
                                         });
                                       policyIssuance.StageAccount = _loginUser;
                                       policyIssuance.CopyFromGuid = item.guid;
@@ -5968,6 +6149,7 @@
                                 delay: 16,
                                 showFillListSelect: editorOptions.showFillListSelect,
                                 compactAttachment: editorOptions.compactAttachment === true,
+                                mappedFromQuotation: editorOptions.mappedFromQuotation === true,
                                 sectionId: editorOptions.sectionId,
                                 policyIssuanceId: editorOptions.policyIssuanceId,
                                 sectionIdQt: editorOptions.sectionIdQt,
@@ -6762,6 +6944,7 @@
                 const author = x.author || x.Author || "";
                 const date = x.date || x.Date || x.createdDate || x.CreatedDate;
                 const subDirectory = x.subDirectory || x.SubDirectory || "";
+                const mappedFromQuotation = options?.mappedFromQuotation === true;
                       const $wrapper = $("<div>")
                             .addClass(`att-item-wrapper${options?.compactAttachment ? " att-item-wrapper--mini" : ""}`)
                             .css({
@@ -6869,10 +7052,15 @@
                     text: options?.compactAttachment ? "Delete" : undefined,
                     hint: "Delete",
                     stylingMode: "outlined",
-                    visible: options?.uploaderAllow !== false,
+                    visible: !mappedFromQuotation && options?.uploaderAllow !== false,
                     elementAttr: { class: "attachment-delete-action" },
                     onClick: async function (ev) {
                         ev.event?.stopPropagation?.();
+
+                        if (mappedFromQuotation) {
+                            DevExpress.ui.notify("Quotation attachments are reference files and cannot be deleted here.", "warning", 2200);
+                            return;
+                        }
 
                         const liveSectionPermission = $item
                             .closest(".dept-section")
@@ -6949,6 +7137,7 @@
                                 .dxButton("instance");
                             deleteButton?.option(
                                 "visible",
+                                !mappedFromQuotation &&
                                 options?.uploaderAllow !== false &&
                                 liveSectionPermission !== false &&
                                 !workflowGroupLocked
@@ -11107,12 +11296,14 @@
             }
             return PIC_MAP[deptKey] || null;
         }
+        //Pending decision features
          function setDecisionButtonsDisabled(items, disabled) {
              $.each(items, function(itemIndex, item) {
-                 debugger
                  if (!item) return;
                  try {
-                     $(`#${item}`).dxButton("instance")?.option("disabled", !!disabled);
+                     var element = document.getElementById(item);
+                     if (!element || !element.classList.contains("dx-button")) return;
+                     DevExpress.ui.dxButton.getInstance(element)?.option("disabled", !!disabled);
                  } catch (error) {
                      console.warn("Unable to update decision button state.", item, error);
                  }
@@ -11376,10 +11567,22 @@
 
         let report;
         try {
-                   const defaultPhase2Allow = controlType === "comment" ? sameAsStage : true;
+            const defaultPhase2Allow = controlType === "comment" ? sameAsStage : true;
+            const phase2Allow = typeof options.allowWhen === "function"
+                ? !!(await options.allowWhen({
+                    controlType,
+                    dept: controlDept,
+                    stageDept,
+                    role,
+                    defaultAllowed: defaultPhase2Allow,
+                    sectionAllowed: phase1SectionAllowed,
+                    formData: options.formData || {}
+                }))
+                : defaultPhase2Allow;
 
             report = await window.checkFeatureRoleRule({
                         feature: options.feature || `${controlType} · ${controlDept || "unknown"}`,
+                        controlType: controlType,
                         role,
                         stageDept,
                         section: controlDept,
@@ -11436,19 +11639,6 @@
                     });
             switch (controlType) {
                 case "comment":
-                    const phase2Allow = typeof options.allowWhen === "function"
-                        ? !!(await options.allowWhen({
-                            controlType,
-                            dept: controlDept,
-                            stageDept,
-                            role,
-                            defaultAllowed: defaultPhase2Allow,
-                            sectionAllowed: phase1SectionAllowed,
-                            formData: options.formData || {}
-                        }))
-                        : defaultPhase2Allow;
-
-                    
                     break;
                 case "accept": {
                   
