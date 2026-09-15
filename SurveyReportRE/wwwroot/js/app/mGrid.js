@@ -889,6 +889,7 @@ var MGridOption = class MGridOption {
                     icon: "edit",
                     hint: "Edit layout",
                     elementAttr: {
+                        class: "mgrid-admin-toolbar-button",
                         "aria-label": "Edit layout"
                     },
                     onClick: function (buttonEvent) {
@@ -899,14 +900,20 @@ var MGridOption = class MGridOption {
                                     type: "success",
                                     icon: "save",
                                     hint: "Save layout",
-                                    elementAttr: { "aria-label": "Save layout" }
+                                    elementAttr: {
+                                        class: "mgrid-admin-toolbar-button",
+                                        "aria-label": "Save layout"
+                                    }
                                 });
                             } else {
                                 buttonEvent.component.option({
                                     type: "default",
                                     icon: "edit",
                                     hint: "Edit layout",
-                                    elementAttr: { "aria-label": "Edit layout" }
+                                    elementAttr: {
+                                        class: "mgrid-admin-toolbar-button",
+                                        "aria-label": "Edit layout"
+                                    }
                                 });
                             }
                         }
@@ -921,6 +928,7 @@ var MGridOption = class MGridOption {
                     icon: "selectall",
                     hint: "Enable bulk mode",
                     elementAttr: {
+                        class: "mgrid-admin-toolbar-button",
                         "aria-label": "Enable bulk mode"
                     },
                     onClick: function (buttonEvent) {
@@ -931,14 +939,20 @@ var MGridOption = class MGridOption {
                                     type: "success",
                                     icon: "unselectall",
                                     hint: "Exit bulk mode",
-                                    elementAttr: { "aria-label": "Exit bulk mode" }
+                                    elementAttr: {
+                                        class: "mgrid-admin-toolbar-button",
+                                        "aria-label": "Exit bulk mode"
+                                    }
                                 });
                             } else {
                                 buttonEvent.component.option({
                                     type: "default",
                                     icon: "selectall",
                                     hint: "Enable bulk mode",
-                                    elementAttr: { "aria-label": "Enable bulk mode" }
+                                    elementAttr: {
+                                        class: "mgrid-admin-toolbar-button",
+                                        "aria-label": "Enable bulk mode"
+                                    }
                                 });
                             }
                         }
@@ -953,6 +967,7 @@ var MGridOption = class MGridOption {
                     icon: "trash",
                     hint: "Delete selected",
                     elementAttr: {
+                        class: "mgrid-admin-toolbar-button",
                         "aria-label": "Delete selected"
                     },
                     onClick: function () {
