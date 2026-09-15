@@ -3,18 +3,88 @@ using Microsoft.Extensions.Configuration;
 using ERPCore.Controllers.Base;
 using ERPCore.Models.Migration.Business.Data;
 using ERPCore.Models.Request;
+using ERPCore.Models.Models.Parsing;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
 public class PolicyIssuanceSubDetailsController : BaseControllerApi<PolicyIssuanceSubDetails>
 {
     private readonly IBaseRepository<PolicyIssuanceSubDetails> _BaseRepository;
+	private readonly IBaseRepository<PolicyIssuance> _policyIssuanceRepository;
 	private readonly IConfiguration configuration;
 
-	public PolicyIssuanceSubDetailsController(IBaseRepository<PolicyIssuanceSubDetails> BaseRepository, IConfiguration config,IHttpContextAccessor httpContextAccessor) : base(BaseRepository,httpContextAccessor)
+	public PolicyIssuanceSubDetailsController(
+        IBaseRepository<PolicyIssuanceSubDetails> BaseRepository,
+        IBaseRepository<PolicyIssuance> policyIssuanceRepository,
+        IConfiguration config,
+        IHttpContextAccessor httpContextAccessor) : base(BaseRepository,httpContextAccessor)
     {
         configuration = config;
         _BaseRepository = BaseRepository;
+        _policyIssuanceRepository = policyIssuanceRepository;
+    }
+
+    [HttpGet("{sourceType}/{sourceId:long}")]
+    public async Task<ActionResult<List<PolicyIssuanceSubDetails>>> GetPaProcess(
+        string sourceType,
+        long sourceId)
+    {
+        if (sourceId <= 0)
+        {
+            return BadRequest(new { message = "PA Process source id must be greater than zero." });
+        }
+
+        long? policyIssuanceId = null;
+        if (string.Equals(sourceType, "Quotation", StringComparison.OrdinalIgnoreCase))
+        {
+            // A Quotation can be viewed before its Policy Issuance section is opened.
+            // Resolve the attached Policy Issuance first, then use its id to filter PA rows.
+            var linkedPolicyIssuances = await _policyIssuanceRepository.GetListObject(item =>
+                item.QuotationId == sourceId &&
+                item.Deleted == false);
+
+            policyIssuanceId = linkedPolicyIssuances
+                .OrderByDescending(item => item.Id)
+                .Select(item => (long?)item.Id)
+                .FirstOrDefault();
+        }
+        else if (string.Equals(sourceType, "PolicyIssuance", StringComparison.OrdinalIgnoreCase))
+        {
+            policyIssuanceId = sourceId;
+        }
+        else
+        {
+            return BadRequest(new
+            {
+                message = "PA Process source type must be Quotation or PolicyIssuance."
+            });
+        }
+
+        if (!policyIssuanceId.HasValue)
+        {
+            return Ok(new List<PolicyIssuanceSubDetails>());
+        }
+
+        // Preserve DevExtreme load options (filter, sort, skip, take...) and add the
+        // resolved relationship through the repository interface's dynamic filter.
+        var requestParams = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in HttpContext.Request.Query)
+        {
+            if (!string.Equals(item.Key, "_", StringComparison.OrdinalIgnoreCase))
+            {
+                requestParams[item.Key] = item.Value.ToString();
+            }
+        }
+
+        requestParams["refField"] = nameof(PolicyIssuanceSubDetails.PolicyIssuanceId);
+        requestParams["refKey"] = policyIssuanceId.Value.ToString();
+        requestParams["refOperator"] = "=";
+
+        var rows = await _BaseRepository.GetByDynamicField(
+            new List<DynamicFieldFilter>(),
+            requestParams);
+
+        return Ok(rows ?? new List<PolicyIssuanceSubDetails>());
     }
 
     [HttpGet]
