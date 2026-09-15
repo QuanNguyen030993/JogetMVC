@@ -34,6 +34,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Net.Http.Headers;
 using ERPCore.Models.Migration.Business.Data;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Text.RegularExpressions;
 
 namespace ERPCore.ControllerUtil
 {
@@ -43,6 +44,39 @@ namespace ERPCore.ControllerUtil
         public const string ConnectionEnvironmentSessionKey = "CurrentConnectionEnvironment";
         public const string DatabaseProfileSessionKey = "CurrentDbProfile";
         public static string tmivEnvironment = "Default";
+
+        public static string ResolveTemplatePlaceholders(
+            string? template,
+            IReadOnlyDictionary<string, object>? values)
+        {
+            if (string.IsNullOrEmpty(template)) return template ?? string.Empty;
+
+            Dictionary<string, object> lookup = new(StringComparer.OrdinalIgnoreCase);
+            if (values != null)
+            {
+                foreach ((string key, object value) in values)
+                {
+                    if (!string.IsNullOrWhiteSpace(key)) lookup[key] = value;
+                }
+            }
+
+            return Regex.Replace(
+                template,
+                @"@@(?<field>[A-Za-z_][A-Za-z0-9_]*)",
+                match =>
+                {
+                    string field = match.Groups["field"].Value;
+                    if (!lookup.TryGetValue(field, out object? value)
+                        || value == null
+                        || value == DBNull.Value)
+                    {
+                        return string.Empty;
+                    }
+
+                    return Convert.ToString(value) ?? string.Empty;
+                },
+                RegexOptions.CultureInvariant);
+        }
         public static string jogetEnvironment = "Joget";
 
         public static string NormalizeConnectionEnvironment(string? environment)
