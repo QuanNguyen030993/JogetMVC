@@ -22,29 +22,51 @@
             && (!config.requireDebugOrSuperUser || isDebug || isSuperUser);
     }
 
-    function isITAcceptDemoItem(item, index) {
+    function isAcceptDecisionItem(item, index) {
         if (!item || typeof item === "string") return index === 0;
         return item.controlType === "accept"
             || item.useDefaultDecisionClick === true
             || String(item.text || "").trim().toLowerCase() === "accept";
     }
 
-    function applyITAcceptDemoState(formProps, items) {
-        // ITAcceptDemo: only Accept controls are forced on; route/custom/return
-        // controls are deliberately excluded.
-        if (!isITAcceptDemoEnabled(formProps)) return false;
-        normalizeDecisionFieldButtons(items || [])
-            .filter(isITAcceptDemoItem)
+    async function applyDecisionAcceptRuleOnce(formProps, record, items) {
+        var acceptItems = normalizeDecisionFieldButtons(items || []).filter(isAcceptDecisionItem);
+        var acceptButtonIds = acceptItems
             .map(function (item) { return getDelayAcceptButtonId(item); })
-            .filter(Boolean)
-            .forEach(function (buttonId) {
-                var $button = $(`#${buttonId}`);
-                var instance = $button.dxButton("instance");
-                if (!instance) return;
-                instance.option({ visible: true, disabled: false });
+            .filter(Boolean);
+        var decision = await window.applyFeatureRoleControlRule({
+            feature: `Accept · ${formProps?.dept || "unknown"}`,
+            controlType: "accept",
+            dept: formProps?.dept || "",
+            stageDept: record?.stageDept || record?.StageDept || "",
+            formData: record || {},
+            role: typeof _role !== "undefined" ? _role : window._role,
+            state: formProps?.state || {},
+            isDebugMode: typeof _isDebugMode !== "undefined" ? _isDebugMode : window._isDebugMode,
+            isSuperUser: typeof _isSuperUser !== "undefined" ? _isSuperUser : window._isSuperUser
+        });
+
+        var demoOverride = isITAcceptDemoEnabled(formProps);
+        var disabled = demoOverride ? false : decision.allowed !== true;
+
+        // This is the only decision-button disabled writer in this file.
+        setDecisionButtonsDisabled(acceptButtonIds, disabled);
+        acceptButtonIds.forEach(function (buttonId) {
+            var $button = $(`#${buttonId}`);
+            if (demoOverride) {
                 $button.attr("data-it-accept-demo", "true");
-            });
-        return true;
+                $button.dxButton("instance")?.option("visible", true);
+            } else {
+                $button.removeAttr("data-it-accept-demo");
+            }
+        });
+
+        return {
+            decision: decision,
+            disabled: disabled,
+            ITAcceptDemo: demoOverride,
+            buttonIds: acceptButtonIds
+        };
     }
 
     /**
@@ -53,11 +75,7 @@
          * this field has no local Accept button.
          */
         
-
-
-
-       
-    async function renderDecisionDeferredV2(formProps, groupName, mainField, ...params) {
+        async function renderDecisionDeferredV2(formProps, groupName, mainField, ...params) {
                  const formDataClone = structuredClone(formProps); // Form view cshtml invoke by 1 function as loop
                     var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
                     var commonStatusId = getDecisionFieldStatusId(
@@ -72,8 +90,8 @@
                             setDecisionCommonStatus(commonStatusId, "onLoaded", "Form unavailable");
                             return;
                         }
+
                         var formItems = form.option("formData") || {};
-                        // var formItems = formDataClone.record;
                         if (formItems)
                         {
 
@@ -95,11 +113,6 @@
                                 normalizedDecisionItems.map(item => getDelayAcceptButtonId(item)),
                                 true
                             );
-                            // ITAcceptDemo: missing assignment must not hide/lock Accept during demo.
-                            if (isITAcceptDemoEnabled(formDataClone)) {
-                                try { form.itemOption(groupName, "visible", true); } catch (e) { }
-                                applyITAcceptDemoState(formDataClone, normalizedDecisionItems);
-                            }
                             return;
 
                         }
@@ -108,8 +121,8 @@
                             form.itemOption(groupName, "visible", pic ? true : false);
                         } catch (e) {
                         }
-                         
-                            debugger
+
+
                        var latestFormItems = form.option("formData") || {};
                        var latestTatObject = tryParseJSON(latestFormItems.turnAroundTimeAttributes, "TAT Load Button Problem") || {};
                         var customStatus = tryParseJSON(latestFormItems.actionStatus || "", "Custom parsing problem") || {};
@@ -148,8 +161,6 @@
                                    });
                                }
                            });
-                           // ITAcceptDemo: button hydration may restore configured disabled state.
-                           applyITAcceptDemoState(formDataClone, buttonItems);
                           var finalDecisionStatus = getDecisionCommonStatus(
                                     latestFormItems,
                                     formDataClone.dept,
@@ -166,8 +177,6 @@
                       {
                           if (formDataClone.dept != "FO") //exception for FO
                              disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
-                          // ITAcceptDemo: accepted/TAT state must not lock Accept during demo.
-                          applyITAcceptDemoState(formDataClone, buttonItems);
                               var acceptButtonId = getDelayAcceptButtonId(params[0]);
                               var skipAcceptedMainFields = params[0] && typeof params[0] === "object" && params[0].skipAcceptedMainFields;
                               if (acceptButtonId)
@@ -214,8 +223,6 @@
                                           );
                                           console.log(buttonItems);
                                           disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
-                                          // ITAcceptDemo: re-enable before the FO early return.
-                                          applyITAcceptDemoState(formDataClone, buttonItems);
                                           return;
                                       }
 
@@ -238,189 +245,204 @@
                                   customStatus[formDataClone.dept]
                                   );
                                   disableAllDecisionButton(buttonItems.map(item => getDelayAcceptButtonId(item)), latestFormItems);
-                                  // ITAcceptDemo: actionStatus must not lock the demo Accept control.
-                                  applyITAcceptDemoState(formDataClone, buttonItems);
                           }
-
-                          window.applyFeatureRoleControlRule({
-                            feature: ``,
-                            controlType: "accept",
-                            dept: _role,
-                            stageDept: latestFormItems?.stageDept || "",
-                            formData: latestFormItems || {},
-                            role:  _role,
-                            state: {},
-                            isDebugMode: _isDebugMode,
-                            isSuperUser: _isSuperUser,
-                            apply: function (decision) {
-                            }
-                        }).then(r => {
-                           var attribAccept = r.report.checks.find(f => f.key == "accept");
-                           //Should not include accept button
-                           setDecisionButtonsDisabled(
+                          setDecisionButtonsDisabled(
                               buttonItems.map(item => getDelayAcceptButtonId(item)),
-                              !!attribAccept
+                              shouldDisableWorkflowButton({
+                                  dept: formDataClone.dept,
+                                  stageDept: latestFormItems.stageDept,
+                                  formItems: latestFormItems,
+                                  tatObject: latestTatObject,
+                                  type: "late-decision",
+                                  items: buttonItems.map(item => getDelayAcceptButtonId(item))
+                              })
                           );
-                          // ITAcceptDemo: preserve the role result but override UI state for IT.
-                          applyITAcceptDemoState(formDataClone, buttonItems);
-                        });
-            }, _delayUnlockForm);
+
+    }, _delayUnlockForm);
 
 
     }
+
+
+       
+    // async function renderDecisionDeferredV2(formProps, groupName, mainField, ...params) {
+    //     debugger
+    //     var formDataClone = Object.assign({}, formProps || {});
+    //     var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
+    //     var commonStatusId = getDecisionFieldStatusId(
+    //         formDataClone,
+    //         normalizedDecisionItems,
+    //         params[1] || params[3]
+    //     );
+    //     var usesLegacyStringPairs = params.length > 0
+    //         && params.every(function (item) { return typeof item === "string"; });
+    //     var buttonItems = usesLegacyStringPairs
+    //         ? params.filter(function (item, index) { return index % 2 === 0 && item; })
+    //         : normalizedDecisionItems.filter(function (item) { return getDelayAcceptButtonId(item); });
+
+    //     await new Promise(function (resolve) {
+    //         window.setTimeout(resolve, Math.max(0, Number(_delayUnlockForm) || 0));
+    //     });
+
+    //     var form = $(`#${formDataClone.formId}`).dxForm("instance");
+    //     if (!form) {
+    //         setDecisionCommonStatus(commonStatusId, "onLoaded", "Form unavailable");
+    //         return { record: {}, disabled: true, buttonItems: buttonItems };
+    //     }
+
+    //     var formItems = form.option("formData") || formDataClone.record || {};
+    //     var tatObject = formItems.turnAroundTimeAttributes
+    //         && typeof formItems.turnAroundTimeAttributes === "object"
+    //             ? formItems.turnAroundTimeAttributes
+    //             : (tryParseJSON(formItems.turnAroundTimeAttributes || "{}", "TAT Load Button Problem") || {});
+    //     var actionStatus = formItems.actionStatus && typeof formItems.actionStatus === "object"
+    //         ? formItems.actionStatus
+    //         : (tryParseJSON(formItems.actionStatus || "{}", "Custom parsing problem") || {});
+    //     var rawPic = formItems.pic ?? formItems.pIC ?? formItems.PIC;
+    //     if (rawPic == null && typeof PIC_JSON !== "undefined") rawPic = PIC_JSON;
+    //     var picMap = rawPic && typeof rawPic === "object"
+    //         ? rawPic
+    //         : (tryParseJSON(rawPic || "{}", "PIC Load Problem") || {});
+    //     var pic = picMap[formDataClone.dept];
+
+    //     try {
+    //         form.itemOption(groupName, "visible", !!pic || isITAcceptDemoEnabled(formDataClone));
+    //     } catch (error) { }
+
+    //     buttonItems.forEach(function (item) {
+    //         renderDelayAcceptStoredStatusButton(
+    //             formDataClone.formId,
+    //             formDataClone.dept,
+    //             item,
+    //             formItems,
+    //             tatObject
+    //         );
+    //         applyDelayDecisionButton(formDataClone, item);
+
+    //         if (item && typeof item === "object" && typeof item.loadRouteButtons === "function") {
+    //             item.loadRouteButtons({
+    //                 formId: formDataClone.formId,
+    //                 dept: formDataClone.dept,
+    //                 formItems: formItems,
+    //                 tatObject: tatObject,
+    //                 config: item
+    //             });
+    //         }
+    //     });
+
+    //     var finalStatus = getDecisionCommonStatus(formItems, formDataClone.dept, tatObject);
+    //     setDecisionCommonStatus(
+    //         commonStatusId,
+    //         "onLoaded",
+    //         finalStatus.title || finalStatus.text
+    //     );
+
+    //     var acceptDate = tatObject?.[formDataClone.dept]?.AcceptDate;
+    //     var skipAcceptedMainFields = params[0]
+    //         && typeof params[0] === "object"
+    //         && params[0].skipAcceptedMainFields;
+    //     var mainFieldsMarker = `decisionMainFields_${formDataClone.dept}`;
+    //     if (acceptDate && mainField && !skipAcceptedMainFields && !form.element().data(mainFieldsMarker)) {
+    //         form.element().data(mainFieldsMarker, true);
+    //         form.option("items", [...form.option("items"), ...mainField]);
+    //     }
+
+    //     if (actionStatus?.[formDataClone.dept]) {
+    //         updateDelayAcceptStatus(
+    //             commonStatusId,
+    //             acceptDate,
+    //             actionStatus[formDataClone.dept]
+    //         );
+    //     }
+
+    //     // One role evaluation and one final disabled write per render.
+    //     var roleState = await applyDecisionAcceptRuleOnce(
+    //         formDataClone,
+    //         formItems,
+    //         buttonItems
+    //     );
+
+    //     return {
+    //         record: formItems,
+    //         tatObject: tatObject,
+    //         decision: roleState.decision,
+    //         disabled: roleState.disabled,
+    //         ITAcceptDemo: roleState.ITAcceptDemo,
+    //         buttonItems: buttonItems,
+    //         commonStatusId: commonStatusId
+    //     };
+    // }
     async function delayAcceptStatusV2Promise(
         mainFields,
         formProps,
         ...params
     ) {
-           var record = await window.OverviewDataBootstrap.getRecord({
-                    moduleCode: "qt",
-                    id: formProps.id,
-                    forceReload: false
-                });
+        formProps = formProps || {};
+        var decisionItems = normalizeDecisionFieldButtons(params);
+        var moduleCode = String(formProps.schemeName || formProps.ModelName || "")
+            .replace(/\s+/g, "")
+            .toLowerCase() === "policyissuance"
+                ? viewIdModulePrefix.policyIssuance
+                : viewIdModulePrefix.quotation;
+        var form = formProps.formId ? $(`#${formProps.formId}`).dxForm("instance") : null;
+        var record = form?.option("formData");
+        if (!record || !Object.keys(record).length) {
+            record = await window.OverviewDataBootstrap.getRecord({
+                moduleCode: moduleCode,
+                id: formProps.id,
+                forceReload: false
+            });
+        }
+        formProps.record = record || {};
 
-        var delayObject = structuredClone(formProps);
+        var decisionFieldName = getDecisionFieldName(formProps, decisionItems);
+        var registryDept = formProps.subDeptComponent || formProps.dept;
+        var decisionGroupName = `decision${registryDept}Group.${decisionFieldName}`;
+        var decisionRegistryKey = `${formProps.formId}:${String(registryDept || "").trim().toUpperCase()}`;
 
-        var decisionItems =
-            normalizeDecisionFieldButtons(params);
-
-        var decisionFieldName =
-            getDecisionFieldName(
-                formProps,
-                decisionItems
-            );
-
-        var decisionGroupName =
-            `decision${delayObject.dept}Group.${decisionFieldName}`;
-
-        var decisionRegistryKey =
-            `${formProps.formId}:` +
-            `${String(delayObject.dept || "")
-                .trim()
-                .toUpperCase()}`;
-    if (delayObject.subDeptComponent)
-              {
-                  decisionGroupName =
-              `decision${delayObject.subDeptComponent}Group.${decisionFieldName}`;
-              decisionRegistryKey =
-            `${formProps.formId}:` +
-            `${String(delayObject.subDeptComponent || "")
-                .trim()
-                .toUpperCase()}`;
-              }
-        window.WorkflowDecisionRegistry =
-            window.WorkflowDecisionRegistry || {};
-
-        window.WorkflowDecisionRegistry[
-            decisionRegistryKey
-        ] = {
+        window.WorkflowDecisionRegistry = window.WorkflowDecisionRegistry || {};
+        window.WorkflowDecisionRegistry[decisionRegistryKey] = {
             formProps: formProps,
             groupName: decisionGroupName,
             mainFields: mainFields,
             params: params
         };
 
-        var initialStatusId =
-            getDecisionFieldStatusId(
-                formProps,
-                decisionItems,
-                params[1] || params[3]
-            );
-
-        /*
-         * Chờ form load đến routeState thực sự.
-         */
-        await waitForDecisionRouteStage(
-            formProps.formId
+        var initialStatusId = getDecisionFieldStatusId(
+            formProps,
+            decisionItems,
+            params[1] || params[3]
         );
 
-        /*
-         * Giữ delay hiện tại nếu renderDecisionDeferredV2
-         * vẫn cần khoảng delay này.
-         */
+        await waitForDecisionRouteStage(formProps.formId);
         await new Promise(function (resolve) {
-            setTimeout(
+            window.setTimeout(
                 resolve,
-                Math.max(
-                    0,
-                    Number(FormStageDelay?.routeComponent) || 0
-                )
+                Math.max(0, Number(FormStageDelay?.routeComponent) || 0)
             );
         });
-        formProps.record = record;
-        /*
-         * Render Decision.
-         */
-        renderDecisionDeferredV2(
+
+        // renderDecisionDeferredV2 owns the single role evaluation/final write.
+        var renderResult = await renderDecisionDeferredV2(
             formProps,
             decisionGroupName,
             mainFields,
             ...params
         );
+        var rendered = getDecisionRenderedObjects(
+            formProps,
+            decisionItems,
+            initialStatusId,
+            { disabled: renderResult.disabled }
+        );
 
-        /*
-         * renderDecisionDeferredV2 bên trong lại dùng
-         * _delayUnlockForm nên cần chờ nó render xong.
-         */
-        await new Promise(function (resolve) {
-            setTimeout(
-                resolve,
-                Math.max(
-                    0,
-                    Number(_delayUnlockForm) || 0
-                ) + 20
-            );
-        });
-    /*
-         * Sau khi render mới query DOM + dxButton instance.
-         */
-        // var decisionForm = $(`#${formProps.formId}`).dxForm("instance");
-        // var decisionFormItems = decisionForm?.option("formData") || {};
-        decisionFormItems = record;
-         window.applyFeatureRoleControlRule({
-                            feature: ``,
-                            controlType: "accept",
-                            dept: _role,
-                            stageDept: formProps.record?.stageDept || "",
-                            formData: formProps.record || {},
-                            role:  _role,
-                            state: {},
-                            isDebugMode: _isDebugMode,
-                            isSuperUser: _isSuperUser,
-                            apply: function (decision) {
-                            }
-                        }).then(r => {
-                           var attribAccept = r.report.checks.find(f => f.key == "accept");
-      
-        var ruleDisabled = attribAccept;
-        // var ruleDisabled = shouldDisableWorkflowButton({
-        //     dept: delayObject.dept,
-        //     stageDept: decisionFormItems.stageDept,
-        //     formItems: decisionFormItems,
-        //     tatObject: decisionTatObject,
-        //     type: "early-decision",
-        //     items: $(`#${formProps.formId}`)
-        // });
-          var decisionTatObject = tryParseJSON(
-            decisionFormItems.turnAroundTimeAttributes,
-            "Decision Button TAT Problem"
-        ) || {};
-        var rendered =
-            getDecisionRenderedObjects(
-                formProps,
-                decisionItems,
-                initialStatusId,
-                { disabled: ruleDisabled }
-            );
-        rendered.setDisabled(ruleDisabled);
-        // ITAcceptDemo: this promise can be the last writer of disabled state.
-        applyITAcceptDemoState(formProps, decisionItems);
         return {
             formProps: formProps,
-            formItems: decisionFormItems,
-            tatObject: decisionTatObject,
+            formItems: renderResult.record,
+            tatObject: renderResult.tatObject,
+            acceptDecision: renderResult.decision,
             formId: formProps.formId,
-            dept: delayObject.dept,
+            dept: registryDept,
             groupName: decisionGroupName,
             registryKey: decisionRegistryKey,
             params: params,
@@ -432,10 +454,9 @@
             disable: rendered.disable,
             setDisabled: rendered.setDisabled,
             getButton: rendered.getButton,
-            ruleDisabled: ruleDisabled
+            ruleDisabled: renderResult.disabled,
+            ITAcceptDemo: renderResult.ITAcceptDemo
         };
-                        });
-
     }
 
 
@@ -575,16 +596,6 @@
                 } else if (section) {
                     $(section).find("[id^='AC_']").each(function () {
                         $(this).addClass("btn-success");
-                        var $acceptButton = $(this);
-                        $acceptButton.dxButton("instance")?.option("disabled", true);
-                        // ITAcceptDemo: accepted-action fallback must not be the
-                        // final writer that locks Accept after the demo click.
-                        if (isITAcceptDemoEnabled({ dept: dept })) {
-                            $acceptButton
-                                .attr("data-it-accept-demo", "true")
-                                .dxButton("instance")
-                                ?.option({ visible: true, disabled: false });
-                        }
                     });
                 }
 
@@ -602,7 +613,63 @@
                 });
            }
            window.applyAcceptedDepartmentDecision = applyAcceptedDepartmentDecision;
-       function shouldDisableWorkflowButton(options) {
+       // function shouldDisableWorkflowButton(options) {
+       //      options = options || {};
+       //      var formItems = options.formItems || {};
+       //      var buttonDept = normalizeDeptKey(options.dept);
+       //      var currentStageDept = normalizeDeptKey(
+       //          options.stageDept
+       //          || formItems.stageDept
+       //          || formItems.StageDept
+       //          || window.QuotationPage?.state?.stageDept
+       //          || window.PolicyIssuancePage?.state?.stageDept
+       //      );
+       //      var currentRole = normalizeDeptKey(
+       //          typeof options.role !== "undefined"
+       //              ? options.role
+       //              : (typeof _role !== "undefined" ? _role : "")
+       //      );
+       //      var tatObject = options.tatObject;
+
+       //      if (!tatObject || typeof tatObject !== "object") {
+       //          tatObject = tryParseJSON(
+       //              formItems.turnAroundTimeAttributes,
+       //              "Workflow Button TAT Problem"
+       //          ) || {};
+       //      }
+
+
+           
+       //         // Default is disabled. A button is actionable only for the current
+       //      // stage and the role currently being used in the form.
+       //      var ownsCurrentStage = !!buttonDept && buttonDept === currentStageDept;
+       //      var roleMatchesStage = !!currentStageDept && currentRole === currentStageDept;
+       //      if (!ownsCurrentStage || !roleMatchesStage) return true;
+       //      // Accept/decision no longer belongs here. Its AcceptDate and role
+       //      // checks are centralized in checkFeatureRoleRule (_Roles.cshtml).
+       //      // This helper remains only for route/custom transition controls.
+       //      if (options.type == "route")
+       //      {
+       //           var isFoRoute = currentRole === "FO";
+       //           var hasAcceptDate = isFoRoute ? true : !!tatObject?.[buttonDept]?.AcceptDate;
+       //           // var hasActionStatus = hasWorkflowButtonStatus(formItems, buttonDept);
+       //           if (isFoRoute)
+       //               return !hasAcceptDate ;
+       //           else
+       //               return !hasAcceptDate; //|| hasActionStatus;
+       //      }
+       //      if (options.type == "custom")
+       //      {
+       //           var isFoCustom = currentRole === "FO";
+       //           var hasAcceptDate = isFoCustom ? true : !!tatObject?.[buttonDept]?.AcceptDate;
+       //           if (isFoCustom)
+       //               return !hasAcceptDate ;
+       //           else
+       //               return hasAcceptDate; //|| hasActionStatus;
+       //       }
+       //      // });
+       //   }
+        function shouldDisableWorkflowButton(options) {
             options = options || {};
             var formItems = options.formItems || {};
             var buttonDept = normalizeDeptKey(options.dept);
@@ -627,18 +694,15 @@
                 ) || {};
             }
 
-
-           
-               // Default is disabled. A button is actionable only for the current
+            // Default is disabled. A button is actionable only for the current
             // stage and the role currently being used in the form.
             var ownsCurrentStage = !!buttonDept && buttonDept === currentStageDept;
             var roleMatchesStage = !!currentStageDept && currentRole === currentStageDept;
             if (!ownsCurrentStage || !roleMatchesStage) return true;
             //decision / route / custom
-            
-
            if (options.type == "late-decision" || options.type == "early-decision")
             {
+                 console.log(options.type, options.items);
                  var isFoDecision = currentRole === "FO";
                  var hasAcceptDate = isFoDecision ? true : !!tatObject?.[buttonDept]?.AcceptDate;
                  if (isFoDecision)
@@ -648,6 +712,7 @@
             }
             if (options.type == "route")
             {
+                console.log("route", options.items);
                  var isFoRoute = currentRole === "FO";
                  var hasAcceptDate = isFoRoute ? true : !!tatObject?.[buttonDept]?.AcceptDate;
                  // var hasActionStatus = hasWorkflowButtonStatus(formItems, buttonDept);
@@ -658,6 +723,7 @@
             }
             if (options.type == "custom")
             {
+                 console.log("custom");
                  var isFoCustom = currentRole === "FO";
                  var hasAcceptDate = isFoCustom ? true : !!tatObject?.[buttonDept]?.AcceptDate;
                  if (isFoCustom)
@@ -665,8 +731,8 @@
                  else
                      return hasAcceptDate; //|| hasActionStatus;
              }
-            // });
          }
+
          function getDelayAcceptStoredStatus(formItems, dept, item) {
                 if (!item || typeof item !== "object") return null;
                 if (item.acceptStatus) return item.acceptStatus;
@@ -795,8 +861,8 @@
                     text: formProps?.labelText || primaryItem.labelText || "Decision",
                     visible: formProps?.labelVisible !== false && primaryItem.labelVisible !== false
                 },
-                // ITAcceptDemo: render the item so its Accept button can exist.
-                visible: isITAcceptDemoEnabled(formProps),
+                // Always render the skeleton; role state is applied once after load.
+                visible: true,
                 itemType: "simple",
                 colSpan: primaryItem.colSpan || formProps?.decisionColSpan || 1,
                 cssClass: "workflow-decision-field decision-field-v2",
@@ -833,11 +899,7 @@
 
                         var options = {
                             elementAttr: { id: buttonId },
-                            // ITAcceptDemo: initial dxButton state for Accept demo.
-                            disabled: isITAcceptDemoEnabled(formProps)
-                                && isITAcceptDemoItem(config, index)
-                                ? false
-                                : true,
+                            disabled: true,
                             text: config.text || (index === 0 ? "Accept" : ""),
                             icon: config.icon || (index === 0 ? "check" : undefined),
                             type: config.type || (index === 0 ? "success" : "default"),
@@ -858,11 +920,6 @@
                             .dxButton(options)
                             .appendTo($actionRow);
                         if (config.buttonClass) $button.addClass(config.buttonClass);
-                        // ITAcceptDemo: mark and normalize the rendered Accept control.
-                        if (isITAcceptDemoEnabled(formProps) && isITAcceptDemoItem(config, index)) {
-                            $button.attr("data-it-accept-demo", "true");
-                            $button.dxButton("instance")?.option({ visible: true, disabled: false });
-                        }
                     });
                     //??
                     // setDecisionCommonStatus(
