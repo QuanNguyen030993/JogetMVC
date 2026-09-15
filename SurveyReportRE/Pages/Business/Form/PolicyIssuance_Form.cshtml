@@ -87,6 +87,8 @@ Note:
     state.selectedId = null;
     state.selectedGuid = null;
     state.selectedCodeNo = null;
+    state.formData = null;
+    state.stageAccount = "";
     state.selectedAttachmentId = null;
     state.stageDept = null;
     state.quoteDetails = {};
@@ -515,6 +517,9 @@ Note:
             PIC_JSON = pICs.find(f => f.quotationCode == state.selectedCodeNo)?.pIC ?? q.pIC ?? "{}";
             var map = parsePicMap(PIC_JSON);
             stageAccount = map[stageDept] ? map[stageDept] : "(Unassigned)";
+            q.stageAccount = stageAccount;
+            state.stageAccount = stageAccount;
+            state.formData = q;
 
         }
 
@@ -594,7 +599,8 @@ Note:
                 returnToStep: returnToStep,
                 formModuleKey: formModuleKeyPi,
                 reload: true,
-                forceWorkflowReload: forceReload === true
+                forceWorkflowReload: forceReload === true,
+                onLoaded: applyPolicyIssuanceRouteButtonRules
             });
 
               // return ajaxGet(`/api/PolicyIssuance/GetPolicyIssuanceWorkflow/@ViewData["Guid"]`, null)
@@ -1046,7 +1052,7 @@ Note:
             })().catch(function (err) {
                 console.error("reloadPolicyIssuanceComponents error:", err);
                 policyIssuanceRenderGate.fail(renderToken, "Policy issuance refresh failed");
-            })().finally(function () {
+            }).finally(function () {
                 policyIssuanceReloadPromise = null;
             });
 
@@ -1083,6 +1089,9 @@ Note:
                 PIC_JSON = q.pIC || q.pic || "{}";
                 var picMap = parsePicMap(PIC_JSON);
                 stageAccount = picMap[stageDept] || "(Unassigned)";
+                q.stageAccount = stageAccount;
+                state.stageAccount = stageAccount;
+                state.formData = q;
 
                 deptData[dept] = { ...q, id: q.id, sectionName: dept, code: q.policyIssuanceCode };
                 var formId = window.PolicyIssuanceIdManager.form(dept, @ViewData["Id"]);
@@ -1223,6 +1232,49 @@ Note:
             });
         }
 
+        async function applyPolicyIssuanceRouteButtonRules() {
+            const activeStageDept = String(stageDept || "").trim().toUpperCase();
+            if (!activeStageDept || !window.PolicyIssuanceIdManager.validateDepartment(activeStageDept)) return null;
+
+            const formId = window.PolicyIssuanceIdManager.form(activeStageDept, @ViewData["Id"]);
+            const form = $(`#${formId}`).dxForm("instance");
+            const formData = form?.option("formData") || getSelectedModel() || {};
+            const tatObject = tryParseJSON(
+                formData.turnAroundTimeAttributes,
+                "Policy Issuance route/return TAT"
+            ) || {};
+            const hasAcceptedStage = activeStageDept === "FO"
+                || !!tatObject?.[activeStageDept]?.AcceptDate;
+            const returnHostId = window.PolicyIssuanceIdManager.btnReturnBranch(activeStageDept, @ViewData["Id"]);
+            const submitHostId = window.PolicyIssuanceIdManager.btnSubmitBranch(activeStageDept, @ViewData["Id"]);
+            const $routeButtons = $()
+                .add($(`#${returnHostId}`).find("[data-workflow-route-button]"))
+                .add($(`#${submitHostId}`).find("[data-workflow-route-button]"));
+
+            return window.applyFeatureRoleControlRule({
+                feature: `Policy Issuance route/return · ${activeStageDept}`,
+                controlType: "button",
+                dept: activeStageDept,
+                stageDept: activeStageDept,
+                role: state.currentUserRole,
+                formData: formData,
+                state: state,
+                isDebugMode: _isDebugMode,
+                isSuperUser: _isSuperUser,
+                allowWhen: function () {
+                    return hasAcceptedStage;
+                },
+                apply: function (decision) {
+                    $routeButtons.each(function () {
+                        $(this).dxButton("instance")?.option({
+                            visible: decision.allowed,
+                            disabled: !decision.allowed
+                        });
+                    });
+                }
+            });
+        }
+
         function applyEditLock() {
             /*
              * role enable/disable restored code
@@ -1316,12 +1368,13 @@ Note:
                     value: state.currentUserRole,
                     stylingMode: "outlined",
                     width: "100%",
-                    onValueChanged: (e) => {
+                    onValueChanged: async (e) => {
                         state.currentUserRole = e.value;
                         _role = e.value;
                         $(`#${formModuleKeyPi}-loginRoleLabel`).text(state.currentUserRole);
                         applyEditLock();
                         updateHints();
+                        await selfLoadSelectedWorkflow(true);
                         DevExpress.ui.notify("Role switched: " + state.currentUserRole, "info", 1200);
                     }
                 });

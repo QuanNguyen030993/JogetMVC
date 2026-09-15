@@ -75,7 +75,10 @@
          * this field has no local Accept button.
          */
         
+    /* role enable/disable restored code: legacy decision renderer kept for rollback.
+    */
         async function renderDecisionDeferredV2(formProps, groupName, mainField, ...params) {
+            debugger
                  const formDataClone = structuredClone(formProps); // Form view cshtml invoke by 1 function as loop
                     var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
                     var commonStatusId = getDecisionFieldStatusId(
@@ -263,10 +266,143 @@
 
     }
 
+    // async function renderDecisionDeferredV2(formProps, groupName, mainField, ...params) {
+    //     var formDataClone = Object.assign({}, formProps || {});
+    //     var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
+    //     var commonStatusId = getDecisionFieldStatusId(
+    //         formDataClone,
+    //         normalizedDecisionItems,
+    //         params[1] || params[3]
+    //     );
+    //     var usesLegacyStringPairs = params.length > 0
+    //         && params.every(function (item) { return typeof item === "string"; });
+    //     var buttonItems = usesLegacyStringPairs
+    //         ? params.filter(function (item, index) { return index % 2 === 0 && item; })
+    //         : normalizedDecisionItems.filter(function (item) { return getDelayAcceptButtonId(item); });
+
+    //     await new Promise(function (resolve) {
+    //         window.setTimeout(resolve, Math.max(0, Number(_delayUnlockForm) || 0));
+    //     });
+
+    //     var form = $(`#${formDataClone.formId}`).dxForm("instance");
+    //     if (!form) {
+    //         setDecisionCommonStatus(commonStatusId, "onLoaded", "Form unavailable");
+    //         return { record: {}, tatObject: {}, disabled: true, buttonItems: buttonItems };
+    //     }
+
+    //     // Keep the complete overview record as the base. A dxForm can temporarily
+    //     // expose only its rendered fields while itemOption is rebuilding a group.
+    //     var formItems = Object.assign(
+    //         {},
+    //         formDataClone.record || {},
+    //         form.option("formData") || {}
+    //     );
+    //     var rawPic = formItems.pic ?? formItems.pIC ?? formItems.PIC;
+    //     if (rawPic == null && typeof PIC_JSON !== "undefined") rawPic = PIC_JSON;
+    //     var picMap = rawPic && typeof rawPic === "object"
+    //         ? rawPic
+    //         : (tryParseJSON(rawPic || "{}", "PIC Load Problem") || {});
+    //     var deptKey = normalizeDeptKey(formDataClone.dept);
+    //     var picKey = Object.keys(picMap).find(function (key) {
+    //         return normalizeDeptKey(key) === deptKey;
+    //     });
+    //     var pic = picKey ? picMap[picKey] : null;
+
+    //     try {
+    //         form.itemOption(groupName, "visible", !!pic || isITAcceptDemoEnabled(formDataClone));
+    //     } catch (error) { }
+
+    //     // itemOption can recreate the group's DOM. Let that render finish, then
+    //     // reacquire both the form and its data just like the stable legacy flow.
+    //     await new Promise(function (resolve) {
+    //         window.setTimeout(resolve, 0);
+    //     });
+    //     form = $(`#${formDataClone.formId}`).dxForm("instance") || form;
+    //     formItems = Object.assign(
+    //         {},
+    //         formDataClone.record || {},
+    //         form.option("formData") || {}
+    //     );
+    //     var rawTat = formItems.turnAroundTimeAttributes ?? formItems.TurnAroundTimeAttributes;
+    //     var tatObject = rawTat && typeof rawTat === "object"
+    //         ? rawTat
+    //         : (tryParseJSON(rawTat || "{}", "TAT Load Button Problem") || {});
+    //     var rawActionStatus = formItems.actionStatus ?? formItems.ActionStatus;
+    //     var actionStatus = rawActionStatus && typeof rawActionStatus === "object"
+    //         ? rawActionStatus
+    //         : (tryParseJSON(rawActionStatus || "{}", "Custom parsing problem") || {});
+
+    //     function initializeDecisionButtons() {
+    //         buttonItems.forEach(function (item) {
+    //             renderDelayAcceptStoredStatusButton(
+    //                 formDataClone.formId,
+    //                 formDataClone.dept,
+    //                 item,
+    //                 formItems,
+    //                 tatObject
+    //             );
+    //             // Always restore the click handler. Stored status only changes the
+    //             // status display; it must not skip button initialization.
+    //             applyDelayDecisionButton(formDataClone, item);
+
+    //             if (item && typeof item === "object" && typeof item.loadRouteButtons === "function") {
+    //                 item.loadRouteButtons({
+    //                     formId: formDataClone.formId,
+    //                     dept: formDataClone.dept,
+    //                     formItems: formItems,
+    //                     tatObject: tatObject,
+    //                     config: item
+    //                 });
+    //             }
+    //         });
+    //     }
+
+    //     initializeDecisionButtons();
+
+    //     var finalStatus = getDecisionCommonStatus(formItems, formDataClone.dept, tatObject);
+    //     setDecisionCommonStatus(commonStatusId, "onLoaded", finalStatus.title || finalStatus.text);
+
+    //     var tatKey = Object.keys(tatObject).find(function (key) {
+    //         return normalizeDeptKey(key) === deptKey;
+    //     });
+    //     var deptTat = tatKey ? (tatObject[tatKey] || {}) : {};
+    //     var acceptDate = deptTat.AcceptDate ?? deptTat.acceptDate;
+    //     var skipAcceptedMainFields = params[0]
+    //         && typeof params[0] === "object"
+    //         && params[0].skipAcceptedMainFields;
+    //     var mainFieldsMarker = `decisionMainFields_${formDataClone.dept}`;
+    //     if (acceptDate && mainField && !skipAcceptedMainFields && !form.element().data(mainFieldsMarker)) {
+    //         form.element().data(mainFieldsMarker, true);
+    //         form.option("items", [...form.option("items"), ...mainField]);
+    //         await new Promise(function (resolve) {
+    //             window.setTimeout(resolve, 0);
+    //         });
+    //         // Adding accepted fields rebuilds dxForm and its buttons.
+    //         initializeDecisionButtons();
+    //     }
+
+    //     var actionStatusKey = Object.keys(actionStatus).find(function (key) {
+    //         return normalizeDeptKey(key) === deptKey;
+    //     });
+    //     if (actionStatusKey) {
+    //         updateDelayAcceptStatus(commonStatusId, acceptDate, actionStatus[actionStatusKey]);
+    //     }
+
+    //     // One final owner for disabled state: the centralized role rule.
+    //     var roleState = await applyDecisionAcceptRuleOnce(formDataClone, formItems, buttonItems);
+    //     return {
+    //         record: formItems,
+    //         tatObject: tatObject,
+    //         decision: roleState.decision,
+    //         disabled: roleState.disabled,
+    //         ITAcceptDemo: roleState.ITAcceptDemo,
+    //         buttonItems: buttonItems,
+    //         commonStatusId: commonStatusId
+    //     };
+    // }
 
        
     // async function renderDecisionDeferredV2(formProps, groupName, mainField, ...params) {
-    //     debugger
     //     var formDataClone = Object.assign({}, formProps || {});
     //     var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
     //     var commonStatusId = getDecisionFieldStatusId(
@@ -378,20 +514,54 @@
         ...params
     ) {
         formProps = formProps || {};
-        var decisionItems = normalizeDecisionFieldButtons(params);
+        var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
+        var usesLegacyStringPairs = params.length > 0
+            && params.every(function (item) { return typeof item === "string"; });
+        // Legacy callers pass buttonId/statusId pairs. Status elements must never
+        // enter dxButton initialization or disabled-state handling.
+        var decisionItems = usesLegacyStringPairs
+            ? params.filter(function (item, index) { return index % 2 === 0 && item; })
+            : normalizedDecisionItems;
         var moduleCode = String(formProps.schemeName || formProps.ModelName || "")
             .replace(/\s+/g, "")
             .toLowerCase() === "policyissuance"
                 ? viewIdModulePrefix.policyIssuance
                 : viewIdModulePrefix.quotation;
         var form = formProps.formId ? $(`#${formProps.formId}`).dxForm("instance") : null;
-        var record = form?.option("formData");
-        if (!record || !Object.keys(record).length) {
-            record = await window.OverviewDataBootstrap.getRecord({
+        var formRecord = form?.option("formData") || {};
+        var record = Object.assign({}, formProps.record || {}, formRecord);
+        var hasWorkflowRecord = !!(
+            record.stageDept
+            || record.StageDept
+        ) && !!(
+            record.stageAccount
+            || record.StageAccount
+            || record.pic
+            || record.pIC
+            || record.PIC
+        );
+        if (!hasWorkflowRecord) {
+            var overviewRecord = await window.OverviewDataBootstrap.getRecord({
                 moduleCode: moduleCode,
                 id: formProps.id,
                 forceReload: false
             });
+            record = Object.assign({}, overviewRecord || {}, record);
+            // Empty partial fields must not overwrite workflow metadata supplied
+            // by the overview record.
+            record.stageDept = record.stageDept || record.StageDept
+                || overviewRecord?.stageDept || overviewRecord?.StageDept || "";
+            record.stageAccount = record.stageAccount || record.StageAccount
+                || overviewRecord?.stageAccount || overviewRecord?.StageAccount || "";
+            record.pIC = record.pIC || record.pic || record.PIC
+                || overviewRecord?.pIC || overviewRecord?.pic || overviewRecord?.PIC || "";
+            record.turnAroundTimeAttributes = record.turnAroundTimeAttributes
+                || record.TurnAroundTimeAttributes
+                || overviewRecord?.turnAroundTimeAttributes
+                || overviewRecord?.TurnAroundTimeAttributes
+                || "{}";
+            record.actionStatus = record.actionStatus || record.ActionStatus
+                || overviewRecord?.actionStatus || overviewRecord?.ActionStatus || "{}";
         }
         formProps.record = record || {};
 
@@ -429,6 +599,39 @@
             mainFields,
             ...params
         );
+        if (!renderResult) {
+            // The retained legacy renderer schedules its work with setTimeout and
+            // intentionally has no return value. Wait for that pass, then let the
+            // centralized role rule own the final Accept disabled state.
+            await new Promise(function (resolve) {
+                window.setTimeout(resolve, Math.max(0, Number(_delayUnlockForm) || 0) + 1);
+            });
+            form = formProps.formId ? $(`#${formProps.formId}`).dxForm("instance") : null;
+            var latestRecord = Object.assign(
+                {},
+                formProps.record || {},
+                form?.option("formData") || {}
+            );
+            var rawTat = latestRecord.turnAroundTimeAttributes
+                ?? latestRecord.TurnAroundTimeAttributes
+                ?? "{}";
+            var latestTatObject = rawTat && typeof rawTat === "object"
+                ? rawTat
+                : (tryParseJSON(rawTat, "TAT Load Button Problem") || {});
+            var roleState = await applyDecisionAcceptRuleOnce(
+                formProps,
+                latestRecord,
+                decisionItems
+            );
+            renderResult = {
+                record: latestRecord,
+                tatObject: latestTatObject,
+                decision: roleState.decision,
+                disabled: roleState.disabled,
+                ITAcceptDemo: roleState.ITAcceptDemo,
+                buttonItems: decisionItems
+            };
+        }
         var rendered = getDecisionRenderedObjects(
             formProps,
             decisionItems,
@@ -551,6 +754,61 @@
 
             return { text: "No status", title: "" };
         }
+    function refreshAcceptedDepartmentWorkflowControls(schemeName, recordId, dept, form, tatObject) {
+                var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
+                var isPolicyIssuance = normalizedScheme === "policyissuance"
+                    || normalizedScheme === viewIdModulePrefix.policyIssuance;
+                var moduleCode = isPolicyIssuance
+                    ? viewIdModulePrefix.policyIssuance
+                    : viewIdModulePrefix.quotation;
+                var manager = isPolicyIssuance
+                    ? window.PolicyIssuanceIdManager
+                    : window.QuotationIdManager;
+                var normalizedDept = normalizeDeptKey(dept);
+                var registryEntry = window.OverviewViewRegistry?.[`${moduleCode}:${recordId}`];
+                var reloadRoutes = typeof registryEntry?.reloadWorkflow === "function"
+                    ? registryEntry.reloadWorkflow(true)
+                    : Promise.resolve();
+
+                return Promise.resolve(reloadRoutes).then(function () {
+                    var latestFormItems = form?.option("formData") || {};
+                    var latestStageDept = normalizeDeptKey(
+                        latestFormItems.stageDept
+                        || latestFormItems.StageDept
+                        || normalizedDept
+                    );
+                    var hasAcceptDate = !!tatObject?.[normalizedDept]?.AcceptDate;
+                    var returnHostId = manager?.btnReturnBranch?.(normalizedDept, recordId);
+                    var submitHostId = manager?.btnSubmitBranch?.(normalizedDept, recordId);
+                    var $routeButtons = $()
+                        .add(returnHostId ? $(`#${returnHostId}`).find("[data-workflow-route-button]") : $())
+                        .add(submitHostId ? $(`#${submitHostId}`).find("[data-workflow-route-button]") : $());
+
+                    return window.applyFeatureRoleControlRule({
+                        feature: `${isPolicyIssuance ? "Policy Issuance" : "Quotation"} route/return · ${normalizedDept}`,
+                        controlType: "button",
+                        dept: normalizedDept,
+                        stageDept: latestStageDept,
+                        role: typeof _role !== "undefined" ? _role : "",
+                        formData: latestFormItems,
+                        isDebugMode: typeof _isDebugMode !== "undefined" && _isDebugMode,
+                        isSuperUser: typeof _isSuperUser !== "undefined" && _isSuperUser,
+                        allowWhen: function () {
+                            return hasAcceptDate;
+                        },
+                        apply: function (decision) {
+                            $routeButtons.each(function () {
+                                $(this).dxButton("instance")?.option({
+                                    visible: decision.allowed,
+                                    disabled: !decision.allowed
+                                });
+                            });
+
+                        }
+                    });
+                });
+            }
+
     function applyAcceptedDepartmentDecision(schemeName, recordId, dept, responseData) {
                 var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
                 var isPolicyIssuance = normalizedScheme === "policyissuance" || normalizedScheme === viewIdModulePrefix.policyIssuance;
@@ -599,7 +857,7 @@
                     });
                 }
 
-                return new Promise(function (resolve) {
+                return new Promise(function (resolve, reject) {
                     window.setTimeout(function () {
                         var overviewRoot = section?.closest(
                             `[id^='${viewIdModulePrefix.quotation}-overviewRoot_'], ` +
@@ -608,7 +866,15 @@
                         // renderDecisionDeferredV2 has already rebuilt the decision
                         // field from the updated TAT. Repainting here recreates the
                         // template and resets the freshly rendered Accepted status.
-                        resolve(true);
+                        refreshAcceptedDepartmentWorkflowControls(
+                            schemeName,
+                            recordId,
+                            dept,
+                            form,
+                            tatObject
+                        ).then(function () {
+                            resolve(true);
+                        }).catch(reject);
                     }, Math.max(0, Number(FormStageDelay?.unlockForm) || 0) + 120);
                 });
            }
@@ -914,6 +1180,10 @@
                                     dept: formProps?.dept
                                 });
                             };
+                        } else if (config.useDefaultDecisionClick === true) {
+                            // Keep Accept clickable even when the legacy hydration
+                            // short-circuits after rendering a stored status.
+                            options.onClick = buildDefaultDecisionClick(formProps);
                         }
 
                         var $button = $("<div>", { id: buttonId })

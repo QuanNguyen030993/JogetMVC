@@ -41,6 +41,25 @@
         color: var(--theme-muted, #64748b);
         font-size: 11px;
     }
+
+    .pi-ts-bypass-demo-bar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        margin: 10px 0;
+    }
+
+    .pi-ts-bypass-demo-badge {
+        padding: 3px 7px;
+        border: 1px solid #f59e0b;
+        border-radius: 999px;
+        color: #854d0e;
+        background: #fef3c7;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .06em;
+    }
 </style>
 <script type="text/javascript">
     $(async function() {
@@ -48,7 +67,10 @@
         moduleCode: viewIdModulePrefix.policyIssuance,
         id: @policyIssuanceId,
         department: "@dept"
-    }).catch(function () { return {}; });
+    }).catch(function (error) {
+        console.warn("Policy Issuance TS initial data is unavailable; decision hydration will retry.", error);
+        return null;
+    });
     var thisObject = new Object();
     thisObject.ModelName =  "PolicyIssuance";       
     thisObject.formId = `@PIViewIdHelper.Form(dept, policyIssuanceId)`;
@@ -57,6 +79,7 @@
     thisObject.schemeName = "PolicyIssuance";
     thisObject.decisionColSpan = 2;
     thisObject.id = @ViewData["Id"];
+    thisObject.record = initialFormData;
 
     var thisObjectDetails = new Object();
     thisObjectDetails.ModelName =  "PolicyIssuanceDetails";
@@ -291,13 +314,15 @@
         acceptStatusField: "actionStatus",
         useTatAcceptStatus: true,
         tatStatusText: "Accepted",
-        skipAcceptedMainFields: false,
+        // TS content is mounted with the initial dxForm render. The Accept
+        // lifecycle must not append the same checklist/groups a second time.
+        skipAcceptedMainFields: true,
         statusButtonDisabled: true
     };
     var itemsDelay = [acceptDecisionV2];
 
     $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm({
-        formData: initialFormData,
+        formData: initialFormData || {},
        
          items: [
               {
@@ -313,7 +338,12 @@
                   colCount: 2,
                   items: [
             workflowDecisionField(thisObject, ...itemsDelay)
-        ]}
+        ]},
+
+        // Render the checklist and the remaining TS groups up front. Previously
+        // these items depended on the delayed AcceptDate branch and could be
+        // omitted when decision hydration returned before that branch completed.
+        ...mainFields
 
     // 🔷 1. Proposal & UW Input
    
@@ -321,6 +351,59 @@
          ]
        });
      viewFieldAdjust("@PIViewIdHelper.Form(dept, policyIssuanceId)");
+
+     // ITAcceptDemo: standalone TS bypass action. This button deliberately stays
+     // outside the centralized role/decision disabled-state calculation.
+     var $bypassTsDemo = $("#pi-ts-bypass-task-demo-@policyIssuanceId").dxButton({
+         text: "Bypass TS",
+         icon: "arrowright",
+         type: "success",
+         stylingMode: "contained",
+         disabled: false,
+         elementAttr: {
+             class: "dx-button-success it-accept-demo-button pi-ts-bypass-demo-button",
+             "data-it-accept-demo": "true"
+         },
+         onClick: function (event) {
+             var loading = beginWorkflowButtonLoading(event);
+             var request = $.ajax({
+                 url: "/api/PolicyIssuance/BypassTS",
+                 type: "POST",
+                 contentType: "application/json; charset=utf-8",
+                 data: JSON.stringify({ id: @policyIssuanceId, dept: "TS" })
+             });
+
+             request.done(function (responseData) {
+                 var tsForm = $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm("instance");
+                 tsForm?.updateData("stageDept", responseData.stageDept || "PM");
+                 tsForm?.updateData("stageAccount", responseData.stageAccount || "");
+                 tsForm?.updateData("turnAroundTimeAttributes", responseData.turnAroundTimeAttributes);
+                DevExpress.ui.notify(
+                    "TS bypassed by " + (responseData.workflowStepCode || "SUBMIT_TO_PM")
+                    + ". Policy Issuance moved to " + (responseData.stageDept || "PM") + ".",
+                    "success",
+                    2400);
+                 Promise.resolve(
+                     reloadWorkflowViewComponents("PolicyIssuance", @policyIssuanceId, event.element, true)
+                 )
+                     .catch(function (error) {
+                         console.error("Policy Issuance refresh after TS bypass failed", error);
+                     });
+             });
+
+             request.fail(function (xhr) {
+                 appErrorHandling("Bypass TS failed", xhr);
+             });
+
+             request.always(function () {
+                 loading?.finish(true);
+                 window.setTimeout(function () {
+                     $bypassTsDemo.dxButton("instance")?.option("disabled", false);
+                 }, 0);
+             });
+         }
+     });
+
           // Fetch attachments to check if there are files uploaded for each checklist item type
           const cloneQuotationGuid = "@(cloneQuotationGuid)";
           const quotationGuid = "@(quotationGuid)";
@@ -477,9 +560,9 @@
              */
             /* role enable/disable restored code
              * Legacy: decisionContext.enable();
-                 * Restored as active legacy while button-rule refactor is paused.
+                 * Kept for rollback; Accept state now belongs to the central rule.
              */
-            decisionContext.enable();
+            // role enable/disable restored code: decisionContext.enable();
 
 
             /*
@@ -560,4 +643,8 @@
     })
 </script>
 <div id="@PIViewIdHelper.Form(dept, policyIssuanceId)">
+</div>
+<div class="pi-ts-bypass-demo-bar">
+    <span class="pi-ts-bypass-demo-badge">DEMO</span>
+    <div id="pi-ts-bypass-task-demo-@policyIssuanceId"></div>
 </div>
