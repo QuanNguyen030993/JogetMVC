@@ -30,6 +30,9 @@
         overlayDone: 1100,
         personInCharge: 0,
         routeState: 3000,
+        // dxForm must finish creating the decision hosts/widget instances before
+        // record hydration and feature-role rules touch their options.
+        decisionHydration: 80,
         comments: 0,
         routeComponent: 45,
         reloadAssignment: 200,
