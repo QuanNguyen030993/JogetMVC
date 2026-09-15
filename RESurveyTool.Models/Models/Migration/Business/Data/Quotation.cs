@@ -104,6 +104,7 @@ public class Quotation : BaseModel
     public string? OptionParentCode { get; set; }
     public bool? IsView { get; set; } = true;
     public string? ActionStatus { get; set; }
+    public bool? PackageRequest { get; set; } = false;
     public EnumData? StatusEnum { get; set; }
     public InstanceWorkflow? InstanceWorkflowFK { get; set; }
     public TurnAroundAttributes? TurnAroundAttributes { get; set; }

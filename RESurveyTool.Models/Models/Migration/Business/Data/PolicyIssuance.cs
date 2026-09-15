@@ -92,4 +92,6 @@ public class PolicyIssuance : BaseModel
     public string? LineCode { get; set; } = "";
     public string? ProductCode { get; set; } = "";
     public string? PolicyIssuanceType { get; set; } = "";
+    public bool? PackageRequest { get; set; } = false;
+    public long? BICommission { get; set; } = 0;
 }
