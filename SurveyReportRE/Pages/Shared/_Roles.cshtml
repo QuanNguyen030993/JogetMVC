@@ -305,7 +305,7 @@
         const suppliedPhase2Checks = Array.isArray(options.phase2Checks)
             ? options.phase2Checks
             : [];
-        const reservedCheckKeys = new Set(["role", "stageDept", "section", "route", "customRoute", "accept", "acceptDate"]);
+        const reservedCheckKeys = new Set(["role", "stageDept", "section", "route", "customRoute", "accept", "acceptDate", "saveButton"]);
         const phase1Definitions = [
             { key: "role", label: "Role", configured: roleConfigured, actual: role, expected: allowedRoles, required: true, evaluate: function () { return matchesAllowed([role], allowedRoles); } },
             { key: "stageDept", label: "Stage dept", configured: !!allowedStageDepts.length, actual: stageDeptValue, expected: allowedStageDepts, required: true, evaluate: function () { return matchesAllowed([stageDeptValue], allowedStageDepts); } },
@@ -368,6 +368,15 @@
         );
 
         const phase2Definitions = [
+            {
+                key: "saveButton",
+                label: "Save button",
+                configured: normalize(options.controlType) === "SAVE",
+                actual: options.saveButton !== false,
+                expected: true,
+                required: true,
+                evaluate: function () { return options.saveButton !== false; }
+            },
             { key: "route", label: "Only allow from route", configured: onlyAllowFromRoute != null && onlyAllowFromRoute !== false && onlyAllowFromRoute !== "", actual: routeCandidates.filter(Boolean), expected: onlyAllowFromRoute, required: true, evaluate: checkOnlyAllowFromRoute },
             { key: "customRoute", label: "Custom route condition", configured: customRouteCondition != null && customRouteCondition !== "", actual: customRouteCondition == null ? "" : "evaluated", expected: customRouteCondition, required: true, evaluate: function () { return evaluateCustomCondition(customRouteCondition, evaluationContext); } },
             {

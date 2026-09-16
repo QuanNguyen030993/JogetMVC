@@ -10045,6 +10045,7 @@
             report = await window.checkFeatureRoleRule({
                         feature: options.feature || `${controlType} · ${controlDept || "unknown"}`,
                         controlType: controlType,
+                        saveButton: options.saveButton,
                         role,
                         stageDept,
                         section: controlDept,
@@ -10057,7 +10058,7 @@
                         isSuperUser: typeof options.isSuperUser !== "undefined"
                             ? options.isSuperUser
                             : window._isSuperUser,
-                        superUserBypass: options.superUserBypass !== false,
+                        superUserBypass: controlType !== "save" && options.superUserBypass !== false,
                         display: false,
                         rules: {
                             roles: [stageDept],

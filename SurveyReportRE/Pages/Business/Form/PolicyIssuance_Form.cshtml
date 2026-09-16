@@ -1346,7 +1346,8 @@ Note:
                     await window.applyFeatureRoleControlRule({
                         ...commonRule,
                         feature: `Policy Issuance save button · ${item}`,
-                        controlType: "button",
+                        controlType: "save",
+                        saveButton: true,
                         apply: function (decision) {
                             $(`#${saveButtonId}`).dxButton("instance")?.option({
                                 visible: decision.allowed,

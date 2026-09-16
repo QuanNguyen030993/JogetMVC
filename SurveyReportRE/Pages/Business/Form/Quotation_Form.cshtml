@@ -1487,11 +1487,18 @@ Note:
                                 `#${formModuleKeyQt}-sec_${item}_@ViewData["Id"]`,
                                 !isReferenceDepartment && decision.phase1Allowed
                             );
-                            // Save is part of the same section permission result; do
-                            // not evaluate a second, potentially divergent button rule.
+                        }
+                    });
+
+                    await window.applyFeatureRoleControlRule({
+                        ...commonRule,
+                        feature: `Quotation save button · ${item}`,
+                        controlType: "save",
+                        saveButton: item !== "PM",
+                        apply: function (decision) {
                             $(`#${saveButtonId}`).dxButton("instance")?.option({
-                                visible: !isReferenceDepartment && decision.allowed,
-                                disabled: isReferenceDepartment || !decision.allowed
+                                visible: decision.allowed,
+                                disabled: !decision.allowed
                             });
                         }
                     });
