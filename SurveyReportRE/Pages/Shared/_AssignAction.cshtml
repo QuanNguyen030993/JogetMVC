@@ -1,0 +1,929 @@
+<script>
+        function syncDeptNodeAssignmentMenu(dept, hasAssignee, scope) {
+            var normalizedDept = String(dept || "").trim().toUpperCase();
+            if (!normalizedDept) return;
+
+            var $scope = scope ? $(scope) : $(document);
+            var $matchingNodes = $scope.find(".dept-node[data-key]").filter(function () {
+                return String($(this).attr("data-key") || "").trim().toUpperCase() === normalizedDept;
+            });
+
+            $matchingNodes.each(function () {
+                var $node = $(this);
+                var isReferenceDepartment = $node.attr("data-reference") === "true";
+                var enabled = Boolean(hasAssignee) || isReferenceDepartment;
+                $node
+                    .attr("data-has-assignee", String(enabled))
+                    .toggleClass("fan-open", enabled && $node.hasClass("fan-open"));
+                $node.find(".dept-circle")
+                    .attr({
+                        "aria-disabled": String(!enabled),
+                        "aria-expanded": enabled
+                            ? String($node.hasClass("fan-open"))
+                            : "false"
+                    });
+
+                if (!enabled) {
+                    $node.find(".dept-subnodes")
+                        .attr("aria-hidden", "true")
+                        .find(".dept-subnode")
+                        .attr("tabindex", "-1");
+                }
+            });
+        }
+
+            async function persistDepartmentAssignment(schemeName, recordId, dept, store, values, formId) {
+                var normalizedScheme = String(schemeName || "").replace(/\s+/g, "").toLowerCase();
+                var moduleCode = normalizedScheme === "policyissuance"
+                    ? viewIdModulePrefix.policyIssuance
+                    : viewIdModulePrefix.quotation;
+                var controllerName = moduleCode === viewIdModulePrefix.policyIssuance ? "PolicyIssuance" : "Quotation";
+                var reloadKey = `${moduleCode}:${recordId}`;
+                var loadingContexts = beginDepartmentAssignmentLoading(
+                    moduleCode,
+                    recordId,
+                    dept
+                );
+                // UpdateData emits R_ItemSubmitted. Assignment updates its own header
+                // and department tree, so suppress the matching overview refresh.
+                window.WorkflowViewReloadState = window.WorkflowViewReloadState || {};
+                window.WorkflowViewReloadState[reloadKey] = Number.POSITIVE_INFINITY;
+                try {
+                    if (store && typeof store.update === "function") {
+                        await Promise.resolve(store.update(recordId, values));
+                    } else {
+                        await Promise.resolve(ajaxPut(`/api/${controllerName}/UpdateData`, {
+                            key: recordId,
+                            values: JSON.stringify(values)
+                        }));
+                    }
+                    var assignmentResult = await $.ajax({
+                        url: `/api/${controllerName}/AssignTask`,
+                        type: "POST",
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify({ id: recordId, dept: dept })
+                    });
+
+                    if (values?.pIC) {
+                        PIC_JSON = values.pIC;
+                        var assignmentOverviewRoot = document.getElementById(
+                            `${moduleCode}-overviewRoot_${recordId}`
+                        );
+                        renderDeptCallouts(PIC_JSON, assignmentOverviewRoot);
+                    }
+
+                    // The assignment picker updates the section immediately, but the
+                    // decision/status controls are rendered by a separate deferred
+                    // registry. Keep the form data in sync and rerun that renderer so
+                    // the button no longer stays in its pre-assignment/loading state.
+                    var assignedForm = formId ? $(`#${formId}`).dxForm("instance") : null;
+                    var assignedPic = values?.pIC ?? values?.pic ?? values?.PIC;
+                    if (assignedForm && assignedPic !== undefined) {
+                        var assignedFormItems = assignedForm.option("formData") || {};
+                        var picFields = ["pic", "pIC", "PIC"];
+                        var updatedPicField = false;
+                        picFields.forEach(function (fieldName) {
+                            if (!Object.prototype.hasOwnProperty.call(assignedFormItems, fieldName)) return;
+                            assignedForm.updateData(fieldName, assignedPic);
+                            updatedPicField = true;
+                        });
+                        if (!updatedPicField) assignedForm.updateData("pIC", assignedPic);
+                    }
+
+                    var decisionRegistryKey = `${formId}:${String(dept || "").trim().toUpperCase()}`;
+                    var decisionEntry = window.WorkflowDecisionRegistry?.[decisionRegistryKey];
+                    if (decisionEntry) {
+                        renderDecisionDeferredV2(
+                            decisionEntry.formProps,
+                            decisionEntry.groupName,
+                            decisionEntry.mainFields,
+                            ...decisionEntry.params
+                        );
+                    }
+                    var treeStack = document.getElementById(
+                        (moduleCode === viewIdModulePrefix.policyIssuance ? window.PolicyIssuanceIdManager : window.QuotationIdManager)
+                            ?.treeStack?.(recordId)
+                    );
+                    treeStack?.deptTreeScrollSpy?.refresh?.();
+                    finishDepartmentAssignmentLoading(loadingContexts, dept, false);
+                    return assignmentResult;
+                } catch (err) {
+                    console.error(`${controllerName} assignment failed`, err);
+                    finishDepartmentAssignmentLoading(loadingContexts, dept, true);
+                    if (typeof appNotifyWarning === "function") {
+                        appNotifyWarning("Assignment could not be completed. Please try again.", false);
+                    }
+                } finally {
+                    window.setTimeout(function () {
+                        delete window.WorkflowViewReloadState[reloadKey];
+                    }, 1500);
+                }
+            }
+
+        /**
+         * Render assignment theo Promise de loading tong co the doi dxTagBox bind PIC.
+         * lifecycleState duoc truyen tu form; khong dat co render trung gian tren window.
+         */
+        async function renderAssignment(moduleKey, data, lifecycleState, delay) {
+            const renderState = lifecycleState || { isAssigneeBoxRender: false };
+            const isQuotation = moduleKey === viewIdModulePrefix.quotation;
+            const departments = isQuotation
+                ? FormStageDelay.departmentOrder.quotation
+                : FormStageDelay.departmentOrder.policyIssuance;
+            const idManager = isQuotation ? window.QuotationIdManager : window.PolicyIssuanceIdManager;
+            const schemeName = isQuotation ? "Quotation" : "PolicyIssuance";
+            const workflowPage = isQuotation ? window.QuotationPage : window.PolicyIssuancePage;
+            const sourceData = data || {};
+            const getActiveStage = function () {
+                return String(workflowPage?.state?.stageDept || "").trim().toUpperCase();
+            };
+
+            renderState.isAssigneeBoxRender = false;
+            await new Promise(resolve => setTimeout(resolve, Math.max(0, Number(delay) || 0)));
+
+            for (const dept of departments) {
+                const dataForm = sourceData[dept];
+                if (!dataForm) continue;
+
+                const isReferenceDepartment = isQuotation && dept === "PM";
+                const currentPic = getDefaultPicByDept(dept, dataForm);
+                const $section = $(`#${moduleKey}-sec_${dept}_${dataForm.id}`);
+                $section
+                    .find(".dept-upperbody, .dept-body")
+                    .toggle(isReferenceDepartment || !!currentPic);
+                // Comments are part of the workflow history and must remain
+                // visible even before a department member is assigned. The
+                // comment editor's disableComment rule controls write access.
+                $section
+                    .find(".dept-lowerbody")
+                    .show();
+                $section
+                    .find(".dept-footer")
+                    .toggle(isReferenceDepartment || !!currentPic || getActiveStage() === dept);
+
+                await renderDepartmentAssigneeBox(`#${idManager.assigneeBox(dept, dataForm.id)}`, {
+                    groupName: dept,
+                    dataForm: dataForm,
+                    isDisabled: dept === "LMKT" || isReferenceDepartment,
+                    currentSection: function () {
+                        return workflowPage?.state?.currentUserRole || _role;
+                    },
+                    onClosed: function (selectedItems) {
+                        if (isReferenceDepartment) return;
+                        if (!renderState.isAssigneeBoxRender || !Array.isArray(selectedItems)) return;
+
+                        const formId = idManager.form(dept, this.dataForm.id);
+                        const form = $(`#${formId}`).dxForm("instance");
+                        const store = form?.option("dataSource");
+                        const picMap = readAssignmentPicMap(form?.option("formData") || this.dataForm);
+
+                        // valueExpr la accountName; emailName chi ho tro record cu.
+                        const accounts = selectedItems
+                            .map(item => item?.accountName || item?.emailName)
+                            .filter(Boolean);
+
+                          if (picMap[dept] == accounts.join(","))
+                                    {
+
+
+                        // Giu nguyen full selection. Loai currentPic tai day se lam PIC cu
+                        // bi mat chi vi user mo roi dong dropdown ma khong sua gi.
+
+
+                                    }
+                                    else {
+                        $section
+                            .find(".dept-upperbody, .dept-body")
+                            .toggle(accounts.length > 0);
+                        $section
+                            .find(".dept-lowerbody")
+                            .show();
+                        $section
+                            .find(".dept-footer")
+                            .toggle(accounts.length > 0 || getActiveStage() === dept);
+                                         picMap[dept] = accounts.join(",");
+                        this.dataForm.pIC = JSON.stringify(picMap);
+                        persistDepartmentAssignment(
+                            schemeName,
+                            this.dataForm.id,
+                            dept,
+                            store,
+                            { pIC: this.dataForm.pIC },
+                            formId
+                        );}
+
+                    }
+                });
+            }
+
+            renderState.isAssigneeBoxRender = true;
+        }
+
+        function getCachedEmployeeRequest(cacheKey, requestFactory, ttl) {
+            const now = Date.now();
+            const cached = employeeRequestCache.get(cacheKey);
+            if (cached && cached.expiresAt > now) return cached.promise;
+
+            const entry = {
+                promise: null,
+                expiresAt: now + (Number(ttl) || 1800000)
+            };
+            entry.promise = Promise.resolve().then(requestFactory).catch(function (error) {
+                if (employeeRequestCache.get(cacheKey) === entry) {
+                    employeeRequestCache.delete(cacheKey);
+                }
+                throw error;
+            });
+            employeeRequestCache.set(cacheKey, entry);
+            return entry.promise;
+        }
+
+        function getAssignableEmployeesByGroup(groupName, keyword) {
+            const branchCode = String(_branch || "").trim();
+            const normalizedGroup = String(groupName || "").trim().toUpperCase();
+            const normalizedKeyword = String(keyword || "").trim().toLowerCase();
+            const cacheKey = `assignable-batch|${branchCode.toLowerCase()}`;
+
+            return getCachedEmployeeRequest(cacheKey, function () {
+                const browserCacheKey = `tmiv.assignable-batch.v1:${branchCode.toLowerCase()}`;
+                try {
+                    const cachedBatch = JSON.parse(sessionStorage.getItem(browserCacheKey) || "null");
+                    if (cachedBatch?.expiresAt > Date.now() && cachedBatch.response) {
+                        return cachedBatch.response;
+                    }
+                } catch (error) {
+                    sessionStorage.removeItem(browserCacheKey);
+                }
+
+                return $.ajax({
+                    url: "/api/Employee/GetAssignableByGroups",
+                    type: "GET",
+                    dataType: "json",
+                    data: {
+                        branchCode: branchCode,
+                        excludeCurrent: true
+                    }
+                }).then(function (response) {
+                    try {
+                        sessionStorage.setItem(browserCacheKey, JSON.stringify({
+                            expiresAt: Date.now() + 1800000,
+                            response: response
+                        }));
+                    } catch (error) {
+                        console.warn("Assignable employee batch could not be cached in this browser.", error);
+                    }
+                    return response;
+                });
+            }, 1800000).then(function (response) {
+                if (!response?.success || !response.data) return [];
+
+                const groupKey = Object.keys(response.data).find(function (key) {
+                    return String(key).trim().toUpperCase() === normalizedGroup;
+                });
+                const employees = groupKey && Array.isArray(response.data[groupKey])
+                    ? response.data[groupKey]
+                    : [];
+                if (!normalizedKeyword) return employees;
+
+                return employees.filter(function (employee) {
+                    return [
+                        employee?.fullName,
+                        employee?.employeeCode,
+                        employee?.accountName,
+                        employee?.emailName
+                    ].some(function (value) {
+                        return String(value || "").toLowerCase().includes(normalizedKeyword);
+                    });
+                });
+            });
+        }
+
+        function normalizeAssignmentAccount(value) {
+            return String(value || "")
+                .trim()
+                .replace(/^.*\\/, "")
+                .toLowerCase();
+        }
+
+        function collectAssignmentAccounts(value, result = []) {
+            if (value == null || value === "") return result;
+
+            if (Array.isArray(value)) {
+                value.forEach(item => collectAssignmentAccounts(item, result));
+                return result;
+            }
+
+            if (typeof value === "object") {
+                Object.values(value).forEach(item => collectAssignmentAccounts(item, result));
+                return result;
+            }
+
+            String(value)
+                .split(/[;,|]/)
+                .map(normalizeAssignmentAccount)
+                .filter(Boolean)
+                .forEach(account => result.push(account));
+            return result;
+        }
+
+        function getDepartmentLeaderAccounts(dataForm, department) {
+            const rawLeaderPic = dataForm?.leaderPIC
+                ?? dataForm?.leaderPic
+                ?? dataForm?.LeaderPIC
+                ?? dataForm?.LEADERPIC;
+            const leaderMap = parsePicObject(rawLeaderPic);
+            const departmentKey = Object.keys(leaderMap).find(key =>
+                String(key).trim().toUpperCase() === String(department || "").trim().toUpperCase()
+            );
+
+            return departmentKey
+                ? collectAssignmentAccounts(leaderMap[departmentKey])
+                : [];
+        }
+
+        function canEditDepartmentAssignee(settings) {
+            const department = String(settings?.groupName || "").trim().toUpperCase();
+            const currentSection = String(
+                typeof settings?.currentSection === "function"
+                    ? settings.currentSection()
+                    : (settings?.currentSection || _role)
+            ).trim().toUpperCase();
+            const applicationRole = String(_roleAppName || "").trim().toUpperCase();
+            const authenticatedSection = String(_role || "").trim().toUpperCase();
+            const isItTester = authenticatedSection === "IT"
+                || applicationRole === "IT"
+                || applicationRole === "ADMIN"
+                || applicationRole === "SUPERUSER"
+                || String(_isSuperUser).toLowerCase() === "true";
+
+            if (isItTester) return true;
+            if (applicationRole !== "LEADER" || currentSection !== department) return false;
+
+            const currentAccount = normalizeAssignmentAccount(_loginUser);
+            return !!currentAccount
+                && getDepartmentLeaderAccounts(settings?.dataForm, department)
+                    .includes(currentAccount);
+        }
+
+        async function renderDepartmentAssigneeBox(selector, options, hideIfMuliple = true) {
+            const settings = $.extend(true, {
+                groupName: "",
+                dataForm: {},
+                isDisabled: options?.options || false,
+                currentUserId: null,
+                currentSection: null,
+                value: null, // string: acc1,acc2
+                allowEdit: false,
+                forceRecreate: false,
+                onChanged: null,
+                onClosed: null,
+                onValueChanged: null
+            }, options || {});
+            const canEdit = settings.allowEdit === true || canEditDepartmentAssignee(settings);
+
+            const store = new DevExpress.data.CustomStore({
+                key: "accountName", // align with valueExpr: "accountName"
+                loadMode: "raw",
+
+                load: function (loadOptions) {
+                    loadOptions = loadOptions || {};
+                    const keyword = loadOptions.searchValue || "";
+                    return getAssignableEmployeesByGroup(settings.groupName, keyword);
+                },
+
+                byKey: function (key) {
+                    if (!key) return null;
+
+                    const cacheKey = `employee|${String(key).toLowerCase()}`;
+                    return getCachedEmployeeRequest(cacheKey, function () {
+                        return $.ajax({
+                            url: `api/Employee/EmployeeLookup/${encodeURIComponent(key)}`,
+                            type: "GET",
+                            dataType: "json"
+                        });
+                    }, 1800000).then(function (res) {
+                        return res && res.success ? res.data : null;
+                    });
+                }
+            });
+
+            const defaultValue =
+                getDefaultPicByDept(settings.groupName, settings.dataForm)
+                || settings.value;
+
+            let selectedValues = assignmentPicAccounts(defaultValue);
+
+            const $el = $(selector);
+            if ($el.length === 0) return;
+
+            const $assignWrapper = $el.closest(".dept-form-header__assign");
+            const $assignmentOverviewRoot = $el.closest(
+                `[id^='${viewIdModulePrefix.quotation}-overviewRoot_'], ` +
+                `[id^='${viewIdModulePrefix.policyIssuance}-overviewRoot_']`
+            );
+            const departmentName = String(settings.groupName || "").trim().toUpperCase();
+            let $assignmentStatus = $();
+
+            if ($assignWrapper.length) {
+                const statusId = `${$el.attr("id")}-detail-status`;
+                $assignmentStatus = $(document.getElementById(statusId));
+                if (!$assignmentStatus.length) {
+                    $assignmentStatus = $("<div>", {
+                        id: statusId,
+                        class: "assignee-detail-status",
+                        role: "status",
+                        "aria-live": "polite"
+                    }).insertAfter($assignWrapper);
+                }
+                $assignmentStatus.text(`Assign member to view details for the ${departmentName} section.`);
+            }
+
+            const syncAssignmentStatus = function (values) {
+                const needsAssignee = !Array.isArray(values) || values.length === 0;
+                syncDeptNodeAssignmentMenu(
+                    departmentName,
+                    !needsAssignee,
+                    $assignmentOverviewRoot.length ? $assignmentOverviewRoot : null
+                );
+                if ($assignmentStatus.length) {
+                    $assignmentStatus
+                        .toggleClass("is-visible", needsAssignee)
+                        .attr("aria-hidden", needsAssignee ? "false" : "true");
+                }
+            };
+            syncAssignmentStatus(selectedValues);
+
+            // Nap datasource truoc khi gan value. Voi CustomStore, chi option("value")
+            // co the khien TagBox render key truoc khi byKey tra ve va hien sai PIC.
+            let employees = [];
+            try {
+                employees = await Promise.resolve(store.load());
+                employees = Array.isArray(employees) ? employees.slice() : [];
+
+            } catch (error) {
+                console.warn(`Assignment list for ${settings.groupName} could not be preloaded.`, error);
+            }
+
+            // Resolve saved PIC independently of the branch list request. Keep an
+            // account-only row when lookup fails so an existing assignment cannot
+            // disappear from selectedItems (and be cleared on dropdown close).
+            const matchesAccount = function (employee, account) {
+                return [employee?.accountName, employee?.emailName].some(function (alias) {
+                    return alias && normalizeAssignmentAccount(alias) === normalizeAssignmentAccount(account);
+                });
+            };
+            const resolvedSelections = await Promise.all(selectedValues.map(async function (account) {
+                const existing = employees.find(employee => matchesAccount(employee, account));
+                if (existing) return existing;
+                try {
+                    const employee = await store.byKey(account);
+                    if (employee?.accountName) return employee;
+                } catch (error) {
+                    console.warn("Assigned employee lookup failed; displaying the saved account.", account, error);
+                }
+                return { accountName: account, fullName: account };
+            }));
+            const employeeMap = new Map();
+            employees.concat(resolvedSelections).forEach(function (employee) {
+                if (!employee?.accountName) return;
+                employeeMap.set(employee.accountName, {
+                    ...employee,
+                    fullName: employee.fullName || employee.displayName || employee.accountName
+                });
+            });
+            employees = Array.from(employeeMap.values());
+            selectedValues = [...new Set(resolvedSelections.map(employee => employee.accountName))];
+
+            const resolvedStore = new DevExpress.data.ArrayStore({
+                key: "accountName",
+                data: employees
+            });
+
+            // Reuse existing dxTagBox instance to avoid recreating it
+            let existingInstance = DevExpress.ui.dxTagBox.getInstance($el[0]);
+            if (existingInstance && settings.forceRecreate === true) {
+                existingInstance.dispose();
+                $el.empty();
+                existingInstance = null;
+            }
+            if (existingInstance) {
+                existingInstance.option({
+                    dataSource: resolvedStore,
+                    value: selectedValues,
+                    readOnly: !canEdit,
+                    hint: canEdit
+                        ? ""
+                        : "Only the Leader PIC in the same section can assign."
+                });
+                existingInstance.repaint();
+                await new Promise(resolve => requestAnimationFrame(resolve));
+                return;
+            }
+            const tagBox = $el.dxTagBox({
+                elementAttr: {
+                    class: "outlined-tagbox"
+                },
+                disabled:settings.isDisabled,
+                dataSource: resolvedStore,
+                valueExpr: "accountName",
+                displayExpr: "fullName",
+                height: _defaultTagBoxEditorHeight,
+                width: _defaultTagBoxEditorWidth,
+                value: selectedValues,
+                readOnly: !canEdit,
+                hint: canEdit
+                    ? ""
+                    : "Only the Leader PIC in the same section can assign.",
+                searchEnabled: true,
+                maxDisplayedTags: 1,//hideIfMuliple ? 1 : 100,
+                showMultiTagOnly: hideIfMuliple,
+                onMultiTagPreparing: function (e) {
+                    if (hideIfMuliple) {
+                        const items = e.selectedItems || [];
+                        const hiddenItems = items.slice(1);
+                        e.text = `+${hiddenItems.length} more`;
+                        e.multiTagElement.attr("title",
+                            hiddenItems.map(x => x.fullName).join("\n")
+                        );
+                    }
+                },
+                searchExpr: [
+                    "fullName",
+                    "accountName",
+                    "displayName"
+                ],
+                placeholder: "Select assignee...",
+                showClearButton: true,
+                showSelectionControls: true,
+                applyValueMode: "useButtons",
+                buttons: [
+                    "clear",
+                    "dropDown",
+                    {
+                        name: "assignToMe",
+                        location: "after",
+                        options: {
+                            type: "default",
+                            text: "Assign to me",
+                            visible: canEdit,
+                            disabled: !canEdit,
+                            elementAttr: {
+                                class: "workflow-primary-button assign-to-me-button"
+                            },
+                            onClick: function () {
+                                if (!canEdit) return;
+                                $.ajax({
+                                    url: "api/Employee/GetMyAssigneeProfile",
+                                    type: "GET",
+                                    dataType: "json"
+                                }).done(async function (res) {
+                                    if (!res || !res.success || !res.data?.accountName) {
+                                        DevExpress.ui.notify("Your assignee profile is not available.", "warning", 2500);
+                                        return;
+                                    }
+
+                                    const me = res.data;
+                                    const editor = $el.dxTagBox("instance");
+                                    if (!editor) return;
+
+                                    // Get the store currently bound to the editor. This is important
+                                    // when the assignee box has been refreshed with a new data source.
+                                    const currentStore = editor.getDataSource()?.store?.() || resolvedStore;
+                                    try {
+                                        const existingMe = await Promise.resolve(currentStore.byKey(me.accountName))
+                                            .catch(() => null);
+                                        if (!existingMe) {
+                                            await Promise.resolve(currentStore.insert(me));
+                                        }
+                                    } catch (error) {
+                                        console.warn("Current user could not be added to the assignee list.", error);
+                                    }
+
+                                    const current = Array.isArray(editor.option("value"))
+                                        ? editor.option("value").slice()
+                                        : [];
+                                    if (!current.includes(me.accountName)) current.push(me.accountName);
+
+                                    const selectedItems = Array.isArray(editor.option("selectedItems"))
+                                        ? editor.option("selectedItems").slice()
+                                        : [];
+                                    const selectedByAccount = new Map(
+                                        selectedItems
+                                            .filter(item => item?.accountName)
+                                            .map(item => [item.accountName, item])
+                                    );
+                                    selectedByAccount.set(me.accountName, me);
+                                    const mergedSelectedItems = current
+                                        .map(accountName => selectedByAccount.get(accountName)
+                                            || employees.find(item => item?.accountName === accountName)
+                                            || { accountName: accountName, fullName: accountName });
+
+                                    editor.option("value", current);
+                                    syncAssignmentStatus(current);
+                                    editor.getDataSource()?.reload?.();
+
+                                    if (typeof settings.onChanged === "function") {
+                                        settings.onChanged(mergedSelectedItems, editor, true);
+                                    }
+                                    if (typeof settings.onClosed === "function") {
+                                        settings.onClosed(mergedSelectedItems, editor, true);
+                                    }
+                                    if (typeof settings.onValueChanged === "function") {
+                                        settings.onValueChanged(mergedSelectedItems, editor, true);
+                                    }
+                                }).fail(function (xhr) {
+                                    console.error("GetMyAssigneeProfile failed.", xhr);
+                                    DevExpress.ui.notify("Unable to assign the task to you.", "error", 2500);
+                                });
+                            }
+                        }
+                    }
+                ],
+                onClosed: function (e) {
+                    if (!canEdit) return;
+                    const items = e.component.option("selectedItems") || [];
+                    syncAssignmentStatus(e.component.option("value"));
+                    if (typeof settings.onClosed === "function") {
+                        settings.onClosed(items, e.component, false);
+                    }
+                    if (typeof settings.onValueChanged === "function") {
+                        settings.onValueChanged(items, e.component, false);
+                    }
+                }
+            });
+
+
+            $(tagBox).on("click", function (e) {
+                e.stopPropagation();
+            });
+            await new Promise(resolve => requestAnimationFrame(resolve));
+        }
+
+           function getAssignNotificationTypeId() {
+                if (typeof getNotificationTypeEnumId === "function") {
+                    var resolvedId = getNotificationTypeEnumId("assign");
+                    if (resolvedId !== null && resolvedId !== undefined) return resolvedId;
+                }
+
+                var normalizeType = function (value) {
+                    return String(value || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
+                };
+                var assignAliases = ["assign", "assignment", "assigned"];
+                var enumItem = (_enums.NotificationType || []).find(function (item) {
+                    return [item?.key, item?.code, item?.value, item?.name, item?.text]
+                        .map(normalizeType)
+                        .some(value => assignAliases.includes(value));
+                });
+                return enumItem?.id ?? enumItem?.Id ?? null;
+           }
+
+           function getPicNotificationAccounts(picValue) {
+                var accounts = [];
+                var appendValue = function (value) {
+                    if (value === null || value === undefined) return;
+                    if (Array.isArray(value)) {
+                        value.forEach(appendValue);
+                        return;
+                    }
+                    if (typeof value === "object") {
+                        Object.values(value).forEach(appendValue);
+                        return;
+                    }
+
+                    String(value).split(/[,;]+/).forEach(function (account) {
+                        account = account.trim();
+                        if (account && !["null", "undefined"].includes(account.toLowerCase())) {
+                            accounts.push(account);
+                        }
+                    });
+                };
+
+                if (typeof picValue === "string") {
+                    var parsedPic = tryParseJSON(picValue, "Accept PIC Notification Problem");
+                    appendValue(parsedPic && Object.keys(parsedPic).length ? parsedPic : picValue);
+                } else {
+                    appendValue(picValue);
+                }
+
+                var seenAccounts = new Set();
+                return accounts.filter(function (account) {
+                    var normalizedAccount = account.toLowerCase();
+                    if (seenAccounts.has(normalizedAccount)) return false;
+                    seenAccounts.add(normalizedAccount);
+                    return true;
+                });
+           }
+
+           function notifyAcceptDecisionPicAccounts(passingObject) {
+                var formItems = passingObject.formItems || {};
+                var picValue = formItems.pic ?? formItems.pIC ?? formItems.PIC;
+                var accounts = getPicNotificationAccounts(picValue);
+                if (!accounts.length) return;
+
+                var scheme = passingObject.schemeName || "Quotation";
+                var recordCode = formItems.quotationCode
+                    || formItems.policyIssuanceCode
+                    || formItems.code
+                    || formItems.id;
+                var notificationTypeId = getAssignNotificationTypeId();
+                var tabPublicUrl = {
+                    url: `/Business/Form/${scheme}_Form/${formItems.id}`,
+                    caption: `form_${scheme}_Form_${formItems.id}`,
+                    name: `${scheme} ${recordCode || ""}`.trim(),
+                    data: ""
+                };
+
+                accounts.forEach(function (account) {
+                    var notificationData = {
+                        Notification: {
+                            Title: `Assigning Task - ${recordCode || scheme}`,
+                            Message: `${scheme} ${recordCode || ""} was accepted by ${_displayName}.`,
+                            IsRead: false,
+                            Resource: `${account}_${passingObject.dept}`,
+                            System: "WM",
+                            RecordGuid: formItems.guid,
+                            ReceivedBy: account,
+                            Type: notificationTypeId
+                        },
+                        connectionId: account,
+                        tabPublicUrl: tabPublicUrl
+                    };
+
+                    // ajaxPost("api/Utility/NotifyAnother", notificationData, {
+                    //     onError: function (err) {
+                    //         console.warn("Accept PIC notification failed.", account, err);
+                    //     }
+                    // });
+                });
+           }
+
+           function beginDepartmentAssignmentLoading(moduleCode, recordId, dept) {
+                var section = document.getElementById(`${moduleCode}-sec_${dept}_${recordId}`);
+                var assigneeHost = section?.querySelector(".dept-form-header__assign");
+                var manager = moduleCode === viewIdModulePrefix.policyIssuance
+                    ? window.PolicyIssuanceIdManager
+                    : window.QuotationIdManager;
+                var treeStack = manager?.treeStack
+                    ? document.getElementById(manager.treeStack(recordId))
+                    : null;
+                var tree = treeStack?.closest(".dept-tree");
+                return {
+                    header: beginWorkflowElementLoading(
+                        assigneeHost,
+                        `Saving ${dept} assignment...`,
+                        "header"
+                    ),
+                    tree: beginWorkflowElementLoading(tree, "Sync PIC", "tree")
+                };
+           }
+
+           function finishDepartmentAssignmentLoading(contexts, dept, isError) {
+                finishWorkflowElementLoading(
+                    contexts?.header,
+                    isError ? "Assignment failed" : `${dept} assigned`,
+                    isError
+                );
+                finishWorkflowElementLoading(
+                    contexts?.tree,
+                    isError ? "Sync failed" : "Synced",
+                    isError
+                );
+           }
+
+            function getPersonInCharge(accountIds) {
+                const accounts = String(accountIds || "")
+                    .split(",")
+                    .map(item => item.trim())
+                    .filter(Boolean);
+                if (!accounts.length) return Promise.resolve("");
+
+                const cacheKey = `person-in-charge|${accounts
+                    .map(item => item.toLowerCase())
+                    .sort()
+                    .join(",")}`;
+                const cached = employeeRequestCache.get(cacheKey);
+                if (cached && cached.expiresAt > Date.now()) return cached.promise;
+
+                var deferred = $.Deferred();
+
+                $.ajax({
+                    url: `/api/Employee/PersonInChargeLookup/${encodeURIComponent(accounts.join(","))}`,
+                    type: "GET",
+                    success: function (res) {
+                        if (res.success) {
+                            deferred.resolve(res.fullNames); // ✅ trả về chuỗi đã ghép
+                        } else {
+                            deferred.resolve(""); // fallback
+                        }
+                    },
+                    error: function (err) {
+                        console.error("API error:", err);
+                        deferred.reject(err);
+                    }
+                });
+
+                const promise = deferred.promise();
+                employeeRequestCache.set(cacheKey, {
+                    promise: promise,
+                    expiresAt: Date.now() + 1800000
+                });
+                promise.fail(function () {
+                    employeeRequestCache.delete(cacheKey);
+                });
+                return promise;
+            }
+
+                function renderDeptCallouts(picJson, scope) {
+                    const picMap = parsePicMap(picJson);
+                    const $scope = scope ? $(scope) : $(document);
+                    $scope.find(".dept-node").each(function () {
+                        const dept = normalizeDeptKey($(this).data("key"));
+                        const $co = $(this).find(".dept-callout");
+                        if (!$co.length) return;
+                        const isReferenceDepartment = $(this).attr("data-reference") === "true";
+                        const pic = picMap[dept] || "";
+                        const $overviewRoot = $(this).closest(
+                            `[id^='${viewIdModulePrefix.quotation}-overviewRoot_'], ` +
+                            `[id^='${viewIdModulePrefix.policyIssuance}-overviewRoot_']`
+                        );
+                        if (isReferenceDepartment) {
+                            $co.removeAttr("data-pic-account");
+                            $co.find(".co-text").text("Reference details");
+                            $co.css({ color: "" });
+                            return;
+                        }
+                        syncDeptNodeAssignmentMenu(
+                            dept,
+                            !!String(pic).trim(),
+                            $overviewRoot.length ? $overviewRoot : $(this).parent()
+                        );
+                        $co.attr("data-pic-account", pic);
+                        if (!pic) {
+                            $co.find(".co-text").text("-");
+                            $co.css({ color: "" });
+                            return;
+                        }
+                        getPersonInCharge(pic).then(function (stageName) {
+                            if ($co.attr("data-pic-account") !== pic) return;
+                            $co.find(".co-text").text(stageName);
+                            $co.css({ color: window.AppColors.c_rgba_17_24_39_85 });
+                        }).catch(function (error) {
+                            console.warn(`PIC lookup for ${dept} failed.`, error);
+                        });
+                    });
+                }
+
+                function parsePicMap(picJson) {
+                    try {
+                        const obj = JSON.parse(picJson || "{}");
+                        const map = {};
+                        Object.keys(obj).forEach(k => map[normalizeDeptKey(k)] = obj[k]);
+                        return map;
+                    } catch {
+                        return {};
+                    }
+                }
+
+                      function normalizeDeptKey(k) {
+                    return String(k || "").trim().toUpperCase();
+                }
+
+        /**
+         * getDefaultPicByDept: Safely parses the PIC JSON data and retrieves
+         * the assignee's account name for a specific department.
+         * Supports pIC / pic / PIC, JSON or object values, and department key casing.
+         */
+        function getDefaultPicByDept(deptKey, dataForm) {
+            if (!deptKey) return null;
+            if (!dataForm) return null;
+            const picMap = readAssignmentPicMap(dataForm);
+            const key = Object.keys(picMap).find(key =>
+                String(key).trim().toUpperCase() === String(deptKey).trim().toUpperCase());
+            return key ? assignmentPicAccounts(picMap[key]).join(",") || null : null;
+        }
+
+        function readAssignmentPicMap(dataForm) {
+            const value = dataForm?.pIC ?? dataForm?.pic ?? dataForm?.PIC;
+            const parsed = parsePicObject(value);
+            return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+        }
+
+        function assignmentPicAccounts(value) {
+            const accounts = [];
+            const collect = function (item) {
+                if (item == null) return;
+                if (Array.isArray(item)) return item.forEach(collect);
+                if (typeof item === "object") {
+                    const account = item.accountName ?? item.AccountName ?? item.emailName ?? item.EmailName;
+                    return account != null ? collect(account) : Object.values(item).forEach(collect);
+                }
+                if (typeof item !== "string") return;
+                item.split(/[;,|]/).map(account => account.trim()).filter(Boolean)
+                    .forEach(account => accounts.push(account));
+            };
+            collect(value);
+            return [...new Set(accounts)];
+        }
+
+        window.syncDeptNodeAssignmentMenu = syncDeptNodeAssignmentMenu;
+</script>

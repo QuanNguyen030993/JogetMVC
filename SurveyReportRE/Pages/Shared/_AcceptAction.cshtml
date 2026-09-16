@@ -1233,4 +1233,684 @@
             }
             return workflowDecisionField({ formId: formId, dept: dept }, ...items);
         }
+           function disposeDecisionDockGroup(group) {
+                var $group = $(group);
+                $group.find(".dx-button").each(function () {
+                    try { $(this).dxButton("instance")?.dispose(); } catch (_) { }
+                });
+                group.workflowDecisionPositionAnchor?.remove();
+                $group.remove();
+           }
+
+           function getDecisionGroupInstanceKey(root, section, dock, group) {
+                var overviewKey = root?.id || "workflow-overview";
+                var sectionKey = section?.id || "department-section";
+                var deptKey = group?.dataset?.routeDept
+                    || dock?.dataset?.dept
+                    || "department";
+                var groupKey = group?.dataset?.decisionGroupKey
+                    || group?.dataset?.formGroupName
+                    || group?.id
+                    || "decision-group";
+
+                return [overviewKey, sectionKey, deptKey, groupKey]
+                    .map(function (value) { return String(value).trim().toLowerCase(); })
+                    .join("::");
+           }
+
+           function beginWorkflowButtonLoading(event) {
+                var instance = event?.component;
+                var $button = event?.element
+                    ? $(event.element)
+                    : $(instance?.element?.() || []);
+                if (!$button.length) return null;
+
+                var wasDisabled = instance?.option("disabled") === true;
+                var $content = $button.find(".dx-button-content").first();
+                $button.addClass("workflow-button-loading").attr("aria-busy", "true");
+                instance?.option("disabled", true);
+
+                if (!$content.children(".workflow-button-loader").length) {
+                    $(`
+                        <span class="workflow-button-loader dept-section-action-loader" aria-hidden="true">
+                            <span></span><span></span><span></span>
+                        </span>`).prependTo($content);
+                }
+
+                return {
+                    finish: function (restoreEnabled) {
+                        $button.removeClass("workflow-button-loading").attr("aria-busy", "false");
+                        $button.find(".workflow-button-loader").remove();
+                        if (restoreEnabled === true && !wasDisabled) {
+                            instance?.option("disabled", false);
+                        }
+                    }
+                };
+           }
+
+           function acceptDecision(object, dept) {
+                object = object || {};
+                dept = dept || object.dept;
+                var buttonLoading = beginWorkflowButtonLoading(object.triggerEvent);
+
+                var scheme = object.schemeName || (object.prefix === viewIdModulePrefix.policyIssuance ? "PolicyIssuance" : "Quotation");
+                var formItems = object.formItems
+                    || $(`#${object.formId}`).dxForm("instance")?.option("formData")
+                    || {};
+                var loadingContext = beginDepartmentSectionLoading(
+                    scheme,
+                    formItems.id,
+                    dept,
+                    `Accepting ${dept} decision...`
+                );
+
+                // Accept does not move the workflow. The API owns the status/TAT update,
+                // action log and the NotificationType = Accept notification.
+                var acceptRequest = $.ajax({
+                    url: `/api/${scheme}/AcceptTask`,
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify({
+                        id: formItems.id,
+                        dept: dept,
+                        comment: object.Comment || null
+                    })
+                });
+
+                acceptRequest.done(function (responseData) {
+                    applyAcceptedDepartmentDecision(
+                        scheme,
+                        formItems.id,
+                        dept,
+                        responseData
+                    )
+                        .then(function () {
+                            buttonLoading?.finish(false);
+                            finishDepartmentSectionLoading(
+                                loadingContext,
+                                `${dept} form unlocked`,
+                                false
+                            );
+                        })
+                        .catch(function (err) {
+                            buttonLoading?.finish(true);
+                            finishDepartmentSectionLoading(
+                                loadingContext,
+                                `${dept} refresh failed`,
+                                true
+                            );
+                            console.error("Accept decision section update failed", err);
+                        });
+                });
+
+                acceptRequest.fail(function (xhr) {
+                    buttonLoading?.finish(true);
+                    finishDepartmentSectionLoading(
+                        loadingContext,
+                        "Accept decision failed",
+                        true
+                    );
+                    appErrorHandling("Accept decision failed", xhr);
+                });
+
+                return acceptRequest;
+           }
+
+           function rejectDecision(object){
+                var statusObject = _enums.OverallStatus.find(f => f.value == object.statusName);
+                              object.formItems.statusId  = statusObject.id;
+                              object.formItems.workflowStatus = statusObject.value;
+
+
+                              //TAT handle if need
+
+
+                               ajaxPut(object.url,
+                                {
+                                    key: object.formItems.id,
+                                    values: JSON.stringify(
+                                        object.formItems
+                                    )
+                                },
+                                {
+                                    onSuccess: function (response) {
+                                    },
+                                    onError: function (err) { }
+                                });
+
+                            var submitRequest = new Object();
+                                submitRequest.Comment = object.Comment;
+                                submitRequest.StepsWorkflow = new Object()
+                                submitRequest.StepsWorkflow.FromNodeId = object.dept;
+                                submitRequest.StepsWorkflow.StepName = "Internal Workflow";
+                                submitRequest.isFullDetail = false;
+                             var quotationData = new Object();
+
+                                quotationData.Quotation = new Object();
+                                quotationData.Quotation.Id = object.formItems.id;
+                                quotationData.Quotation.Guid = object.formItems.guid;
+                                quotationData.Quotation.BranchCode = _branch;
+                                quotationData.Attributes = new Object();
+                                quotationData.Attributes.SectionName = object.dept;
+                                 var formData = new FormData();
+                                formData.append(`${object.schemeName}Data`,JSON.stringify(quotationData));
+                                formData.append("SubmitRequest",JSON.stringify(submitRequest));
+                                  $.ajax({
+                                    url:`${object.urlLog}`,
+                                    type: "POST",
+                                    data: formData,
+                                    processData: false,
+                                    contentType: false,
+                                    success: function (res) {
+                                    },
+                                    error: function (xhr) {
+                                    }
+                                });
+           }
+
+                function waitForDecisionRouteStage(formId) {
+                    var $form = $(`#${formId}`);
+                    var $stageRoot = $form.closest("[data-render-stage]");
+                    var hasReachedRouteStage = function (stage) {
+                        return stage === "routeState" || stage === "comments";
+                    };
+                    if (!$stageRoot.length || hasReachedRouteStage($stageRoot.attr("data-render-stage"))) {
+                        return Promise.resolve();
+                    }
+
+                    return new Promise(function (resolve) {
+                        var root = $stageRoot[0];
+                        var completed = false;
+                        var finish = function () {
+                            if (completed) return;
+                            completed = true;
+                            observer.disconnect();
+                            window.clearTimeout(fallbackTimer);
+                            resolve();
+                        };
+                        var observer = new MutationObserver(function () {
+                            if (!hasReachedRouteStage($stageRoot.attr("data-render-stage"))) return;
+                            finish();
+                        });
+                        observer.observe(root, { attributes: true, attributeFilter: ["data-render-stage"] });
+                        var fallbackTimer = window.setTimeout(finish, 8000);
+                    });
+                }
+
+                function delayAcceptStatusV2(mainFields,formProps, ...params ){
+                    var delayObject = structuredClone(formProps);
+                    var decisionItems = normalizeDecisionFieldButtons(params);
+                    var decisionFieldName = getDecisionFieldName(formProps, decisionItems);
+                    var decisionGroupName = `decision${delayObject.dept}Group.${decisionFieldName}`;
+                    var decisionRegistryKey = `${formProps.formId}:${String(delayObject.dept || "").trim().toUpperCase()}`;
+                    window.WorkflowDecisionRegistry = window.WorkflowDecisionRegistry || {};
+                    window.WorkflowDecisionRegistry[decisionRegistryKey] = {
+                        formProps: formProps,
+                        groupName: decisionGroupName,
+                        mainFields: mainFields,
+                        params: params
+                    };
+                    var initialButtonId = getDelayAcceptButtonId(decisionItems[0]);
+                    var initialStatusId = getDecisionFieldStatusId(
+                        formProps,
+                        decisionItems,
+                        params[1] || params[3]
+                    );
+                    setTimeout(() => {
+                        // setDecisionCommonStatus(initialStatusId, initialButtonId, "loading");
+                    }, 0);
+                    waitForDecisionRouteStage(formProps.formId).then(function () {
+                        setTimeout(() => {
+                            renderDecisionDeferredV2(
+                                formProps,
+                                decisionGroupName,
+                                mainFields,
+                                ...params
+                            )
+                        }, FormStageDelay.routeComponent);
+                    });
+                }
+
+        function hasWorkflowButtonStatus(formItems, dept) {
+            var rawActionStatus = formItems?.actionStatus;
+            var actionStatus = rawActionStatus && typeof rawActionStatus === "object"
+                ? rawActionStatus
+                : (tryParseJSON(rawActionStatus, "Workflow Button Status Problem") || {});
+            var normalizedDept = normalizeDeptKey(dept);
+            var storedStatus = actionStatus?.[`${normalizedDept}Button`]
+                ?? actionStatus?.[normalizedDept];
+
+            if (storedStatus == null || storedStatus === false) return false;
+            if (typeof storedStatus === "string") return storedStatus.trim().length > 0;
+            if (typeof storedStatus === "object") return Object.keys(storedStatus).length > 0;
+            return true;
+        }
+
+         function normalizeDecisionFieldButtons(params) {
+            return params.reduce(function (items, item) {
+                if (Array.isArray(item)) return items.concat(normalizeDecisionFieldButtons(item));
+                if (item) items.push(item);
+                return items;
+            }, []);
+        }
+
+        function getDecisionFieldKey(formProps) {
+            var formKey = String(formProps?.formId || "form")
+                .replace(/[^a-zA-Z0-9_-]/g, "-");
+            var deptKey = String(formProps?.dept || "common")
+                .replace(/[^a-zA-Z0-9_-]/g, "-");
+            return `${formKey}-${deptKey}`;
+        }
+
+        function getDecisionFieldName(formProps, buttonItems) {
+            var primaryItem = buttonItems?.[0] || {};
+            return formProps?.decisionFieldName
+                || formProps?.fieldName
+                || primaryItem.fieldName
+                || "decisionStatus";
+        }
+
+        function getDecisionFieldStatusId(formProps, buttonItems, legacyStatusId) {
+            var explicitStatusId = formProps?.decisionStatusId
+                || formProps?.statusId
+                || (buttonItems || []).map(getDelayAcceptStatusId).find(Boolean)
+                || legacyStatusId;
+            return explicitStatusId || `decision-status-${getDecisionFieldKey(formProps)}`;
+        }
+
+        function getDecisionFieldActionHostId(formProps) {
+            return formProps?.decisionActionHostId
+                || formProps?.actionHostId
+                || `decision-actions-${getDecisionFieldKey(formProps)}`;
+        }
+
+            function isRouteDecisionButton(item) {
+                return item && typeof item === "object" && (item.isRouteButton || item.route || item.findRoute);
+            }
+
+            function getDelayAcceptButtonHost(item) {
+                if (!item || typeof item !== "object") return null;
+                var hostId = item.containerId || item.hostId || item.appendTo || "";
+                if (!hostId) return null;
+                return String(hostId).charAt(0) === "#" || String(hostId).charAt(0) === "." ? $(hostId) : $(`#${hostId}`);
+            }
+
+            function ensureDelayDecisionButtonElement(buttonId, item) {
+                var $button = $(`#${buttonId}`);
+                if ($button.length) return $button;
+
+                var $host = getDelayAcceptButtonHost(item);
+                if (!$host || !$host.length) return $button;
+
+                return $(`<div id="${buttonId}"></div>`).appendTo($host);
+            }
+
+            function ensureDelayDecisionButtonInstance(buttonId, item) {
+       var $button = ensureDelayDecisionButtonElement(buttonId, item);
+       // Không tìm thấy element
+       if (!$button || !$button.length) {
+           return {
+               type: null,
+               value: null
+           };
+       }
+       try
+       {
+       // Check instance đã tồn tại
+       var instance = $button.dxButton("instance");
+       if (instance) {
+           return {
+               type: "instance",
+               value: instance,
+               element: $button
+           };
+       }
+       var route = item?.route || item?.findRoute;
+       var options = {
+           disabled: true,
+           text:
+               item?.text ||
+               route?.displayStatus ||
+               route?.actionName ||
+               route?.actionCode ||
+               "",
+           icon:
+               item?.icon ||
+               (route
+                   ? getTransitionButtonIcon(route, "check")
+                   : "check"),
+           type:
+               item?.type ||
+               (route?.isReturn ? "danger" : "info")
+       };
+       // Init DevExtreme Button
+       $button.dxButton(options);
+       var buttonClass =
+           item?.buttonClass ||
+           getTransitionButtonClass(route, "");
+       if (buttonClass) {
+           applyTransitionButtonClass(
+               `#${buttonId}`,
+               route || {
+                   buttonClass: buttonClass
+               },
+               buttonClass
+           );
+       }
+       if (
+           item?.buttonColor ||
+           item?.backgroundColor
+       ) {
+           $button
+               .find(".dx-button")
+               .css(
+                   "background-color",
+                   item.buttonColor ||
+                   item.backgroundColor
+               );
+       }
+       instance = $button.dxButton("instance");
+       }
+       catch {
+
+       }
+       // Lấy instance sau khi init
+       return {
+           type: instance
+               ? "instance"
+               : "element",
+           value: instance || $button,
+           element: $button,
+           instance: instance || null
+       };
+    }
+
+            function buildRouteDecisionClick(formId, dept, item) {
+                return function (e) {
+                    var route = item.route || item.findRoute;
+                    var formItems = $(`#${formId}`).dxForm("instance")?.option("formData") || {};
+                    var content = "";
+
+                    if (typeof item.getComment === "function") {
+                        content = item.getComment();
+                    } else {
+                        content = window.remarkBoxs?.[dept]?.controlRemark?.value?.() || "";
+                    }
+
+                    if (item.requireRemark && !content) {
+                        appNotifyWarning(item.remarkMessage || "Please put your reason to remarks!", false);
+                        return;
+                    }
+
+                    formItems.comment = content || "";
+
+                    if (typeof item.onClick === "function") {
+                        item.onClick({
+                            event: e,
+                            formItems: formItems,
+                            route: route,
+                            dept: dept,
+                            formId: formId,
+                            config: item
+                        });
+                        return;
+                    }
+
+                    var moduleName = item.moduleName || item.formModuleKey || item.moduleKey || viewIdModulePrefix.quotation;
+                    var nextStep = item.nextStep || item.state?.nextStep || window.QuotationPage?.state?.nextStep;
+                    var handlerName = item.handlerName || item.action || (route?.isReturn ? "returnToStep" : "submitNextStep");
+
+                    if (!route || !nextStep) {
+                        buildDefaultDecisionClick(formProps)(e);
+                        return;
+                    }
+
+                    if (handlerName === "returnToStep") {
+                        returnToStep(moduleName, nextStep, route, formItems);
+                        return;
+                    }
+
+                    submitNextStep(moduleName, nextStep, route, formItems);
+                };
+            }
+
+            function applyDelayDecisionButton(formProps, item) {
+                var buttonId = getDelayAcceptButtonId(item);
+                if (!buttonId) return;
+
+                var instance = ensureDelayDecisionButtonInstance(buttonId, item);
+                if (!instance) return;
+
+                if (instance.type == "instance")
+                {
+                    if (isRouteDecisionButton(item)) {
+                        var route = item.route || item.findRoute;
+                        var buttonOptions = {
+                            onClick: buildRouteDecisionClick(formProps.formId, formProps.dept, item)
+                        };
+
+                        if (route) {
+                            buttonOptions.text = item.text || route.displayStatus || route.actionName || route.actionCode || instance.option("text");
+                            buttonOptions.icon = item.icon || getTransitionButtonIcon(route, instance.option("icon") || "check");
+                            buttonOptions.type = item.type || instance.option("type");
+                            buttonOptions.disabled = true;
+                        }
+
+                        instance.option(buttonOptions);
+                        applyTransitionButtonClass(`#${buttonId}`, route || item, item.buttonClass);
+                        if (item.buttonColor || item.backgroundColor) {
+                            $(`#${buttonId}`).find(".dx-button").css("background-color", item.buttonColor || item.backgroundColor);
+                        }
+                        return;
+                    }
+                        var objSnapshot = cloneReusableOptions(formProps);
+                        var defaultButtonOptions = { disabled: true };
+                        if (item && typeof item === "object"
+                            && typeof item.onClick === "function"
+                            && item.useDefaultDecisionClick !== true) {
+                            defaultButtonOptions.onClick = function (event) {
+                                return item.onClick(event, {
+                                    formProps: objSnapshot,
+                                    config: item,
+                                    formId: objSnapshot.formId,
+                                    dept: objSnapshot.dept
+                                });
+                            };
+                        } else if (!item || typeof item !== "object" || item.useDefaultDecisionClick !== false) {
+                            defaultButtonOptions.onClick = buildDefaultDecisionClick(objSnapshot);
+                        }
+                        if (item && typeof item === "object") {
+                            if (item.text) defaultButtonOptions.text = item.text;
+                            if (item.icon) defaultButtonOptions.icon = item.icon;
+                            if (item.type) defaultButtonOptions.type = item.type;
+                        }
+                        instance.value.option(defaultButtonOptions);
+                        applyTransitionButtonClass(`#${buttonId}`, item, item?.buttonClass);
+                        if (item?.buttonColor || item?.backgroundColor) {
+                            $(`#${buttonId}`).find(".dx-button").css(
+                                "background-color",
+                                item.buttonColor || item.backgroundColor
+                            );
+                        }
+                }
+            }
+
+        //Pending decision features
+         function setDecisionButtonsDisabled(items, disabled) {
+             $.each(items, function(itemIndex, item) {
+                 if (!item) return;
+                 try {
+                     var element = document.getElementById(item);
+                     if (!element || !element.classList.contains("dx-button")) return;
+                     DevExpress.ui.dxButton.getInstance(element)?.option("disabled", !!disabled);
+                 } catch (error) {
+                     console.warn("Unable to update decision button state.", item, error);
+                 }
+             });
+         }
+
+         function disableAllDecisionButton(items) {
+             setDecisionButtonsDisabled(items, true);
+         }
+
+          function enableAllDecisionButton(items) {
+             setDecisionButtonsDisabled(items, false);
+         }
+
+    function getDecisionRenderedObjects(formProps, decisionItems, legacyStatusId, buttonRule) {
+        decisionItems = normalizeDecisionFieldButtons(decisionItems || []);
+        buttonRule = buttonRule || {};
+
+        function isRuleLocked() {
+            return buttonRule.disabled === true;
+        }
+
+        var statusId = getDecisionFieldStatusId(
+            formProps,
+            decisionItems,
+            legacyStatusId
+        );
+
+        var actionHostId = getDecisionFieldActionHostId(formProps);
+
+        var $status = statusId
+            ? $(`#${statusId}`)
+            : $();
+
+        var $actionHost = actionHostId
+            ? $(`#${actionHostId}`)
+            : $();
+
+        var buttons = decisionItems
+            .map(function (item) {
+                var buttonId = getDelayAcceptButtonId(item);
+
+                if (!buttonId) {
+                    return null;
+                }
+
+                var $button = $(`#${buttonId}`);
+
+                var instance = $button.length
+                    ? $button.dxButton("instance")
+                    : null;
+
+                return {
+                    id: buttonId,
+
+                    config: item,
+
+                    element: $button[0] || null,
+
+                    $element: $button,
+
+                    instance: instance,
+
+                    enable: function () {
+                        instance?.option("disabled", isRuleLocked());
+                        return this;
+                    },
+
+                    disable: function () {
+                        instance?.option("disabled", true);
+                        return this;
+                    },
+
+                    setDisabled: function (disabled) {
+                        instance?.option("disabled", isRuleLocked() || !!disabled);
+                        return this;
+                    },
+
+                    setVisible: function (visible) {
+                        instance?.option("visible", !!visible);
+                        return this;
+                    },
+
+                    option: function (name, value) {
+                        if (!instance) {
+                            return undefined;
+                        }
+
+                        if (arguments.length === 1) {
+                            return instance.option(name);
+                        }
+
+                        instance.option(name, value);
+
+                        return this;
+                    }
+                };
+            })
+            .filter(Boolean);
+
+        var primaryButton = buttons[0] || null;
+
+        return {
+            formProps: formProps,
+
+            status: {
+                id: statusId,
+
+                element: $status[0] || null,
+
+                $element: $status,
+
+                setText: function (text) {
+                    $status.text(text ?? "");
+                    return this;
+                },
+
+                show: function () {
+                    $status.show();
+                    return this;
+                },
+
+                hide: function () {
+                    $status.hide();
+                    return this;
+                }
+            },
+
+            actionHost: {
+                id: actionHostId,
+                element: $actionHost[0] || null,
+                $element: $actionHost
+            },
+
+            buttons: buttons,
+
+            primaryButton: primaryButton,
+
+            enable: function () {
+                buttons.forEach(function (button) {
+                    button.enable();
+                });
+
+                return this;
+            },
+
+            disable: function () {
+                buttons.forEach(function (button) {
+                    button.disable();
+                });
+
+                return this;
+            },
+
+            setDisabled: function (disabled) {
+                buttons.forEach(function (button) {
+                    button.setDisabled(disabled);
+                });
+
+                return this;
+            },
+
+            getButton: function (buttonId) {
+                return buttons.find(function (button) {
+                    return button.id === buttonId;
+                }) || null;
+            }
+        };
+    }
+
 </script>
