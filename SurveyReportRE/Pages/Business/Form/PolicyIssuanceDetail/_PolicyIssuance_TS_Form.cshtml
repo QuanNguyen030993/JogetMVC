@@ -7,6 +7,8 @@
     long cloneId = Convert.ToInt64(ViewData["CloneId"]); // Quotation
     string cloneQuotationGuid = ViewData["CopyFromGuid"].ToString();
 }
+<div id="@PIViewIdHelper.Form(dept, policyIssuanceId)">
+</div>
 <style>
     .dx-tabpanel .dx-tabpanel-tabs .dx-tab {
         width: auto;
@@ -80,6 +82,7 @@
     thisObject.decisionColSpan = 2;
     thisObject.id = @ViewData["Id"];
     thisObject.record = initialFormData;
+    thisObject.formInstance = $(`#${thisObject.formId}`).dxForm().dxForm("instance") || {};
 
     var thisObjectDetails = new Object();
     thisObjectDetails.ModelName =  "PolicyIssuanceDetails";
@@ -484,6 +487,7 @@
 
 
     // delayAcceptStatusV2(mainFields,thisObject, ...itemsDelay);
+    debugger
      delayAcceptStatusV2Promise(
         mainFields,
         thisObject,
@@ -641,8 +645,7 @@
 
     })
 </script>
-<div id="@PIViewIdHelper.Form(dept, policyIssuanceId)">
-</div>
+
 <div class="pi-ts-bypass-demo-bar">
     <span class="pi-ts-bypass-demo-badge">DEMO</span>
     <div id="pi-ts-bypass-task-demo-@policyIssuanceId"></div>

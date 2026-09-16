@@ -29,6 +29,7 @@
         thisObject.schemeName = "Quotation";
         thisObject.decisionColSpan = 2;
         thisObject.record = initialFormData;
+        thisObject.formInstance = $(`#${thisObject.formId}`).dxForm().dxForm("instance") || {};
 
         var that = new Object();
     var sectionId = "@(ViewData["Cd"])";
@@ -204,7 +205,6 @@
      ]});
     viewFieldAdjust("@QTViewIdHelper.Form(dept, quotationId)", ["Fill Task"]);
     // delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
-
      delayAcceptStatusV2Promise(
             mainFields,
             thisObject,

@@ -845,10 +845,9 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
         const string submitToPmStepCode = "SUBMIT_TO_PM";
         StepsWorkflow? pmTransition = workflowSteps
             .Where(item => string.Equals(
-                item.StepCode?.Trim(),
+                item.ActionCode?.Trim(),
                 submitToPmStepCode,
                 StringComparison.OrdinalIgnoreCase))
-            .OrderBy(item => item.SortOrder)
             .FirstOrDefault();
         if (pmTransition == null || string.IsNullOrWhiteSpace(pmTransition.TNodeId))
         {

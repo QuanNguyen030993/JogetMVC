@@ -11,6 +11,9 @@
         padding-right: 18px;
     }
 </style>
+<div id="@QTViewIdHelper.Form(dept, quotationId)">
+</div>
+
 <script type="text/javascript">
     $(async function () {
         const initialFormData = await window.OverviewDataBootstrap.getFormData({
@@ -32,6 +35,9 @@
         };
         thisObject.id = @ViewData["Id"];
         thisObject.record = initialFormData;
+        thisObject.formInstance = $(`#${thisObject.formId}`).dxForm().dxForm("instance") || {};
+
+
         var that = {
             ModelName: "Quotation",
             moduleName: "default",
@@ -401,5 +407,3 @@
             });
     });
 </script>
-<div id="@QTViewIdHelper.Form(dept, quotationId)">
-</div>

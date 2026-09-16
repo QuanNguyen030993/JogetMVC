@@ -93,6 +93,7 @@
     --overview-editor-padding-y: 3px;
     --overview-editor-padding-x: 6px;
     --overview-uploader-padding: 4px;
+    --select-action-items: 3;
     /* Colors gathered from CSS files */
     --c-0077cc: #0077cc;
     --c-1861ac: #1861ac;

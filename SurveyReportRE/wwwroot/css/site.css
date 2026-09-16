@@ -914,7 +914,7 @@
     width: 100%;
     max-width: 1080px;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--select-action-items), minmax(0, 1fr));
     align-items: stretch;
     gap: clamp(12px, 2.5vw, 40px);
 }

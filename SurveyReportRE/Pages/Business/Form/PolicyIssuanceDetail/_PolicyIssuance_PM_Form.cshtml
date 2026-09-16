@@ -81,7 +81,7 @@
         thisObject.prefix = viewIdModulePrefix.policyIssuance;
         thisObject.id = @policyIssuanceId;
         thisObject.record = initialFormData;
-
+        thisObject.formInstance = $(`#${thisObject.formId}`).dxForm().dxForm("instance") || {};
 
     var thisObjectDetails = new Object();
     thisObjectDetails.ModelName = "PolicyIssuanceChecklist";

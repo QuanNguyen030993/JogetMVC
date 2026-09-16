@@ -78,7 +78,8 @@
     /* role enable/disable restored code: legacy decision renderer kept for rollback.
     */
         async function renderDecisionDeferredV2(formProps, groupName, mainField, ...params) {
-            debugger
+                 var form = formProps.formInstance;
+                 formProps.formInstance = {};
                  const formDataClone = structuredClone(formProps); // Form view cshtml invoke by 1 function as loop
                     var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
                     var commonStatusId = getDecisionFieldStatusId(
@@ -87,21 +88,23 @@
                         params[1] || params[3]
                     );
 
-                    setTimeout(() => {
-                        var form = $(`#${formDataClone.formId}`).dxForm("instance");
+                     // setTimeout(() => {
+                        // var form = $(`#${formDataClone.formId}`).dxForm("instance");
                         if (!form) {
                             setDecisionCommonStatus(commonStatusId, "onLoaded", "Form unavailable");
                             return;
                         }
 
-                        var formItems = form.option("formData") || {};
-                        if (formItems)
-                        {
+                        // var formItems = form.option("formData") || {};
+                        // if (formItems)
+                        // {
 
-                        }
-                        else {
-                            console.log("Form " + " no data");
-                        }
+                        // }
+                        // else {
+                        //     console.log("Form " + " no data");
+                        // }
+                        var formItems = formProps.record;
+
                         var rawPic = formItems.pic ?? formItems.pIC ?? formItems.PIC;
                         if (rawPic == null && typeof PIC_JSON !== "undefined") {
                             rawPic = PIC_JSON;
@@ -126,7 +129,8 @@
                         }
 
 
-                       var latestFormItems = form.option("formData") || {};
+                       // var latestFormItems = form.option("formData") || {};
+                       var latestFormItems = formItems || {};
                        var latestTatObject = tryParseJSON(latestFormItems.turnAroundTimeAttributes, "TAT Load Button Problem") || {};
                         var customStatus = tryParseJSON(latestFormItems.actionStatus || "", "Custom parsing problem") || {};
                        // Legacy callers (UW/LMKT) pass buttonId/statusId pairs.
@@ -261,258 +265,15 @@
                               })
                           );
 
-    }, _delayUnlockForm);
-
-
+     // }, _delayUnlockForm);
     }
 
-    // async function renderDecisionDeferredV2(formProps, groupName, mainField, ...params) {
-    //     var formDataClone = Object.assign({}, formProps || {});
-    //     var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
-    //     var commonStatusId = getDecisionFieldStatusId(
-    //         formDataClone,
-    //         normalizedDecisionItems,
-    //         params[1] || params[3]
-    //     );
-    //     var usesLegacyStringPairs = params.length > 0
-    //         && params.every(function (item) { return typeof item === "string"; });
-    //     var buttonItems = usesLegacyStringPairs
-    //         ? params.filter(function (item, index) { return index % 2 === 0 && item; })
-    //         : normalizedDecisionItems.filter(function (item) { return getDelayAcceptButtonId(item); });
-
-    //     await new Promise(function (resolve) {
-    //         window.setTimeout(resolve, Math.max(0, Number(_delayUnlockForm) || 0));
-    //     });
-
-    //     var form = $(`#${formDataClone.formId}`).dxForm("instance");
-    //     if (!form) {
-    //         setDecisionCommonStatus(commonStatusId, "onLoaded", "Form unavailable");
-    //         return { record: {}, tatObject: {}, disabled: true, buttonItems: buttonItems };
-    //     }
-
-    //     // Keep the complete overview record as the base. A dxForm can temporarily
-    //     // expose only its rendered fields while itemOption is rebuilding a group.
-    //     var formItems = Object.assign(
-    //         {},
-    //         formDataClone.record || {},
-    //         form.option("formData") || {}
-    //     );
-    //     var rawPic = formItems.pic ?? formItems.pIC ?? formItems.PIC;
-    //     if (rawPic == null && typeof PIC_JSON !== "undefined") rawPic = PIC_JSON;
-    //     var picMap = rawPic && typeof rawPic === "object"
-    //         ? rawPic
-    //         : (tryParseJSON(rawPic || "{}", "PIC Load Problem") || {});
-    //     var deptKey = normalizeDeptKey(formDataClone.dept);
-    //     var picKey = Object.keys(picMap).find(function (key) {
-    //         return normalizeDeptKey(key) === deptKey;
-    //     });
-    //     var pic = picKey ? picMap[picKey] : null;
-
-    //     try {
-    //         form.itemOption(groupName, "visible", !!pic || isITAcceptDemoEnabled(formDataClone));
-    //     } catch (error) { }
-
-    //     // itemOption can recreate the group's DOM. Let that render finish, then
-    //     // reacquire both the form and its data just like the stable legacy flow.
-    //     await new Promise(function (resolve) {
-    //         window.setTimeout(resolve, 0);
-    //     });
-    //     form = $(`#${formDataClone.formId}`).dxForm("instance") || form;
-    //     formItems = Object.assign(
-    //         {},
-    //         formDataClone.record || {},
-    //         form.option("formData") || {}
-    //     );
-    //     var rawTat = formItems.turnAroundTimeAttributes ?? formItems.TurnAroundTimeAttributes;
-    //     var tatObject = rawTat && typeof rawTat === "object"
-    //         ? rawTat
-    //         : (tryParseJSON(rawTat || "{}", "TAT Load Button Problem") || {});
-    //     var rawActionStatus = formItems.actionStatus ?? formItems.ActionStatus;
-    //     var actionStatus = rawActionStatus && typeof rawActionStatus === "object"
-    //         ? rawActionStatus
-    //         : (tryParseJSON(rawActionStatus || "{}", "Custom parsing problem") || {});
-
-    //     function initializeDecisionButtons() {
-    //         buttonItems.forEach(function (item) {
-    //             renderDelayAcceptStoredStatusButton(
-    //                 formDataClone.formId,
-    //                 formDataClone.dept,
-    //                 item,
-    //                 formItems,
-    //                 tatObject
-    //             );
-    //             // Always restore the click handler. Stored status only changes the
-    //             // status display; it must not skip button initialization.
-    //             applyDelayDecisionButton(formDataClone, item);
-
-    //             if (item && typeof item === "object" && typeof item.loadRouteButtons === "function") {
-    //                 item.loadRouteButtons({
-    //                     formId: formDataClone.formId,
-    //                     dept: formDataClone.dept,
-    //                     formItems: formItems,
-    //                     tatObject: tatObject,
-    //                     config: item
-    //                 });
-    //             }
-    //         });
-    //     }
-
-    //     initializeDecisionButtons();
-
-    //     var finalStatus = getDecisionCommonStatus(formItems, formDataClone.dept, tatObject);
-    //     setDecisionCommonStatus(commonStatusId, "onLoaded", finalStatus.title || finalStatus.text);
-
-    //     var tatKey = Object.keys(tatObject).find(function (key) {
-    //         return normalizeDeptKey(key) === deptKey;
-    //     });
-    //     var deptTat = tatKey ? (tatObject[tatKey] || {}) : {};
-    //     var acceptDate = deptTat.AcceptDate ?? deptTat.acceptDate;
-    //     var skipAcceptedMainFields = params[0]
-    //         && typeof params[0] === "object"
-    //         && params[0].skipAcceptedMainFields;
-    //     var mainFieldsMarker = `decisionMainFields_${formDataClone.dept}`;
-    //     if (acceptDate && mainField && !skipAcceptedMainFields && !form.element().data(mainFieldsMarker)) {
-    //         form.element().data(mainFieldsMarker, true);
-    //         form.option("items", [...form.option("items"), ...mainField]);
-    //         await new Promise(function (resolve) {
-    //             window.setTimeout(resolve, 0);
-    //         });
-    //         // Adding accepted fields rebuilds dxForm and its buttons.
-    //         initializeDecisionButtons();
-    //     }
-
-    //     var actionStatusKey = Object.keys(actionStatus).find(function (key) {
-    //         return normalizeDeptKey(key) === deptKey;
-    //     });
-    //     if (actionStatusKey) {
-    //         updateDelayAcceptStatus(commonStatusId, acceptDate, actionStatus[actionStatusKey]);
-    //     }
-
-    //     // One final owner for disabled state: the centralized role rule.
-    //     var roleState = await applyDecisionAcceptRuleOnce(formDataClone, formItems, buttonItems);
-    //     return {
-    //         record: formItems,
-    //         tatObject: tatObject,
-    //         decision: roleState.decision,
-    //         disabled: roleState.disabled,
-    //         ITAcceptDemo: roleState.ITAcceptDemo,
-    //         buttonItems: buttonItems,
-    //         commonStatusId: commonStatusId
-    //     };
-    // }
-
-       
-    // async function renderDecisionDeferredV2(formProps, groupName, mainField, ...params) {
-    //     var formDataClone = Object.assign({}, formProps || {});
-    //     var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
-    //     var commonStatusId = getDecisionFieldStatusId(
-    //         formDataClone,
-    //         normalizedDecisionItems,
-    //         params[1] || params[3]
-    //     );
-    //     var usesLegacyStringPairs = params.length > 0
-    //         && params.every(function (item) { return typeof item === "string"; });
-    //     var buttonItems = usesLegacyStringPairs
-    //         ? params.filter(function (item, index) { return index % 2 === 0 && item; })
-    //         : normalizedDecisionItems.filter(function (item) { return getDelayAcceptButtonId(item); });
-
-    //     await new Promise(function (resolve) {
-    //         window.setTimeout(resolve, Math.max(0, Number(_delayUnlockForm) || 0));
-    //     });
-
-    //     var form = $(`#${formDataClone.formId}`).dxForm("instance");
-    //     if (!form) {
-    //         setDecisionCommonStatus(commonStatusId, "onLoaded", "Form unavailable");
-    //         return { record: {}, disabled: true, buttonItems: buttonItems };
-    //     }
-
-    //     var formItems = form.option("formData") || formDataClone.record || {};
-    //     var tatObject = formItems.turnAroundTimeAttributes
-    //         && typeof formItems.turnAroundTimeAttributes === "object"
-    //             ? formItems.turnAroundTimeAttributes
-    //             : (tryParseJSON(formItems.turnAroundTimeAttributes || "{}", "TAT Load Button Problem") || {});
-    //     var actionStatus = formItems.actionStatus && typeof formItems.actionStatus === "object"
-    //         ? formItems.actionStatus
-    //         : (tryParseJSON(formItems.actionStatus || "{}", "Custom parsing problem") || {});
-    //     var rawPic = formItems.pic ?? formItems.pIC ?? formItems.PIC;
-    //     if (rawPic == null && typeof PIC_JSON !== "undefined") rawPic = PIC_JSON;
-    //     var picMap = rawPic && typeof rawPic === "object"
-    //         ? rawPic
-    //         : (tryParseJSON(rawPic || "{}", "PIC Load Problem") || {});
-    //     var pic = picMap[formDataClone.dept];
-
-    //     try {
-    //         form.itemOption(groupName, "visible", !!pic || isITAcceptDemoEnabled(formDataClone));
-    //     } catch (error) { }
-
-    //     buttonItems.forEach(function (item) {
-    //         renderDelayAcceptStoredStatusButton(
-    //             formDataClone.formId,
-    //             formDataClone.dept,
-    //             item,
-    //             formItems,
-    //             tatObject
-    //         );
-    //         applyDelayDecisionButton(formDataClone, item);
-
-    //         if (item && typeof item === "object" && typeof item.loadRouteButtons === "function") {
-    //             item.loadRouteButtons({
-    //                 formId: formDataClone.formId,
-    //                 dept: formDataClone.dept,
-    //                 formItems: formItems,
-    //                 tatObject: tatObject,
-    //                 config: item
-    //             });
-    //         }
-    //     });
-
-    //     var finalStatus = getDecisionCommonStatus(formItems, formDataClone.dept, tatObject);
-    //     setDecisionCommonStatus(
-    //         commonStatusId,
-    //         "onLoaded",
-    //         finalStatus.title || finalStatus.text
-    //     );
-
-    //     var acceptDate = tatObject?.[formDataClone.dept]?.AcceptDate;
-    //     var skipAcceptedMainFields = params[0]
-    //         && typeof params[0] === "object"
-    //         && params[0].skipAcceptedMainFields;
-    //     var mainFieldsMarker = `decisionMainFields_${formDataClone.dept}`;
-    //     if (acceptDate && mainField && !skipAcceptedMainFields && !form.element().data(mainFieldsMarker)) {
-    //         form.element().data(mainFieldsMarker, true);
-    //         form.option("items", [...form.option("items"), ...mainField]);
-    //     }
-
-    //     if (actionStatus?.[formDataClone.dept]) {
-    //         updateDelayAcceptStatus(
-    //             commonStatusId,
-    //             acceptDate,
-    //             actionStatus[formDataClone.dept]
-    //         );
-    //     }
-
-    //     // One role evaluation and one final disabled write per render.
-    //     var roleState = await applyDecisionAcceptRuleOnce(
-    //         formDataClone,
-    //         formItems,
-    //         buttonItems
-    //     );
-
-    //     return {
-    //         record: formItems,
-    //         tatObject: tatObject,
-    //         decision: roleState.decision,
-    //         disabled: roleState.disabled,
-    //         ITAcceptDemo: roleState.ITAcceptDemo,
-    //         buttonItems: buttonItems,
-    //         commonStatusId: commonStatusId
-    //     };
-    // }
     async function delayAcceptStatusV2Promise(
         mainFields,
         formProps,
         ...params
     ) {
+        debugger
         formProps = formProps || {};
         var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
         var usesLegacyStringPairs = params.length > 0

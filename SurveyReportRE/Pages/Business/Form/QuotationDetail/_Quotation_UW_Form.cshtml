@@ -48,6 +48,8 @@
         display: none;
     }
 </style>
+<div id="@QTViewIdHelper.Form(dept, quotationId)"></div>
+
 <script type="text/javascript">
     $(async function() {
         const initialFormData = await window.OverviewDataBootstrap.getFormData({
@@ -67,7 +69,7 @@
         thisObject.prefix = `@prefix`;
         thisObject.id = @quotationId;
         thisObject.record = initialFormData;
-
+        thisObject.formInstance = $(`#${thisObject.formId}`).dxForm().dxForm("instance") || {};
 
          // var items = [
          //            { id: "AC_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Accept", value: true },
@@ -304,4 +306,3 @@
 })
 </script>
 
-<div id="@QTViewIdHelper.Form(dept, quotationId)"></div>
