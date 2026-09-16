@@ -155,6 +155,51 @@
                                     allowUpdating: true
                                 },
 
+                                onEditorPreparing: function (e) {
+                                    if (e.parentType !== "dataRow" || e.dataField !== "pmCheck") return;
+
+                                    var defaultValueChanged = e.editorOptions.onValueChanged;
+                                    e.editorOptions.onValueChanged = function (args) {
+                                        if (typeof defaultValueChanged === "function") {
+                                            defaultValueChanged(args);
+                                        }
+
+                                        var grid = e.component;
+                                        var rowId = e.row?.key ?? e.row?.data?.id;
+                                        var previousSave = grid.__pmChecklistSavePromise || Promise.resolve();
+
+                                        grid.__pmChecklistSavePromise = previousSave
+                                            .catch(function () {})
+                                            .then(function () {
+                                                return $.ajax({
+                                                    url: `/api/PolicyIssuanceChecklist/UpdatePmCheck/${rowId}`,
+                                                    method: "PUT",
+                                                    contentType: "application/json; charset=utf-8",
+                                                    data: JSON.stringify({ pmCheck: !!args.value })
+                                                });
+                                            })
+                                            .then(function () {
+                                                grid.cancelEditData();
+                                                return Promise.resolve(grid.getDataSource().reload());
+                                            })
+                                            .then(function () {
+                                                grid.__pmChecklistSaveFailed = false;
+                                                DevExpress.ui.notify("Checklist updated", "success", 1000);
+                                            })
+                                            .catch(function (error) {
+                                                grid.__pmChecklistSaveFailed = true;
+                                                console.error("Unable to update PM checklist", error);
+                                                grid.cancelEditData();
+                                                grid.getDataSource().reload();
+                                                DevExpress.ui.notify(
+                                                    "Unable to update the checklist. Please try again.",
+                                                    "error",
+                                                    3500
+                                                );
+                                            });
+                                    };
+                                },
+
                                 columnAutoWidth: true,
                                 wordWrapEnabled: true,
 

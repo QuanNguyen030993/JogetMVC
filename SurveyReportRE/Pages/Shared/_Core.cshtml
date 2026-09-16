@@ -853,6 +853,102 @@
                 .filter(Boolean);
         }
 
+        function requiresCompletePmChecklist(route) {
+            if (
+                moduleCode !== viewIdModulePrefix.policyIssuance ||
+                route?.isReturn === true
+            ) {
+                return false;
+            }
+
+            return getCustomRouteLabels(route).some(function (label) {
+                return label === "submit policy" || label.includes("submit but follow up");
+            });
+        }
+
+        function getPmChecklistGrid() {
+            const exactId = `${viewIdModulePrefix.policyIssuance}_checkList_${id}`;
+            const element = document.getElementById(exactId) ||
+                Array.from(document.querySelectorAll(`[id$="_checkList_${id}"]`))[0];
+
+            if (!element) return null;
+
+            try {
+                return $(element).dxDataGrid("instance");
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function focusPmChecklist(grid) {
+            if (!grid?.element) return;
+
+            const $element = $(grid.element());
+            const $section = $element.closest(".dept-section");
+
+            if ($section.length && typeof setDeptSectionCollapsed === "function") {
+                setDeptSectionCollapsed($section, false);
+            }
+
+            window.setTimeout(function () {
+                $element.get(0)?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }, 50);
+        }
+
+        async function ensurePmChecklistComplete(route) {
+            if (!requiresCompletePmChecklist(route)) return true;
+
+            const grid = getPmChecklistGrid();
+
+            try {
+                if (grid?.__pmChecklistSavePromise) {
+                    await grid.__pmChecklistSavePromise;
+                }
+
+                if (grid?.__pmChecklistSaveFailed === true) {
+                    throw new Error("The last PM checklist change could not be saved.");
+                }
+
+                if (grid?.hasEditData?.()) {
+                    await Promise.resolve(grid.saveEditData());
+
+                    if (grid.hasEditData()) {
+                        throw new Error("The PM checklist contains an unsaved change.");
+                    }
+                }
+
+                const status = await $.ajax({
+                    url: `/api/PolicyIssuanceChecklist/Completion/${id}`,
+                    method: "GET",
+                    cache: false
+                });
+
+                const isComplete = status?.isComplete ?? status?.IsComplete;
+                const total = Number(status?.total ?? status?.Total ?? 0);
+                const completed = Number(status?.completed ?? status?.Completed ?? 0);
+
+                if (isComplete === true) return true;
+
+                focusPmChecklist(grid);
+
+                const message = total === 0
+                    ? "The PM checklist is empty. Refresh the PM section before submitting."
+                    : `Please complete all PM checklist items before submitting (${completed}/${total} completed).`;
+
+                DevExpress.ui.notify(message, "warning", 4500);
+                return false;
+            } catch (error) {
+                console.error("Unable to validate PM checklist", error);
+                focusPmChecklist(grid);
+                DevExpress.ui.notify(
+                    "Unable to validate the PM checklist. Please try again before submitting.",
+                    "error",
+                    4500
+                );
+                return false;
+            }
+        }
+
         function getWorkflowRequestType() {
             const selectedRecords = [];
             const sharedStates = [
@@ -1046,7 +1142,7 @@
                         ? "danger"
                         : "info",
 
-                onClick: function () {
+                onClick: async function () {
                     const formItems =
                         getFormItems(stageDept);
 
@@ -1074,6 +1170,11 @@
                             params
                         );
                     }
+
+                    if (!(await ensurePmChecklistComplete(route))) {
+                        return;
+                    }
+
                     if (!content) {
                         return appNotifyWarning(
                             "You may leave your remark empty, system will remark default message?",
@@ -1313,7 +1414,7 @@
                                     ? "danger"
                                     : "info",
 
-                            onClick: function () {
+                            onClick: async function () {
                                 const routeFormItems =
                                     getFormItems(routeDept);
 
@@ -1343,6 +1444,10 @@
                                         routeFormItems,
                                         params
                                     );
+                                }
+
+                                if (!(await ensurePmChecklistComplete(route))) {
+                                    return;
                                 }
 
                                 return submitNextStepFn(

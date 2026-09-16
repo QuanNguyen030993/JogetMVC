@@ -34,6 +34,7 @@ using Microsoft.AspNetCore.Authorization;
 public class WorkflowTransitionSubmitRequest : SubmitRequest
 {
     public string? ActionStatus { get; set; }
+    public string? RouteLabel { get; set; }
 }
 
 [ApiController]
@@ -64,6 +65,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     private readonly IBaseRepository<Document> _documentRepository;
     private readonly IBaseRepository<WorkflowInstanceNode> _workflowInstanceNodeRepository;
     private readonly IBaseRepository<UsersSession> _usersSessionRepository;
+    private readonly IBaseRepository<PolicyIssuanceChecklist> _policyIssuanceChecklistRepository;
     private readonly IHubContext<FileProcessingHub> _hubContext;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BlobStorageSettings> _blobStorageSettings;
     private readonly Microsoft.Extensions.Options.IOptionsMonitor<BusinessConfig> _businessConfig;
@@ -104,6 +106,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
         _documentRepository = new BaseRepository<Document>(configuration, _httpContextAccessor);
         _workflowInstanceNodeRepository = new BaseRepository<WorkflowInstanceNode>(configuration, _httpContextAccessor);
         _usersSessionRepository = new BaseRepository<UsersSession>(configuration, _httpContextAccessor);
+        _policyIssuanceChecklistRepository = new BaseRepository<PolicyIssuanceChecklist>(configuration, _httpContextAccessor);
         _emailSettings = configuration.GetSection("Email").Get<MailConfig>();
         _hubContext = hubContext;
         _blobStorageSettings = blobStorageSettings;
@@ -314,6 +317,22 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
     {
 
                 if (string.IsNullOrEmpty(submitRequest.StepsWorkflow.FromNodeId) || string.IsNullOrEmpty(submitRequest.StepsWorkflow.ToNodeId)) return StatusCode(500, "Submit problem, please contact IT Admin!!!!");
+
+        if (RequiresCompletedPmChecklist(submitRequest.StepsWorkflow, submitRequest.RouteLabel))
+        {
+            if (!submitRequest.PolicyIssuanceId.HasValue)
+            {
+                return BadRequest("Policy Issuance was not found for PM checklist validation.");
+            }
+
+            var checklistRows = await _policyIssuanceChecklistRepository.GetListObject(item =>
+                item.PolicyIssuanceId == submitRequest.PolicyIssuanceId.Value && !item.Deleted);
+
+            if (checklistRows.Count == 0 || checklistRows.Any(item => !item.PMCheck))
+            {
+                return BadRequest("Please complete all PM checklist items before submitting the policy.");
+            }
+        }
         
         PolicyIssuance quotation = new PolicyIssuance();
         quotation = await _policyIssuanceRepository.GetSingleObject(s => s.Id == submitRequest.PolicyIssuanceId);
@@ -520,6 +539,30 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
             quotation.WorkflowStatus);
 
         return Ok();
+    }
+
+    private static bool RequiresCompletedPmChecklist(StepsWorkflow? route, string? routeLabel)
+    {
+        if (route?.IsReturn == true)
+        {
+            return false;
+        }
+
+        var labels = new[]
+        {
+            routeLabel,
+            route?.DisplayStatus,
+            route?.ActionCode,
+            route?.StepName,
+            route?.StatusName
+        };
+
+        return labels.Any(label =>
+        {
+            var normalized = Regex.Replace(label ?? "", @"\s+", " ").Trim();
+            return normalized.Equals("Submit policy", StringComparison.OrdinalIgnoreCase)
+                || normalized.Contains("Submit but follow up", StringComparison.OrdinalIgnoreCase);
+        });
     }
     private async Task HandleTransferFile(
   TransferFileConfig config,
