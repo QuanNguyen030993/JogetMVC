@@ -3,6 +3,7 @@ import TimeBox from "../components/TimeBox.jsx";
 import HtmlEditor from "../components/HtmlEditor.jsx"; 
 import HtmlEditorCommentBox from "../components/HtmlEditorCommentBox.jsx"; 
 import CustomGrid from "../components/CustomGrid.jsx"; 
+import BoardControl from "../components/BoardControl.jsx";
 import CommentEditor from "../components/CommentEditor.jsx";
 import CommentEditorRoute from "../components/CommentEditorRoute.jsx";
 import HandsomGrid from "../components/HandsomGrid.jsx";
@@ -384,6 +385,13 @@ const $ = window.jQuery;
 function createJQueryPlugin(pluginName, componentName) {
     $.fn[pluginName] = function(arg1, arg2, arg3) {
         if (typeof arg1 === "string") {
+            if (arg1 === "instance") {
+                return this.length === 1 ? roots.get(this[0])?.ref?.current : undefined;
+            }
+            if (["reload", "refresh", "getDataSource", "getVisibleItems"].includes(arg1)) {
+                const control = this.length === 1 ? roots.get(this[0])?.ref?.current : null;
+                return control?.[arg1]?.(...[arg2, arg3].filter(value => value !== undefined));
+            }
             if (arg1 === "option") {
                 if (arguments.length >= 3) {
                     this.each(function() {
@@ -445,6 +453,15 @@ function createJQueryPlugin(pluginName, componentName) {
                             return instance.ref.current.value();
                         }
                         return instance.options.value ?? "";
+                    },
+                    reload() {
+                        return roots.get(el)?.ref?.current?.reload?.();
+                    },
+                    refresh() {
+                        return roots.get(el)?.ref?.current?.refresh?.();
+                    },
+                    getDataSource() {
+                        return roots.get(el)?.ref?.current?.getDataSource?.();
                     }
                 };
             }
@@ -478,6 +495,15 @@ function createJQueryPlugin(pluginName, componentName) {
                             return instance.ref.current.value();
                         }
                         return instance.options.value ?? "";
+                    },
+                    reload() {
+                        return roots.get(el)?.ref?.current?.reload?.();
+                    },
+                    refresh() {
+                        return roots.get(el)?.ref?.current?.refresh?.();
+                    },
+                    getDataSource() {
+                        return roots.get(el)?.ref?.current?.getDataSource?.();
                     }
                 });
             });
@@ -493,7 +519,10 @@ createJQueryPlugin("checkbox", "CheckBox");
 createJQueryPlugin("selectbox", "SelectBox");
 createJQueryPlugin("tagbox", "TagBox");
 createJQueryPlugin("dropdownbox", "DropDownBox");
+createJQueryPlugin("board", "BoardControl");
+createJQueryPlugin("boardcontrol", "BoardControl");
 $.fn.tmivtagbox = $.fn.tagbox;
+$.fn.tmivboard = $.fn.board;
 
 const getFloatPopupFacade = (element) => {
     const getInstance = () => roots.get(element);
@@ -1558,6 +1587,11 @@ register(
 );
 
 register(
+    "BoardControl",
+    BoardControl
+);
+
+register(
     "DataGrid",
     DataGrid
 );
@@ -1649,6 +1683,7 @@ window.TMIVCom.DataGrid = DataGrid;
 window.TMIVCom.DxCompatibleDataGrid = DxCompatibleDataGrid;
 window.TMIVCom.GridArrayStore = GridArrayStore;
 window.TMIVCom.GridCustomStore = GridCustomStore;
+window.TMIVCom.BoardControl = BoardControl;
 window.TMIVCom.TagBox = TagBox;
 window.TMIVCom.FloatPopup = FloatPopup;
 
@@ -1678,5 +1713,5 @@ if (typeof window !== "undefined") {
     //}, 5000);
 }
 
-export { TagBox, FloatPopup, DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore };
-export default { DateBox, TimeBox, HtmlEditor, HtmlEditorCommentBox, CustomGrid, DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, TagBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, FloatPopup, notify, TourGuide, startTour, exportTour };
+export { TagBox, FloatPopup, BoardControl, DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore };
+export default { DateBox, TimeBox, HtmlEditor, HtmlEditorCommentBox, CustomGrid, BoardControl, DataGrid, DxCompatibleDataGrid, GridArrayStore, GridCustomStore, HandsomGrid, CommentEditor, CommentEditorRoute, TextBox, NumberBox, CheckBox, SelectBox, TagBox, DropDownBox, CustomForm, PreviewOffice, FileUploader, Notification, FloatPopup, notify, TourGuide, startTour, exportTour };
