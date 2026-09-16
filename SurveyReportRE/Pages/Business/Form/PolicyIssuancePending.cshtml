@@ -1,0 +1,140 @@
+@page
+@{
+    Layout = null;
+    var boardId = "policy-issuance-pending-" + Guid.NewGuid().ToString("N");
+}
+<div class="policy-issuance-pending-view">
+    <p>Drag a card from Pending acceptance to Accepted to accept the task. Click a card to open its details.</p>
+    <div id="@boardId" class="policy-issuance-pending-board" aria-label="Policy Issuance pending tasks"></div>
+</div>
+<script>
+    (function () {
+        $(async function () {
+            const $board = $(document.getElementById("@boardId"));
+            let board;
+            let accepting = false;
+            function showError(error) {
+                const message = error?.responseJSON?.message || error?.message || "Unable to load or accept the task. Please refresh and try again.";
+                DevExpress.ui.notify(message, "error", 5000);
+            }
+            function acceptanceLane(row) {
+                const dept = String(row.stageDept || "").trim().toUpperCase();
+                if (!dept) return "completed";
+                let tat = row.turnAroundTimeAttributes || {};
+                if (typeof tat === "string") tat = JSON.parse(tat || "{}");
+                const key = Object.keys(tat).find(key => key.toUpperCase() === dept);
+                const acceptedAt = tat[key]?.AcceptDate || tat[key]?.acceptDate;
+                return acceptedAt ? "accepted" : "pending";
+            }
+            try {
+                if (typeof $.fn.boardcontrol !== "function") {
+                    throw new Error("TMIVCom BoardControl is unavailable. Please reload the application.");
+                }
+                // Match the list view's datasource configuration and access filters.
+                const params = { isAllowRowMenu: true };
+                const loginAccount = window._loginAccount || _loginUser;
+                if (!_isSuperUser) {
+                    params.refOperator = "contains";
+                    params.refKey = _loginUser;
+                    params.refField = "pic";
+                    if (_roleAppName == "Leader") params.refField = "leaderPIC";
+                    if (_roleAppName == "HOD") params.refField = "hodpic";
+                    params.refKey2 = _role;
+                    params.refField2 = "stageDept";
+                    params.refOperator2 = "=";
+                    params.refKey3 = loginAccount;
+                    params.refField3 = "stageAccount";
+                    params.refOperator3 = "=";
+                }
+                const gridConfig = new PolicyIssuanceGridOption("PolicyIssuance", "User", params);
+                const gridOptions = await gridConfig.makeGridOptions();
+                const source = gridOptions.dataSource instanceof DevExpress.data.DataSource
+                    ? gridOptions.dataSource
+                    : new DevExpress.data.DataSource({ store: gridOptions.dataSource });
+                source.paginate(false);
+                // Board lanes are derived UI state, never fields sent to UpdateData.
+                const boardSource = {
+                    load: async function () {
+                        const rows = await source.reload();
+                        return rows.map(row => ({
+                            ...row,
+                            acceptanceLane: acceptanceLane(row),
+                            boardSubtitle: [row.stageDept, row.workflowStatus].filter(Boolean).join(" · ")
+                        }));
+                    }
+                };
+                board = $board.boardcontrol({
+                    title: "Policy Issuance · Pending tasks",
+                    dataSource: boardSource,
+                    keyExpr: "id",
+                    statusExpr: "acceptanceLane",
+                    titleExpr: "policyIssuanceCode",
+                    subtitleExpr: "boardSubtitle",
+                    descriptionExpr: "subject",
+                    assigneeExpr: "stageAccount",
+                    dueDateExpr: "dueDate",
+                    laneDataSource: [
+                        { value: "pending", text: "Pending acceptance", color: "#d97706" },
+                        { value: "accepted", text: "Accepted", color: "#059669" },
+                        { value: "completed", text: "No active stage", color: "#64748b" }
+                    ],
+                    allowDragging: true,
+                    showSearch: true,
+                    showRefresh: true,
+                    height: "calc(100vh - 210px)",
+                    onCardClick: function (event) {
+                        if (!accepting) gridConfig.onRowDblClick({ data: event.item });
+                    },
+                    onCardMoving: async function (event) {
+                        // Always cancel the generic move: the API and subsequent reload own state.
+                        event.cancel = true;
+                        if (accepting || event.fromStatus === event.toStatus) return false;
+                        if (event.fromStatus !== "pending" || event.toStatus !== "accepted") {
+                            DevExpress.ui.notify("Only Pending acceptance → Accepted is supported. Use the request form for other workflow actions.", "warning", 3500);
+                            return false;
+                        }
+                        accepting = true;
+                        $board.attr("aria-busy", "true");
+                        try {
+                            // Recheck the latest server record before accepting a potentially stale card.
+                            const rows = await boardSource.load();
+                            const row = rows.find(item => String(item.id) === String(event.key));
+                            if (!row || row.acceptanceLane !== "pending" || row.stageDept !== event.item.stageDept) {
+                                throw new Error("This task has changed. Refresh the board before accepting it.");
+                            }
+                            const permission = await window.applyFeatureRoleControlRule({
+                                feature: `Policy Issuance board Accept · ${row.stageDept}`,
+                                controlType: "accept",
+                                role: _role,
+                                stageDept: row.stageDept,
+                                dept: row.stageDept,
+                                formData: row,
+                                state: {},
+                                isSuperUser: _isSuperUser
+                            });
+                            if (!permission.allowed) throw new Error("You do not have permission to accept this task.");
+                            await $.ajax({
+                                url: "/api/PolicyIssuance/AcceptTask",
+                                method: "POST",
+                                contentType: "application/json; charset=utf-8",
+                                data: JSON.stringify({ id: row.id, dept: row.stageDept, comment: null })
+                            });
+                            DevExpress.ui.notify("Task accepted successfully.", "success", 2000);
+                        } catch (error) {
+                            showError(error);
+                        } finally {
+                            await board.reload();
+                            accepting = false;
+                            $board.attr("aria-busy", "false");
+                        }
+                        return false;
+                    },
+                    onDataError: showError
+                });
+            } catch (error) {
+                $board.text("The board could not be loaded. Reopen this view to try again.");
+                showError(error);
+            }
+        });
+    })();
+</script>
