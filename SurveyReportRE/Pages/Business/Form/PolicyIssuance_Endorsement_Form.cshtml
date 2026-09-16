@@ -1755,91 +1755,9 @@ Note:
 
         //Select items
 
-        function bindInfiniteScroll() {
-            const $scroller = $(".quote-pane-scroll");
 
-            $scroller.off("scroll.quote").on("scroll.quote", function () {
-                const el = this;
-                const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 120;
-                if (nearBottom) {
-                    loadQuotePage(false);
-                }
-            });
-        }
 
-        function initMainPaneSplitter() {
-            const grid = document.getElementById("mainContentGrid");
-            const splitter = document.getElementById("mainSplitter");
-            if (!grid || !splitter) return;
-
-            const MIN_LEFT = 260;
-            const MAX_LEFT = 520;
-            const COLLAPSED_LEFT = 0;
-            const SPLITTER_W = 10;
-            let isDragging = false;
-
-            function setLeftWidth(px) {
-                const total = grid.clientWidth;
-                const maxAllowed = Math.min(MAX_LEFT, total - 620 - SPLITTER_W);
-                const left = Math.max(MIN_LEFT, Math.min(px, maxAllowed));
-                grid.classList.remove("left-collapsed");
-                grid.style.gridTemplateColumns = `${left}px ${SPLITTER_W}px minmax(620px, 1fr)`;
-            }
-
-            function collapseLeft() {
-                grid.classList.add("left-collapsed");
-                grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
-            }
-
-            function expandLeftDefault() {
-                setLeftWidth(360);
-            }
-
-            splitter.addEventListener("mousedown", function (e) {
-                e.preventDefault();
-                isDragging = true;
-                splitter.classList.add("dragging");
-                document.body.style.cursor = "col-resize";
-                document.body.style.userSelect = "none";
-            });
-
-            window.addEventListener("mousemove", function (e) {
-                if (!isDragging) return;
-                const rect = grid.getBoundingClientRect();
-                const nextLeft = e.clientX - rect.left;
-                setLeftWidth(nextLeft);
-            });
-
-            window.addEventListener("mouseup", function () {
-                if (!isDragging) return;
-                isDragging = false;
-                splitter.classList.remove("dragging");
-                document.body.style.cursor = "";
-                document.body.style.userSelect = "";
-            });
-
-            $("#pi-btnToggleLeftPane").dxButton({
-                icon: "pin",
-                hint: "Thu gọn / mở rộng danh sách policyIssuance",
-                stylingMode: "text",
-                onClick: function () {
-                    if (grid.classList.contains("left-collapsed")) {
-                        expandLeftDefault();
-                    } else {
-                        collapseLeft();
-                    }
-                }
-            });
-
-            window.addEventListener("resize", function () {
-                if (grid.classList.contains("left-collapsed")) {
-                    grid.style.gridTemplateColumns = `${COLLAPSED_LEFT}px ${SPLITTER_W}px minmax(620px, 1fr)`;
-                } else {
-                    const first = parseInt((grid.style.gridTemplateColumns || "").split(" ")[0], 10);
-                    if (!isNaN(first)) setLeftWidth(first);
-                }
-            });
-        }
+        
 
         function debounce(fn, delay) {
             let t = null;
@@ -1989,19 +1907,13 @@ Note:
            bindSectionHeaderToggle();
         setupDeptTree();
 
-        // bindInfiniteScroll();
-        // initMainPaneSplitter();
-
         setTimeout(layoutTreeLine, 0);
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
 
 
 
-        // bindSectionHeaderToggle();
         // // bindQuoteCardClick();
-        // // bindInfiniteScroll();
         // setupDeptTree();
-        // // initMainPaneSplitter();
 
         // setTimeout(layoutTreeLine, 0);
         // window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));

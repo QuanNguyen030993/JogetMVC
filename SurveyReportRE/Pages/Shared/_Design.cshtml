@@ -1,0 +1,30 @@
+﻿<script>
+    function normalizeStatus(raw) {
+                const s = String(raw ?? "").trim();
+                const k = s.toLowerCase().replace(/\s+/g, " ");
+
+                if (k === "") return { text: "(All)" };
+                if (k === "pending") return { css: "pending", text: raw };
+                if (k.includes("pending")) return { css: "pending", text: raw };
+                if (k.includes("receive")) return { css: "pending", text: raw };
+                if (k === "in progress") return { css: "in-progress", text: raw };
+                if (k.includes("process")) return { css: "process", text: raw };
+                if (k === "accept") return { css: "accepted", text: raw };
+                if (k.includes("accept")) return { css: "accepted", text: raw };
+                if (k === "approved") return { css: "approved", text: raw };
+                if (k === "reject") return { css: "rejected", text: raw };
+                if (k === "cancelled") return { css: "rejected", text: raw };
+                if (k === "decline" || k === "declined") return { css: "declined", text: raw };
+                if (k === "quotation confirmed") return { css: "accepted", text: raw };
+                if (k === "quotation refused") return { css: "rejected", text: raw };
+                if (k === "done") return { css: "done", text: raw };
+                if (k === "complete") return { css: "complete", text: raw };
+                if (k === "issued") return { css: "accepted", text: raw };
+                if (k.includes("complete")) return { css: "complete", text: raw };
+                if (k === "dispose") return { css: "dispose", text: raw };
+                if (k === "archive") return { css: "archive", text: raw };
+                if (k === "signed") return { css: "signed", text: raw };
+                if (k === "?" || k === "unknown") return { css: "unknown", text: "?" };
+                return { css: "unknown", text: s || "?" };
+            }
+</script>

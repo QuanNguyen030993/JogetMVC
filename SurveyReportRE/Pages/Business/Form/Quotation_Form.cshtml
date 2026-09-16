@@ -1720,25 +1720,7 @@ Note:
                 };
             }
 
-            // function escapeHtml(s) {
-            //     return String(s ?? "")
-            //         .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-            //         .replaceAll('"', "&quot;").replaceAll("'", "&var(--c-003399);");
-            // }
-
-            // function renderComments(items) {
-            //     if (!Array.isArray(items) || items.length === 0) {
-            //         return `<div style="color:var(--c-6b7280);font-size:12px;padding:6px 4px;">No audit logs</div>`;
-            //     }
-            //     return items.map((c) => `
-            //                     <div class="ct-item">
-            //                         <div class="ct-user">${escapeHtml((c.deptCode ? c.deptCode + " – " : "") + (c.commentBy || ""))}</div>
-            //                         <div class="ct-time">${fmtTimeLocal(c.commentTime || "")}</div>
-            //                         <div class="ct-text">${c.commentText}</div>
-            //                     </div>
-            //                 `).join("");
-            //                         // <div class="ct-time">${escapeHtml(c.commentTime || "")}${c.commentOrder != null ? " • #" + escapeHtml(c.commentOrder) : ""}</div>
-            // }
+      
 
             const loadAuditLogs = debounce(function (quoteNo) {
                 document.documentElement.style.setProperty("--rightdock-width", "30%");
@@ -2199,38 +2181,7 @@ Note:
         }
 
 
-        // $(`#${formModuleKeyQt}-btnClientConfirm`).dxButton({
-        //     text: "Submit To Policy Issuance",
-        //     icon: "check",
-        //     type: "success",
-        //     onClick: function () {
-        //         var quotationConvert = state.quotes.find(x => x.id == state.selectedId);
-        //         if (!quotationConvert) return;
-
-        //         var policyIssuance = new Object();
-        //         policyIssuance = ObjectPopulateKey(quotationConvert, true, false);
-        //         policyIssuance.RequestDate = new Date();
-        //         policyIssuance.PIC = {
-        //             FO: "",
-        //             TS: "",
-        //             PM: ""
-        //         };
-
-        //         policyIssuance.PIC = JSON.stringify(policyIssuance.PIC);
-        //         policyIssuance.StageDept = "FO";
-        //         policyIssuance.PolicyIssuanceStatus = "FO Pending";
-        //         policyIssuance.WorkflowStatus = "FO Pending";
-
-
-
-        //         ajaxPost('api/PolicyIssuance/CreatePolicyIssuance', policyIssuance, {
-        //             onSuccess: function () {
-        //                 DevExpress.ui.notify("Quotation submitted!", "info", 1200);
-        //             },
-        //             onError: function () { }
-        //         });
-        //     }
-        // });
+        
 
         $("#branchOverlay .backdrop").on("click", function () {
             $("#branchOverlay").hide();
@@ -2244,10 +2195,6 @@ Note:
 
         bindSectionHeaderToggle();
         setupDeptTree();
-
-        // bindInfiniteScroll();
-        // initMainPaneSplitter();
-
         setTimeout(layoutTreeLine, 0);
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
 
@@ -2275,14 +2222,7 @@ Note:
         });
     }, _delayQuotationsLoadForm);
  
-      // var reportButtonMini = `<div class="report-mini" onclick="submitIssue(${_id},'LossControl','${lossControlData.lossControlNo}')">
-      //             <div class="triangle-mini" ></div>
-      //           </div>`;
-
-         // <div style="display:flex">
-         //                                        ${reportButtonMini}
-         //                                        </div>
-
+   
 </script>
 
 <body>
