@@ -495,8 +495,7 @@
                 @policyIssuanceId,
                 "@PIViewIdHelper.Form(dept, policyIssuanceId)"
             );
-            var tsForm = $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm("instance");
-            tsForm?.itemOption("fillListGroup", "visible", !skipTsEnabled);
+            setPolicyIssuanceFillListVisibility(@policyIssuanceId, skipTsEnabled);
 
             /*
              * decisionContext hiện có:

@@ -379,10 +379,10 @@
         @policyIssuanceId,
         "@PIViewIdHelper.Form(dept, policyIssuanceId)"
     ).then(function (skipTsEnabled) {
+        setPolicyIssuanceFillListVisibility(@policyIssuanceId, skipTsEnabled);
         if (!skipTsEnabled) return;
 
         var foForm = $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm("instance");
-        foForm?.itemOption("fillListGroup", "visible", true);
 
         const fetchQuotationDocs = $.ajax({
             url: "/api/Document/GetByKey?recordGuid=@cloneQuotationGuid",

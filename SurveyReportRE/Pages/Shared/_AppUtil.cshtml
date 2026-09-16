@@ -902,6 +902,13 @@
                                     typeFieldName,
                                     mergeSkipTSIntoRequestType(currentTypeValue, event.value)
                                 );
+
+                                if (String(typeFieldName || "").trim().toLowerCase() === "policyissuancetype") {
+                                    var recordId = latestFormData.id ?? latestFormData.Id;
+                                    if (recordId != null) {
+                                        setPolicyIssuanceFillListVisibility(recordId, event.value === true);
+                                    }
+                                }
                             }
                         }).appendTo(itemElement);
                         window.applyFeatureRoleControlRule({
@@ -956,6 +963,28 @@
 
                 return window.PolicyIssuanceSkipTSPromises[cacheKey];
             }
+
+            function setPolicyIssuanceFillListVisibility(recordId, skipTsEnabled) {
+                var normalizedRecordId = String(recordId ?? "").trim();
+                if (!normalizedRecordId || !window.PolicyIssuanceIdManager) return false;
+
+                var enabled = skipTsEnabled === true;
+                window.PolicyIssuanceSkipTSPromises = window.PolicyIssuanceSkipTSPromises || {};
+                window.PolicyIssuanceSkipTSPromises[normalizedRecordId] = Promise.resolve(enabled);
+
+                [
+                    { dept: "FO", visible: enabled },
+                    { dept: "TS", visible: !enabled }
+                ].forEach(function (target) {
+                    var formId = window.PolicyIssuanceIdManager.form(target.dept, recordId);
+                    var targetForm = formId ? $(`#${formId}`).dxForm("instance") : null;
+                    targetForm?.itemOption("fillListGroup", "visible", target.visible);
+                });
+
+                return enabled;
+            }
+
+            window.setPolicyIssuanceFillListVisibility = setPolicyIssuanceFillListVisibility;
 
             function newQuotationForm() {
                 var id = 0;
