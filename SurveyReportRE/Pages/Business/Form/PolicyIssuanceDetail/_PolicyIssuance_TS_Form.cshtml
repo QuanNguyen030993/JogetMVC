@@ -247,7 +247,7 @@
                          that.baseOnAttributes = "FieldName";
                          that.compactAttachment = true;
                          var sectionId = "@(ViewData["Cd"])";
-                         that.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, data.field, @(policyIssuanceId)), Department: "@(dept)", FieldName: `${data.field}_@(policyIssuanceId)` }; //{"SectionName":"default_FO_410"}
+                         that.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, data.field, @(policyIssuanceId)), Department: "@(dept)", FieldName: `${data.field}_@(policyIssuanceId)`, FormId: `@PIViewIdHelper.Form(dept, policyIssuanceId)` }; //{"SectionName":"default_FO_410"}
                          editor = $("<div>");
                          createEditor(that, editor, $(`<div>`), that);
                          break;
@@ -303,32 +303,37 @@
    
     var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
     var panelStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+    var itemsDelay = [acceptButtonId, panelStatusId];
     // Keep the Policy Issuance TS decision on the same V2 lifecycle as
     // Quotation TS so the deferred renderer wires AcceptTask correctly.
-    var acceptDecisionV2 = {
-        buttonId: acceptButtonId,
-        statusId: panelStatusId,
-        text: "Accept",
-        icon: "check",
-        type: "success",
-        buttonClass: "dx-button-success",
-        disabled: true,
-        useDefaultDecisionClick: true,
-        acceptStatusField: "actionStatus",
-        useTatAcceptStatus: true,
-        tatStatusText: "Accepted",
-        // TS content is mounted with the initial dxForm render. The Accept
-        // lifecycle must not append the same checklist/groups a second time.
-        skipAcceptedMainFields: true,
-        statusButtonDisabled: true
-    };
-    var itemsDelay = [acceptDecisionV2];
+    // var acceptDecisionV2 = {
+    //     buttonId: acceptButtonId,
+    //     statusId: panelStatusId,
+    //     text: "Accept",
+    //     icon: "check",
+    //     type: "success",
+    //     buttonClass: "dx-button-success",
+    //     disabled: true,
+    //     useDefaultDecisionClick: true,
+    //     acceptStatusField: "actionStatus",
+    //     useTatAcceptStatus: true,
+    //     tatStatusText: "Accepted",
+    //     // TS content is mounted with the initial dxForm render. The Accept
+    //     // lifecycle must not append the same checklist/groups a second time.
+    //     skipAcceptedMainFields: true,
+    //     statusButtonDisabled: true
+    // };
 
+
+    // var itemsDelay = [acceptDecisionV2];
+    // var itemsDelay = [acceptButtonId, panelStatusId];
     $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm({
         formData: initialFormData || {},
        
          items: [
               {
+
+
                   itemType: "group",
                   name: "decision@(dept)Group",
                   cssClass: "workflow-decision-group pi-decision-group-@(dept)",
@@ -340,7 +345,14 @@
                   caption: "@dept Decision",
                   colCount: 2,
                   items: [
-            workflowDecisionField(thisObject, ...itemsDelay)
+             // workflowDecisionField(thisObject, ...itemsDelay)
+             decisionField(
+                            `@PIViewIdHelper.Form(dept, policyIssuanceId)`,
+                            "@dept",
+                            `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,
+                            `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,
+                            null,
+                            null)
         ]},
 
         // Render the checklist and the remaining TS groups up front. Previously
@@ -486,8 +498,6 @@
           });
 
 
-    // delayAcceptStatusV2(mainFields,thisObject, ...itemsDelay);
-    debugger
      delayAcceptStatusV2Promise(
         mainFields,
         thisObject,
@@ -590,7 +600,7 @@
              */
 
             // PolicyIssuance_Form owns the single workflow render pass.
-            var lmktRoutes = [];
+            // var lmktRoutes = [];
 
 
             /*
