@@ -4680,12 +4680,7 @@
                         const formId = idManager.form(dept, this.dataForm.id);
                         const form = $(`#${formId}`).dxForm("instance");
                         const store = form?.option("dataSource");
-                        let picMap = {};
-                        try {
-                            picMap = JSON.parse(this.dataForm.pIC || this.dataForm.pic || "{}");
-                        } catch (e) {
-                            picMap = {};
-                        }
+                        const picMap = readAssignmentPicMap(form?.option("formData") || this.dataForm);
 
                         // valueExpr la accountName; emailName chi ho tro record cu.
                         const accounts = selectedItems
@@ -4923,9 +4918,7 @@
                 getDefaultPicByDept(settings.groupName, settings.dataForm)
                 || settings.value;
 
-            const selectedValues = defaultValue
-                ? defaultValue.split(",").map(x => x.trim()).filter(Boolean)
-                : [];
+            let selectedValues = assignmentPicAccounts(defaultValue);
 
             const $el = $(selector);
             if ($el.length === 0) return;
@@ -4974,15 +4967,39 @@
                 employees = await Promise.resolve(store.load());
                 employees = Array.isArray(employees) ? employees.slice() : [];
 
-                const loadedKeys = new Set(employees.map(item => item?.accountName).filter(Boolean));
-                const missingKeys = selectedValues.filter(key => !loadedKeys.has(key));
-                const missingEmployees = await Promise.all(missingKeys.map(key =>
-                    Promise.resolve(store.byKey(key)).catch(() => null)
-                ));
-                missingEmployees.filter(Boolean).forEach(item => employees.push(item));
             } catch (error) {
                 console.warn(`Assignment list for ${settings.groupName} could not be preloaded.`, error);
             }
+
+            // Resolve saved PIC independently of the branch list request. Keep an
+            // account-only row when lookup fails so an existing assignment cannot
+            // disappear from selectedItems (and be cleared on dropdown close).
+            const matchesAccount = function (employee, account) {
+                return [employee?.accountName, employee?.emailName].some(function (alias) {
+                    return alias && normalizeAssignmentAccount(alias) === normalizeAssignmentAccount(account);
+                });
+            };
+            const resolvedSelections = await Promise.all(selectedValues.map(async function (account) {
+                const existing = employees.find(employee => matchesAccount(employee, account));
+                if (existing) return existing;
+                try {
+                    const employee = await store.byKey(account);
+                    if (employee?.accountName) return employee;
+                } catch (error) {
+                    console.warn("Assigned employee lookup failed; displaying the saved account.", account, error);
+                }
+                return { accountName: account, fullName: account };
+            }));
+            const employeeMap = new Map();
+            employees.concat(resolvedSelections).forEach(function (employee) {
+                if (!employee?.accountName) return;
+                employeeMap.set(employee.accountName, {
+                    ...employee,
+                    fullName: employee.fullName || employee.displayName || employee.accountName
+                });
+            });
+            employees = Array.from(employeeMap.values());
+            selectedValues = [...new Set(resolvedSelections.map(employee => employee.accountName))];
 
             const resolvedStore = new DevExpress.data.ArrayStore({
                 key: "accountName",
@@ -11310,20 +11327,38 @@
         /**
          * getDefaultPicByDept: Safely parses the PIC JSON data and retrieves
          * the assignee's account name for a specific department.
-         * Checks both case-variations (pIC / pic) and uses try-catch to prevent crashes.
+         * Supports pIC / pic / PIC, JSON or object values, and department key casing.
          */
         function getDefaultPicByDept(deptKey, dataForm) {
             if (!deptKey) return null;
             if (!dataForm) return null;
-            const picStr = dataForm.pIC || dataForm.pic || "";
-            if (!picStr) return null;
-            let PIC_MAP = {};
-            try {
-                PIC_MAP = JSON.parse(picStr);
-            } catch (e) {
-                return null;
-            }
-            return PIC_MAP[deptKey] || null;
+            const picMap = readAssignmentPicMap(dataForm);
+            const key = Object.keys(picMap).find(key =>
+                String(key).trim().toUpperCase() === String(deptKey).trim().toUpperCase());
+            return key ? assignmentPicAccounts(picMap[key]).join(",") || null : null;
+        }
+
+        function readAssignmentPicMap(dataForm) {
+            const value = dataForm?.pIC ?? dataForm?.pic ?? dataForm?.PIC;
+            const parsed = parsePicObject(value);
+            return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+        }
+
+        function assignmentPicAccounts(value) {
+            const accounts = [];
+            const collect = function (item) {
+                if (item == null) return;
+                if (Array.isArray(item)) return item.forEach(collect);
+                if (typeof item === "object") {
+                    const account = item.accountName ?? item.AccountName ?? item.emailName ?? item.EmailName;
+                    return account != null ? collect(account) : Object.values(item).forEach(collect);
+                }
+                if (typeof item !== "string") return;
+                item.split(/[;,|]/).map(account => account.trim()).filter(Boolean)
+                    .forEach(account => accounts.push(account));
+            };
+            collect(value);
+            return [...new Set(accounts)];
         }
         //Pending decision features
          function setDecisionButtonsDisabled(items, disabled) {
