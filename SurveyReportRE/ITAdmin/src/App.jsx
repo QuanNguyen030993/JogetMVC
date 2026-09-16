@@ -24,6 +24,7 @@ import NotificationTemplate from './components/NotificationTemplate';
 import NotificationTemplateDesigner from './components/NotificationTemplateDesigner';
 import DatabaseManagement from './components/DatabaseManagement';
 import ReportBuilder from './components/ReportBuilder';
+import TemplateExcelImport from './components/TemplateExcelImport';
 import './styles/flow.css';
 import './styles/com.all.css';
 import './styles/serilogs.css';
@@ -39,6 +40,7 @@ import './styles/databasemanagement.css';
 import './styles/turnAroundTimeAnalytics.css';
 import './styles/usermanagement.css';
 import './styles/reportbuilder.css';
+import './styles/templateexcelimport.css';
 import { notify, ToastContainer } from '../../TMIVCom/src/components/Notification';
 import "./fonts/css/all.min.css";
 import './styles/admin-layout.css';
@@ -409,6 +411,7 @@ function App() {
     { id: 'enum-design', label: 'Enum' },
     { id: 'enumdata-grid', label: 'Enum List' },
     { id: 'mail-template', label: 'Mail Template' },
+    { id: 'template-excel-import', label: 'Import Template Excel' },
     { id: 'mail-queue', label: 'Mail Queue' },
     { id: 'flowgrid', label: 'Workflow List' },
     { id: 'flow', label: 'Workflow Form' },
@@ -455,6 +458,8 @@ function App() {
         return <UserManagement />;
       case 'mail-template':
         return <MailTemplateDesigner />;
+      case 'template-excel-import':
+        return <TemplateExcelImport />;
       case 'mail-queue':
         return <MailQueue />;
       case 'flow':
