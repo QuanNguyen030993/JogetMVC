@@ -1,9 +1,165 @@
 ﻿<script>
+
+    /**
+     * Central adapter for role-driven state on controls rendered by the
+     * Quotation and Policy Issuance overview forms.
+     */
+    async function applyFeatureRoleControlRule(options) {
+        // console.log("From apply",options);
+        options = options || {};
+        const normalizeRuleValue = value => String(value || "").trim().toUpperCase();
+        const controlType = String(options.controlType || "section").trim().toLowerCase();
+        const controlDept = normalizeRuleValue(options.dept);
+        const stageDept = normalizeRuleValue(options.stageDept);
+        const role = normalizeRuleValue(options.role);
+        const sameAsStage = !!controlDept && !!stageDept && controlDept === stageDept;
+        const roleMatchesStage = !!role && !!stageDept && role === stageDept;
+        const phase1SectionAllowed = controlType === "comment" ? roleMatchesStage : sameAsStage;
+        const phase1AllowedSections = controlType === "comment"
+            ? [controlDept]
+            : [stageDept];
+
+        if (typeof window.checkFeatureRoleRule !== "function") {
+            const unavailable = {
+                allowed: false,
+                phase1Allowed: false,
+                controlType,
+                dept: controlDept,
+                stageDept,
+                role,
+                error: "checkFeatureRoleRule is unavailable"
+            };
+            await options.apply?.(unavailable);
+            return unavailable;
+        }
+
+        let report;
+        try {
+            const defaultPhase2Allow = controlType === "comment" ? sameAsStage : true;
+            const phase2Allow = typeof options.allowWhen === "function"
+                ? !!(await options.allowWhen({
+                    controlType,
+                    dept: controlDept,
+                    stageDept,
+                    role,
+                    defaultAllowed: defaultPhase2Allow,
+                    sectionAllowed: phase1SectionAllowed,
+                    formData: options.formData || {}
+                }))
+                : defaultPhase2Allow;
+
+            report = await window.checkFeatureRoleRule({
+                        feature: options.feature || `${controlType} · ${controlDept || "unknown"}`,
+                        controlType: controlType,
+                        saveButton: options.saveButton,
+                        role,
+                        stageDept,
+                        section: controlDept,
+                        route: options.route,
+                        formData: options.formData || {},
+                        state: options.state || {},
+                        isDebugMode: typeof options.isDebugMode !== "undefined"
+                            ? options.isDebugMode
+                            : window._isDebugMode,
+                        isSuperUser: typeof options.isSuperUser !== "undefined"
+                            ? options.isSuperUser
+                            : window._isSuperUser,
+                        superUserBypass: controlType !== "save" && options.superUserBypass !== false,
+                        display: false,
+                        rules: {
+                            roles: [stageDept],
+                            stageDepts: [stageDept],
+                            sections: phase1AllowedSections,
+                            onlyAllowFromRoute: options.onlyAllowFromRoute,
+                            customRouteCondition: options.customRouteCondition
+                        },
+                        phase1Checks: controlType === "comment" ? [{
+                            key: `comment_role_${controlDept || "unknown"}`,
+                            label: "Comment allow",
+                            required: true,
+                            actual: role,
+                            expected: role,
+                            evaluate: function () {
+                                return {
+                                    passed: !!role,
+                                    actual: role,
+                                    expected: role
+                                };
+                            }
+                        }] : [],
+                        phase2Checks: [{
+                            key: `control_${controlType}_${controlDept || "unknown"}`,
+                            label: controlType === "comment"
+                                ? `Comment allow in stageDept · ${stageDept || "unknown"}`
+                                : `${controlType} allow · ${controlDept || "unknown"}`,
+                            required: true,
+                            evaluate: function () {
+                                return {
+                                    passed: phase2Allow,
+                                    actual: controlType === "comment"
+                                        ? controlDept
+                                        : (phase2Allow ? "ALLOW" : "LOCK"),
+                                    expected: controlType === "comment"
+                                        ? stageDept
+                                        : "ALLOW"
+                                };
+                            }
+                        }]
+                    });
+            switch (controlType) {
+                case "comment":
+                    report.checks.push({ phase: 2,
+                        passed: false,
+                        skipped: true,
+                        error: "",
+                        startedAtMs: 0,
+                        completedAtMs: 0,
+                        durationMs: 0,
+                        completedOrder: 0,  
+                        key: "commentMatrix",
+                        actual: "",
+                        expected: "",
+                        details: { FO: stageDept == "FO" ? false :  (_role == "FO" ? true : false),
+                            TS: stageDept == "TS" ? false :  (_role == "TS" ? true : false),
+                            UW: stageDept == "UW" ? false :  (_role == "UW" ? true :false),
+                            LMKT: stageDept == "LMKT" ? false :  (_role == "LMKT" ? true : false),
+                            PM: stageDept == "PM" ? false :  (_role == "PM" ? true :false)
+                        }
+                    })
+
+                    break;
+                case "accept": 
+                    break;
+
+                default:
+                    //defaultPhase2Allow = true;
+                    break;
+            }
+            
+        } catch (error) {
+            console.warn("Feature role control rule failed; control remains locked.", error);
+            report = { allowed: false, error: error?.message || String(error) };
+        }
+        const decision = {
+            allowed: report.allowed === true,
+            phase1Allowed: report.phase1Passed,
+                // || (report.isSuperUser === true && report.superUserBypass === true),
+            controlType,
+            dept: controlDept,
+            stageDept,
+            role,
+            report
+        };
+        await options.apply?.(decision);
+        return decision;
+    }
+
+    window.applyFeatureRoleControlRule = applyFeatureRoleControlRule;
+
     // Centralized feature-rule diagnostic. AppUtil invokes it with display:false for
     // runtime control rules; invoke it manually with display:true for the review UI.
     async function checkFeatureRoleRule(options) {
         
-        // console.log("From check",options);
         options = options || {};
         const configuredRules = options.rules || options.rule || {};
 

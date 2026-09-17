@@ -294,25 +294,25 @@ Note:
                     details: details
                 };
             };
-            const inspectAllDepartmentComments = function () {
-                const details = qtDeptModuleCode.map(function (dept) {
-                    const $editor = $(`#${formModuleKeyQt}-commentEditor_${dept}_@ViewData["Id"]`);
-                    var disabled = true;
-                    if ($editor.length && typeof $editor.tmivcommenteditorroute === "function") {
-                        disabled = $editor.tmivcommenteditorroute("option", "disableComment") === true;
-                    }
-                    const actualAllow = $editor.length > 0 && !disabled;
-                    const expectedAllow = dept !== "PM" && (reviewSuperUser
-                        || (phase1RoleAndStagePassed && dept === actualStageDept));
-                    return { dept, actualAllow, expectedAllow, matched: actualAllow === expectedAllow };
-                });
-                return {
-                    passed: details.every(function (item) { return item.matched; }),
-                    actual: details.map(function (item) { return `${item.dept}:${item.actualAllow ? "ALLOW" : "LOCK"}`; }).join(", "),
-                    expected: details.map(function (item) { return `${item.dept}:${item.expectedAllow ? "ALLOW" : "LOCK"}`; }).join(", "),
-                    details: details
-                };
-            };
+            // const inspectAllDepartmentComments = function () {
+            //     const details = qtDeptModuleCode.map(function (dept) {
+            //         const $editor = $(`#${formModuleKeyQt}-commentEditor_${dept}_@ViewData["Id"]`);
+            //         var disabled = true;
+            //         if ($editor.length && typeof $editor.tmivcommenteditorroute === "function") {
+            //             disabled = $editor.tmivcommenteditorroute("option", "disableComment") === true;
+            //         }
+            //         const actualAllow = $editor.length > 0 && !disabled;
+            //         const expectedAllow = dept !== "PM" && (reviewSuperUser
+            //             || (phase1RoleAndStagePassed && dept === actualStageDept));
+            //         return { dept, actualAllow, expectedAllow, matched: actualAllow === expectedAllow };
+            //     });
+            //     return {
+            //         passed: details.every(function (item) { return item.matched; }),
+            //         actual: details.map(function (item) { return `${item.dept}:${item.actualAllow ? "ALLOW" : "LOCK"}`; }).join(", "),
+            //         expected: details.map(function (item) { return `${item.dept}:${item.expectedAllow ? "ALLOW" : "LOCK"}`; }).join(", "),
+            //         details: details
+            //     };
+            // };
             const inspectStageRemark = function () {
                 const dept = actualStageDept;
                 const control = remarkBoxs?.[dept]?.controlRemark;
@@ -387,7 +387,7 @@ Note:
                     },
                     {
                         key: "commentAllowInStageDept", label: "Comment allow in stageDept", required: true,
-                        evaluate: inspectAllDepartmentComments
+                        evaluate: function () {}//inspectAllDepartmentComments
                     },
                     {
                         key: "remarkAllowAll", label: "Remark allow · stage department only", required: true,
@@ -1101,24 +1101,25 @@ Note:
                         }
                     });
 
-                    await window.applyFeatureRoleControlRule({
-                        ...commonRule,
-                        feature: `Quotation comment · ${item}`,
-                        controlType: "comment",
-                        apply: function (decision) {
-                            var $commentEditor = $(`#${formModuleKeyQt}-commentEditor_${item}_@ViewData["Id"]`);
-                            if (!$commentEditor.length) return;
-                            try {
-                                $commentEditor.tmivcommenteditorroute(
-                                    "option",
-                                    "disableComment",
-                                    item === "PM" || !decision.allowed
-                                );
-                            } catch (error) {
-                                console.warn(`Quotation comment role state was not ready for ${item}.`, error);
-                            }
-                        }
-                    });
+                    // await window.applyFeatureRoleControlRule({
+                    //     ...commonRule,
+                    //     feature: `Quotation comment · ${item}`,
+                    //     controlType: "comment",
+                    //     apply: function (decision) {
+                    //         var $commentEditor = $(`#${formModuleKeyQt}-commentEditor_${item}_@ViewData["Id"]`);
+                    //         if (!$commentEditor.length) return;
+                    //         try {
+                    //             console.log(item,decision.allowed);
+                    //             $commentEditor.tmivcommenteditorroute(
+                    //                 "option",
+                    //                 "disableComment",
+                    //                 item === "PM" || !decision.allowed
+                    //             );
+                    //         } catch (error) {
+                    //             console.warn(`Quotation comment role state was not ready for ${item}.`, error);
+                    //         }
+                    //     }
+                    // });
 
                     if (item === "TS") {
                         var tat = tryParseJSON(

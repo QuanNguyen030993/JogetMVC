@@ -563,7 +563,6 @@ Note:
                                              && f.fromNodeId == stageDept
                                              && f.fNodeId == state.nextStep.currentStep);
 
-                                             console.log(findRoutes);
                                         // var findRouteReturn = data.find(f => f.isReturn && f.fromNodeId == stageDept && f.fNodeId == state.nextStep.currentStep);
                                         var findRouteReturns = data.filter(f => f.isReturn
                                             && String(f?.flowType || "").trim().toLowerCase() !== "custom"

@@ -582,7 +582,10 @@ Note:
         }
         function selfLoadSelectedWorkflow(forceReload = false) {
             const selectedModel = getSelectedModel();
+             const formId =  window.PolicyIssuanceIdManager.form(_role, @ViewData["Id"]);
             return window.WorkflowLoader.load({
+                modelName: "@nameof(PolicyIssuance)",
+                formId: formId,
                 moduleCode: viewIdModulePrefix.policyIssuance,
                 id: @ViewData["Id"],
                 loadingHost: `#${window.PolicyIssuanceIdManager.actionBarDept(stageDept, @ViewData["Id"])}`,
@@ -878,48 +881,7 @@ Note:
             });
         }
 
-        async function applyPolicyIssuanceRouteButtonRules() {
-            const activeStageDept = String(stageDept || "").trim().toUpperCase();
-            if (!activeStageDept || !window.PolicyIssuanceIdManager.validateDepartment(activeStageDept)) return null;
-
-        //     const formId = window.PolicyIssuanceIdManager.form(activeStageDept, @ViewData["Id"]);
-        //     const form = $(`#${formId}`).dxForm("instance");
-        //     const formData = form?.option("formData") || getSelectedModel() || {};
-        //     const tatObject = tryParseJSON(
-        //         formData.turnAroundTimeAttributes,
-        //         "Policy Issuance route/return TAT"
-        //     ) || {};
-        //     const hasAcceptedStage = activeStageDept === "FO"
-        //         || !!tatObject?.[activeStageDept]?.AcceptDate;
-        //     const returnHostId = window.PolicyIssuanceIdManager.btnReturnBranch(activeStageDept, @ViewData["Id"]);
-        //     const submitHostId = window.PolicyIssuanceIdManager.btnSubmitBranch(activeStageDept, @ViewData["Id"]);
-        //     const $routeButtons = $()
-        //         .add($(`#${returnHostId}`).find("[data-workflow-route-button]"))
-        //         .add($(`#${submitHostId}`).find("[data-workflow-route-button]"));
-
-            return window.applyFeatureRoleControlRule({
-                feature: `Policy Issuance route/return · ${activeStageDept}`,
-                controlType: "button",
-                dept: activeStageDept,
-                stageDept: activeStageDept,
-                role: state.currentUserRole,
-                formData: formData,
-                state: state,
-                isDebugMode: _isDebugMode,
-                isSuperUser: _isSuperUser,
-                allowWhen: function () {
-                    return hasAcceptedStage;
-                },
-                apply: function (decision) {
-                    $routeButtons.each(function () {
-                        $(this).dxButton("instance")?.option({
-                            visible: decision.allowed,
-                            disabled: !decision.allowed
-                        });
-                    });
-                }
-            });
-        }
+       
 
         function applyEditLock() {
             /*
@@ -977,6 +939,7 @@ Note:
                             var $commentEditor = $(`#${formModuleKeyPi}-commentEditor_${item}_@ViewData["Id"]`);
                             if (!$commentEditor.length) return;
                             try {
+                                console.log(item,decision.allowed);
                                 $commentEditor.tmivcommenteditorroute(
                                     "option",
                                     "disableComment",

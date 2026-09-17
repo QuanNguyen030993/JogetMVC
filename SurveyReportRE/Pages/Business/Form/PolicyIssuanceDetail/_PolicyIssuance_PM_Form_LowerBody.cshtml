@@ -30,7 +30,6 @@
 
 <script>
     setTimeout(() => {
-        renderFormComment(`@PIViewIdHelper.CommentPanelControl(dept, quotationId)`,`@dept`,viewIdModulePrefix.policyIssuance,@(quotationId), "@(quotationGuid)");
-        
+        renderFormComment(`@PIViewIdHelper.CommentPanelControl(dept, quotationId)`,`@dept`,viewIdModulePrefix.policyIssuance,@(quotationId), "@(quotationGuid)", "@PIViewIdHelper.Form(dept, quotationId)");
     },1);
 </script>
