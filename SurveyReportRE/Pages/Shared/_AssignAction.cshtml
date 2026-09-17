@@ -265,10 +265,10 @@
                     }
                 }).then(function (response) {
                     try {
-                        sessionStorage.setItem(browserCacheKey, JSON.stringify({
-                            expiresAt: Date.now() + 1800000,
-                            response: response
-                        }));
+                        // sessionStorage.setItem(browserCacheKey, JSON.stringify({
+                        //     expiresAt: Date.now() + 1800000,
+                        //     response: response
+                        // }));
                     } catch (error) {
                         console.warn("Assignable employee batch could not be cached in this browser.", error);
                     }
