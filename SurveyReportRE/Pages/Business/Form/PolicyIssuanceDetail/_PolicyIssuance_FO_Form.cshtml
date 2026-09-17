@@ -292,9 +292,10 @@
                             searchEnabled: true,
                             showClearButton: true,
                             onSelectionChanged: function (event) {
+                                debugger
                                 // Initial data binding must keep BI Commission disabled;
                                 // only a user selection enables it.
-                                if (!event.event) return;
+                                // if (!event.event) return;
                                 var form = $("#@PIViewIdHelper.Form(dept, policyIssuanceId)")
                                     .dxForm("instance");
                                 form?.getEditor("biCommission")?.option("disabled", false);

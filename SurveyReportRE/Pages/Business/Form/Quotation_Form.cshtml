@@ -1101,25 +1101,6 @@ Note:
                         }
                     });
 
-                    // await window.applyFeatureRoleControlRule({
-                    //     ...commonRule,
-                    //     feature: `Quotation comment · ${item}`,
-                    //     controlType: "comment",
-                    //     apply: function (decision) {
-                    //         var $commentEditor = $(`#${formModuleKeyQt}-commentEditor_${item}_@ViewData["Id"]`);
-                    //         if (!$commentEditor.length) return;
-                    //         try {
-                    //             console.log(item,decision.allowed);
-                    //             $commentEditor.tmivcommenteditorroute(
-                    //                 "option",
-                    //                 "disableComment",
-                    //                 item === "PM" || !decision.allowed
-                    //             );
-                    //         } catch (error) {
-                    //             console.warn(`Quotation comment role state was not ready for ${item}.`, error);
-                    //         }
-                    //     }
-                    // });
 
                     if (item === "TS") {
                         var tat = tryParseJSON(
