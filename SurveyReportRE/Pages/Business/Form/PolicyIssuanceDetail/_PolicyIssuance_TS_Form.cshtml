@@ -369,55 +369,55 @@
 
      // ITAcceptDemo: standalone TS bypass action. This button deliberately stays
      // outside the centralized role/decision disabled-state calculation.
-     var $bypassTsDemo = $("#pi-ts-bypass-task-demo-@policyIssuanceId").dxButton({
-         text: "Bypass TS",
-         icon: "arrowright",
-         type: "success",
-         stylingMode: "contained",
-         disabled: false,
-         elementAttr: {
-             class: "dx-button-success it-accept-demo-button pi-ts-bypass-demo-button",
-             "data-it-accept-demo": "true"
-         },
-         onClick: function (event) {
-             var loading = beginWorkflowButtonLoading(event);
-             var request = $.ajax({
-                 url: "/api/PolicyIssuance/BypassTS",
-                 type: "POST",
-                 contentType: "application/json; charset=utf-8",
-                 data: JSON.stringify({ id: @policyIssuanceId, dept: "TS" })
-             });
+     // var $bypassTsDemo = $("#pi-ts-bypass-task-demo-@policyIssuanceId").dxButton({
+     //     text: "Bypass TS",
+     //     icon: "arrowright",
+     //     type: "success",
+     //     stylingMode: "contained",
+     //     disabled: false,
+     //     elementAttr: {
+     //         class: "dx-button-success it-accept-demo-button pi-ts-bypass-demo-button",
+     //         "data-it-accept-demo": "true"
+     //     },
+     //     onClick: function (event) {
+     //         var loading = beginWorkflowButtonLoading(event);
+     //         var request = $.ajax({
+     //             url: "/api/PolicyIssuance/BypassTS",
+     //             type: "POST",
+     //             contentType: "application/json; charset=utf-8",
+     //             data: JSON.stringify({ id: @policyIssuanceId, dept: "TS" })
+     //         });
 
-             request.done(function (responseData) {
-                 var tsForm = $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm("instance");
-                 tsForm?.updateData("stageDept", responseData.stageDept || "PM");
-                 tsForm?.updateData("stageAccount", responseData.stageAccount || "");
-                 tsForm?.updateData("turnAroundTimeAttributes", responseData.turnAroundTimeAttributes);
-                DevExpress.ui.notify(
-                    "TS bypassed by " + (responseData.workflowStepCode || "SUBMIT_TO_PM")
-                    + ". Policy Issuance moved to " + (responseData.stageDept || "PM") + ".",
-                    "success",
-                    2400);
-                 Promise.resolve(
-                     reloadWorkflowViewComponents("PolicyIssuance", @policyIssuanceId, event.element, true)
-                 )
-                     .catch(function (error) {
-                         console.error("Policy Issuance refresh after TS bypass failed", error);
-                     });
-             });
+     //         request.done(function (responseData) {
+     //             var tsForm = $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm("instance");
+     //             tsForm?.updateData("stageDept", responseData.stageDept || "PM");
+     //             tsForm?.updateData("stageAccount", responseData.stageAccount || "");
+     //             tsForm?.updateData("turnAroundTimeAttributes", responseData.turnAroundTimeAttributes);
+     //            DevExpress.ui.notify(
+     //                "TS bypassed by " + (responseData.workflowStepCode || "SUBMIT_TO_PM")
+     //                + ". Policy Issuance moved to " + (responseData.stageDept || "PM") + ".",
+     //                "success",
+     //                2400);
+     //             Promise.resolve(
+     //                 reloadWorkflowViewComponents("PolicyIssuance", @policyIssuanceId, event.element, true)
+     //             )
+     //                 .catch(function (error) {
+     //                     console.error("Policy Issuance refresh after TS bypass failed", error);
+     //                 });
+     //         });
 
-             request.fail(function (xhr) {
-                 appErrorHandling("Bypass TS failed", xhr);
-             });
+     //         request.fail(function (xhr) {
+     //             appErrorHandling("Bypass TS failed", xhr);
+     //         });
 
-             request.always(function () {
-                 loading?.finish(true);
-                 window.setTimeout(function () {
-                     $bypassTsDemo.dxButton("instance")?.option("disabled", false);
-                 }, 0);
-             });
-         }
-     });
+     //         request.always(function () {
+     //             loading?.finish(true);
+     //             window.setTimeout(function () {
+     //                 $bypassTsDemo.dxButton("instance")?.option("disabled", false);
+     //             }, 0);
+     //         });
+     //     }
+     // });
 
           // Fetch attachments to check if there are files uploaded for each checklist item type
           const cloneQuotationGuid = "@(cloneQuotationGuid)";
@@ -655,8 +655,9 @@
 
     })
 </script>
-
+@* 
 <div class="pi-ts-bypass-demo-bar">
     <span class="pi-ts-bypass-demo-badge">DEMO</span>
     <div id="pi-ts-bypass-task-demo-@policyIssuanceId"></div>
 </div>
+ *@
