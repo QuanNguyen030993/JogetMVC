@@ -160,7 +160,6 @@ Note:
     //     $('[data-toggle="push-menu"]').click();
     //     isToggleMenu = true;
     // }
-
     var page = window.QuotationPage;
     var state = page.state;
 
@@ -264,7 +263,8 @@ Note:
             };
             const inspectAllDepartmentSections = function () {
                 const details = qtDeptModuleCode.map(function (dept) {
-                    const formId = window.QuotationIdManager.form(dept, @ViewData["Id"]);
+                    const formId =  window.QuotationIdManager.form(dept, @ViewData["Id"]);
+
                     const form = $(`#${formId}`).dxForm("instance");
                     const saveButtonId = window.QuotationIdManager.btnSave(dept, @ViewData["Id"]);
                     const saveButton = $(`#${saveButtonId}`).dxButton("instance");
@@ -682,8 +682,11 @@ Note:
 
         function selfLoadSelectedWorkflow(forceReload = false) {
             const selectedModel = getSelectedModel();
+            const formId =  window.QuotationIdManager.form(_role, @ViewData["Id"]);
             return window.WorkflowLoader.load({
                 moduleCode: viewIdModulePrefix.quotation,
+                modelName: "@nameof(Quotation)",
+                formId: formId,
                 id: @ViewData["Id"],
                 loadingHost: `#${window.QuotationIdManager.actionBarDept(stageDept, @ViewData["Id"])}`,
                 guid: state.selectedGuid,
@@ -854,7 +857,7 @@ Note:
                 state.formData = q;
                 quotationData = q;
                 deptData[dept] = { ...q, id: q.id, sectionName: dept, code: q.quotationCode };
-                var formId = window.QuotationIdManager.form(dept, @ViewData["Id"]);
+                const formId =  window.QuotationIdManager.form(dept, @ViewData["Id"]);
                 var form = $(`#${formId}`).dxForm("instance");
                 if (!form) throw new Error(`${dept} form is not initialized.`);
                 form.option("formData", deptData[dept]);
@@ -1051,8 +1054,8 @@ Note:
             setTimeout(function () {
                 applyQuotationStageRemarkRule(getSelectedModel() || {});
                 qtDeptModuleCode.forEach(async function (item) {
-                    var formId = window.QuotationIdManager.form(item, @ViewData["Id"]);
                     var saveButtonId = window.QuotationIdManager.btnSave(item, @ViewData["Id"]);
+                    const formId =  window.QuotationIdManager.form(item, @ViewData["Id"]);
                     var form = $(`#${formId}`).dxForm("instance");
                     var formData = form?.option("formData") || {};
                     var commonRule = {

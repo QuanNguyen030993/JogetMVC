@@ -119,7 +119,6 @@
 
         function openPaProcessPopup(options) {
             options = options || {};
-            debugger
             var popupKey = String(options.key || "default").replace(/[^a-zA-Z0-9_-]/g, "-");
             var hostId = `pa-process-popup-host-${popupKey}`;
             var $existingHost = $(`#${hostId}`);

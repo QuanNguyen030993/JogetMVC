@@ -74,7 +74,19 @@
 
                     return null;
                 },
+                 getAcceptButtonId: function (dept, recordId) {
+                    if (
+                        window.PolicyIssuanceIdManager &&
+                        typeof window.QuotationIdManager.btnAcceptTask === "function"
+                    ) {
+                        return window.QuotationIdManager.btnAcceptTask(
+                            dept,
+                            recordId
+                        );
+                    }
 
+                    return null;
+                },
                 getReturnButtonId: function (dept, recordId) {
                     if (
                         window.QuotationIdManager &&
@@ -139,7 +151,19 @@
 
                     return null;
                 },
+                 getAcceptButtonId: function (dept, recordId) {
+                    if (
+                        window.PolicyIssuanceIdManager &&
+                        typeof window.PolicyIssuanceIdManager.btnAcceptTask === "function"
+                    ) {
+                        return window.PolicyIssuanceIdManager.btnAcceptTask(
+                            dept,
+                            recordId
+                        );
+                    }
 
+                    return null;
+                },
                 getReturnButtonId: function (dept, recordId) {
                     if (
                         window.PolicyIssuanceIdManager &&
@@ -1047,15 +1071,20 @@
             return $host;
         }
 
-        function buildNormalRouteButton(options) {
+       async function buildNormalRouteButton(options) {
+            if (options.type == "accept")
+            {
+            }
             const route = options.route;
             const isReturn = options.type === "return";
+            const isAccept = options.type === "accept";
             const isReturnNeedAccepted = options.route.isReturnNeedAccepted || false;
-            const buttonHostId =
+            var buttonHostId =
                 isReturn
                     ? moduleConfig.getReturnButtonId(stageDept, id)
                     : moduleConfig.getSubmitButtonId(stageDept, id);
-
+            buttonHostId = isAccept ? moduleConfig.getAcceptButtonId(stageDept, id) : buttonHostId;
+            console.log(buttonHostId);
             if (!buttonHostId) {
                 return;
             }
@@ -1111,6 +1140,27 @@
                 items: $button
             });
 
+             var decision = await window.applyFeatureRoleControlRule({
+            feature: `Accept · ${buttonFormItems?.stageDept || "unknown"}`,
+            controlType: "accept",
+            dept: _role || "",
+            stageDept: buttonFormItems?.stageDept || buttonFormItems?.StageDept || "",
+            formData: buttonFormItems || {},
+            role: typeof _role !== "undefined" ? _role : window._role,
+            state: options?.state || {},
+            isDebugMode: typeof _isDebugMode !== "undefined" ? _isDebugMode : window._isDebugMode,
+            isSuperUser: typeof _isSuperUser !== "undefined" ? _isSuperUser : window._isSuperUser
+            });
+
+            if (isAccept){
+                const isPassedControlByRole = decision.report.checks.find(f => f.key == `control_accept_${_role}`).passed;
+                console.log("isPassedControlByRole",isPassedControlByRole);
+                const isNotHasAcceptDate = decision.report.checks.find(f => f.key ==  "acceptDate").passed;
+                console.log("isHasAcceptDate",isNotHasAcceptDate);
+                const allowButton = isPassedControlByRole && isNotHasAcceptDate ? false : true;
+                buttonDisabled = allowButton;
+            }
+
             if (isReturn && isReturnNeedAccepted) {
                 if (!(options.data.tatObject[buttonFormItems.stageDept]?.AcceptDate)
                     && options.data.tatObject[buttonFormItems.stageDept]?.AcceptDate == "") {
@@ -1118,7 +1168,37 @@
                 }
             }
 
-            $button.dxButton({
+            if (isAccept)
+            {
+                if (!buttonId) return;
+                var formProps = { 
+                        ModelName: options.modelName,
+                        decisionColSpan: 2,
+                        dept: _role,
+                        formId: options.formId,
+                        formInstance: {},
+                        id: buttonFormItems?.id,
+                        prefix: options.prefix,
+                        record: buttonFormItems || {},
+                        schemeName: options.modelName
+                    };
+                var btnOptions = {
+                    elementAttr: { id: buttonId },
+                    disabled: buttonDisabled,
+                    text: "Accept",
+                    icon: "check",
+                    type: "success",
+                    stylingMode: "contained",
+                    className: "submit-btn-visible",
+                    useDefaultDecisionClick: true,
+                    onClick:buildDefaultDecisionClick(formProps)
+                };
+
+                $button.dxButton(btnOptions);
+                if (options.buttonClass) $button.addClass(options.buttonClass);
+            }
+            else {
+                $button.dxButton({
                 disabled: buttonDisabled,
                 className: "submit-btn-visible",
                 text:
@@ -1205,6 +1285,8 @@
                         }
 
             });
+            }
+            
 
             if (
                 typeof applyTransitionButtonClass === "function"
@@ -1599,6 +1681,26 @@
                                 : null
                         )
                             .then(async function () {
+                                 const acceptButtonId = params.moduleCode == "qt" ? window.QuotationIdManager.btnAcceptTask(params.stageDept,params.id) : window.PolicyIssuanceIdManager.btnAcceptTask(params.stageDept,params.id);
+                                 const acceptButtons = Array.from($(`#${acceptButtonId}`));
+                                 for (
+                                    const [routeIndex, route]
+                                    of acceptButtons.entries()
+                                ) {
+                                    if (formStages?.pace) {
+                                        await formStages.pace(
+                                            routeIndex
+                                        );
+                                    }
+                                      await buildNormalRouteButton({
+                                        route: route,
+                                        type: "accept",
+                                        routeIndex: routeIndex,
+                                        ...params
+                                    });
+                                }
+                              
+
                                 for (
                                     const [routeIndex, route]
                                     of returnRoutes.entries()
@@ -1608,7 +1710,8 @@
                                             routeIndex
                                         );
                                     }
-                                    buildNormalRouteButton({
+                                   
+                                    await buildNormalRouteButton({
                                         route: route,
                                         type: "return",
                                         routeIndex: routeIndex,
@@ -1627,7 +1730,7 @@
                                         );
                                     }
 
-                                    buildNormalRouteButton({
+                                   await buildNormalRouteButton({
                                         route: route,
                                         type: "submit",
                                         routeIndex: routeIndex,
@@ -1662,6 +1765,9 @@
                                     state: state
                                 };
                             });
+
+                            
+
                     });
             })
             .always(function () {

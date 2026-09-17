@@ -6,21 +6,21 @@
         requireDebugOrSuperUser: true
     });
 
-    function isITAcceptDemoEnabled(formProps) {
-        var config = window.ITAcceptDemo;
-        if (!config?.enabled) return false;
-        var role = String(
-            formProps?.role ?? (typeof _role !== "undefined" ? _role : window._role) ?? ""
-        ).trim().toUpperCase();
-        var isDebug = String(
-            typeof _isDebugMode !== "undefined" ? _isDebugMode : window._isDebugMode
-        ).toLowerCase() === "true";
-        var isSuperUser = String(
-            typeof _isSuperUser !== "undefined" ? _isSuperUser : window._isSuperUser
-        ).toLowerCase() === "true";
-        return role === config.role
-            && (!config.requireDebugOrSuperUser || isDebug || isSuperUser);
-    }
+    // function isITAcceptDemoEnabled(formProps) {
+    //     var config = window.ITAcceptDemo;
+    //     if (!config?.enabled) return false;
+    //     var role = String(
+    //         formProps?.role ?? (typeof _role !== "undefined" ? _role : window._role) ?? ""
+    //     ).trim().toUpperCase();
+    //     var isDebug = String(
+    //         typeof _isDebugMode !== "undefined" ? _isDebugMode : window._isDebugMode
+    //     ).toLowerCase() === "true";
+    //     var isSuperUser = String(
+    //         typeof _isSuperUser !== "undefined" ? _isSuperUser : window._isSuperUser
+    //     ).toLowerCase() === "true";
+    //     return role === config.role
+    //         && (!config.requireDebugOrSuperUser || isDebug || isSuperUser);
+    // }
 
     function isAcceptDecisionItem(item, index) {
         if (!item || typeof item === "string") return index === 0;
@@ -46,25 +46,25 @@
             isSuperUser: typeof _isSuperUser !== "undefined" ? _isSuperUser : window._isSuperUser
         });
 
-        var demoOverride = isITAcceptDemoEnabled(formProps);
-        var disabled = demoOverride ? false : decision.allowed !== true;
+        // var demoOverride = isITAcceptDemoEnabled(formProps);
+        var disabled = decision.allowed;
 
         // This is the only decision-button disabled writer in this file.
         setDecisionButtonsDisabled(acceptButtonIds, disabled);
         acceptButtonIds.forEach(function (buttonId) {
             var $button = $(`#${buttonId}`);
-            if (demoOverride) {
-                $button.attr("data-it-accept-demo", "true");
-                $button.dxButton("instance")?.option("visible", true);
-            } else {
+            // if (demoOverride) {
+            //     $button.attr("data-it-accept-demo", "true");
+            //     $button.dxButton("instance")?.option("visible", true);
+            // } else {
                 $button.removeAttr("data-it-accept-demo");
-            }
+            // }
         });
 
         return {
             decision: decision,
             disabled: disabled,
-            ITAcceptDemo: demoOverride,
+            ITAcceptDemo: false,
             buttonIds: acceptButtonIds
         };
     }
@@ -273,7 +273,6 @@
         formProps,
         ...params
     ) {
-        debugger
         formProps = formProps || {};
         var normalizedDecisionItems = normalizeDecisionFieldButtons(params);
         var usesLegacyStringPairs = params.length > 0
@@ -912,52 +911,47 @@
                     //     "aria-live": "polite"
                     // }).appendTo($statusRow);
 
-                    var $actionRow = $("<div>", {
-                        id: actionHostId,
-                        class: "decision-action-row",
-                        "data-decision-action-host": "true",
-                        "data-route-dept": formProps?.dept || ""
-                    }).appendTo($content);
+                    // var $actionRow = $("<div>", {
+                    //     id: actionHostId,
+                    //     class: "decision-action-row",
+                    //     "data-decision-action-host": "true",
+                    //     "data-route-dept": formProps?.dept || ""
+                    // }).appendTo($content);
 
-                    buttonItems.forEach(function (item, index) {
-                        var config = typeof item === "string" ? { buttonId: item } : item;
-                        var buttonId = getDelayAcceptButtonId(config);
-                        if (!buttonId) return;
+                    // buttonItems.forEach(function (item, index) {
+                    //     var config = typeof item === "string" ? { buttonId: item } : item;
+                    //     var buttonId = getDelayAcceptButtonId(config);
+                    //     if (!buttonId) return;
 
-                        var options = {
-                            elementAttr: { id: buttonId },
-                            disabled: true,
-                            text: config.text || (index === 0 ? "Accept" : ""),
-                            icon: config.icon || (index === 0 ? "check" : undefined),
-                            type: config.type || (index === 0 ? "success" : "default"),
-                            stylingMode: config.stylingMode || "contained"
-                        };
-                        if (typeof config.onClick === "function" && config.useDefaultDecisionClick !== true) {
-                            options.onClick = function (event) {
-                                return config.onClick(event, {
-                                    formProps: formProps,
-                                    config: config,
-                                    formId: formProps?.formId,
-                                    dept: formProps?.dept
-                                });
-                            };
-                        } else if (config.useDefaultDecisionClick === true) {
-                            // Keep Accept clickable even when the legacy hydration
-                            // short-circuits after rendering a stored status.
-                            options.onClick = buildDefaultDecisionClick(formProps);
-                        }
+                    //     var options = {
+                    //         elementAttr: { id: buttonId },
+                    //         disabled: true,
+                    //         text: config.text || (index === 0 ? "Accept" : ""),
+                    //         icon: config.icon || (index === 0 ? "check" : undefined),
+                    //         type: config.type || (index === 0 ? "success" : "default"),
+                    //         stylingMode: config.stylingMode || "contained"
+                    //     };
+                    //     if (typeof config.onClick === "function" && config.useDefaultDecisionClick !== true) {
+                    //         options.onClick = function (event) {
+                    //             return config.onClick(event, {
+                    //                 formProps: formProps,
+                    //                 config: config,
+                    //                 formId: formProps?.formId,
+                    //                 dept: formProps?.dept
+                    //             });
+                    //         };
+                    //     } else if (config.useDefaultDecisionClick === true) {
+                    //         // Keep Accept clickable even when the legacy hydration
+                    //         // short-circuits after rendering a stored status.
+                    //         options.onClick = buildDefaultDecisionClick(formProps);
+                    //     }
 
-                        var $button = $("<div>", { id: buttonId })
-                            .dxButton(options)
-                            .appendTo($actionRow);
-                        if (config.buttonClass) $button.addClass(config.buttonClass);
-                    });
-                    //??
-                    // setDecisionCommonStatus(
-                    //     commonStatusId,
-                    //     primaryButtonId,
-                    //     formProps?.initialDecisionStatus || primaryItem.initialDecisionStatus || "No status"
-                    // );
+                    //     var $button = $("<div>", { id: buttonId })
+                    //         .dxButton(options)
+                    //         .appendTo($actionRow);
+                    //     if (config.buttonClass) $button.addClass(config.buttonClass);
+                    // });
+                   
                 }
             };
         }

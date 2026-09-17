@@ -176,6 +176,7 @@ namespace JogetMVC.Model
         public static string BtnSave(string department, long quotationId) => GenerateId("btnSave", department, quotationId);
         public static string BtnSubmitBranch(string department, long quotationId) => GenerateId("btnSubmitBranch", department, quotationId);
         public static string BtnReturnBranch(string department, long quotationId) => GenerateId("btnReturnBranch", department, quotationId);
+        public static string BtnAcceptTask(string department, long quotationId) => GenerateId("btnAccept", department, quotationId);
         public static string ExpandCollapsedBtn(string department, long quotationId) => GenerateId("expandCollapsedBtn", department, quotationId);
 
         // Section elements by department
@@ -632,7 +633,7 @@ namespace JogetMVC.Model
 
         public static string BtnReturnBranch(string department, long quotationId)
             => GenerateId("btnReturnBranch", department, quotationId);
-
+        public static string BtnAcceptTask(string department, long quotationId) => GenerateId("btnAccept", department, quotationId);
         public static string BtnExpandCollapse(string department, long quotationId)
             => GenerateId("btnExpandCollapse", department, quotationId);
 

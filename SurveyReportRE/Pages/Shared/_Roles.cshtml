@@ -305,7 +305,7 @@
         const suppliedPhase2Checks = Array.isArray(options.phase2Checks)
             ? options.phase2Checks
             : [];
-        const reservedCheckKeys = new Set(["role", "stageDept", "section", "route", "customRoute", "accept", "acceptDate", "saveButton"]);
+        const reservedCheckKeys = new Set(["role", "stageDept", "section", "route", "customRoute", "acceptDate", "saveButton"]);
         const phase1Definitions = [
             { key: "role", label: "Role", configured: roleConfigured, actual: role, expected: allowedRoles, required: true, evaluate: function () { return matchesAllowed([role], allowedRoles); } },
             { key: "stageDept", label: "Stage dept", configured: !!allowedStageDepts.length, actual: stageDeptValue, expected: allowedStageDepts, required: true, evaluate: function () { return matchesAllowed([stageDeptValue], allowedStageDepts); } },
@@ -352,12 +352,13 @@
         const tatObject = typeof rawTat === "object"
             ? (rawTat || {})
             : (safeJson(rawTat) || {});
-        const acceptDept = normalize(firstDefined(
-            options.section,
-            options.dept,
-            stageDeptValue,
-            ""
-        ));
+        // const acceptDept = normalize(firstDefined(
+        //     options.section,
+        //     options.dept,
+        //     stageDeptValue,
+        //     ""
+        // ));
+        const acceptDept = options.section;
         const acceptTat = Object.keys(tatObject).reduce(function (result, key) {
             return result || (normalize(key) === acceptDept ? tatObject[key] : null);
         }, null) || {};
@@ -403,7 +404,7 @@
                 required: true,
                 evaluate: function () {
                     return {
-                        passed: !acceptDate,
+                        passed: acceptDate ? true : false,
                         actual: acceptDate || "EMPTY",
                         expected: "EMPTY"
                     };
@@ -479,6 +480,12 @@
                 expected: timing?.expected !== undefined ? timing.expected : definition.expected
             });
         });
+        $.each(phase2Checks,function(itemIndex,item){
+            if (item.key == "acceptDate"){
+                  item.passed = acceptDate ? false : true;
+            } 
+        } );
+
         const checks = phase1Checks.concat(phase2Checks);
         const requiredPhase2Checks = phase2Checks.filter(function (item) {
             return item.configured && item.required;

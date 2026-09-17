@@ -7,10 +7,10 @@
 @await Html.PartialAsync("_FormStageDelay")
 @await Html.PartialAsync("_AppUtil")
 @await Html.PartialAsync("_AssignAction")
-@await Html.PartialAsync("_Core")
 @await Html.PartialAsync("_AcceptAction")
 @await Html.PartialAsync("_Design")
 @await Html.PartialAsync("_Roles")
+@await Html.PartialAsync("_Core")
 <script src="~/js/app/appUtil.js"></script>
 <link rel="stylesheet" href="~/css/app/user-guide.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/lib/tmivcom/style.css" asp-append-version="true" />
@@ -977,7 +977,7 @@
             return true;
         });
 
-        window.addEventListener("unload", () => {
+        window.addEventListener("pagehide", () => {
             navigator.sendBeacon(
                 "/api/log-hours",
                     JSON.stringify({

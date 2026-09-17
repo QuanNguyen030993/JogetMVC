@@ -1,30 +1,31 @@
 ﻿@using JogetMVC.Model
 @{
     string dept = "PM";
-    long quotationId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
+    long policyIssuanceId = Convert.ToInt64(ViewData["Id"]); string quotationGuid = ViewData["Guid"].ToString();
 }
 
 
-<div class="actionBarDept" id="@PIViewIdHelper.ActionBarDept(dept,quotationId)">
+<div class="actionBarDept" id="@PIViewIdHelper.ActionBarDept(dept,policyIssuanceId)">
     <div class="dept-remark-panel">
-        <span class="dept-title">Remarks</span> <div id="@PIViewIdHelper.RemarkBox(dept,quotationId)" class="htmleditor"></div>
+        <span class="dept-title">Remarks</span> <div id="@PIViewIdHelper.RemarkBox(dept,policyIssuanceId)" class="htmleditor"></div>
     </div>
     <div class="actionRight"  aria-action-right="@dept">
         @* Save button temporarily disabled for Policy Issuance flow. *@
-        @* <div id="@PIViewIdHelper.BtnSave(dept,quotationId)"></div> *@
-        <div id="@PIViewIdHelper.BtnReturnBranch(dept,quotationId)" class="return-btn-style"></div>
-        <div id="@PIViewIdHelper.BtnSubmitBranch(dept,quotationId)" class="submit-btn-style"></div>
+        @* <div id="@PIViewIdHelper.BtnSave(dept,policyIssuanceId)"></div> *@
+        <div id="@PIViewIdHelper.BtnAcceptTask(dept, policyIssuanceId)" class="return-btn-style"></div>
+        <div id="@PIViewIdHelper.BtnReturnBranch(dept,policyIssuanceId)" class="return-btn-style"></div>
+        <div id="@PIViewIdHelper.BtnSubmitBranch(dept,policyIssuanceId)" class="submit-btn-style"></div>
     </div>
 </div>
 <script>
      var dept = "@dept";
        //       var pageLayout = window.PolicyIssuancePage;
        // var stateLayout = pageLayout.state;
-    $("#@PIViewIdHelper.BtnSave(dept, quotationId)").dxButton({ text: "", icon: "save", type: "default", onClick:
+    $("#@PIViewIdHelper.BtnSave(dept, policyIssuanceId)").dxButton({ text: "", icon: "save", type: "default", onClick:
          function (e) {
-               var formId = "@PIViewIdHelper.Form(dept, quotationId)";
+               var formId = "@PIViewIdHelper.Form(dept, policyIssuanceId)";
                if (typeof validateEnabledOverviewSection === "function" && !validateEnabledOverviewSection(formId)) return;
-               var formItems = $(`#@PIViewIdHelper.Form(dept, quotationId)`).dxForm("instance")?.option("formData") || {};
+               var formItems = $(`#@PIViewIdHelper.Form(dept, policyIssuanceId)`).dxForm("instance")?.option("formData") || {};
                var globalLoadPanel = $("#loadingPopup").dxLoadPanel({
                    shadingColor: window.AppColors.c_rgba_0_0_0_0_4,
                    visible: false,
@@ -32,7 +33,7 @@
                    showPane: false,
                    shading: true,
                    closeOnOutsideClick: false,
-                    position: { of: `#@PIViewIdHelper.Form(dept, quotationId)`}
+                    position: { of: `#@PIViewIdHelper.Form(dept, policyIssuanceId)`}
                    // onShown: function () {
                    //     setTimeout(function () {
                    //         appLoadPanel.hide();
