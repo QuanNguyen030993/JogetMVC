@@ -1152,19 +1152,20 @@
             isSuperUser: typeof _isSuperUser !== "undefined" ? _isSuperUser : window._isSuperUser
             });
 
+                const isNotHasAcceptDate = decision.report.checks.find(f => f.key ==  "acceptDate").passed;
             if (isAccept){
                 const isPassedControlByRole = decision.report.checks.find(f => f.key == `control_accept_${_role}`).passed;
-                console.log("isPassedControlByRole",isPassedControlByRole);
-                const isNotHasAcceptDate = decision.report.checks.find(f => f.key ==  "acceptDate").passed;
-                console.log("isHasAcceptDate",isNotHasAcceptDate);
                 const allowButton = isPassedControlByRole && isNotHasAcceptDate ? false : true;
                 buttonDisabled = allowButton;
             }
 
             if (isReturn && isReturnNeedAccepted) {
-                if (!(options.data.tatObject[buttonFormItems.stageDept]?.AcceptDate)
-                    && options.data.tatObject[buttonFormItems.stageDept]?.AcceptDate == "") {
-                    buttonDisabled = false;
+                if (isReturnNeedAccepted)
+                {
+                    buttonDisabled = !isNotHasAcceptDate;
+                }
+                else if (isReturn) {
+                    buttonDisabled = true;
                 }
             }
 
