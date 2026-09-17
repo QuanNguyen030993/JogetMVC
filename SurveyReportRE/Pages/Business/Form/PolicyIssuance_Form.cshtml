@@ -599,8 +599,8 @@ Note:
                 returnToStep: returnToStep,
                 formModuleKey: formModuleKeyPi,
                 reload: true,
-                forceWorkflowReload: forceReload === true,
-                onLoaded: applyPolicyIssuanceRouteButtonRules
+                forceWorkflowReload: forceReload === true//,
+                // onLoaded: applyPolicyIssuanceRouteButtonRules
             });
           }
 
@@ -882,20 +882,20 @@ Note:
             const activeStageDept = String(stageDept || "").trim().toUpperCase();
             if (!activeStageDept || !window.PolicyIssuanceIdManager.validateDepartment(activeStageDept)) return null;
 
-            const formId = window.PolicyIssuanceIdManager.form(activeStageDept, @ViewData["Id"]);
-            const form = $(`#${formId}`).dxForm("instance");
-            const formData = form?.option("formData") || getSelectedModel() || {};
-            const tatObject = tryParseJSON(
-                formData.turnAroundTimeAttributes,
-                "Policy Issuance route/return TAT"
-            ) || {};
-            const hasAcceptedStage = activeStageDept === "FO"
-                || !!tatObject?.[activeStageDept]?.AcceptDate;
-            const returnHostId = window.PolicyIssuanceIdManager.btnReturnBranch(activeStageDept, @ViewData["Id"]);
-            const submitHostId = window.PolicyIssuanceIdManager.btnSubmitBranch(activeStageDept, @ViewData["Id"]);
-            const $routeButtons = $()
-                .add($(`#${returnHostId}`).find("[data-workflow-route-button]"))
-                .add($(`#${submitHostId}`).find("[data-workflow-route-button]"));
+        //     const formId = window.PolicyIssuanceIdManager.form(activeStageDept, @ViewData["Id"]);
+        //     const form = $(`#${formId}`).dxForm("instance");
+        //     const formData = form?.option("formData") || getSelectedModel() || {};
+        //     const tatObject = tryParseJSON(
+        //         formData.turnAroundTimeAttributes,
+        //         "Policy Issuance route/return TAT"
+        //     ) || {};
+        //     const hasAcceptedStage = activeStageDept === "FO"
+        //         || !!tatObject?.[activeStageDept]?.AcceptDate;
+        //     const returnHostId = window.PolicyIssuanceIdManager.btnReturnBranch(activeStageDept, @ViewData["Id"]);
+        //     const submitHostId = window.PolicyIssuanceIdManager.btnSubmitBranch(activeStageDept, @ViewData["Id"]);
+        //     const $routeButtons = $()
+        //         .add($(`#${returnHostId}`).find("[data-workflow-route-button]"))
+        //         .add($(`#${submitHostId}`).find("[data-workflow-route-button]"));
 
             return window.applyFeatureRoleControlRule({
                 feature: `Policy Issuance route/return · ${activeStageDept}`,
