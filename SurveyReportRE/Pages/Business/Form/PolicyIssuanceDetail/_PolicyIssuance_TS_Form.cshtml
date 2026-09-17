@@ -301,31 +301,31 @@
      ]
      ;
    
-    var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+    // var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
     var panelStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
-    var itemsDelay = [acceptButtonId, panelStatusId];
+    // var itemsDelay = [acceptButtonId, panelStatusId];
     // Keep the Policy Issuance TS decision on the same V2 lifecycle as
     // Quotation TS so the deferred renderer wires AcceptTask correctly.
-    // var acceptDecisionV2 = {
-    //     buttonId: acceptButtonId,
-    //     statusId: panelStatusId,
-    //     text: "Accept",
-    //     icon: "check",
-    //     type: "success",
-    //     buttonClass: "dx-button-success",
-    //     disabled: true,
-    //     useDefaultDecisionClick: true,
-    //     acceptStatusField: "actionStatus",
-    //     useTatAcceptStatus: true,
-    //     tatStatusText: "Accepted",
-    //     // TS content is mounted with the initial dxForm render. The Accept
-    //     // lifecycle must not append the same checklist/groups a second time.
-    //     skipAcceptedMainFields: true,
-    //     statusButtonDisabled: true
-    // };
+    var acceptDecisionV2 = {
+        buttonId: null,
+        statusId: panelStatusId,
+        text: "Accept",
+        icon: "check",
+        type: "success",
+        buttonClass: "dx-button-success",
+        disabled: true,
+        useDefaultDecisionClick: true,
+        acceptStatusField: "actionStatus",
+        useTatAcceptStatus: true,
+        tatStatusText: "Accepted",
+        // TS content is mounted with the initial dxForm render. The Accept
+        // lifecycle must not append the same checklist/groups a second time.
+        skipAcceptedMainFields: true,
+        statusButtonDisabled: true
+    };
 
 
-    // var itemsDelay = [acceptDecisionV2];
+    var itemsDelay = [acceptDecisionV2];
     // var itemsDelay = [acceptButtonId, panelStatusId];
     $("#@PIViewIdHelper.Form(dept, policyIssuanceId)").dxForm({
         formData: initialFormData || {},
@@ -345,14 +345,14 @@
                   caption: "@dept Decision",
                   colCount: 2,
                   items: [
-             // workflowDecisionField(thisObject, ...itemsDelay)
-             decisionField(
-                            `@PIViewIdHelper.Form(dept, policyIssuanceId)`,
-                            "@dept",
-                            `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,
-                            `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,
-                            null,
-                            null)
+             workflowDecisionField(thisObject, ...itemsDelay)
+             // decisionField(
+             //                `@PIViewIdHelper.Form(dept, policyIssuanceId)`,
+             //                "@dept",
+             //                `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,
+             //                `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,
+             //                null,
+             //                null)
         ]},
 
         // Render the checklist and the remaining TS groups up front. Previously

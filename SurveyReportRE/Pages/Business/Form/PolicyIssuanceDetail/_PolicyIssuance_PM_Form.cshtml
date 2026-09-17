@@ -129,9 +129,28 @@
     that3.data = { SectionName: window.IdManager.attachmentSectionKey(sectionId, that3.moduleName, @(policyIssuanceId)), Department: "@(dept)", FieldName: that3.moduleName, FormId: "@(PIViewIdHelper.Form(dept, policyIssuanceId))" }; //{"SectionName":"default_FO_410"}
     // Keep the delayed lookup on the exact same PI id rendered by decisionField.
     // Using QTViewIdHelper here made getDelayAcceptButtonId resolve a non-existing id.
-    var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
+    // var acceptButtonId = `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
     var panelStatusId = `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`;
-    var itemsDelay = [acceptButtonId, panelStatusId];
+     var acceptDecisionV2 = {
+        buttonId: null,
+        statusId: panelStatusId,
+        text: "Accept",
+        icon: "check",
+        type: "success",
+        buttonClass: "dx-button-success",
+        disabled: true,
+        useDefaultDecisionClick: true,
+        acceptStatusField: "actionStatus",
+        useTatAcceptStatus: true,
+        tatStatusText: "Accepted",
+        // TS content is mounted with the initial dxForm render. The Accept
+        // lifecycle must not append the same checklist/groups a second time.
+        skipAcceptedMainFields: true,
+        statusButtonDisabled: true
+    };
+
+
+    var itemsDelay = [acceptDecisionV2];
 
 
 
@@ -333,13 +352,14 @@
                     caption: "@dept Review",
                     colCount: 2,
                     items: [
-                        decisionField(
-                            `@PIViewIdHelper.Form(dept, policyIssuanceId)`,
-                            "@dept",
-                            `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,
-                            `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,
-                            null,
-                            null)
+                        workflowDecisionField(thisObject, ...itemsDelay)
+                        // decisionField(
+                        //     `@PIViewIdHelper.Form(dept, policyIssuanceId)`,
+                        //     "@dept",
+                        //     `AC_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,
+                        //     `Status_@PIViewIdHelper.Decision(dept, policyIssuanceId)`,
+                        //     null,
+                        //     null)
                     ]
                 }
             ]
@@ -350,10 +370,162 @@
         // Decision/submit handlers depend on formData, so initialize them only
         // after the Policy Issuance record has been loaded and bound to dxForm.
         // role enable/disable restored code: delayAcceptStatusV2(mainFields, thisObject, ...itemsDelay);
-        delayAcceptStatusV2Promise(mainFields, thisObject, ...itemsDelay)
+       delayAcceptStatusV2Promise(
+            mainFields,
+            thisObject,
+            ...itemsDelay
+        )
+            .then(async function (decisionContext) {
+                /*
+                 * decisionContext hiện có:
+                 *
+                 * decisionContext.status
+                 * decisionContext.buttons
+                 * decisionContext.primaryButton
+                 * decisionContext.actionHost
+                 *
+                 * decisionContext.enable()
+                 * decisionContext.disable()
+                 * decisionContext.setDisabled(...)
+                 */
+                var picJson =
+                    PIC_JSON || "{}";
+
+                var picMap =
+                    parsePicMap(picJson);
+
+                var picVal =
+                    picMap["@dept"] || "";
+
+                var $section =
+                    $(`#qt-sec_@(dept)_@(policyIssuanceId)`);
+
+
+                if (!picVal) {
+
+                    $section
+                        .find(
+                            ".dept-upperbody, " +
+                            ".dept-body, " +
+                            ".dept-lowerbody, " +
+                            ".dept-footer"
+                        )
+                        .hide();
+
+                }
+                else {
+
+                    $section
+                        .find(
+                            ".dept-upperbody, " +
+                            ".dept-body, " +
+                            ".dept-lowerbody, " +
+                            ".dept-footer"
+                        )
+                        .show();
+                }
+
+
+                /*
+                 * =========================================================
+                 * DECISION
+                 * =========================================================
+                 */
+
+
+                /*
+                 * Nếu muốn enable tất cả decision button
+                 */
+                /* role enable/disable restored code
+                 * Legacy: decisionContext.enable();
+                 * Kept for rollback; Accept state now belongs to the central rule.
+                 */
+                // role enable/disable restored code: decisionContext.enable();
+
+
+                /*
+                 * Nếu chỉ muốn primary button:
+                 *
+                 * decisionContext.primaryButton?.enable();
+                 *
+                 * decisionContext.primaryButton?.disable();
+                 */
+
+
+                /*
+                 * Status object
+                 */
+              
+
+
+                /*
+                 * =========================================================
+                 * CUSTOM ROUTE
+                 * =========================================================
+                 */
+                // Quotation_Form owns the single workflow render pass.
+                var lmktRoutes = [];
+
+
+                /*
+                 * Nếu cần disable:
+                 *
+                 * lmktRoutes.forEach(function (item) {
+                 *     item.disable();
+                 * });
+                 */
+
+
+                /*
+                 * Ví dụ tìm route cụ thể
+                 */
+                var approveRoute =
+                    lmktRoutes.find(
+                        function (item) {
+
+                            return (
+                                item.route?.actionCode === "Approve" ||
+                                item.route?.displayStatus === "Approve"
+                            );
+                        }
+                    );
+                // $(approveRoute).dxButton("instance").option("disabled", false);
+                // if (approveRoute) {
+
+                //     console.log(
+                //         "Approve route:",
+                //         approveRoute
+                //     );
+
+                //      approveRoute.enable();
+
+                //     // approveRoute.disable();
+
+                //     // approveRoute.button.instance
+                //     //     ?.option("disabled", false);
+                // }
+
+            })
             .catch(function (error) {
-                console.error("Policy Issuance PM decision hydration failed.", error);
+
+                console.error(
+                    "@dept decision initialization failed:",
+                    error
+                );
+
             });
+    // setTimeout(() => {
+    //     var picJson = PIC_JSON || "{}";
+    //     var picMap = parsePicMap(picJson);
+    //     var picVal = picMap["@dept"] || "";
+    //     var sectionId = `#qt-sec_@(dept)_@(policyIssuanceId)`;
+    //     if (!picVal) {
+    //         $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").hide();
+    //     } else {
+    //         $(sectionId).find(".dept-upperbody, .dept-body, .dept-lowerbody, .dept-footer").show();
+    //     }
+    // }, _delayRenderDecisionButton);
 
     })
+
 </script>

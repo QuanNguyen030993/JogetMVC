@@ -49,6 +49,8 @@ window.PolicyIssuanceIdManager = {
     btnSave: function (department, quotationId) { return this.generateId('btnSave', department, quotationId); },
     btnSubmitBranch: function (department, quotationId) { return this.generateId('btnSubmitBranch', department, quotationId); },
     btnReturnBranch: function (department, quotationId) { return this.generateId('btnReturnBranch', department, quotationId); },
+    btnAcceptTask: function (department, quotationId) { return this.generateId('btnAccept', department, quotationId); },
+
     expandCollapsedBtn: function (department, quotationId) { return this.generateId('expandCollapsedBtn', department, quotationId); },
     actionBarDept: function (department, quotationId) { return this.generateId('actionBarDept', department, quotationId); },
 
@@ -101,6 +103,7 @@ window.PolicyIssuanceIdManager = {
                 btnSave: this.btnSave(dept, quotationId),
                 btnSubmitBranch: this.btnSubmitBranch(dept, quotationId),
                 btnReturnBranch: this.btnReturnBranch(dept, quotationId),
+                btnAcceptTask: this.btnAcceptTask(dept, quotationId),
                 expandCollapsedBtn: this.expandCollapsedBtn(dept, quotationId),
                 sec: this.sec(dept, quotationId),
                 upd: this.upd(dept, quotationId),

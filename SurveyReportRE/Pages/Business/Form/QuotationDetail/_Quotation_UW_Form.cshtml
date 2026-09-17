@@ -76,10 +76,10 @@
          //            // { id: "AS_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Assign", value: false },
          //            { id: "RJ_@QTViewIdHelper.Decision(dept, quotationId)" , text: "Reject", value: false }
          //        ];
-     var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
+     // var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
          var panelStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
      var noNeedToRefer = `NNTF_@QTViewIdHelper.Decision(dept, quotationId)`;
-                     var items = [ `#${acceptButtonId}`, `#${noNeedToRefer}`];
+                     var items = [ null, `#${noNeedToRefer}`];
                                  
     var sectionId = "@(ViewData["Cd"])";
     var that = new Object();
@@ -117,12 +117,12 @@
 
 
 
-        var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
+        // var acceptButtonId = `AC_@QTViewIdHelper.Decision(dept, quotationId)`;
         var panelStatusId = `Status_@QTViewIdHelper.Decision(dept, quotationId)`;
         // V2 config: status/TAT, click handler va lifecycle cua Accept cung di qua
         // renderDecisionDeferredV2; khong con dung cap string legacy.
         var acceptDecisionV2 = {
-            buttonId: acceptButtonId,
+            buttonId: null,
             statusId: panelStatusId,
             text: "Accept",
             icon: "check",
