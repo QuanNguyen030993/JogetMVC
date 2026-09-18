@@ -738,7 +738,48 @@ $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
 
             return this;
         }
+        if (arg1 === "quillValue") {
+            if (arguments.length === 1) {
+                if (this.length === 1) {
+                    const instance = getInstance(this[0]);
+                    if (!instance) return "";
 
+                    return instance.ref?.current?.quillValue?.()
+                        ?? instance.options?.value
+                        ?? "";
+                }
+
+                return this.map(function() {
+                    const instance = getInstance(this);
+                    if (!instance) return null;
+
+                    return instance.ref?.current?.quillValue?.()
+                        ?? instance.options?.value
+                        ?? null;
+                }).get();
+            }
+
+            this.each(function() {
+                const instance = getInstance(this);
+                if (!instance) return;
+
+                instance.options.value = arg2;
+
+                if (instance.ref?.current?.option) {
+                    instance.ref.current.option("quillValue", arg2);
+                } else {
+                    const Component = controls[instance.name];
+                    instance.root.render(
+                        <Component
+                            ref={instance.ref}
+                            {...instance.options}
+                        />
+                    );
+                }
+            });
+
+            return this;
+        }
         if (arg1 === "focus") {
             return this.each(function() {
                 getControl(this)?.focus?.();
@@ -831,6 +872,8 @@ $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
             });
         }
 
+
+
         if (arg1 === "removeButton") {
             return this.each(function() {
                 getControl(this)?.removeButton?.(arg2);
@@ -903,7 +946,27 @@ $.fn.tmivhtmleditorcommentbox = function(arg1, arg2, arg3, ...rest) {
 
                 return this;
             },
+            quillValue(nextValue) {
+                const instance = getInstance(el);
+                if (!instance) return "";
 
+                const control = instance.ref?.current;
+
+                if (arguments.length === 0) {
+                    return control?.quillValue?.() // main call function export in control
+                        ?? instance.options?.value
+                        ?? "";
+                }
+
+                instance.options.value = nextValue;
+
+                control?.option?.(
+                    "value",
+                    nextValue
+                );
+
+                return this;
+            },
             focus() {
                 getControl(el)?.focus?.();
                 return this;

@@ -290,7 +290,7 @@ export default function DataGridFieldDesigner() {
 
   const gridColumns = [
     { field: "DataField", caption: "Mã trường (DataField)", width: "180px" },
-    { field: "Caption", caption: " I think that that's all I know. I think that that's all I know. I think that that's all I know. I think that that's all I know.Tiêu đề hiển thị (Caption)", width: "180px" },
+    { field: "Caption", caption: " I And then we go to the I I Mm.Tiêu đề hiển thị (Caption)", width: "180px" },
     {
       field: "DataType",
       caption: "Kiểu dữ liệu (DataType)",

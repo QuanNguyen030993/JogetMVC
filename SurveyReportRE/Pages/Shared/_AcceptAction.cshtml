@@ -255,14 +255,14 @@
                           }
                           setDecisionButtonsDisabled(
                               buttonItems.map(item => getDelayAcceptButtonId(item)),
-                              shouldDisableWorkflowButton({
-                                  dept: formDataClone.dept,
-                                  stageDept: latestFormItems.stageDept,
-                                  formItems: latestFormItems,
-                                  tatObject: latestTatObject,
-                                  type: "late-decision",
-                                  items: buttonItems.map(item => getDelayAcceptButtonId(item))
-                              })
+                              // shouldDisableWorkflowButton({
+                              //     dept: formDataClone.dept,
+                              //     stageDept: latestFormItems.stageDept,
+                              //     formItems: latestFormItems,
+                              //     tatObject: latestTatObject,
+                              //     type: "late-decision",
+                              //     items: buttonItems.map(item => getDelayAcceptButtonId(item))
+                              // })
                           );
 
      // }, _delayUnlockForm);
@@ -695,69 +695,70 @@
        //       }
        //      // });
        //   }
-        function shouldDisableWorkflowButton(options) {
-            options = options || {};
-            var formItems = options.formItems || {};
-            var buttonDept = normalizeDeptKey(options.dept);
-            var currentStageDept = normalizeDeptKey(
-                options.stageDept
-                || formItems.stageDept
-                || formItems.StageDept
-                || window.QuotationPage?.state?.stageDept
-                || window.PolicyIssuancePage?.state?.stageDept
-            );
-            var currentRole = normalizeDeptKey(
-                typeof options.role !== "undefined"
-                    ? options.role
-                    : (typeof _role !== "undefined" ? _role : "")
-            );
-            var tatObject = options.tatObject;
 
-            if (!tatObject || typeof tatObject !== "object") {
-                tatObject = tryParseJSON(
-                    formItems.turnAroundTimeAttributes,
-                    "Workflow Button TAT Problem"
-                ) || {};
-            }
+       //Comment out 2026-09-18
+        // function shouldDisableWorkflowButton(options) {
+        //     options = options || {};
+        //     var formItems = options.formItems || {};
+        //     var buttonDept = normalizeDeptKey(options.dept);
+        //     var currentStageDept = normalizeDeptKey(
+        //         options.stageDept
+        //         || formItems.stageDept
+        //         || formItems.StageDept
+        //         || window.QuotationPage?.state?.stageDept
+        //         || window.PolicyIssuancePage?.state?.stageDept
+        //     );
+        //     var currentRole = normalizeDeptKey(
+        //         typeof options.role !== "undefined"
+        //             ? options.role
+        //             : (typeof _role !== "undefined" ? _role : "")
+        //     );
+        //     var tatObject = options.tatObject;
 
-            // Default is disabled. A button is actionable only for the current
-            // stage and the role currently being used in the form.
-            var ownsCurrentStage = !!buttonDept && buttonDept === currentStageDept;
-            var roleMatchesStage = !!currentStageDept && currentRole === currentStageDept;
-            if (!ownsCurrentStage || !roleMatchesStage) return true;
-            //decision / route / custom
-           if (options.type == "late-decision" || options.type == "early-decision")
-            {
-                 console.log(options.type, options.items);
-                 var isFoDecision = currentRole === "FO";
-                 var hasAcceptDate = isFoDecision ? true : !!tatObject?.[buttonDept]?.AcceptDate;
-                 if (isFoDecision)
-                     return !hasAcceptDate ;
-                 else
-                     return hasAcceptDate; //|| hasActionStatus;
-            }
-            if (options.type == "route")
-            {
-                console.log("route", options.items);
-                 var isFoRoute = currentRole === "FO";
-                 var hasAcceptDate = isFoRoute ? true : !!tatObject?.[buttonDept]?.AcceptDate;
-                 // var hasActionStatus = hasWorkflowButtonStatus(formItems, buttonDept);
-                 if (isFoRoute)
-                     return !hasAcceptDate ;
-                 else
-                     return !hasAcceptDate; //|| hasActionStatus;
-            }
-            if (options.type == "custom")
-            {
-                 console.log("custom");
-                 var isFoCustom = currentRole === "FO";
-                 var hasAcceptDate = isFoCustom ? true : !!tatObject?.[buttonDept]?.AcceptDate;
-                 if (isFoCustom)
-                     return !hasAcceptDate ;
-                 else
-                     return hasAcceptDate; //|| hasActionStatus;
-             }
-         }
+        //     if (!tatObject || typeof tatObject !== "object") {
+        //         tatObject = tryParseJSON(
+        //             formItems.turnAroundTimeAttributes,
+        //             "Workflow Button TAT Problem"
+        //         ) || {};
+        //     }
+
+        //     // Default is disabled. A button is actionable only for the current
+        //     // stage and the role currently being used in the form.
+        //     var ownsCurrentStage = !!buttonDept && buttonDept === currentStageDept;
+        //     var roleMatchesStage = !!currentStageDept && currentRole === currentStageDept;
+        //     if (!ownsCurrentStage || !roleMatchesStage) return true;
+        //     //decision / route / custom
+        //    if (options.type == "late-decision" || options.type == "early-decision")
+        //     {
+        //          console.log(options.type, options.items);
+        //          var isFoDecision = currentRole === "FO";
+        //          var hasAcceptDate = isFoDecision ? true : !!tatObject?.[buttonDept]?.AcceptDate;
+        //          if (isFoDecision)
+        //              return !hasAcceptDate ;
+        //          else
+        //              return hasAcceptDate; //|| hasActionStatus;
+        //     }
+        //     if (options.type == "route")
+        //     {
+        //          var isFoRoute = currentRole === "FO";
+        //          var hasAcceptDate = isFoRoute ? true : !!tatObject?.[buttonDept]?.AcceptDate;
+        //          // var hasActionStatus = hasWorkflowButtonStatus(formItems, buttonDept);
+        //          if (isFoRoute)
+        //              return !hasAcceptDate ;
+        //          else
+        //              return !hasAcceptDate; //|| hasActionStatus;
+        //     }
+        //     if (options.type == "custom")
+        //     {
+        //          console.log("custom");
+        //          var isFoCustom = currentRole === "FO";
+        //          var hasAcceptDate = isFoCustom ? true : !!tatObject?.[buttonDept]?.AcceptDate;
+        //          if (isFoCustom)
+        //              return !hasAcceptDate ;
+        //          else
+        //              return hasAcceptDate; //|| hasActionStatus;
+        //      }
+        //  }
 
          function getDelayAcceptStoredStatus(formItems, dept, item) {
                 if (!item || typeof item !== "object") return null;

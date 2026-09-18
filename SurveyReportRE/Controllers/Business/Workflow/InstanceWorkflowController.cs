@@ -1624,6 +1624,7 @@ public class InstanceWorkflowController : BaseControllerApi<InstanceWorkflow>
                     _BaseRepository._connectionString,
                     notificationTemplate.NotificationQuery,
                     (fallbackType + "Id", fallbackTransferObject.Id));
+                if (query != null)
                 if (query.Rows.Count > 0)
                 {
                     templateData = Util.MakeQueryIntoDirectory(query.Rows[0]);

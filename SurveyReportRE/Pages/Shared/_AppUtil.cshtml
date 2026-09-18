@@ -2313,8 +2313,10 @@
                      var store = dataSource.store();
                         $(`#${moduleKey}-btnChatSend_${dept}_${id}`).dxButton({
                          onClick: function (e) {
-                                var commentDataForm = $(`#${moduleKey}-commentPanelControl_${dept}_${id}`).dxForm("instance").option("formData");
-                              const commentText = commentDataForm.content?.trim();
+                              //   var commentDataForm = $(`#${moduleKey}-commentPanelControl_${dept}_${id}`).dxForm("instance").option("formData");
+                                
+                              // const commentText = commentDataForm.content?.trim();
+                              const commentText = getRemark(dept);
                               if (!commentText) {
                                   DevExpress.ui.notify("Please enter comment content", "warning", 2000);
                                   return;

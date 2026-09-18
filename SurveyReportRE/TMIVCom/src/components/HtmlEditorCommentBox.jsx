@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import SelectBox from "./SelectBox.jsx";
 import { createPortal } from "react-dom";
+import HtmlEditorQuill from "./HtmlEditorQuill.jsx";
 
 
 
@@ -255,19 +256,19 @@ const HtmlEditor = forwardRef(({
     // true  => bắt buộc chọn phòng ban, nếu thiếu sẽ cảnh báo
     // false => nếu chưa chọn thì comment vào currentSection/currentDepartment
     requireDepartment = false,
-
+     
     // Array of dxButton-like configs.
     customButtons = []
 }, ref) => {
 
     const editorRef = useRef();
+    const quillEditorRef = useRef();
     const lastValueRef = useRef(null);
     const isComposingRef = useRef(false);
-
     const [actionButtons, setActionButtons] = useState(
         Array.isArray(customButtons) ? customButtons : []
     );
-
+    const [quillValueConst, setQuillValue] = useState("");
     const [comments, setComments] = useState(Array.isArray(items) ? items : []);
     const [disableComment, setDisableComment] = useState(
         Boolean(disableCommentProp || disabled)
@@ -344,6 +345,8 @@ const HtmlEditor = forwardRef(({
             ? sourceHtml
             : (editorRef.current?.innerHTML ?? "")
     );
+
+
 
 
     const generateGuid = () => {
@@ -424,7 +427,8 @@ const HtmlEditor = forwardRef(({
     const addComment = async (event = null) => {
         if (disableComment) return null;
 
-        const htmlText = getCurrentValue();
+        // const htmlText = getCurrentValue();
+        const htmlText = quillValueConst;
         const textOnly = (htmlText || "")
             .replace(/<[^>]*>/g, "")
             .replace(/&nbsp;/gi, " ")
@@ -686,16 +690,18 @@ const cropperRef =
 
 
     const update = () => {
-
         if (!editorRef.current) return;
 
         const result =
             editorRef.current.innerHTML;
-
         lastValueRef.current = result;
         onChange?.(result);
     };
+    const quillUpdate = (inputChangeValue) => {
+           lastValueRef.current = inputChangeValue;
+    }
 
+     
     const focusEditor = () => {
         if (disableComment) return;
         editorRef.current?.focus();
@@ -1339,7 +1345,11 @@ useEffect(() => {
                     return undefined;
             }
         },
-
+        quillValue() {
+            return {
+                text: quillValueConst
+            }
+        }, 
         value() {
             return {
                 text: getCurrentValue(),
@@ -1451,9 +1461,9 @@ useEffect(() => {
 
                 <div className="tmiv-html-editor-route">
 
-                    <div className="tmiv-html-toolbar tmiv-comment-toolbar">
-
-    <div
+                    {/* <div className="tmiv-html-toolbar tmiv-comment-toolbar"> */}
+                   <div >
+    {/* <div
         className="tmiv-tool-item"
         onClick={() => command("undo")}
     >
@@ -1847,11 +1857,11 @@ useEffect(() => {
         }
     >
         Tx
+    </div> */}
+
     </div>
 
-</div>
-
-                    {showSource && (
+                    {/* {showSource && (
                         <textarea
                             className={`tmiv-html-source ${isFocused ? "is-focused" : ""}`}
                             value={sourceHtml}
@@ -1881,38 +1891,54 @@ useEffect(() => {
                                 overflow: "auto"
                             }}
                         />
-                    )}
-
+                    )} */}
                     <div
-                        ref={editorRef}
-                        contentEditable={!disableComment}
-                        aria-readonly={disableComment}
-                        suppressContentEditableWarning
-                        onFocus={handleFocusIn}
-                        onBlur={handleFocusOut}
-                        onCompositionStart={() => {
-                            isComposingRef.current = true;
-                        }}
-                        onCompositionEnd={() => {
-                            isComposingRef.current = false;
-                            update();
-                        }}
-                        onInput={() => {
-                            if (!isComposingRef.current) {
-                                update();
-                            }
-                        }}
-                        className={`tmiv-html-content ${isFocused ? "is-focused" : ""} ${disableComment ? "is-disabled" : ""}`}
-                        style={{
-                            minHeight: height,
-                            height: height,
-                            display: showSource ? "none" : "block",
-                            resize: "vertical",
-                            overflow: "auto",
-                            boxSizing: "border-box"
-                        }}
-                    />
-
+                         ref={editorRef}
+                         //contentEditable={!disableComment}
+                         aria-readonly={disableComment}
+                         //suppressContentEditableWarning
+                        // onFocus={handleFocusIn}
+                        // onBlur={handleFocusOut}
+                        // onCompositionStart={() => {
+                        //     isComposingRef.current = true;
+                        // }}
+                        // onCompositionEnd={() => {
+                        //     isComposingRef.current = false;
+                        //     update();
+                        // }}
+                        // onInput={() => {
+                        //     if (!isComposingRef.current) {
+                        //         update();
+                        //     }
+                        // }}
+                         className={`tmiv-html-content ${isFocused ? "is-focused" : ""} ${disableComment ? "is-disabled" : ""}`}
+                        // style={{
+                        //     minHeight: height,
+                        //     height: height,
+                        //     display: showSource ? "none" : "block",
+                        //     resize: "vertical",
+                        //     overflow: "auto",
+                        //     boxSizing: "border-box"
+                        // }}
+                    > 
+                    </div>  
+                    <HtmlEditorQuill
+                        onChange={(event) => {
+                        setQuillValue(event);}
+                        } 
+                        placeholder="Input yout remarks..."
+                        height={height}       
+                        // style={{
+                        //     minHeight: height,
+                        //     height: height,
+                        //     display: showSource ? "none" : "block",
+                        //     resize: "vertical",
+                        //     overflow: "auto",
+                        //     boxSizing: "border-box"
+                        // }}
+                        >
+                    </HtmlEditorQuill>
+                    
                     {!disableComment && !showSource && selectedImage && imageRect && (
                         <div
                             className="tmiv-image-overlay"

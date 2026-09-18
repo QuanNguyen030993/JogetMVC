@@ -800,10 +800,13 @@
 
         function getRemark(dept) {
             const value =
+                // remarkBoxes?.[dept]
+                //     ?.controlRemark
+                //     ?.value?.();
+                //     const quillValue =
                 remarkBoxes?.[dept]
                     ?.controlRemark
-                    ?.value?.();
-
+                    ?.quillValue?.();
             if (value == null) {
                 return "";
             }
@@ -1084,7 +1087,6 @@
                     ? moduleConfig.getReturnButtonId(stageDept, id)
                     : moduleConfig.getSubmitButtonId(stageDept, id);
             buttonHostId = isAccept ? moduleConfig.getAcceptButtonId(stageDept, id) : buttonHostId;
-            console.log(buttonHostId);
             if (!buttonHostId) {
                 return;
             }
@@ -1132,24 +1134,26 @@
             ).appendTo($host);
 
             const buttonFormItems = getFormItems(stageDept);
-            var buttonDisabled = shouldDisableWorkflowButton({
-                dept: stageDept,
-                stageDept: buttonFormItems.stageDept || stageDept,
-                formItems: buttonFormItems,
-                type: "route",
-                items: $button
-            });
+            var buttonDisabled = true;
+            
+            // shouldDisableWorkflowButton({
+            //     dept: stageDept,
+            //     stageDept: buttonFormItems.stageDept || stageDept,
+            //     formItems: buttonFormItems,
+            //     type: "route",
+            //     items: $button
+            // });
 
              var decision = await window.applyFeatureRoleControlRule({
-            feature: `Accept · ${buttonFormItems?.stageDept || "unknown"}`,
-            controlType: "accept",
-            dept: _role || "",
-            stageDept: buttonFormItems?.stageDept || buttonFormItems?.StageDept || "",
-            formData: buttonFormItems || {},
-            role: typeof _role !== "undefined" ? _role : window._role,
-            state: options?.state || {},
-            isDebugMode: typeof _isDebugMode !== "undefined" ? _isDebugMode : window._isDebugMode,
-            isSuperUser: typeof _isSuperUser !== "undefined" ? _isSuperUser : window._isSuperUser
+                feature: `Accept · ${buttonFormItems?.stageDept || "unknown"}`,
+                controlType: "accept",
+                dept: _role || "",
+                stageDept: buttonFormItems?.stageDept || buttonFormItems?.StageDept || "",
+                formData: buttonFormItems || {},
+                role: typeof _role !== "undefined" ? _role : window._role,
+                state: options?.state || {},
+                isDebugMode: typeof _isDebugMode !== "undefined" ? _isDebugMode : window._isDebugMode,
+                isSuperUser: typeof _isSuperUser !== "undefined" ? _isSuperUser : window._isSuperUser
             });
 
                 const isNotHasAcceptDate = decision.report.checks.find(f => f.key ==  "acceptDate").passed;
@@ -1159,15 +1163,7 @@
                 buttonDisabled = allowButton;
             }
 
-            if (isReturn && isReturnNeedAccepted) {
-                if (isReturnNeedAccepted)
-                {
-                    buttonDisabled = !isNotHasAcceptDate;
-                }
-                else if (isReturn) {
-                    buttonDisabled = true;
-                }
-            }
+            
 
             if (isAccept)
             {
@@ -1199,6 +1195,35 @@
                 if (options.buttonClass) $button.addClass(options.buttonClass);
             }
             else {
+                var decision = await window.applyFeatureRoleControlRule({
+                    feature: `Routes · ${buttonFormItems?.stageDept || "unknown"}`,
+                    controlType: isReturn ? "returnRoute" : "route",
+                    dept: _role || "",
+                    stageDept: buttonFormItems?.stageDept || buttonFormItems?.StageDept || "",
+                    formData: buttonFormItems || {},
+                    role: typeof _role !== "undefined" ? _role : window._role,
+                    state: options?.state || {},
+                    isDebugMode: typeof _isDebugMode !== "undefined" ? _isDebugMode : window._isDebugMode,
+                    isSuperUser: typeof _isSuperUser !== "undefined" ? _isSuperUser : window._isSuperUser,
+                    data: {route: options.route},
+                    getSingleRole: true
+                });
+
+                // console.log(decision);
+
+                if (isReturn) {
+                    buttonDisabled = decision.configured.disabled;
+                    // if (isReturnNeedAccepted)
+                    // {
+                    //     buttonDisabled = !isNotHasAcceptDate;
+                    // }
+                    // else if (isReturn) {
+                    //     buttonDisabled = true;
+                    // }
+                }
+                else{
+                    buttonDisabled = decision.configured.disabled;
+                }
                 $button.dxButton({
                 disabled: buttonDisabled,
                 className: "submit-btn-visible",
@@ -1464,13 +1489,27 @@
                                 )
                                 : {};
 
-                        var disabled = shouldDisableWorkflowButton({
-                            dept: routeDept,
-                            stageDept: formItems.stageDept || stageDept,
-                            formItems: formItems,
-                            tatObject: latestTatObject,
-                            type: "custom",
-                            items: $customButton
+                        var disabled = true;
+                        // shouldDisableWorkflowButton({
+                        //     dept: routeDept,
+                        //     stageDept: formItems.stageDept || stageDept,
+                        //     formItems: formItems,
+                        //     tatObject: latestTatObject,
+                        //     type: "custom",
+                        //     items: $customButton
+                        // });
+                        var decision = await window.applyFeatureRoleControlRule({
+                            feature: `Custom Routes · ${buttonFormItems?.stageDept || "unknown"}`,
+                            controlType: "customRoute",
+                            dept: _role || "",
+                            stageDept: buttonFormItems?.stageDept || buttonFormItems?.StageDept || "",
+                            formData: buttonFormItems || {},
+                            role: typeof _role !== "undefined" ? _role : window._role,
+                            state: options?.state || {},
+                            isDebugMode: typeof _isDebugMode !== "undefined" ? _isDebugMode : window._isDebugMode,
+                            isSuperUser: typeof _isSuperUser !== "undefined" ? _isSuperUser : window._isSuperUser,
+                            data: {route: options.route},
+                            getSingleRole: true
                         });
 
                         $customButton.dxButton({

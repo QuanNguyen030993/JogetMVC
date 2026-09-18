@@ -8,6 +8,7 @@ import {
 import Diagram, { createNodeStyle } from '../../../ITAdmin/src/components/Diagram';
 import '@xyflow/react/dist/style.css';
 
+
 const nodeTemplates = [
     {
         type: 'start',

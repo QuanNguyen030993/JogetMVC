@@ -9,6 +9,7 @@ import Diagram, { createNodeStyle } from './Diagram';
 import '@xyflow/react/dist/style.css';
 import CustomGrid from '../../../TMIVCom/src/components/CustomGrid';
 import { notify } from '../../../TMIVCom/src/components/Notification';
+import HtmlEditorQuill from "../../../TMIVCom/src/components/HtmlEditorQuill";
 
 
 
@@ -2107,11 +2108,16 @@ const updateSelectedEdge = useCallback(
                 </label>
                 <label>
                     <span>Node Instruction (Hướng dẫn)</span>
-                    <textarea
+                    {/* <textarea
                         rows={3}
                         value={selectedNode.data.nodeInstruction ?? selectedNode.data.instruction ?? selectedNode.data.assignLabel ?? ''}
                         onChange={(event) => updateSelectedNode('nodeInstruction', event.target.value)}
                         placeholder="Nhập chú thích hoặc hướng dẫn khi workflow đọc tới node này"
+                    /> */}
+
+                     <HtmlEditorQuill
+                        value={selectedNode.data.nodeInstruction ?? selectedNode.data.instruction ?? selectedNode.data.assignLabel ?? ''}
+                        onChange={(event) => updateSelectedNode('nodeInstruction', event) }
                     />
                 </label>
                 <label>
