@@ -1508,12 +1508,15 @@ Note:
                 $(actionBar).closest(".dept-footer").show();
                 $(actionBar).css("display", "block");
                 const activeRemarkBoxId = window.PolicyIssuanceIdManager.remarkBox(stageDept, @ViewData["Id"]);
-                const editorControl = TinyMCEElementMaker(
+                const editorControl =   TinyMCEElementMaker(
                     `#${activeRemarkBoxId}`,
                     stageDept,
                     @ViewData["Id"],
                     remarkBoxs?.[stageDept]?.controlRemark,
-                    viewIdModulePrefix.policyIssuance, q.guid);
+                    viewIdModulePrefix.policyIssuance, 
+                    q.guid,
+                    q, 
+                    state);
                 remarkBoxs[stageDept] = {
                     id: q.id,
                     sectionName: stageDept,

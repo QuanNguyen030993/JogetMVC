@@ -1639,12 +1639,15 @@ Note:
 
                 $(actionBar).closest(".dept-footer").show();
                 $(actionBar).css("display", "block");
-                const editorControl = TinyMCEElementMaker(
+                const editorControl =  TinyMCEElementMaker(
                     ".htmleditor",
                     stageDept,
                     @ViewData["Id"],
                     remarkBoxs?.[stageDept]?.controlRemark,
-                    viewIdModulePrefix.policyIssuance);
+                    viewIdModulePrefix.policyIssuance,
+                    q.guid,
+                    q, 
+                    state);
                 remarkBoxs[stageDept] = {
                     id: q.id,
                     sectionName: stageDept,

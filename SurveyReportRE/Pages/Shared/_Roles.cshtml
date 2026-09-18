@@ -595,7 +595,20 @@
                         expected: "EMPTY"
                     };
                 }
+            },  {
+                key: "remarkVisible",
+                label: "Remark Visible By Stage Dept",
+                configured: {visible: false},
+                actual: _role,
+                expected: stageDeptValue,
+                required: true,
+                evaluate: function () {
+                    return {
+                        passed: allowedRoles && allowedStageDepts &&  allowedSections
+                    };
+                }
             }
+
         ].concat(suppliedPhase2Checks.map(function (definition, index) {
             const requestedKey = definition.key || `phase2_${index + 1}`;
             return {
@@ -667,14 +680,20 @@
             });
         });
         $.each(phase2Checks,function(itemIndex,item){
-            if (item.key == "acceptDate"){
+            if (item.key == "remarkVisible"){
+                  item.evaluate();
+                  if (item.passed) { //another condition should be here
+                      item.configured.visible = item.passed;
+                  }
+            }
+            else if (item.key == "acceptDate"){
                   item.passed = acceptDate ? false : true;
             } 
             else if (item.key == "returnRoute"){
                   item.evaluate();
                   if (item.passed) {
                       item.passed= false;
-                      const isReturnNeedAccepted = options.data.route?.isReturnNeedAccepted || false;
+                      const isReturnNeedAccepted = options.data?.route?.isReturnNeedAccepted || false;
                       if (isReturnNeedAccepted)
                       {
                           item.passed = acceptDate ? true : false;
@@ -710,9 +729,8 @@
                           item.configured.disabled = !item.passed;
                       }
                   }
-            }
+            } 
         } );
-        console.log(phase2Checks);
         const checks = phase1Checks.concat(phase2Checks);
         const requiredPhase2Checks = phase2Checks.filter(function (item) {
             return item.configured && item.required;

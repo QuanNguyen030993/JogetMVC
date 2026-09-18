@@ -1671,14 +1671,17 @@ Note:
                 $(actionBar).closest(".dept-footer").show();
                 $(actionBar).css("display", "block");
                 const activeRemarkBoxId = window.QuotationIdManager.remarkBox(stageDept, @ViewData["Id"]);
-                const editorControl = TinyMCEElementMaker(
+                const editorControl =  TinyMCEElementMaker(
                     `#${activeRemarkBoxId}`,
                     stageDept,
                     @ViewData["Id"],
                     remarkBoxs?.[stageDept]?.controlRemark,
                     viewIdModulePrefix.quotation,
-                    q.guid);
-                    remarkBoxs[stageDept] = {
+                    q.guid,
+                    q, 
+                    state
+                );
+                remarkBoxs[stageDept] = {
                     id: q.id,
                     sectionName: stageDept,
                     controlRemark: editorControl
