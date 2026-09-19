@@ -134,7 +134,7 @@ Note:
         var commentPanelOpened = false;
         var stageDept = null;
         var stageAccount = "";
-
+        var policyIssuanceData = new Object();
         var deptData = { FO: {}, TS: {}, PM: {} };
         // Remark editors are registered lazily for the record's active stage only.
         var remarkBoxs = {};
@@ -564,29 +564,45 @@ Note:
             );
         }
         function selfLoadSelectedWorkflow(forceReload = false) {
-            const selectedModel = getSelectedModel();
-             const formId =  window.PolicyIssuanceIdManager.form(_role, @ViewData["Id"]);
-            return window.WorkflowLoader.load({
-                modelName: "@nameof(PolicyIssuance)",
-                formId: formId,
-                moduleCode: viewIdModulePrefix.policyIssuance,
-                id: @ViewData["Id"],
-                loadingHost: `#${window.PolicyIssuanceIdManager.actionBarDept(stageDept, @ViewData["Id"])}`,
-                guid: state.selectedGuid,
-                stageDept: stageDept,
-                state: state,
-                deptCodes: piDeptModuleCode,
-                formStages: policyIssuanceFormStages,
-                remarkBoxes: remarkBoxs,
-                prefix: "@prefix",
-                requestType: selectedModel?.requestType ?? selectedModel?.RequestType ?? "",
-                loadScreenConditions: loadAndApplyPolicyIssuanceScreenConditions,
-                submitNextStep: submitNextStep,
-                returnToStep: returnToStep,
-                formModuleKey: formModuleKeyPi,
-                reload: true,
-                forceWorkflowReload: forceReload === true//,
-                // onLoaded: applyPolicyIssuanceRouteButtonRules
+            window.applyFeatureRoleControlRule({
+                feature: `Remark Visible · ${policyIssuanceData?.stageDept || "unknown"}`,
+                controlType: "remarkVisible",
+                dept: _role || "",
+                stageDept: policyIssuanceData?.stageDept || policyIssuanceData?.StageDept || "",
+                formData: policyIssuanceData || {},
+                role: typeof _role !== "undefined" ? _role : window._role,
+                state: state || {},
+                isDebugMode: typeof _isDebugMode !== "undefined" ? _isDebugMode : window._isDebugMode,
+                isSuperUser: typeof _isSuperUser !== "undefined" ? _isSuperUser : window._isSuperUser,
+                data: { route: {} },
+                getSingleRole: true
+            }).then(decision => {
+                if (decision.configured.visible) {
+                    const selectedModel = getSelectedModel();
+                    const formId = window.PolicyIssuanceIdManager.form(_role, @ViewData["Id"]);
+                    return window.WorkflowLoader.load({
+                        modelName: "@nameof(PolicyIssuance)",
+                        formId: formId,
+                        moduleCode: viewIdModulePrefix.policyIssuance,
+                        id: @ViewData["Id"],
+                        loadingHost: `#${window.PolicyIssuanceIdManager.actionBarDept(stageDept, @ViewData["Id"])}`,
+                        guid: state.selectedGuid,
+                        stageDept: stageDept,
+                        state: state,
+                        deptCodes: piDeptModuleCode,
+                        formStages: policyIssuanceFormStages,
+                        remarkBoxes: remarkBoxs,
+                        prefix: "@prefix",
+                        requestType: selectedModel?.requestType ?? selectedModel?.RequestType ?? "",
+                        loadScreenConditions: loadAndApplyPolicyIssuanceScreenConditions,
+                        submitNextStep: submitNextStep,
+                        returnToStep: returnToStep,
+                        formModuleKey: formModuleKeyPi,
+                        reload: true,
+                        forceWorkflowReload: forceReload === true//,
+                        // onLoaded: applyPolicyIssuanceRouteButtonRules
+                    });
+                }
             });
           }
 
@@ -615,7 +631,7 @@ Note:
                 const rows = Array.isArray(data)
                     ? data.map(item => ({ ...item, pIC: item.pic }))
                     : [];
-
+                policyIssuanceData = rows[0];
                 if (reset && rows.length === 0) {
                     state.quotePaging.done = true;
                     return false;
@@ -1508,22 +1524,43 @@ Note:
                 $(actionBar).closest(".dept-footer").show();
                 $(actionBar).css("display", "block");
                 const activeRemarkBoxId = window.PolicyIssuanceIdManager.remarkBox(stageDept, @ViewData["Id"]);
-                const editorControl =   TinyMCEElementMaker(
-                    `#${activeRemarkBoxId}`,
-                    stageDept,
-                    @ViewData["Id"],
-                    remarkBoxs?.[stageDept]?.controlRemark,
-                    viewIdModulePrefix.policyIssuance, 
-                    q.guid,
-                    q, 
-                    state);
-                remarkBoxs[stageDept] = {
-                    id: q.id,
-                    sectionName: stageDept,
-                    controlRemark: editorControl
-                };
-                applyPolicyIssuanceStageRemarkRule(q);
-                return editorControl;
+                // const activeRemarkBoxId = window.QuotationIdManager.remarkBox(stageDept, @ViewData["Id"]);
+
+                var editorControl = $(`#${activeRemarkBoxId}`);
+
+                window.applyFeatureRoleControlRule({
+                    feature: `Remark Visible · ${policyIssuanceData?.stageDept || "unknown"}`,
+                    controlType: "remarkVisible",
+                    dept: _role || "",
+                    stageDept: policyIssuanceData?.stageDept || policyIssuanceData?.StageDept || "",
+                    formData: policyIssuanceData || {},
+                    role: typeof _role !== "undefined" ? _role : window._role,
+                    state: state || {},
+                    isDebugMode: typeof _isDebugMode !== "undefined" ? _isDebugMode : window._isDebugMode,
+                    isSuperUser: typeof _isSuperUser !== "undefined" ? _isSuperUser : window._isSuperUser,
+                    data: { route: {} },
+                    getSingleRole: true
+                }).then(decision => {
+                    if (decision.configured.visible) {
+
+                        editorControl = TinyMCEElementMaker(
+                            `#${activeRemarkBoxId}`,
+                            stageDept,
+                            @ViewData["Id"],
+                            remarkBoxs?.[stageDept]?.controlRemark,
+                            viewIdModulePrefix.policyIssuance,
+                            q.guid,
+                            q,
+                            state);
+                        remarkBoxs[stageDept] = {
+                            id: q.id,
+                            sectionName: stageDept,
+                            controlRemark: editorControl
+                        };
+                        applyPolicyIssuanceStageRemarkRule(q);
+                        return editorControl;
+                    }
+                    });
             };
 
             // Department loop below only binds section data; it does not create remarks.
@@ -1532,7 +1569,7 @@ Note:
                 deptData[item] = { ...q, id: q.id, sectionName: item, code: q.policyIssuanceCode };
                 $(`#${PolicyIssuanceIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "none" });
             });
-            ensureActiveRemarkEditor();
+            // ensureActiveRemarkEditor();
 
 
             await policyIssuanceFormStages.enter("formData");

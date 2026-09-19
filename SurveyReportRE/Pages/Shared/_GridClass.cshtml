@@ -2181,7 +2181,9 @@
                 callElementView(`/Business/Form/PolicyIssuance_Form/${selectedValue}/${selectedGuid}/${selectedCloneId}/${selectedCopyGuid}`, `form_PolicyIssuance_Form_Form_${e.data.id}`, `PolicyIssuance ${e.data.policyIssuanceCode}`);
             }
              if (e.data.requestTypeId == requestTypeName.id) {
-                 callElementView(`/Business/Form/PolicyIssuance_Endorsement_Form/${selectedValue}/${selectedGuid}`, `form_PolicyIssuance_Endorsement_Form_${e.data.id}`, `PolicyIssuance ${e.data.policyIssuanceCode}`);
+                 selectedCloneId = 0;
+                 selectedCopyGuid = "00000000-0000-0000-0000-000000000000";
+                callElementView(`/Business/Form/PolicyIssuance_Endorsement_Form/${selectedValue}/${selectedGuid}/${selectedCloneId}/${selectedCopyGuid}`, `form_PolicyIssuance_Endorsement_Form_${e.data.id}`, `PolicyIssuance ${e.data.policyIssuanceCode}`);
             }
         }
 
