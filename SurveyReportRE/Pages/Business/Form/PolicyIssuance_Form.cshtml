@@ -140,7 +140,15 @@ Note:
         var remarkBoxs = {};
 
         state.piDetails = {};
-
+        var commonRuleInForm = {
+            role: state.currentUserRole,
+            stageDept: stageDept,
+            dept: _role,
+            formData: policyIssuanceData,
+            state: state,
+            isDebugMode: _isDebugMode,
+            isSuperUser: _isSuperUser
+        };
         async function showPolicyIssuanceRoleReview(policyIssuance) {
             if (typeof window.checkFeatureRoleRule !== "function") {
                 console.error("Policy Issuance role review helper is unavailable");
@@ -173,11 +181,11 @@ Note:
                 const details = piDeptModuleCode.map(function (dept) {
                     const formId = window.PolicyIssuanceIdManager.form(dept, @ViewData["Id"]);
                     const form = $(`#${formId}`).dxForm("instance");
-                    const saveButtonId = window.PolicyIssuanceIdManager.btnSave(dept, @ViewData["Id"]);
-                    const saveButton = $(`#${saveButtonId}`).dxButton("instance");
+                    // const saveButtonId = window.PolicyIssuanceIdManager.btnSave(dept, @ViewData["Id"]);
+                    // const saveButton = $(`#${saveButtonId}`).dxButton("instance");
                     const actualAllow = !!form && form.option("disabled") !== true && form.option("readOnly") !== true;
                     const expectedAllow = reviewSuperUser || (phase1RoleAndStagePassed && dept === actualStageDept);
-                    const actualSaveVisible = saveButton?.option("visible") === true;
+                    // const actualSaveVisible = saveButton?.option("visible") === true;
                     return {
                         dept,
                         actualAllow,
@@ -931,19 +939,7 @@ Note:
                     });
 
                
-                    var saveButtonId = window.PolicyIssuanceIdManager.btnSave(item, @ViewData["Id"]);
-                    await window.applyFeatureRoleControlRule({
-                        ...commonRule,
-                        feature: `Policy Issuance save button · ${item}`,
-                        controlType: "save",
-                        saveButton: true,
-                        apply: function (decision) {
-                            $(`#${saveButtonId}`).dxButton("instance")?.option({
-                                visible: decision.allowed,
-                                disabled: !decision.allowed
-                            });
-                        }
-                    });
+                   
                 });
             }, 1);
 
@@ -1786,7 +1782,7 @@ Note:
         setTimeout(layoutTreeLine, 0);
         window.addEventListener("resize", () => setTimeout(layoutTreeLine, 0));
 
-
+       
 
         // bindSectionHeaderToggle();
         // setupDeptTree();
@@ -1811,6 +1807,20 @@ Note:
             invalidateSectionCommentCache(state.selectedGuid);
             await policyIssuanceFormStages.enter("comments");
             await loadPolicyIssuanceSectionComments();
+            var saveButtonId = window.PolicyIssuanceIdManager.btnSave(_role, @ViewData["Id"]);
+            await window.applyFeatureRoleControlRule({
+                ...commonRuleInForm,
+                feature: `PolicyIssuance save button · ${_role}`,
+                controlType: "saveBtn",
+                getSingleButton: true,
+                apply: function (decision) {
+                    console.log(decision);
+                    $(`#${saveButtonId}`).dxButton("instance")?.option({
+                        visible: decision.allowed,
+                        disabled: !decision.allowed
+                    });
+                }
+            });
         }).catch(function (err) {
             console.error("Initial policy issuance render error:", err);
             policyIssuanceRenderGate.fail(initialRenderToken, "Policy issuance data is unavailable");

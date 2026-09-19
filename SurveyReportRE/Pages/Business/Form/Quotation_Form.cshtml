@@ -192,7 +192,7 @@ Note:
         id: @ViewData["Id"],
         guid: "@ViewData["Guid"]"
     });
-
+     
     var firstRender = true;
     setTimeout(() => {
         const quotationViewInstanceId = "@ViewData["Id"]";
@@ -228,7 +228,15 @@ Note:
         var quotationData = new Object();
         var tatObject = new Object();
         state.quoteDetails = {};
-
+        var commonRuleInForm = {
+                        role: state.currentUserRole,
+                        stageDept: stageDept,
+                        dept: _role,
+                        formData: quotationData,
+                        state: state,
+                        isDebugMode: _isDebugMode,
+                        isSuperUser: _isSuperUser
+                    };
         // ROLE RULE REVIEW EXAMPLE
         // Invoked explicitly from the Maintenance Info review action.
         // Phase 1 gates by role, stage department and section. Phase 2 inspects actions.
@@ -1066,10 +1074,11 @@ Note:
             // $(`#${formId}`).dxForm("instance")?.option("readOnly", roleApply[item]);
             // $(`#${formId}`).dxForm("instance")?.option("disabled", roleApply[item]);
             // setAttachmentPermissionForSection(sectionSelector, !roleApply[item]);
+       
             setTimeout(function () {
                 applyQuotationStageRemarkRule(getSelectedModel() || {});
                 qtDeptModuleCode.forEach(async function (item) {
-                    var saveButtonId = window.QuotationIdManager.btnSave(item, @ViewData["Id"]);
+                    
                     const formId =  window.QuotationIdManager.form(item, @ViewData["Id"]);
                     var form = $(`#${formId}`).dxForm("instance");
                     var formData = form?.option("formData") || {};
@@ -1077,7 +1086,7 @@ Note:
                         role: state.currentUserRole,
                         stageDept: stageDept,
                         dept: item,
-                        formData: formData,
+                        formData: quotationData,
                         state: state,
                         isDebugMode: _isDebugMode,
                         isSuperUser: _isSuperUser
@@ -1103,19 +1112,7 @@ Note:
                         }
                     });
 
-                    await window.applyFeatureRoleControlRule({
-                        ...commonRule,
-                        feature: `Quotation save button · ${item}`,
-                        controlType: "save",
-                        saveButton: item !== "PM",
-                        apply: function (decision) {
-                            $(`#${saveButtonId}`).dxButton("instance")?.option({
-                                visible: decision.allowed,
-                                disabled: !decision.allowed
-                            });
-                        }
-                    });
-
+ 
 
                     if (item === "TS") {
                         var tat = tryParseJSON(
@@ -1179,6 +1176,7 @@ Note:
                 const evaluatedRole = state.currentUserRole;
                 const evaluatedStage = stageDept;
                 renderHint(false);
+                
                 window.applyFeatureRoleControlRule({
                     feature: `Quotation section hint · ${k}`,
                     controlType: "section",
@@ -1748,6 +1746,7 @@ Note:
                 $(`#${window.QuotationIdManager.actionBarDept(item, @ViewData["Id"])}`).css({ "display": "none" });
             });
             // ensureActiveRemarkEditor();
+          
 
             await quotationFormStages.enter("formData");
             await renderDeptForms();
@@ -1851,7 +1850,21 @@ Note:
             invalidateSectionCommentCache(state.selectedGuid);
             await quotationFormStages.enter("comments");
             await loadQuotationSectionComments();
-             
+               var saveButtonId = window.QuotationIdManager.btnSave(_role, @ViewData["Id"]);
+            await window.applyFeatureRoleControlRule({
+                        ...commonRuleInForm,
+                        feature: `Quotation save button · ${_role}`,
+                        controlType: "saveBtn",
+                        getSingleButton: true,
+                        saveButton: _role !== "PM",
+                        apply: function (decision) {
+                            debugger
+                            $(`#${saveButtonId}`).dxButton("instance")?.option({
+                                visible: decision.allowed,
+                                disabled: !decision.allowed
+                            });
+                        }
+                    });
 
         });
     }, _delayQuotationsLoadForm);

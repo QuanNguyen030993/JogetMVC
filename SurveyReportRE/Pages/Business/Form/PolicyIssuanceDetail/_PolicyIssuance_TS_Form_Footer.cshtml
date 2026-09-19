@@ -153,7 +153,7 @@
     window["initializeTsReminderButton_@(policyIssuanceId)"]();
        //       var pageLayout = window.PolicyIssuancePage;
        // var stateLayout = pageLayout.state;
-    $("#@PIViewIdHelper.BtnSave(dept, policyIssuanceId)").dxButton({ text: "", icon: "save", type: "default", onClick:
+    $("#@PIViewIdHelper.BtnSave(dept, policyIssuanceId)").dxButton({ text: "", icon: "save", type: "default", visible: false, onClick:
          function (e) {
                 var formId = `@PIViewIdHelper.Form(dept, policyIssuanceId)`;
                if (typeof validateEnabledOverviewSection === "function" && !validateEnabledOverviewSection(formId)) return;

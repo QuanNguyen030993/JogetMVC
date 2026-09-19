@@ -1676,6 +1676,7 @@ public class PolicyIssuanceController : BaseControllerApi<PolicyIssuance>
                         _BaseRepository._connectionString,
                         notificationTemplate.NotificationQuery,
                         ("PolicyIssuanceId", quotation.Id));
+                    if (query !=null)
                     if (query.Rows.Count > 0)
                     {
                         foreach (var item in Util.MakeQueryIntoDirectory(query.Rows[0]))
